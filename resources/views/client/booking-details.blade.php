@@ -155,6 +155,45 @@
                                                                     <!-- Package Description -->
                                                                     <p class="text-muted small mb-3">{{ $package->package_description ?: 'No description available.' }}</p>
                                                                     
+                                                                    <!-- ==== START: Display package locations correctly ==== -->
+                                                                    <div class="d-flex align-items-center flex-wrap mb-2">
+                                                                        @php
+                                                                            $locations = $package->package_location ?? null;
+                                                                            
+                                                                            // Decode JSON if it's a string
+                                                                            if (is_string($locations)) {
+                                                                                $locations = json_decode($locations, true);
+                                                                            }
+                                                                            
+                                                                            // Ensure it's an array
+                                                                            if (!is_array($locations)) {
+                                                                                $locations = $locations ? [$locations] : ['In-Studio'];
+                                                                            }
+                                                                        @endphp
+                                                                        
+                                                                        @foreach($locations as $location)
+                                                                            @php $location = trim($location, '"\' '); @endphp
+                                                                            @if($location === 'On-Location')
+                                                                                <span class="badge badge-soft-info me-1 mb-1">
+                                                                                    <i class="ti ti-map-pin me-1"></i> On-Location
+                                                                                </span>
+                                                                            @elseif($location === 'In-Studio')
+                                                                                <span class="badge badge-soft-primary me-1 mb-1">
+                                                                                    <i class="ti ti-building me-1"></i> In-Studio
+                                                                                </span>
+                                                                            @else
+                                                                                <span class="badge badge-soft-secondary me-1 mb-1">{{ $location }}</span>
+                                                                            @endif
+                                                                        @endforeach
+                                                                        
+                                                                        @if(count($locations) > 1)
+                                                                            <span class="badge badge-soft-success me-1 mb-1">
+                                                                                <i class="ti ti-arrows-maximize me-1"></i> Flexible
+                                                                            </span>
+                                                                        @endif
+                                                                    </div>
+                                                                    <!-- ==== END: Display package locations correctly ==== -->
+                                                                    
                                                                     <!-- ==== Start: Display package flexibility ==== -->
                                                                     <div class="d-flex align-items-center mb-2">
                                                                         @if($package->allow_time_customization)

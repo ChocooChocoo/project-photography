@@ -84,6 +84,34 @@
             color: #6c757d;
             font-style: italic;
         }
+
+        .flexible-location-ui .btn-check:checked + .btn-outline-primary {
+            background-color: #3475db;
+            color: white;
+            border-color: #3475db;
+        }
+
+        .flexible-location-ui .btn-outline-primary {
+            transition: all 0.3s ease;
+        }
+
+        .flexible-location-ui .btn-outline-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(52, 117, 219, 0.2);
+        }
+
+        .flexible-location-ui .btn-check:checked + .btn-outline-primary i {
+            color: white !important;
+        }
+
+        .location-auto-set-badge {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 @endsection
 
@@ -501,6 +529,7 @@
             let bookingId = null;
             let selectedPackageFlexibility = null;
             let selectedPackageDuration = null;
+            let currentPackageLocationFlexibility = null;
 
             // ========== Operating Days Enforcement ==========
             const operatingDays = JSON.parse($('#operatingDays').val() || '[]');
@@ -875,10 +904,44 @@
                                 
                                 const isStudio = $('#bookingType').val() === 'studio';
                                 
-                                // Location badge HTML
-                                const locationBadge = package.package_location === 'On-Location' 
-                                    ? '<span class="badge badge-soft-info"><i class="ti ti-map-pin me-1"></i> On-Location</span>'
-                                    : '<span class="badge badge-soft-primary"><i class="ti ti-building me-1"></i> In-Studio</span>';
+                                // === START: Updated location badge generation ===
+                                // Parse package location properly
+                                let packageLocations = package.package_location;
+                                let locationBadges = '';
+
+                                // Ensure we're working with an array
+                                if (typeof packageLocations === 'string') {
+                                    try {
+                                        packageLocations = JSON.parse(packageLocations);
+                                    } catch (e) {
+                                        // If parsing fails, treat as single value
+                                        packageLocations = [packageLocations];
+                                    }
+                                } else if (!Array.isArray(packageLocations)) {
+                                    packageLocations = packageLocations ? [packageLocations] : ['In-Studio'];
+                                }
+
+                                // Generate badges for each location
+                                if (Array.isArray(packageLocations)) {
+                                    packageLocations.forEach(function(location) {
+                                        // Clean up the location string (remove any quotes or extra spaces)
+                                        location = location.replace(/["']/g, '').trim();
+                                        
+                                        if (location === 'On-Location') {
+                                            locationBadges += '<span class="badge badge-soft-info me-1 mb-1"><i class="ti ti-map-pin me-1"></i> On-Location</span>';
+                                        } else if (location === 'In-Studio') {
+                                            locationBadges += '<span class="badge badge-soft-primary me-1 mb-1"><i class="ti ti-building me-1"></i> In-Studio</span>';
+                                        } else {
+                                            locationBadges += '<span class="badge badge-soft-secondary me-1 mb-1">' + location + '</span>';
+                                        }
+                                    });
+                                }
+
+                                // If multiple locations, add a "Flexible" indicator
+                                if (Array.isArray(packageLocations) && packageLocations.length > 1) {
+                                    locationBadges += '<span class="badge badge-soft-success me-1 mb-1"><i class="ti ti-arrows-maximize me-1"></i> Flexible</span>';
+                                }
+                                // === END: Updated location badge generation ===
                                 
                                 // ==== Start: Display package flexibility status ====
                                 console.log('Package ID:', package.id, 'allow_time_customization:', package.allow_time_customization, 'type:', typeof package.allow_time_customization);
@@ -916,9 +979,9 @@
                                                 
                                                 <p class="text-muted small mb-3">${package.package_description ? package.package_description.substring(0, 80) + (package.package_description.length > 80 ? '...' : '') : 'No description available.'}</p>
                                                 
-                                                <!-- Location type display in package card -->
-                                                <div class="d-flex align-items-center mb-2">
-                                                    ${locationBadge}
+                                                <!-- Location badges display -->
+                                                <div class="d-flex align-items-center flex-wrap mb-2">
+                                                    ${locationBadges}
                                                 </div>
                                                 
                                                 <!-- ==== Start: Flexibility status display ==== -->
@@ -1082,67 +1145,76 @@
                     return;
                 }
                 
-                const paymentType = $('input[name="payment_type"]:checked').val();
+                // ==== START: Handle location flexibility based on package ====
+                resetLocationUI(); // Clear any existing location UI
                 
-                // AUTO-POPULATE LOCATION TYPE BASED ON SELECTED PACKAGE
-                if (packageData && packageData.package_location) {
-                    const packageLocation = packageData.package_location;
-                    console.log('Package location:', packageLocation);
-                    
-                    // Set the location type dropdown value
-                    if (packageLocation === 'In-Studio') {
-                        $('#locationType').val('in-studio');
-                        console.log('Set location type to: in-studio');
-                    } else if (packageLocation === 'On-Location') {
-                        $('#locationType').val('on-location');
-                        console.log('Set location type to: on-location');
-                    } else {
-                        console.warn('Unknown package_location value:', packageLocation);
-                        $('#locationType').val('');
-                    }
-                    
-                    // Remove any existing badge first
-                    $('#locationType').closest('.col-12').find('.badge.badge-soft-info').remove();
-                    
-                    // Disable the location type dropdown since it's now automatically populated
-                    $('#locationType').prop('disabled', true);
-                    
-                    // Add a visual indicator that this is auto-populated
-                    $('#locationType').closest('.col-12').find('.form-label').append(
-                        '<span class="badge badge-soft-info ms-2" style="font-size: 0.65rem;">' +
-                        '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
-                    );
-                    
-                    // Trigger change event to update location details visibility
-                    $('#locationType').trigger('change');
+                if (packageData.location_flexibility) {
+                    handlePackageLocationFlexibility(packageData);
                 } else {
-                    console.warn('Package data missing package_location:', packageData);
-                    // Reset location type if package doesn't have location info
-                    $('#locationType').val('').prop('disabled', false);
-                    $('#locationType').closest('.col-12').find('.badge.badge-soft-info').remove();
+                    // Fallback to old behavior for backward compatibility
+                    console.warn('No location flexibility data, using fallback');
+                    if (packageData.package_location) {
+                        const packageLocation = packageData.package_location;
+                        
+                        if (packageLocation === 'In-Studio') {
+                            $('#locationType').val('in-studio');
+                        } else if (packageLocation === 'On-Location') {
+                            $('#locationType').val('on-location');
+                        } else {
+                            $('#locationType').val('');
+                        }
+                        
+                        $('#locationType').prop('disabled', true);
+                        $('#locationType').closest('.col-12').find('.form-label').append(
+                            '<span class="badge badge-soft-info ms-2" style="font-size: 0.65rem;">' +
+                            '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
+                        );
+                        $('#locationType').trigger('change');
+                    }
                 }
+                // ==== END: Handle location flexibility based on package ====
                 
+                const paymentType = $('input[name="payment_type"]:checked').val();
                 getBookingSummaryWithPaymentType(packageData, paymentType);
                 
-                // ==== Start: Show/hide duration info based on package flexibility ====
+                // Show/hide duration info based on package flexibility
                 updateTimeRestrictionInfo();
-                // ==== End: Show/hide duration info based on package flexibility ====
             });
             
             // Toggle location details based on location type
             $('#locationType').on('change', function() {
-                if ($(this).val() === 'on-location') {
+                const locationValue = $(this).val();
+                
+                // Check if this is from flexible selection or direct
+                const isFlexible = currentPackageLocationFlexibility && 
+                                currentPackageLocationFlexibility.is_flexible;
+                
+                if (locationValue === 'on-location') {
                     $('#locationDetails').show();
                     $('#venueName').prop('required', true);
                     $('#city').prop('required', true);
                     $('#barangay').prop('required', true);
-                } else {
+                    
+                    // If from flexible selection, add visual indicator
+                    if (isFlexible) {
+                        $('.flexible-location-ui .btn-outline-primary').removeClass('active');
+                        $('input[value="on-location"]').next('label').addClass('active');
+                    }
+                } else if (locationValue === 'in-studio') {
                     $('#locationDetails').hide();
                     $('#venueName').prop('required', false);
                     $('#city').prop('required', false);
                     $('#barangay').prop('required', false);
                     $('#city').val('').trigger('change');
                     $('#barangay').prop('disabled', true).html('<option value="">Select Barangay</option>');
+                    
+                    // If from flexible selection, add visual indicator
+                    if (isFlexible) {
+                        $('.flexible-location-ui .btn-outline-primary').removeClass('active');
+                        $('input[value="in-studio"]').next('label').addClass('active');
+                    }
+                } else {
+                    $('#locationDetails').hide();
                 }
             });
             
@@ -1551,7 +1623,32 @@
                     return false;
                 }
                 
-                // ========== FIX: Duration validation for fixed packages ==========
+                // ==== START: Validate location selection for flexible packages ====
+                const locationType = $('#locationType').val();
+                
+                // Check if this is a flexible package that requires manual selection
+                if (currentPackageLocationFlexibility && currentPackageLocationFlexibility.is_flexible) {
+                    if (!locationType) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Location Required',
+                            text: 'Please select your preferred location type (In-Studio or On-Location).',
+                            confirmButtonColor: '#3475db'
+                        });
+                        return false;
+                    }
+                } else if (!locationType) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Location Type Error',
+                        text: 'Please select a package first to determine location type.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return false;
+                }
+                // ==== END: Validate location selection for flexible packages ====
+                
+                // Duration validation for fixed packages
                 if (selectedPackageFlexibility === false && selectedPackageDuration > 0) {
                     const startTime = $('#startTime').val();
                     const endTime = $('#endTime').val();
@@ -1566,7 +1663,6 @@
                         const endDate = new Date();
                         endDate.setHours(endHours, endMinutes, 0);
                         
-                        // If end time is less than start time, assume it's the next day
                         if (endDate < startDate) {
                             endDate.setDate(endDate.getDate() + 1);
                         }
@@ -1574,7 +1670,6 @@
                         const durationMs = endDate - startDate;
                         const durationHours = durationMs / (1000 * 60 * 60);
                         
-                        // Allow small floating point differences (e.g., 4.99 vs 5.00)
                         if (Math.abs(durationHours - selectedPackageDuration) >= 0.01) {
                             Swal.fire({
                                 icon: 'error',
@@ -1587,21 +1682,8 @@
                         }
                     }
                 }
-                // ========== End of duration validation ==========
                 
-                // Validate location type (should be auto-populated from package)
-                const locationType = $('#locationType').val();
-                if (!locationType) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Location Type Error',
-                        text: 'Please select a package first to determine location type.',
-                        confirmButtonColor: '#3475db'
-                    });
-                    return false;
-                }
-                
-                // ========== FIX: Only validate payment_type for studio ==========
+                // Only validate payment_type for studio
                 @if($type === 'studio')
                     const paymentType = $('input[name="payment_type"]:checked').val();
                     if (!paymentType) {
@@ -1614,7 +1696,6 @@
                         return false;
                     }
                 @endif
-                // ========== End of payment type validation ==========
                 
                 // Validate on-location details if applicable
                 if ($('#locationType').val() === 'on-location') {
@@ -1678,87 +1759,110 @@
                 $('#summaryFullName').text(bookingData.full_name);
                 $('#summaryContactNumber').text(bookingData.contact_number);
                 $('#summaryEmailAddress').text(bookingData.email);
-                
+
                 // Get package details
                 const packageRadio = $(`.package-radio[value="${selectedPackageId}"]`);
                 const packageData = packageRadio.data('package');
                 const packageName = packageData.package_name;
-                
+
                 // ========== FIX: Clear existing dynamic content to prevent duplicates ==========
                 $('#summaryPackage').siblings('.package-type-badge, .package-location-badge, .gallery-info, .photographer-info, .fixed-deposit-info').remove();
                 // ========== End of cleanup ==========
-                
+
                 // Package name
                 $('#summaryPackage').text(packageName);
-                
+
                 // ========== FIX: Show package flexibility in summary ==========
-                const flexibilityHtml = selectedPackageFlexibility 
+                const flexibilityHtml = selectedPackageFlexibility
                     ? '<span class="badge badge-soft-success package-type-badge"><i class="ti ti-clock-edit me-1"></i> Flexible Time Package</span>'
                     : '<span class="badge badge-soft-secondary package-type-badge"><i class="ti ti-clock me-1"></i> Fixed Duration: ' + selectedPackageDuration + ' hours</span>';
-                
+
                 $('#summaryPackage').after(`
                     <p class="text-muted small mb-1">Package Type:</p>
                     <p class="fw-medium mb-2 package-type-badge">${flexibilityHtml}</p>
                 `);
                 // ========== End of package flexibility display ==========
-                
+
                 // ========== FIX: Show package location badge ==========
                 const locationBadge = packageData.package_location === 'On-Location'
                     ? '<span class="badge badge-soft-info package-location-badge"><i class="ti ti-map-pin me-1"></i> On-Location Package</span>'
                     : '<span class="badge badge-soft-primary package-location-badge"><i class="ti ti-building me-1"></i> In-Studio Package</span>';
-                
+
                 $('#summaryPackage').after(`
                     <p class="text-muted small mb-1">Package Location:</p>
                     <p class="fw-medium mb-2 package-location-badge">${locationBadge}</p>
                 `);
                 // ========== End of package location display ==========
-                
+
                 // Event date
                 const eventDate = new Date(bookingData.event_date);
-                $('#summaryDate').text(eventDate.toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+                $('#summaryDate').text(eventDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
                 }));
-                
+
                 // Event time
                 $('#summaryTime').text(
                     formatTime(bookingData.start_time) + ' - ' + formatTime(bookingData.end_time)
                 );
-                
+
                 // ========== FIX: Show duration info in summary for fixed packages ==========
                 if (!selectedPackageFlexibility && selectedPackageDuration > 0) {
                     const startTime = bookingData.start_time;
                     const endTime = bookingData.end_time;
-                    
+
                     // Calculate duration
                     const [startHours, startMinutes] = startTime.split(':').map(Number);
                     const [endHours, endMinutes] = endTime.split(':').map(Number);
-                    
+
                     const startDate = new Date();
                     startDate.setHours(startHours, startMinutes, 0);
-                    
+
                     const endDate = new Date();
                     endDate.setHours(endHours, endMinutes, 0);
-                    
+
                     if (endDate < startDate) {
                         endDate.setDate(endDate.getDate() + 1);
                     }
-                    
+
                     const durationMs = endDate - startDate;
                     const durationHours = durationMs / (1000 * 60 * 60);
-                    
+
                     $('#summaryTime').after(`
                         <p class="text-muted small mb-1 mt-2">Duration:</p>
                         <p class="fw-medium mb-2">${durationHours.toFixed(1)} hours (matches package fixed duration)</p>
                     `);
                 }
                 // ========== End of duration info ==========
-                
-                // Location type
-                const locationTypeDisplay = bookingData.location_type === 'in-studio' ? 'In-Studio' : 'On-Location';
+
+                // ────────────────────────────────────────────────
+                // Location type – UPDATED with flexible location choice support
+                // ────────────────────────────────────────────────
+                let locationTypeDisplay = '';
+
+                if (currentPackageLocationFlexibility && currentPackageLocationFlexibility.is_flexible) {
+                    // For flexible packages, show the user's selection
+                    const selectedLocation = $('.flexible-location-option:checked').val();
+                    locationTypeDisplay = selectedLocation === 'in-studio' ? 'In-Studio' : 'On-Location';
+
+                    // Add note about user's choice
+                    $('#summaryLocationType').after(`
+                        <p class="text-muted small mb-1 mt-1">Location Choice:</p>
+                        <p class="fw-medium mb-2">
+                            <span class="badge badge-soft-info">
+                                <i class="ti ti-check me-1"></i> User selected: ${locationTypeDisplay}
+                            </span>
+                        </p>
+                    `);
+                } else {
+                    // Standard (non-flexible) behavior
+                    locationTypeDisplay = bookingData.location_type === 'in-studio' ? 'In-Studio' : 'On-Location';
+                }
+
                 $('#summaryLocationType').text(locationTypeDisplay);
-                
+                // ────────────────────────────────────────────────
+
                 // Location details for on-location bookings
                 if (bookingData.location_type === 'on-location') {
                     let locationText = '';
@@ -1767,7 +1871,7 @@
                     if (bookingData.barangay) locationText += 'Brgy. ' + bookingData.barangay + ', ';
                     if (bookingData.city) locationText += bookingData.city + ', ';
                     locationText += 'Cavite';
-                    
+
                     $('#summaryLocationDetails').html(`
                         <p class="text-muted small mb-1 mt-2">Location Details:</p>
                         <p class="fw-medium mb-2">${locationText}</p>
@@ -1775,27 +1879,27 @@
                 } else {
                     $('#summaryLocationDetails').hide();
                 }
-                
+
                 // ========== FIX: Display price breakdown with proper formatting ==========
                 if (window.bookingSummary) {
                     $('#packagePrice').text('₱' + window.bookingSummary.package_price);
                     $('#downPayment').text('₱' + window.bookingSummary.down_payment);
                     $('#remainingBalance').text('₱' + window.bookingSummary.remaining_balance);
                     $('#totalAmount').text('₱' + window.bookingSummary.total_amount);
-                    
+
                     // Handle different deposit types for freelancer
                     @if($type === 'freelancer')
                         if (window.bookingSummary.deposit_type === 'fixed') {
                             $('#downPaymentLabel').text('Fixed Deposit:');
                             $('#downPayment').text('₱' + window.bookingSummary.down_payment);
-                            
+
                             // Add fixed deposit info
                             const depositInfo = `
                                 <div class="alert alert-info mt-2 py-2 small fixed-deposit-info">
                                     <i class="ti ti-info-circle me-1"></i>
-                                    Fixed deposit of ₱${window.bookingSummary.deposit_amount}. 
-                                    ${parseFloat(window.bookingSummary.remaining_balance.replace(/,/g, '')) > 0 ? 
-                                        'Balance of ₱' + window.bookingSummary.remaining_balance + ' payable after event.' : 
+                                    Fixed deposit of ₱${window.bookingSummary.deposit_amount}.
+                                    ${parseFloat(window.bookingSummary.remaining_balance.replace(/,/g, '')) > 0 ?
+                                        'Balance of ₱' + window.bookingSummary.remaining_balance + ' payable after event.' :
                                         'This is the full amount.'}
                                 </div>
                             `;
@@ -1809,7 +1913,7 @@
                         const downpaymentPercentage = window.bookingSummary.downpayment_percentage || 30;
                         $('#downPaymentLabel').text(`Down Payment (${downpaymentPercentage}%):`);
                     @endif
-                    
+
                     // Show/hide rows based on payment type
                     if (window.bookingSummary.payment_type === 'full_payment') {
                         $('#downPaymentRow').hide();
@@ -1818,7 +1922,7 @@
                         $('#downPaymentRow').show();
                         $('#remainingBalanceRow').show();
                     }
-                    
+
                     // ========== FIX: Display gallery info ==========
                     const galleryHtml = `
                         <p class="text-muted small mb-1 mt-2">Online Gallery:</p>
@@ -1830,7 +1934,7 @@
                         </p>
                     `;
                     $('#summaryPackage').after(galleryHtml);
-                    
+
                     // ========== FIX: Display photographer info for studio ==========
                     @if($type === 'studio')
                         if (window.bookingSummary.photographer_count !== undefined) {
@@ -1847,7 +1951,7 @@
                         }
                     @endif
                     // ========== End of photographer info ==========
-                    
+
                     // ========== FIX: Display package inclusions ==========
                     let inclusionsHtml = '';
                     if (window.bookingSummary.inclusions && Array.isArray(window.bookingSummary.inclusions)) {
@@ -1858,7 +1962,7 @@
                     $('#summaryInclusions').html(inclusionsHtml);
                     // ========== End of inclusions display ==========
                 }
-                
+
                 $('#bookingSummaryModal').modal('show');
             }
             
@@ -2114,6 +2218,146 @@
                     $('#downPaymentRow').show();
                     $('#remainingBalanceRow').show();
                 }
+            }
+
+            function handlePackageLocationFlexibility(packageData) {
+                // Store current package flexibility data
+                currentPackageLocationFlexibility = packageData.location_flexibility;
+                
+                // Get the location container elements
+                const locationTypeSelect = $('#locationType');
+                const locationSelectionUI = $('#locationSelectionUI');
+                const locationDetails = $('#locationDetails');
+                
+                // Remove any existing custom UI first
+                $('.flexible-location-ui').remove();
+                
+                // Check if package has location flexibility data
+                if (!currentPackageLocationFlexibility) {
+                    console.warn('No location flexibility data available');
+                    return;
+                }
+                
+                const options = currentPackageLocationFlexibility.options || [];
+                const isFlexible = currentPackageLocationFlexibility.is_flexible;
+                const singleOption = currentPackageLocationFlexibility.single_option;
+                
+                console.log('Package location flexibility:', {
+                    options: options,
+                    isFlexible: isFlexible,
+                    singleOption: singleOption
+                });
+                
+                if (isFlexible) {
+                    // === CASE C: Both options available - Show selection UI ===
+                    
+                    // Hide the original select
+                    locationTypeSelect.hide();
+                    locationTypeSelect.prop('required', false);
+                    
+                    // Create custom selection UI
+                    const flexibleUI = `
+                        <div class="flexible-location-ui mb-3">
+                            <label class="form-label">Select Location Type</label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input type="radio" class="btn-check flexible-location-option" 
+                                        name="flexible_location" value="in-studio" 
+                                        id="flexibleStudio" autocomplete="off">
+                                    <label class="btn btn-outline-primary w-100" for="flexibleStudio">
+                                        <i class="ti ti-building me-2"></i>In-Studio
+                                    </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="radio" class="btn-check flexible-location-option" 
+                                        name="flexible_location" value="on-location" 
+                                        id="flexibleLocation" autocomplete="off">
+                                    <label class="btn btn-outline-primary w-100" for="flexibleLocation">
+                                        <i class="ti ti-map-pin me-2"></i>On-Location
+                                    </label>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="ti ti-info-circle me-1"></i>
+                                This package is available at both locations. Please choose your preferred option.
+                            </small>
+                        </div>
+                    `;
+                    
+                    // Insert the UI after the label
+                    locationTypeSelect.closest('.col-12').find('.form-label').after(flexibleUI);
+                    
+                    // Handle selection changes
+                    $('.flexible-location-option').on('change', function() {
+                        const selectedValue = $(this).val();
+                        
+                        // Update hidden select value for form submission
+                        locationTypeSelect.val(selectedValue);
+                        
+                        // Trigger location type change to show/hide details
+                        locationTypeSelect.trigger('change');
+                        
+                        // Visual feedback
+                        $('.flexible-location-ui .btn-outline-primary').removeClass('active');
+                        $(this).next('label').addClass('active');
+                    });
+                    
+                    // Initially hide location details until selection is made
+                    locationDetails.hide();
+                    
+                } else if (singleOption) {
+                    // === CASE A or B: Single option only - Auto-set ===
+                    
+                    // Remove any existing flexible UI
+                    $('.flexible-location-ui').remove();
+                    
+                    // Show and set the original select
+                    locationTypeSelect.show();
+                    locationTypeSelect.prop('disabled', true); // Disable since it's auto-set
+                    
+                    // Map package location to form value
+                    let formValue = '';
+                    let displayText = '';
+                    
+                    if (singleOption === 'In-Studio') {
+                        formValue = 'in-studio';
+                        displayText = 'In-Studio';
+                    } else if (singleOption === 'On-Location') {
+                        formValue = 'on-location';
+                        displayText = 'On-Location';
+                    }
+                    
+                    // Set the value
+                    locationTypeSelect.val(formValue);
+                    
+                    // Add visual indicator
+                    const indicator = `
+                        <div class="alert alert-info alert-sm py-2 mt-2 flexible-location-ui">
+                            <i class="ti ti-info-circle me-1"></i>
+                            <strong>Location auto-set:</strong> This package is only available as <strong>${displayText}</strong>
+                        </div>
+                    `;
+                    locationTypeSelect.closest('.col-12').append(indicator);
+                    
+                    // Trigger change to show/hide location details
+                    locationTypeSelect.trigger('change');
+                }
+            }
+
+            function resetLocationUI() {
+                const locationTypeSelect = $('#locationType');
+                const locationDetails = $('#locationDetails');
+                
+                // Remove any custom UI
+                $('.flexible-location-ui').remove();
+                
+                // Reset select
+                locationTypeSelect.show();
+                locationTypeSelect.prop('disabled', false);
+                locationTypeSelect.val('');
+                
+                // Hide details
+                locationDetails.hide();
             }
         });
     </script>

@@ -153,7 +153,49 @@ class BookingController extends Controller
                     ->where('status', 'active')
                     ->get()
                     ->map(function($package) {
-                        // Add formatted display values
+                        // ==== START: Enhanced location data handling with proper JSON parsing ====
+                        // Get package location - handle JSON array format
+                        $packageLocation = $package->package_location;
+                        
+                        // If it's a JSON string, decode it
+                        if (is_string($packageLocation)) {
+                            // Check if it looks like a JSON array
+                            if (str_starts_with(trim($packageLocation), '[')) {
+                                $decoded = json_decode($packageLocation, true);
+                                $packageLocation = is_array($decoded) ? $decoded : [$packageLocation];
+                            } else {
+                                // If it's a single value without JSON brackets
+                                $packageLocation = [$packageLocation];
+                            }
+                        }
+                        
+                        // Ensure it's always an array
+                        if (!is_array($packageLocation)) {
+                            $packageLocation = $packageLocation ? [$packageLocation] : ['In-Studio'];
+                        }
+                        
+                        // Clean up values (remove any extra quotes or whitespace)
+                        $packageLocation = array_map(function($location) {
+                            return trim($location, '"\' ');
+                        }, $packageLocation);
+                        
+                        // Remove any empty values
+                        $packageLocation = array_filter($packageLocation);
+                        
+                        // Re-index array
+                        $packageLocation = array_values($packageLocation);
+                        
+                        // Determine flexibility
+                        $locationCount = count($packageLocation);
+                        $locationFlexibility = [
+                            'options' => $packageLocation,
+                            'count' => $locationCount,
+                            'is_flexible' => $locationCount > 1,
+                            'single_option' => $locationCount === 1 ? $packageLocation[0] : null,
+                            'raw' => $package->package_location // Keep raw for debugging if needed
+                        ];
+                        // ==== END: Enhanced location data handling with proper JSON parsing ====
+                        
                         return [
                             'id' => $package->id,
                             'package_name' => $package->package_name,
@@ -165,7 +207,10 @@ class BookingController extends Controller
                             'coverage_scope' => $package->coverage_scope,
                             'online_gallery' => $package->online_gallery,
                             'photographer_count' => $package->photographer_count ?? 1,
-                            'package_location' => $package->package_location ?? 'In-Studio', // ADDED
+                            // ==== START: Enhanced location data in response ====
+                            'package_location' => $packageLocation,
+                            'location_flexibility' => $locationFlexibility,
+                            // ==== END: Enhanced location data in response ====
                             'allow_time_customization' => $package->allow_time_customization,
                             'gallery_badge' => $package->online_gallery ? 'Yes' : 'No',
                             'gallery_icon' => $package->online_gallery ? 'ti ti-photo' : 'ti ti-photo-off',
@@ -190,6 +235,20 @@ class BookingController extends Controller
                     ->where('status', 'active')
                     ->get()
                     ->map(function($package) {
+                        // ==== START: Enhanced location data handling for freelancer ====
+                        // Note: Freelancer packages might not have package_location field
+                        // Default to both options if not specified
+                        $packageLocation = ['In-Studio', 'On-Location'];
+                        
+                        $locationCount = count($packageLocation);
+                        $locationFlexibility = [
+                            'options' => $packageLocation,
+                            'count' => $locationCount,
+                            'is_flexible' => $locationCount > 1,
+                            'single_option' => $locationCount === 1 ? $packageLocation[0] : null
+                        ];
+                        // ==== END: Enhanced location data handling for freelancer ====
+                        
                         return [
                             'id' => $package->id,
                             'package_name' => $package->package_name,
@@ -200,6 +259,8 @@ class BookingController extends Controller
                             'package_inclusions' => $package->package_inclusions,
                             'coverage_scope' => $package->coverage_scope,
                             'online_gallery' => $package->online_gallery ?? false,
+                            'package_location' => $packageLocation,
+                            'location_flexibility' => $locationFlexibility,
                             'allow_time_customization' => $package->allow_time_customization,
                             'gallery_badge' => ($package->online_gallery ?? false) ? 'Yes' : 'No',
                             'gallery_icon' => ($package->online_gallery ?? false) ? 'ti ti-photo' : 'ti ti-photo-off',
