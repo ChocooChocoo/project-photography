@@ -30,8 +30,12 @@ class PackagesModel extends Model
         'maximum_edited_photos',
         'coverage_scope',
         'package_price',
-        'online_gallery', // ADDED
+        'online_gallery',
         'status',
+        // ==== NEW FIELDS START ====
+        'allow_multiple_locations',
+        'max_locations'
+        // ==== NEW FIELDS END ====
     ];
 
     /**
@@ -42,8 +46,12 @@ class PackagesModel extends Model
     protected $casts = [
         'package_inclusions' => 'array',
         'package_price' => 'decimal:2',
-        'online_gallery' => 'boolean', // ADDED
+        'online_gallery' => 'boolean',
         'allow_time_customization' => 'boolean',
+        // ==== NEW CASTS START ====
+        'allow_multiple_locations' => 'boolean',
+        'max_locations' => 'integer',
+        // ==== NEW CASTS END ====
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -83,9 +91,76 @@ class PackagesModel extends Model
         'maximum_edited_photos' => 'required|integer|min:1|max:1000',
         'coverage_scope' => 'nullable|string|max:255',
         'package_price' => 'required|numeric|min:0',
-        'online_gallery' => 'boolean', // ADDED
+        'online_gallery' => 'boolean',
         'status' => 'required|in:active,inactive',
+        // ==== NEW RULES START ====
+        'allow_multiple_locations' => 'boolean',
+        'max_locations' => 'nullable|integer|min:1|max:10',
+        // ==== NEW RULES END ====
     ];
+    
+    /**
+     * Get max locations with validation (ensures between 1-10)
+     */
+    public function getMaxLocationsAttribute($value)
+    {
+        if ($this->allow_multiple_locations && $value) {
+            return min(max((int)$value, 1), 10);
+        }
+        return 1; // Default to 1 when multiple locations not allowed
+    }
+
+    /**
+     * Set max locations with validation
+     */
+    public function setMaxLocationsAttribute($value)
+    {
+        if ($this->allow_multiple_locations && $value) {
+            $this->attributes['max_locations'] = min(max((int)$value, 1), 10);
+        } else {
+            $this->attributes['max_locations'] = null;
+        }
+    }
+
+    /**
+     * Check if package allows multiple locations
+     */
+    public function allowsMultipleLocations(): bool
+    {
+        return $this->allow_multiple_locations && $this->max_locations > 1;
+    }
+
+    /**
+     * Get maximum locations display text
+     */
+    public function getMaxLocationsDisplayAttribute(): string
+    {
+        if (!$this->allow_multiple_locations) {
+            return 'Single location only';
+        }
+        
+        return 'Up to ' . $this->max_locations . ' locations';
+    }
+
+    /**
+     * Get multiple locations badge class
+     */
+    public function getMultipleLocationsBadgeAttribute(): string
+    {
+        return $this->allow_multiple_locations 
+            ? 'badge-soft-success' 
+            : 'badge-soft-secondary';
+    }
+
+    /**
+     * Get multiple locations icon
+     */
+    public function getMultipleLocationsIconAttribute(): string
+    {
+        return $this->allow_multiple_locations 
+            ? 'ti ti-map-pin-check' 
+            : 'ti ti-map-pin';
+    }
 
     /**
      * Get time customization label

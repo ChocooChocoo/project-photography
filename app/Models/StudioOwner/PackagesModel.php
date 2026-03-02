@@ -36,6 +36,8 @@ class PackagesModel extends Model
         'package_location',
         'allow_time_customization',
         'status',
+        'allow_multiple_locations',
+        'max_locations'
     ];
 
     /**
@@ -54,6 +56,8 @@ class PackagesModel extends Model
         'allow_time_customization' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'allow_multiple_locations' => 'boolean',
+        'max_locations' => 'integer',
     ];
 
     /**
@@ -203,5 +207,50 @@ class PackagesModel extends Model
     {
         $locations = $this->package_location ?? [];
         return in_array('In-Studio', $locations) && in_array('On-Location', $locations);
+    }
+
+        /**
+     * Get max locations with validation (ensures between 1-10)
+     */
+    public function getMaxLocationsAttribute($value)
+    {
+        if ($this->allow_multiple_locations && $value) {
+            return min(max((int)$value, 1), 10);
+        }
+        return 1; // Default to 1 when multiple locations not allowed
+    }
+
+    /**
+     * Set max locations with validation
+     */
+    public function setMaxLocationsAttribute($value)
+    {
+        if ($this->allow_multiple_locations && $value) {
+            $this->attributes['max_locations'] = min(max((int)$value, 1), 10);
+        } else {
+            $this->attributes['max_locations'] = 1;
+        }
+    }
+
+    /**
+     * Check if package allows multiple locations
+     */
+    public function allowsMultipleLocations(): bool
+    {
+        return $this->allow_multiple_locations && 
+               $this->max_locations > 1 && 
+               $this->isOnLocationAvailable();
+    }
+
+    /**
+     * Get maximum locations display text
+     */
+    public function getMaxLocationsDisplayAttribute(): string
+    {
+        if (!$this->allow_multiple_locations || !$this->isOnLocationAvailable()) {
+            return 'Single location only';
+        }
+        
+        return 'Up to ' . $this->max_locations . ' locations';
     }
 }

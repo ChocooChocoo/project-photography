@@ -35,13 +35,20 @@ class PackageStoreRequest extends FormRequest
             }
         }
 
-        // ==== Start: Handle allow_time_customization boolean conversion ==== //
+        // Handle allow_time_customization boolean conversion
         if ($this->has('allow_time_customization')) {
             $this->merge([
                 'allow_time_customization' => filter_var($this->allow_time_customization, FILTER_VALIDATE_BOOLEAN)
             ]);
         }
-        // ==== End: Handle allow_time_customization boolean conversion ==== //
+
+        // ==== NEW: Handle allow_multiple_locations boolean conversion ====
+        if ($this->has('allow_multiple_locations')) {
+            $this->merge([
+                'allow_multiple_locations' => filter_var($this->allow_multiple_locations, FILTER_VALIDATE_BOOLEAN)
+            ]);
+        }
+        // ==== END: Handle allow_multiple_locations boolean conversion ====
     }
 
     /**
@@ -51,7 +58,6 @@ class PackageStoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        // ==== Start: Add conditional duration validation ==== //
         $rules = [
             'category_id' => 'required|exists:tbl_categories,id',
             'package_name' => 'required|string|max:255',
@@ -83,8 +89,30 @@ class PackageStoreRequest extends FormRequest
             'package_price' => 'required|numeric|min:0',
             'online_gallery' => 'required|boolean',
             'status' => 'required|in:active,inactive',
+            
+            // ==== NEW VALIDATION RULES START ====
+            'allow_multiple_locations' => 'sometimes|boolean',
+            'max_locations' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:10',
+                function ($attribute, $value, $fail) {
+                    $allowMultiple = $this->input('allow_multiple_locations');
+                    
+                    // Required when allow_multiple_locations is true
+                    if ($allowMultiple && empty($value)) {
+                        $fail('Maximum number of locations is required when multiple locations is enabled.');
+                    }
+                    
+                    // Should be null/empty when allow_multiple_locations is false
+                    if (!$allowMultiple && !empty($value)) {
+                        $fail('Maximum locations should not be set when multiple locations is disabled.');
+                    }
+                },
+            ],
+            // ==== NEW VALIDATION RULES END ====
         ];
-        // ==== End: Add conditional duration validation ==== //
 
         return $rules;
     }
@@ -104,10 +132,8 @@ class PackageStoreRequest extends FormRequest
             'package_inclusions.required' => 'At least one inclusion is required.',
             'package_inclusions.min' => 'At least one inclusion is required.',
             'package_inclusions.*.required' => 'Each inclusion field is required.',
-            // ==== Start: Add time customization messages ==== //
             'allow_time_customization.required' => 'Please select if time customization is allowed.',
             'allow_time_customization.boolean' => 'Invalid selection for time customization.',
-            // ==== End: Add time customization messages ==== //
             'duration.required' => 'Duration is required.',
             'duration.min' => 'Duration must be at least 1 hour.',
             'duration.max' => 'Duration cannot exceed 24 hours.',
@@ -119,6 +145,13 @@ class PackageStoreRequest extends FormRequest
             'online_gallery.required' => 'Please select if online gallery is included.',
             'status.required' => 'Status is required.',
             'status.in' => 'Status must be either active or inactive.',
+            
+            // ==== NEW CUSTOM MESSAGES START ====
+            'allow_multiple_locations.boolean' => 'Invalid selection for multiple locations.',
+            'max_locations.integer' => 'Maximum locations must be a valid number.',
+            'max_locations.min' => 'Maximum locations must be at least 1.',
+            'max_locations.max' => 'Maximum locations cannot exceed 10.',
+            // ==== NEW CUSTOM MESSAGES END ====
         ];
     }
 

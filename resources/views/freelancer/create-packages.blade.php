@@ -58,7 +58,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- ==== Start: Time Customization Control ==== -->
                                     <div class="col-12 mb-3">
                                         <label class="form-label d-block">Allow Time Customization</label>
                                         <div class="btn-group w-100 mb-1" role="group" aria-label="Time Customization Toggle">
@@ -78,16 +77,70 @@
                                             When enabled, clients can choose their own duration during booking. When disabled, you must specify a fixed duration.
                                         </small>
                                     </div>
-                                    <!-- ==== End: Time Customization Control ==== -->
 
-                                    <!-- ==== Start: Duration Field with Conditional Visibility ==== -->
                                     <div class="col-12 mb-3" id="durationField">
                                         <label class="form-label">Duration (hours) <span class="text-danger" id="durationRequired">*</span></label>
                                         <input type="number" class="form-control" name="duration" id="durationInput" placeholder="Enter duration in hours" min="1" max="24">
                                         <div class="invalid-feedback">Please enter valid duration (1-24 hours).</div>
                                         <small class="text-muted" id="durationHelpText">Fixed duration for this package.</small>
                                     </div>
-                                    <!-- ==== End: Duration Field with Conditional Visibility ==== -->
+
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label">Location</label>
+                                        <div class="card border-primary bg-light">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <label class="text-primary fw-semibold mb-2">
+                                                            Multiple Shooting Locations
+                                                        </label>
+                                                        <p class="text-muted small">
+                                                            Freelancers can offer both In-Studio and On-Location services. Enable this option to allow clients to book multiple locations within the same session.
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div class="col-md-6">
+                                                        <div class="form-check form-check-primary form-switch mb-2">
+                                                            <input class="form-check-input" type="checkbox" id="allowMultipleLocations" name="allow_multiple_locations" value="1" role="switch">
+                                                            <label class="form-check-label fw-semibold" for="allowMultipleLocations">
+                                                                Allow Multiple Shooting Locations
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="col-md-6" id="maxLocationsField" style="display: none;">
+                                                        <label class="form-label fw-semibold">
+                                                            Maximum Number of Locations <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">
+                                                                <i class="ti ti-map-pin"></i>
+                                                            </span>
+                                                            <input type="number" class="form-control" name="max_locations" id="maxLocations" placeholder="Enter max locations (1-10)" min="1" max="10" step="1" value="1">
+                                                        </div>
+                                                        <small class="text-muted">
+                                                            Maximum of 10 locations allowed per booking.
+                                                        </small>
+                                                        <div class="invalid-feedback" id="maxLocationsError">
+                                                            Please enter a valid number between 1 and 10.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Info Alert for Single Location -->
+                                                <div class="alert alert-info alert-sm mt-2 mb-0" id="singleLocationInfo" style="display: none;">
+                                                    <i class="ti ti-info-circle me-1"></i>
+                                                    <strong>Single Location:</strong> Package will be limited to one location only.
+                                                </div>
+                                                
+                                                <!-- Info Alert for Multiple Locations -->
+                                                <div class="alert alert-success alert-sm mt-2 mb-0" id="multipleLocationInfo" style="display: none;">
+                                                    <i class="ti ti-check-circle me-1"></i>
+                                                    <strong>Multiple Locations Enabled:</strong> Clients can book up to <span id="maxLocationsDisplay">3</span> locations.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <div class="col-12 mb-3">
                                         <label class="form-label">Maximum Edited Photos</label>
@@ -242,12 +295,174 @@
                 toggleDurationField();
                 
                 // Trigger Bootstrap validation update if needed
-                durationInput.removeClass('is-invalid');
+                $('#durationInput').removeClass('is-invalid');
             });
 
             // Initial check on page load (default is "No" - value 0, so duration should be visible)
             toggleDurationField();
             // ==== End: Time Customization Toggle Logic ====
+
+            // ==== START: Multiple Locations Feature JavaScript ====
+
+            /**
+             * Handle allow multiple locations toggle change
+             */
+            function handleAllowMultipleLocationsChange() {
+                const allowMultiple = $('#allowMultipleLocations').is(':checked');
+                const maxLocationsField = $('#maxLocationsField');
+                const maxLocationsInput = $('#maxLocations');
+                const singleLocationInfo = $('#singleLocationInfo');
+                const multipleLocationInfo = $('#multipleLocationInfo');
+                const maxLocationsDisplay = $('#maxLocationsDisplay');
+                
+                if (allowMultiple) {
+                    // Show max locations field
+                    maxLocationsField.fadeIn(300);
+                    maxLocationsInput.prop('required', true);
+                    $('#allowMultipleLocations').val('1');
+                    
+                    // Update info alerts
+                    singleLocationInfo.fadeOut(200);
+                    
+                    // Update max locations display in info alert
+                    const currentMax = maxLocationsInput.val() || 3;
+                    maxLocationsDisplay.text(currentMax);
+                    multipleLocationInfo.fadeIn(200);
+                } else {
+                    // Hide and reset max locations field
+                    maxLocationsField.fadeOut(300);
+                    maxLocationsInput.prop('required', false);
+                    maxLocationsInput.val('1');
+                    $('#allowMultipleLocations').val('0');
+                    
+                    // Update info alerts
+                    multipleLocationInfo.fadeOut(200);
+                    singleLocationInfo.fadeIn(200);
+                }
+                
+                validateMaxLocations();
+            }
+
+            /**
+             * Validate max locations input
+             */
+            function validateMaxLocations() {
+                const allowMultiple = $('#allowMultipleLocations').is(':checked');
+                const maxLocations = parseInt($('#maxLocations').val());
+                const errorElement = $('#maxLocationsError');
+                const maxLocationsDisplay = $('#maxLocationsDisplay');
+                
+                if (allowMultiple) {
+                    if (isNaN(maxLocations) || maxLocations < 1 || maxLocations > 10) {
+                        $('#maxLocations').addClass('is-invalid');
+                        errorElement.show();
+                        return false;
+                    } else {
+                        $('#maxLocations').removeClass('is-invalid');
+                        errorElement.hide();
+                        
+                        // Update the display in info alert
+                        maxLocationsDisplay.text(maxLocations);
+                    }
+                }
+                return true;
+            }
+
+            /**
+             * Reset multiple locations section (called when form is reset)
+             */
+            function resetMultipleLocations() {
+                $('#allowMultipleLocations').prop('checked', false).val('0');
+                $('#maxLocationsField').fadeOut(300);
+                $('#maxLocations').val('1').prop('required', false);
+                $('#singleLocationInfo').show();
+                $('#multipleLocationInfo').hide();
+                validateMaxLocations();
+            }
+
+            // Event listener for allow multiple locations toggle
+            $('#allowMultipleLocations').on('change', function() {
+                handleAllowMultipleLocationsChange();
+            });
+
+            // Event listener for max locations input
+            $('#maxLocations').on('input', function() {
+                validateMaxLocations();
+                
+                // Enforce min/max
+                let value = parseInt($(this).val());
+                if (!isNaN(value)) {
+                    if (value < 1) $(this).val(1);
+                    if (value > 10) $(this).val(10);
+                }
+            });
+
+            // Initialize on page load
+            resetMultipleLocations();
+
+            // Handle form reset
+            $('#createPackageForm').on('reset', function() {
+                setTimeout(function() {
+                    resetMultipleLocations();
+                    // Reset other dynamic fields
+                    inclusionCount = 1;
+                    $('#inclusionsContainer').html(`
+                        <div class="input-group mb-2 inclusion-field">
+                            <input type="text" class="form-control" name="package_inclusions[]" placeholder="Enter inclusion" required>
+                            <button class="btn btn-default add-inclusion-btn" type="button">
+                                <i class="ti ti-plus"></i>
+                            </button>
+                            <button class="btn btn-default remove-inclusion-btn" type="button" disabled>
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        </div>
+                    `);
+                    updateCounter();
+                    $('.remove-inclusion-btn').prop('disabled', true);
+                    
+                    // Reset time customization to default (No)
+                    $('#timeCustomizationNo').prop('checked', true);
+                    toggleDurationField();
+                }, 100);
+            });
+
+            // Add CSS for better UI
+            $('<style>')
+                .prop('type', 'text/css')
+                .html(`
+                    .form-switch.form-switch-md .form-check-input {
+                        height: 1.5rem;
+                        width: calc(2rem + 0.75rem);
+                        margin-right: 0.5rem;
+                        cursor: pointer;
+                    }
+                    .form-switch.form-switch-md .form-check-input:checked {
+                        background-color: #3475db;
+                        border-color: #3475db;
+                    }
+                    .border-primary {
+                        border-color: #3475db !important;
+                    }
+                    #maxLocationsField {
+                        transition: all 0.3s ease;
+                    }
+                    .card.border-primary {
+                        transition: all 0.3s ease;
+                    }
+                    .card.border-primary:hover {
+                        box-shadow: 0 4px 12px rgba(52, 117, 219, 0.15);
+                    }
+                    .alert-sm {
+                        padding: 0.5rem 0.75rem;
+                        font-size: 0.875rem;
+                    }
+                    #maxLocationsError {
+                        display: none;
+                        margin-top: 0.25rem;
+                    }
+                `)
+                .appendTo('head');
+            // ==== END: Multiple Locations Feature JavaScript ====
             
             // Form submission with AJAX
             $('#createPackageForm').on('submit', function(e) {
@@ -258,9 +473,7 @@
                     category_id: $('#categorySelect').val(),
                     package_name: $('input[name="package_name"]').val(),
                     package_description: $('textarea[name="package_description"]').val(),
-                    // ==== Start: Include allow_time_customization ==== //
                     allow_time_customization: $('input[name="allow_time_customization"]:checked').val(),
-                    // ==== End: Include allow_time_customization ==== //
                     duration: $('input[name="duration"]').val(),
                     maximum_edited_photos: $('input[name="maximum_edited_photos"]').val(),
                     coverage_scope: $('input[name="coverage_scope"]').val(),
@@ -291,7 +504,7 @@
                     return;
                 }
 
-                // ==== Start: Validate duration based on time customization ====
+                // Validate duration based on time customization
                 const allowCustomization = formData.allow_time_customization;
                 
                 // If time customization is NOT allowed, duration is required
@@ -316,7 +529,38 @@
                 if (allowCustomization === '1') {
                     delete formData.duration;
                 }
-                // ==== End: Validate duration based on time customization ====
+
+                // ==== START: Validate multiple locations fields ====
+                const allowMultipleLocations = $('#allowMultipleLocations').is(':checked');
+
+                // Validate max locations if multiple locations is enabled
+                if (allowMultipleLocations) {
+                    if (!validateMaxLocations()) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            text: 'Please enter a valid maximum number of locations (1-10).',
+                            confirmButtonColor: '#DC3545'
+                        });
+                        
+                        // Re-enable submit button
+                        const submitBtn = $(this).find('button[type="submit"]');
+                        submitBtn.prop('disabled', false).html('Create Package');
+                        return false;
+                    }
+                    
+                    // Ensure max_locations is within bounds
+                    let maxLoc = parseInt($('#maxLocations').val());
+                    if (maxLoc < 1) maxLoc = 1;
+                    if (maxLoc > 10) maxLoc = 10;
+                    formData.max_locations = maxLoc;
+                    formData.allow_multiple_locations = '1';
+                } else {
+                    // If multiple locations not allowed, ensure values are properly set
+                    formData.allow_multiple_locations = '0';
+                    formData.max_locations = null;
+                }
+                // ==== END: Validate multiple locations fields ====
                 
                 // Show loading state
                 const submitBtn = $(this).find('button[type="submit"]');

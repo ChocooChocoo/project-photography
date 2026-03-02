@@ -39,6 +39,38 @@ class PackageStoreRequest extends FormRequest
             'package_inclusions' => 'required|string|min:1',
             'package_location' => 'required|array|min:1',
             'package_location.*' => 'required|in:In-Studio,On-Location',
+            
+            // ==== NEW VALIDATION RULES START ====
+            'allow_multiple_locations' => [
+                'sometimes',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    // Rule: Can only be true if package_location includes "On-Location"
+                    $locations = $this->package_location ?? [];
+                    if ($value && !in_array('On-Location', $locations)) {
+                        $fail('Multiple locations can only be enabled for packages that include On-Location.');
+                    }
+                },
+            ],
+            'max_locations' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:10',
+                function ($attribute, $value, $fail) {
+                    // Required when allow_multiple_locations is true
+                    if ($this->allow_multiple_locations && empty($value)) {
+                        $fail('Maximum number of locations is required when multiple locations is enabled.');
+                    }
+                    
+                    // Should be null/empty when allow_multiple_locations is false
+                    if (!$this->allow_multiple_locations && !empty($value)) {
+                        $fail('Maximum locations should not be set when multiple locations is disabled.');
+                    }
+                },
+            ],
+            // ==== NEW VALIDATION RULES END ====
+            
             'allow_time_customization' => 'required|boolean',
             'duration' => [
                 'nullable',
@@ -46,7 +78,6 @@ class PackageStoreRequest extends FormRequest
                 'min:1',
                 'max:24',
                 function ($attribute, $value, $fail) {
-                    // If time customization is NOT allowed, duration is required
                     if (!$this->allow_time_customization && empty($value)) {
                         $fail('Duration is required when time customization is not allowed.');
                     }
@@ -58,7 +89,6 @@ class PackageStoreRequest extends FormRequest
                 'string',
                 'max:500',
                 function ($attribute, $value, $fail) {
-                    // Check if "On-Location" is selected in the package_location array
                     $locations = $this->package_location ?? [];
                     if (in_array('On-Location', $locations) && empty($value)) {
                         $fail('Coverage scope is required for on-location packages.');
@@ -92,6 +122,14 @@ class PackageStoreRequest extends FormRequest
             'package_location.required' => 'Please select at least one location type.',
             'package_location.min' => 'Please select at least one location type.',
             'package_location.*.in' => 'Invalid location type selected.',
+            
+            // ==== NEW CUSTOM MESSAGES START ====
+            'allow_multiple_locations.boolean' => 'Invalid value for multiple locations.',
+            'max_locations.integer' => 'Maximum locations must be a valid number.',
+            'max_locations.min' => 'Maximum locations must be at least 1.',
+            'max_locations.max' => 'Maximum locations cannot exceed 10.',
+            // ==== NEW CUSTOM MESSAGES END ====
+            
             'allow_time_customization.required' => 'Please select if time customization is allowed.',
             'allow_time_customization.boolean' => 'Invalid selection for time customization.',
             'duration.integer' => 'Duration must be a valid number.',
@@ -121,6 +159,18 @@ class PackageStoreRequest extends FormRequest
             $input['allow_time_customization'] = filter_var($this->allow_time_customization, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
         }
         
+        // ==== NEW PREPARATION START ====
+        // Handle allow_multiple_locations boolean conversion
+        if ($this->has('allow_multiple_locations')) {
+            $input['allow_multiple_locations'] = filter_var($this->allow_multiple_locations, FILTER_VALIDATE_BOOLEAN);
+        }
+        
+        // If allow_multiple_locations is false, ensure max_locations is null/empty
+        if (isset($input['allow_multiple_locations']) && !$input['allow_multiple_locations']) {
+            $input['max_locations'] = null;
+        }
+        // ==== NEW PREPARATION END ====
+        
         $this->replace($input);
     }
 
@@ -129,7 +179,6 @@ class PackageStoreRequest extends FormRequest
      */
     protected function passedValidation(): void
     {
-        // ==== Start: Ensure duration is null when time customization is allowed ====
         $validated = $this->validated();
         
         // If time customization is allowed, explicitly set duration to null
@@ -137,8 +186,20 @@ class PackageStoreRequest extends FormRequest
             $validated['duration'] = null;
         }
         
-        // Replace the request data with the modified validated data
+        // ==== NEW PASSED VALIDATION START ====
+        // Ensure max_locations is properly set based on allow_multiple_locations
+        if (isset($validated['allow_multiple_locations']) && $validated['allow_multiple_locations'] === true) {
+            // Ensure max_locations is within 1-10
+            if (isset($validated['max_locations'])) {
+                $validated['max_locations'] = min(max((int)$validated['max_locations'], 1), 10);
+            }
+        } else {
+            // If multiple locations not allowed, set max_locations to null
+            $validated['max_locations'] = null;
+            $validated['allow_multiple_locations'] = false;
+        }
+        // ==== NEW PASSED VALIDATION END ====
+        
         $this->replace($validated);
-        // ==== End: Ensure duration is null when time customization is allowed ====
     }
 }

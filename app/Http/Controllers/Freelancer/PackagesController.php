@@ -67,37 +67,57 @@ class PackagesController extends Controller
                 $validated['online_gallery'] = false;
             }
 
-            // ==== Start: Fix duration null issue ==== //
-            // Ensure allow_time_customization is properly set as boolean
+            // Handle duration based on time customization
             $validated['allow_time_customization'] = filter_var($request->allow_time_customization, FILTER_VALIDATE_BOOLEAN);
             
-            // Log the values for debugging (remove in production)
-            \Log::info('Package creation - Before handling:', [
-                'allow_time_customization' => $validated['allow_time_customization'],
-                'duration_input' => $request->duration,
-                'has_duration' => $request->has('duration')
-            ]);
-            
-            // CRITICAL FIX: Handle duration based on time customization
             if ($validated['allow_time_customization']) {
-                // If time customization is allowed, explicitly remove duration from the data
-                // This prevents the NULL value from being sent to the database
                 unset($validated['duration']);
             } else {
-                // If time customization is NOT allowed, ensure duration is present and valid
                 if (!$request->has('duration') || empty($request->duration)) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Duration is required when time customization is not allowed.'
                     ], 422);
                 }
-                // Keep the duration value as is
                 $validated['duration'] = $request->duration;
             }
+
+            // ==== NEW: Handle multiple locations fields ====
+            // Ensure allow_multiple_locations is properly set as boolean
+            if ($request->has('allow_multiple_locations')) {
+                $validated['allow_multiple_locations'] = filter_var($request->allow_multiple_locations, FILTER_VALIDATE_BOOLEAN);
+            } else {
+                $validated['allow_multiple_locations'] = false;
+            }
+            
+            // Handle max_locations based on allow_multiple_locations
+            if ($validated['allow_multiple_locations']) {
+                // Validate max_locations is provided and within range
+                if (!$request->has('max_locations') || empty($request->max_locations)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Maximum locations is required when multiple locations is enabled.'
+                    ], 422);
+                }
+                
+                // Ensure max_locations is within 1-10
+                $maxLocations = (int)$request->max_locations;
+                if ($maxLocations < 1 || $maxLocations > 10) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Maximum locations must be between 1 and 10.'
+                    ], 422);
+                }
+                
+                $validated['max_locations'] = $maxLocations;
+            } else {
+                // If multiple locations not allowed, set max_locations to null
+                $validated['max_locations'] = null;
+            }
+            // ==== END: New multiple locations handling ====
             
             // Log final data before insert (remove in production)
             \Log::info('Package creation - Final data:', $validated);
-            // ==== End: Fix duration null issue ==== //
             
             // Create package
             $package = PackagesModel::create($validated);
@@ -115,7 +135,6 @@ class PackagesController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Illuminate\Database\QueryException $e) {
-            // Handle database errors specifically
             return response()->json([
                 'success' => false,
                 'message' => 'Database error occurred.',
@@ -205,6 +224,9 @@ class PackagesController extends Controller
                 'price' => 'PHP ' . number_format($package->package_price, 2),
                 'duration' => $package->duration . ' hours',
                 'max_photos' => $package->maximum_edited_photos,
+                'locations' => $package->allow_multiple_locations 
+                    ? '<span class="badge badge-soft-success"><i class="ti ti-map-pin-check me-1"></i> Up to ' . $package->max_locations . ' locations</span>'
+                    : '<span class="badge badge-soft-secondary"><i class="ti ti-map-pin me-1"></i> Single location</span>',
                 'status' => $package->status === 'active' 
                     ? '<span class="badge badge-soft-success fs-8 px-1 w-100">ACTIVE</span>'
                     : '<span class="badge badge-soft-danger fs-8 px-1 w-100">INACTIVE</span>',

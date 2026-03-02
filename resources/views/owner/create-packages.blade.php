@@ -162,6 +162,53 @@
                                         </small>
                                     </div>
 
+                                    <div class="col-12 mb-3" id="multipleLocationsSection" style="display: none;">
+                                        <div class="card border-primary bg-light">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-check form-check-primary form-switch mb-2">
+                                                            <input class="form-check-input" type="checkbox" id="allowMultipleLocations" name="allow_multiple_locations" value="1" role="switch">
+                                                            <label class="form-check-label fw-semibold" for="allowMultipleLocations">
+                                                                Allow Multiple Shooting Locations
+                                                            </label>
+                                                        </div>
+                                                        <p class="text-muted small mb-0">
+                                                            Enable this to allow clients to shoot at multiple locations within the same booking.
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div class="col-md-6" id="maxLocationsField" style="display: none;">
+                                                        <label class="form-label fw-semibold">
+                                                            Maximum Number of Locations <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">
+                                                                <i class="ti ti-map-pin"></i>
+                                                            </span>
+                                                            <input type="number" class="form-control" name="max_locations" 
+                                                                id="maxLocations" placeholder="Enter max locations (1-10)" 
+                                                                min="1" max="10" step="1" value="1">
+                                                            <span class="input-group-text">locations</span>
+                                                        </div>
+                                                        <small class="text-muted">
+                                                            Maximum of 10 locations allowed per booking.
+                                                        </small>
+                                                        <div class="invalid-feedback" id="maxLocationsError">
+                                                            Please enter a valid number between 1 and 10.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Info Alert for In-Studio Only -->
+                                                <div class="alert alert-warning alert-sm mt-3 mb-0" id="inStudioOnlyWarning" style="display: none;">
+                                                    <i class="ti ti-alert-triangle me-1"></i>
+                                                    <strong>Note:</strong> Multiple locations can only be enabled for packages that include On-Location.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="col-12 mb-3" id="coverageScopeField" style="display: none;">
                                         <label class="form-label">Coverage Scope <span class="text-danger" id="coverageRequired">*</span></label>
                                         <input type="text" class="form-control" name="coverage_scope" 
@@ -369,15 +416,143 @@
             }
             // === END: Location checkbox styling ===
 
+            // ==== START: Multiple Locations Feature JavaScript ====
+            let currentLocationSelection = [];
+
+            /**
+             * Toggle multiple locations section visibility based on location checkboxes
+             */
+            function toggleMultipleLocationsSection() {
+                const multipleLocationsSection = $('#multipleLocationsSection');
+                const allowMultipleCheckbox = $('#allowMultipleLocations');
+                const maxLocationsField = $('#maxLocationsField');
+                const inStudioOnlyWarning = $('#inStudioOnlyWarning');
+                const onLocationSelected = $('input[name="package_location[]"][value="On-Location"]').is(':checked');
+                const inStudioSelected = $('input[name="package_location[]"][value="In-Studio"]').is(':checked');
+                
+                // Update current selection array
+                currentLocationSelection = [];
+                $('input[name="package_location[]"]:checked').each(function() {
+                    currentLocationSelection.push($(this).val());
+                });
+                
+                if (onLocationSelected) {
+                    // Show multiple locations section when On-Location is selected
+                    multipleLocationsSection.fadeIn(300);
+                    
+                    // Show warning if only In-Studio is selected (shouldn't happen since onLocationSelected is true)
+                    if (!onLocationSelected && inStudioSelected) {
+                        inStudioOnlyWarning.show();
+                        allowMultipleCheckbox.prop('disabled', true);
+                    } else {
+                        inStudioOnlyWarning.hide();
+                        allowMultipleCheckbox.prop('disabled', false);
+                    }
+                } else {
+                    // Hide and reset multiple locations section when On-Location is not selected
+                    multipleLocationsSection.fadeOut(300);
+                    allowMultipleCheckbox.prop('checked', false);
+                    maxLocationsField.fadeOut(300);
+                    inStudioOnlyWarning.hide();
+                    
+                    // Reset values
+                    allowMultipleCheckbox.val('0');
+                    $('#maxLocations').val('1');
+                }
+            }
+
+            /**
+             * Handle allow multiple locations toggle change
+             */
+            function handleAllowMultipleLocationsChange() {
+                const allowMultiple = $('#allowMultipleLocations').is(':checked');
+                const maxLocationsField = $('#maxLocationsField');
+                const maxLocationsInput = $('#maxLocations');
+                
+                if (allowMultiple) {
+                    // Show max locations field
+                    maxLocationsField.fadeIn(300);
+                    maxLocationsInput.prop('required', true);
+                    $('#allowMultipleLocations').val('1');
+                } else {
+                    // Hide and reset max locations field
+                    maxLocationsField.fadeOut(300);
+                    maxLocationsInput.prop('required', false);
+                    maxLocationsInput.val('1');
+                    $('#allowMultipleLocations').val('0');
+                }
+            }
+
+            /**
+             * Validate max locations input
+             */
+            function validateMaxLocations() {
+                const allowMultiple = $('#allowMultipleLocations').is(':checked');
+                const maxLocations = parseInt($('#maxLocations').val());
+                const errorElement = $('#maxLocationsError');
+                
+                if (allowMultiple) {
+                    if (isNaN(maxLocations) || maxLocations < 1 || maxLocations > 10) {
+                        $('#maxLocations').addClass('is-invalid');
+                        errorElement.show();
+                        return false;
+                    } else {
+                        $('#maxLocations').removeClass('is-invalid');
+                        errorElement.hide();
+                    }
+                }
+                return true;
+            }
+
+            /**
+             * Reset multiple locations section (called when form is reset)
+             */
+            function resetMultipleLocations() {
+                $('#allowMultipleLocations').prop('checked', false).val('0');
+                $('#maxLocationsField').fadeOut(300);
+                $('#maxLocations').val('1').prop('required', false);
+                $('#inStudioOnlyWarning').hide();
+                validateMaxLocations();
+            }
+
+            // Event listeners for location checkboxes
+            $(document).on('change', '.location-checkbox', function() {
+                toggleMultipleLocationsSection();
+                updateLocationCardStyles();
+                toggleCoverageScope();
+            });
+
+            // Event listener for allow multiple locations toggle
+            $('#allowMultipleLocations').on('change', function() {
+                handleAllowMultipleLocationsChange();
+                validateMaxLocations();
+            });
+
+            // Event listener for max locations input
+            $('#maxLocations').on('input', function() {
+                validateMaxLocations();
+                
+                // Enforce min/max
+                let value = parseInt($(this).val());
+                if (!isNaN(value)) {
+                    if (value < 1) $(this).val(1);
+                    if (value > 10) $(this).val(10);
+                }
+            });
+            // ==== END: Multiple Locations Feature JavaScript ====
+
             // Handle location checkbox changes
             $(document).on('change', '.location-checkbox', function() {
                 toggleCoverageScope();
                 updateLocationCardStyles();
+                toggleMultipleLocationsSection(); // Added this line
             });
 
             // Initialize location-related UI on page load
             toggleCoverageScope();
             updateLocationCardStyles();
+            toggleMultipleLocationsSection(); // Added this line
+            validateMaxLocations(); // Added this line
 
             // Toggle coverage scope on location change (legacy support)
             $('#packageLocation').on('change', function() {
@@ -480,6 +655,40 @@
                     return false;
                 }
                 // ==== End: Handle coverage scope validation based on on-location selection ====
+
+                // ==== START: Validate multiple locations fields ====
+                const allowMultipleLocations = $('#allowMultipleLocations').is(':checked');
+                
+                // Validate max locations if multiple locations is enabled
+                if (allowMultipleLocations) {
+                    if (!validateMaxLocations()) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            text: 'Please enter a valid maximum number of locations (1-10).',
+                            confirmButtonColor: '#3475db'
+                        });
+                        
+                        // Re-enable submit button
+                        const submitBtn = $(this).find('button[type="submit"]');
+                        submitBtn.prop('disabled', false).html(originalText);
+                        return false;
+                    }
+                    
+                    // Ensure max_locations is properly set
+                    formData.set('allow_multiple_locations', '1');
+                    
+                    // Ensure max_locations is within bounds
+                    let maxLoc = parseInt($('#maxLocations').val());
+                    if (maxLoc < 1) maxLoc = 1;
+                    if (maxLoc > 10) maxLoc = 10;
+                    formData.set('max_locations', maxLoc);
+                } else {
+                    // If multiple locations not allowed, ensure values are properly set
+                    formData.set('allow_multiple_locations', '0');
+                    formData.set('max_locations', '');
+                }
+                // ==== END: Validate multiple locations fields ====
                 
                 // Show loading state
                 const submitBtn = $(this).find('button[type="submit"]');
@@ -527,6 +736,10 @@
                                 $('.location-checkbox').prop('checked', false);
                                 updateLocationCardStyles();
                                 toggleCoverageScope();
+                                
+                                // ==== NEW: Reset multiple locations fields ====
+                                resetMultipleLocations();
+                                // ==== END: Reset multiple locations fields ====
                                 
                                 // Reset radio buttons
                                 $('input[name="online_gallery"]').prop('checked', false);
@@ -588,6 +801,33 @@
                     }, false);
                 });
             })();
+
+            // Add CSS for multiple locations UI
+            $('<style>')
+                .prop('type', 'text/css')
+                .html(`
+                    .form-switch.form-switch-md .form-check-input {
+                        height: 1.5rem;
+                        width: calc(2rem + 0.75rem);
+                        margin-right: 0.5rem;
+                    }
+                    .border-primary {
+                        border-color: #3475db !important;
+                    }
+                    #maxLocationsField {
+                        transition: all 0.3s ease;
+                    }
+                    #multipleLocationsSection .card {
+                        transition: all 0.3s ease;
+                    }
+                    #multipleLocationsSection .card:hover {
+                        box-shadow: 0 4px 12px rgba(52, 117, 219, 0.15);
+                    }
+                    .btn-check:checked + .package-card {
+                        border-color: #3475db !important;
+                    }
+                `)
+                .appendTo('head');
         });
     </script>
 @endsection
