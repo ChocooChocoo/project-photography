@@ -35,13 +35,25 @@
                                             <h3 class="fw-bold mb-1">{{ $package->package_name }}</h3>
                                             <p class="text-muted mb-0">{{ $package->studio->studio_name ?? 'N/A' }} - {{ $package->category->category_name ?? 'N/A' }}</p>
                                             <div class="mt-2">
-                                                @if($package->package_location == 'In-Studio')
-                                                    <span class="badge badge-soft-primary">
+                                                @php
+                                                    $locations = is_array($package->package_location) ? $package->package_location : (array)json_decode($package->package_location ?? '[]', true);
+                                                @endphp
+                                                
+                                                @if(in_array('In-Studio', $locations))
+                                                    <span class="badge badge-soft-primary d-inline-block mb-1">
                                                         <i class="ti ti-building me-1"></i> In-Studio
                                                     </span>
-                                                @else
-                                                    <span class="badge badge-soft-info">
+                                                @endif
+                                                
+                                                @if(in_array('On-Location', $locations))
+                                                    <span class="badge badge-soft-info d-inline-block {{ in_array('In-Studio', $locations) ? 'ms-1' : '' }}">
                                                         <i class="ti ti-map-pin me-1"></i> On-Location
+                                                    </span>
+                                                @endif
+                                                
+                                                @if(empty($locations))
+                                                    <span class="badge badge-soft-secondary">
+                                                        <i class="ti ti-minus me-1"></i> Not specified
                                                     </span>
                                                 @endif
                                             </div>
@@ -307,11 +319,46 @@
                     ? '<span class="badge badge-soft-success px-2 fw-medium"><i class="ti ti-check me-1"></i> Included</span>'
                     : '<span class="badge badge-soft-secondary px-2 fw-medium"><i class="ti ti-x me-1"></i> Not Included</span>';
                 
-                // ==== Start: Format time customization badge ====
+                // Format time customization badge
                 let timeCustomizationBadge = package.allow_time_customization 
                     ? '<span class="badge badge-soft-success px-2 fw-medium"><i class="ti ti-clock-edit me-1"></i> Flexible (Client can choose)</span>'
                     : '<span class="badge badge-soft-secondary px-2 fw-medium"><i class="ti ti-clock me-1"></i> Fixed Duration: ' + (package.duration || 0) + ' hours</span>';
-                // ==== End: Format time customization badge ====
+                
+                // ==== Start: Handle multiple locations ====
+                let locations = [];
+                if (package.package_location) {
+                    if (Array.isArray(package.package_location)) {
+                        locations = package.package_location;
+                    } else if (typeof package.package_location === 'string') {
+                        try {
+                            const parsed = JSON.parse(package.package_location);
+                            locations = Array.isArray(parsed) ? parsed : [package.package_location];
+                        } catch (e) {
+                            locations = [package.package_location];
+                        }
+                    } else {
+                        locations = [String(package.package_location)];
+                    }
+                }
+                
+                let locationBadges = '';
+                let locationDescriptions = [];
+                
+                if (locations.includes('In-Studio')) {
+                    locationBadges += '<span class="badge badge-soft-primary px-2 fw-medium d-inline-block mb-1"><i class="ti ti-building me-1"></i> In-Studio</span> ';
+                    locationDescriptions.push('Session takes place at the studio');
+                }
+                
+                if (locations.includes('On-Location')) {
+                    locationBadges += '<span class="badge badge-soft-info px-2 fw-medium d-inline-block mb-1 ms-1"><i class="ti ti-map-pin me-1"></i> On-Location</span> ';
+                    locationDescriptions.push('Session takes place at client\'s location');
+                }
+                
+                if (locations.length === 0) {
+                    locationBadges = '<span class="badge badge-soft-secondary px-2 fw-medium"><i class="ti ti-minus me-1"></i> Not specified</span>';
+                    locationDescriptions = ['Location not specified'];
+                }
+                // ==== End: Handle multiple locations ====
                 
                 // Format created date
                 let createdDate = 'N/A';
@@ -331,7 +378,7 @@
                 let studioName = package.studio ? package.studio.studio_name : 'N/A';
                 let categoryName = package.category ? package.category.category_name : 'N/A';
                 
-                // Generate modal HTML
+                // Generate modal HTML with updated location display
                 return `
                 <div class="row align-items-center mb-4">
                     <div class="col-12 col-lg-8">
@@ -403,16 +450,15 @@
                                     <div class="flex-grow-1 ms-3">
                                         <label class="text-muted small mb-1">Location Type</label>
                                         <div class="mb-0">
-                                            ${package.package_location === 'In-Studio' 
-                                                ? '<span class="badge badge-soft-primary px-2 fw-medium"><i class="ti ti-building me-1"></i> In-Studio</span>'
-                                                : '<span class="badge badge-soft-info px-2 fw-medium"><i class="ti ti-map-pin me-1"></i> On-Location</span>'}
+                                            ${locationBadges}
                                         </div>
-                                        <small class="text-muted d-block mt-1">${package.package_location === 'In-Studio' ? 'Session takes place at the studio' : 'Session takes place at client\'s location'}</small>
+                                        <small class="text-muted d-block mt-1">
+                                            ${locationDescriptions.join(' • ')}
+                                        </small>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- ==== Start: Time Customization Display in Modal ==== -->
                             <div class="col-12 col-md-6">
                                 <div class="d-flex align-items-start">
                                     <div class="flex-shrink-0">
@@ -433,7 +479,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- ==== End: Time Customization Display in Modal ==== -->
 
                             <div class="col-12 col-md-6">
                                 <div class="d-flex align-items-start">

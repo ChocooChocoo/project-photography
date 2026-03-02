@@ -37,6 +37,8 @@ class PackageStoreRequest extends FormRequest
             ],
             'package_description' => 'required|string|min:10|max:1000',
             'package_inclusions' => 'required|string|min:1',
+            'package_location' => 'required|array|min:1',
+            'package_location.*' => 'required|in:In-Studio,On-Location',
             'allow_time_customization' => 'required|boolean',
             'duration' => [
                 'nullable',
@@ -56,7 +58,9 @@ class PackageStoreRequest extends FormRequest
                 'string',
                 'max:500',
                 function ($attribute, $value, $fail) {
-                    if ($this->package_location === 'On-Location' && empty($value)) {
+                    // Check if "On-Location" is selected in the package_location array
+                    $locations = $this->package_location ?? [];
+                    if (in_array('On-Location', $locations) && empty($value)) {
                         $fail('Coverage scope is required for on-location packages.');
                     }
                 },
@@ -64,7 +68,6 @@ class PackageStoreRequest extends FormRequest
             'package_price' => 'required|numeric|min:0',
             'online_gallery' => 'required|boolean',
             'photographer_count' => 'required|integer|min:0|max:10',
-            'package_location' => 'required|in:In-Studio,On-Location',
             'status' => 'required|in:active,inactive',
         ];
     }
@@ -86,6 +89,9 @@ class PackageStoreRequest extends FormRequest
             'package_description.required' => 'Package description is required.',
             'package_description.min' => 'Package description must be at least 10 characters.',
             'package_inclusions.required' => 'At least one inclusion is required.',
+            'package_location.required' => 'Please select at least one location type.',
+            'package_location.min' => 'Please select at least one location type.',
+            'package_location.*.in' => 'Invalid location type selected.',
             'allow_time_customization.required' => 'Please select if time customization is allowed.',
             'allow_time_customization.boolean' => 'Invalid selection for time customization.',
             'duration.integer' => 'Duration must be a valid number.',
@@ -100,8 +106,6 @@ class PackageStoreRequest extends FormRequest
             'photographer_count.required' => 'Please specify number of photographers.',
             'photographer_count.min' => 'Photographer count cannot be negative.',
             'photographer_count.max' => 'Maximum of 10 photographers allowed.',
-            'package_location.required' => 'Please select a location type.',
-            'package_location.in' => 'Invalid location type selected.',
         ];
     }
 

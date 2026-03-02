@@ -34,9 +34,7 @@ class PackagesModel extends Model
         'online_gallery',
         'photographer_count',
         'package_location',
-        // ==== Start: Add allow_time_customization to fillable ====
         'allow_time_customization',
-        // ==== End: Add allow_time_customization to fillable ====
         'status',
     ];
 
@@ -51,9 +49,8 @@ class PackagesModel extends Model
         'package_price' => 'decimal:2',
         'online_gallery' => 'boolean',
         'photographer_count' => 'integer',
-        // ==== Start: Allow duration to be nullable ====
+        'package_location' => 'array',
         'duration' => 'integer',
-        // ==== End: Allow duration to be nullable ====
         'allow_time_customization' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -89,13 +86,15 @@ class PackagesModel extends Model
             'package_description' => 'required|string|min:10|max:1000',
             'package_inclusions' => 'required|array|min:1',
             'package_inclusions.*' => 'required|string|max:255',
-            // ==== Start: Update validation rules for duration based on allow_time_customization ====
-            'duration' => 'nullable|integer|min:1|max:24',
+            'package_location' => 'required|array|min:1',
+            'package_location.*' => 'required|in:In-Studio,On-Location',
             'allow_time_customization' => 'required|boolean',
-            // ==== End: Update validation rules for duration based on allow_time_customization ====
+            'duration' => 'nullable|integer|min:1|max:24',
             'maximum_edited_photos' => 'required|integer|min:1|max:1000',
             'coverage_scope' => 'nullable|string|max:500',
             'package_price' => 'required|numeric|min:0',
+            'online_gallery' => 'required|boolean',
+            'photographer_count' => 'required|integer|min:0|max:10',
             'status' => 'required|in:active,inactive',
         ];
     }
@@ -153,5 +152,56 @@ class PackagesModel extends Model
     public function scopeByStatus($query, $status)
     {
         return $query->where('status', $status);
+    }
+
+    /**
+     * Get the package location as a formatted string for display.
+     * 
+     * @return string
+     */
+    public function getFormattedLocationAttribute(): string
+    {
+        $locations = $this->package_location ?? [];
+        
+        if (empty($locations)) {
+            return 'Not specified';
+        }
+        
+        if (count($locations) === 1) {
+            return $locations[0];
+        }
+        
+        return implode(' / ', $locations);
+    }
+
+    /**
+     * Check if package is available for in-studio sessions.
+     * 
+     * @return bool
+     */
+    public function isInStudioAvailable(): bool
+    {
+        return in_array('In-Studio', $this->package_location ?? []);
+    }
+
+    /**
+     * Check if package is available for on-location sessions.
+     * 
+     * @return bool
+     */
+    public function isOnLocationAvailable(): bool
+    {
+        return in_array('On-Location', $this->package_location ?? []);
+    }
+
+    /**
+     * Check if package is available for both locations.
+     * 
+     * @return bool
+     */
+    public function isBothLocationsAvailable(): bool
+    {
+        $locations = $this->package_location ?? [];
+        return in_array('In-Studio', $locations) && in_array('On-Location', $locations);
     }
 }

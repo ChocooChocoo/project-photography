@@ -43,10 +43,8 @@
                                         <th data-table-sort>Category</th>
                                         <th data-table-sort>Package Name</th>
                                         <th data-table-sort>Location</th>
-                                        <!-- ==== Start: Add Time Customization Column ==== -->
                                         <th data-table-sort>Time Customization</th>
                                         <th data-table-sort>Duration</th>
-                                        <!-- ==== End: Add Time Customization Column ==== -->
                                         <th data-table-sort>Price</th>
                                         <th data-table-sort>Online Gallery</th>
                                         <th data-table-sort>Photographers</th>
@@ -62,17 +60,28 @@
                                             <td>{{ $package->category->category_name ?? 'N/A' }}</td>
                                             <td>{{ $package->package_name }}</td>
                                             <td>
-                                                @if($package->package_location == 'In-Studio')
-                                                    <span class="badge badge-soft-primary fs-8 px-1 w-100">
+                                                @php
+                                                    $locations = is_array($package->package_location) ? $package->package_location : (array)json_decode($package->package_location ?? '[]', true);
+                                                @endphp
+                                                
+                                                @if(in_array('In-Studio', $locations))
+                                                    <span class="badge badge-soft-primary fs-8 px-1 d-inline-block mb-1 w-100">
                                                         <i class="ti ti-building me-1"></i> In-Studio
                                                     </span>
-                                                @else
-                                                    <span class="badge badge-soft-info fs-8 px-1 w-100">
+                                                @endif
+                                                
+                                                @if(in_array('On-Location', $locations))
+                                                    <span class="badge badge-soft-info fs-8 px-1 d-inline-block {{ in_array('In-Studio', $locations) ? 'mt-1' : '' }} w-100">
                                                         <i class="ti ti-map-pin me-1"></i> On-Location
                                                     </span>
                                                 @endif
+                                                
+                                                @if(empty($locations))
+                                                    <span class="badge badge-soft-secondary fs-8 px-1 w-100">
+                                                        <i class="ti ti-minus me-1"></i> Not specified
+                                                    </span>
+                                                @endif
                                             </td>
-                                            <!-- ==== Start: Time Customization Display ==== -->
                                             <td>
                                                 @if($package->allow_time_customization)
                                                     <span class="badge badge-soft-success fs-8 px-1 w-100" title="Clients can customize duration">

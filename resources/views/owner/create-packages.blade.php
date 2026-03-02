@@ -69,7 +69,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- ==== Start: Time Customization Control ==== -->
                                     <div class="col-12 mb-3">
                                         <label class="form-label d-block">Allow Time Customization</label>
                                         <div class="btn-group w-100 mb-1" role="group" aria-label="Time Customization Toggle">
@@ -89,16 +88,13 @@
                                             When enabled, clients can choose their own duration during booking. When disabled, you must specify a fixed duration.
                                         </small>
                                     </div>
-                                    <!-- ==== End: Time Customization Control ==== -->
 
-                                    <!-- ==== Start: Duration Field (now conditionally shown/hidden) ==== -->
                                     <div class="col-12 mb-3" id="durationField">
                                         <label class="form-label">Duration (hours) <span class="text-danger" id="durationRequired">*</span></label>
                                         <input type="number" class="form-control" name="duration" placeholder="Enter duration in hours" min="1" max="24">
                                         <div class="invalid-feedback">Please enter valid duration (1-24 hours).</div>
                                         <small class="text-muted" id="durationHelpText">Fixed duration for this package.</small>
                                     </div>
-                                    <!-- ==== End: Duration Field ==== -->
 
                                     <div class="col-12 mb-3">
                                         <label class="form-label">Maximum Edited Photos</label>
@@ -107,19 +103,71 @@
                                     </div>
 
                                     <div class="col-12 mb-3">
-                                        <label class="form-label">Location <span class="text-danger">*</span></label>
-                                        <select class="form-select" name="package_location" id="packageLocation" required>
-                                            <option value="">Select Location</option>
-                                            <option value="In-Studio">In-Studio</option>
-                                            <option value="On-Location">On-Location</option>
-                                        </select>
-                                        <div class="invalid-feedback">Please select a location type.</div>
-                                        <small class="text-muted">Choose whether the photo session takes place at the studio or at an external location.</small>
+                                        <label class="form-label d-block">Package Location</label>
+                                        <div class="alert alert-info alert-sm py-2 mb-2">
+                                            <i class="ti ti-info-circle me-1"></i>
+                                            Select one or both locations where this package can be offered.
+                                        </div>
+                                        
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="card location-card h-100">
+                                                    <div class="card-body p-3 text-center">
+                                                        <div class="form-check form-check-inline mb-2">
+                                                            <input class="form-check-input location-checkbox" type="checkbox" 
+                                                                name="package_location[]" id="locationInStudio" value="In-Studio">
+                                                            <label class="form-check-label fw-semibold" for="locationInStudio">
+                                                                <i class="ti ti-building me-1 text-primary"></i> In-Studio
+                                                            </label>
+                                                        </div>
+                                                        <p class="text-muted small mb-0">Session takes place at the studio</p>
+                                                        <div class="mt-2 location-details in-studio-details" style="display: none;">
+                                                            <hr class="my-2">
+                                                            <small class="text-success">
+                                                                <i class="ti ti-check-circle me-1"></i> Selected
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <div class="card location-card h-100">
+                                                    <div class="card-body p-3 text-center">
+                                                        <div class="form-check form-check-inline mb-2">
+                                                            <input class="form-check-input location-checkbox" type="checkbox" 
+                                                                name="package_location[]" id="locationOnLocation" value="On-Location">
+                                                            <label class="form-check-label fw-semibold" for="locationOnLocation">
+                                                                <i class="ti ti-map-pin me-1 text-info"></i> On-Location
+                                                            </label>
+                                                        </div>
+                                                        <p class="text-muted small mb-0">Session takes place at client's location</p>
+                                                        <div class="mt-2 location-details onlocation-details" style="display: none;">
+                                                            <hr class="my-2">
+                                                            <small class="text-success">
+                                                                <i class="ti ti-check-circle me-1"></i> Selected
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="locationError" class="invalid-feedback d-block" style="display: none !important;">
+                                            Please select at least one location type.
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="ti ti-info-circle me-1"></i>
+                                            Packages offering both locations will be available for booking in either setting.
+                                        </small>
                                     </div>
 
-                                    <div class="col-12 mb-3">
-                                        <label class="form-label">Coverage Scope</label>
-                                        <input type="text" class="form-control" name="coverage_scope" placeholder="Enter coverage scope (e.g., Metro Manila, Luzon)">
+                                    <div class="col-12 mb-3" id="coverageScopeField" style="display: none;">
+                                        <label class="form-label">Coverage Scope <span class="text-danger" id="coverageRequired">*</span></label>
+                                        <input type="text" class="form-control" name="coverage_scope" 
+                                            placeholder="Enter coverage scope (e.g., Metro Manila, Luzon)">
+                                        <div class="invalid-feedback">Please enter coverage scope for on-location sessions.</div>
+                                        <small class="text-muted">Required when "On-Location" is selected.</small>
                                     </div>
 
                                     <div class="col-12 mb-3">
@@ -281,6 +329,61 @@
             toggleDurationField();
             // ==== End: Time Customization Toggle Logic ====
 
+            // === START: toggleCoverageScope function ===
+            function toggleCoverageScope() {
+                // Check if "On-Location" is selected among the checkboxes
+                const onLocationSelected = $('input[name="package_location[]"][value="On-Location"]').is(':checked');
+                const coverageScopeField = $('#coverageScopeField');
+                const coverageScopeInput = $('input[name="coverage_scope"]');
+                const coverageRequired = $('#coverageRequired');
+                
+                if (onLocationSelected) {
+                    // Show coverage scope field, make it required
+                    coverageScopeField.fadeIn(300);
+                    coverageScopeInput.prop('required', true);
+                    coverageRequired.show();
+                } else {
+                    // Hide coverage scope field, remove required
+                    coverageScopeField.fadeOut(300);
+                    coverageScopeInput.prop('required', false);
+                    coverageScopeInput.val(''); // Clear the value
+                }
+            }
+            // === END: toggleCoverageScope function ===
+
+            // === START: Location checkbox styling ===
+            function updateLocationCardStyles() {
+                $('.location-checkbox').each(function() {
+                    const $checkbox = $(this);
+                    const $card = $checkbox.closest('.location-card');
+                    const $details = $card.find('.location-details');
+                    
+                    if ($checkbox.is(':checked')) {
+                        $card.addClass('border-primary shadow-sm');
+                        $details.fadeIn(200);
+                    } else {
+                        $card.removeClass('border-primary shadow-sm');
+                        $details.fadeOut(200);
+                    }
+                });
+            }
+            // === END: Location checkbox styling ===
+
+            // Handle location checkbox changes
+            $(document).on('change', '.location-checkbox', function() {
+                toggleCoverageScope();
+                updateLocationCardStyles();
+            });
+
+            // Initialize location-related UI on page load
+            toggleCoverageScope();
+            updateLocationCardStyles();
+
+            // Toggle coverage scope on location change (legacy support)
+            $('#packageLocation').on('change', function() {
+                toggleCoverageScope();
+            });
+
             // Handle form submission
             $('#createPackageForm').submit(function(e) {
                 e.preventDefault();
@@ -317,7 +420,7 @@
                     
                     // Re-enable submit button
                     const submitBtn = $(this).find('button[type="submit"]');
-                    submitBtn.prop('disabled', false).html('Create Package');
+                    submitBtn.prop('disabled', false).html(originalText);
                     return false;
                 }
                 
@@ -326,6 +429,57 @@
                     formData.delete('duration');
                 }
                 // ==== End: Handle duration validation based on time customization ====
+
+                // ==== Start: Validate at least one location is selected ====
+                const selectedLocations = [];
+                $('input[name="package_location[]"]:checked').each(function() {
+                    selectedLocations.push($(this).val());
+                });
+
+                if (selectedLocations.length === 0) {
+                    $('#locationError').show();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: 'Please select at least one location type.',
+                        confirmButtonColor: '#3475db',
+                        confirmButtonText: 'OK'
+                    });
+                    
+                    // Re-enable submit button
+                    const submitBtn = $(this).find('button[type="submit"]');
+                    submitBtn.prop('disabled', false).html(originalText);
+                    return false;
+                } else {
+                    $('#locationError').hide();
+                }
+
+                // Remove any existing package_location entries and add as array
+                formData.delete('package_location[]');
+                selectedLocations.forEach(function(location) {
+                    formData.append('package_location[]', location);
+                });
+                // ==== End: Validate at least one location is selected ====
+
+                // ==== Start: Handle coverage scope validation based on on-location selection ====
+                const onLocationSelected = selectedLocations.includes('On-Location');
+                const coverageScope = formData.get('coverage_scope');
+
+                if (onLocationSelected && (!coverageScope || coverageScope.trim() === '')) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: 'Coverage scope is required for on-location packages.',
+                        confirmButtonColor: '#3475db',
+                        confirmButtonText: 'OK'
+                    });
+                    
+                    // Re-enable submit button
+                    const submitBtn = $(this).find('button[type="submit"]');
+                    submitBtn.prop('disabled', false).html(originalText);
+                    return false;
+                }
+                // ==== End: Handle coverage scope validation based on on-location selection ====
                 
                 // Show loading state
                 const submitBtn = $(this).find('button[type="submit"]');
@@ -369,15 +523,19 @@
                                 updateInclusionCounter();
                                 updateRemoveButtons();
                                 
+                                // Reset location checkboxes and styling
+                                $('.location-checkbox').prop('checked', false);
+                                updateLocationCardStyles();
+                                toggleCoverageScope();
+                                
                                 // Reset radio buttons
                                 $('input[name="online_gallery"]').prop('checked', false);
                                 $('#galleryNo').prop('checked', true);
                                 
-                                // ==== Start: Reset time customization radios and duration field ====
+                                // Reset time customization radios and duration field
                                 $('input[name="allow_time_customization"]').prop('checked', false);
                                 $('#timeCustomizationNo').prop('checked', true);
                                 toggleDurationField(); // Ensure duration field is visible and properly configured
-                                // ==== End: Reset time customization radios and duration field ====
                                 
                                 window.location.href = "{{ route('owner.packages.index') }}";
                             }, 1500);
@@ -415,40 +573,6 @@
                     }
                 });
             });
-
-            function toggleCoverageScope() {
-                const selectedLocation = $('#packageLocation').val();
-                const coverageScopeField = $('input[name="coverage_scope"]').closest('.col-12.mb-3');
-                const coverageScopeLabel = coverageScopeField.find('label');
-                const coverageScopeInput = coverageScopeField.find('input');
-                
-                if (selectedLocation === 'On-Location') {
-                    // Show coverage scope field, make it required
-                    coverageScopeField.fadeIn(300);
-                    coverageScopeLabel.html('Coverage Scope <span class="text-danger">*</span>');
-                    coverageScopeInput.prop('required', true);
-                    coverageScopeInput.prop('placeholder', 'Enter coverage scope (e.g., Metro Manila, Luzon)');
-                    coverageScopeField.find('.invalid-feedback').text('Please enter coverage scope for on-location sessions.');
-                } else if (selectedLocation === 'In-Studio') {
-                    // Hide coverage scope field, remove required
-                    coverageScopeField.fadeOut(300);
-                    coverageScopeInput.prop('required', false);
-                    coverageScopeInput.val(''); // Clear the value
-                } else {
-                    // No selection - hide field
-                    coverageScopeField.fadeOut(300);
-                    coverageScopeInput.prop('required', false);
-                    coverageScopeInput.val('');
-                }
-            }
-
-            // Trigger on location change
-            $('#packageLocation').on('change', function() {
-                toggleCoverageScope();
-            });
-
-            // Initial check on page load
-            toggleCoverageScope();
 
             // Bootstrap form validation
             (function() {

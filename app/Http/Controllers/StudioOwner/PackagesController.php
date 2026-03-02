@@ -73,6 +73,11 @@ class PackagesController extends Controller
             }
             // ==== End: Handle package_inclusions conversion ====
 
+            // ==== Start: Ensure package_location is stored as JSON ====
+            // The package_location is already an array from validation
+            // Cast will handle JSON conversion automatically
+            // ==== End: Ensure package_location is stored as JSON ====
+
             // Create package with all validated data
             $package = PackagesModel::create($validatedData);
 
