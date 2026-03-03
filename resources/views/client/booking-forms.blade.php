@@ -944,35 +944,117 @@
                     return;
                 }
                 
-                // ==== START: Handle location flexibility based on package_location FIRST ====
-                // This preserves the original behavior where package_location determines if
-                // the user needs to choose or if it's auto-set
-                
-                // Reset location UI first
+                // ==== START: Reset and prepare location UI based on booking type ====
                 resetLocationUI();
                 
-                // Check if package has location_flexibility data (from the enhanced getPackages method)
-                if (packageData.location_flexibility) {
-                    handlePackageLocationFlexibility(packageData);
+                // Get booking type
+                const bookingType = $('#bookingType').val();
+                
+                // ==== FIXED: Store freelancer policy info for later use ====
+                if (bookingType === 'freelancer') {
+                    // Initialize freelancer settings storage if not exists
+                    if (!window.currentFreelancerSettings) {
+                        window.currentFreelancerSettings = {};
+                    }
+                    
+                    // Check if package data contains freelancer policy information
+                    // The freelancer_has_policy field should be sent from the server
+                    const hasDepositPolicy = packageData.freelancer_has_policy === true;
+                    const depositPolicy = packageData.freelancer_deposit_policy;
+                    const depositType = packageData.freelancer_deposit_type;
+                    const depositAmount = packageData.freelancer_deposit_amount;
+                    
+                    window.currentFreelancerSettings = {
+                        hasDepositPolicy: hasDepositPolicy,
+                        depositPolicy: depositPolicy,
+                        depositType: depositType,
+                        depositAmount: depositAmount
+                    };
+                    
+                    console.log('Freelancer settings stored:', window.currentFreelancerSettings);
+                }
+                // ==== END: Store freelancer policy info ====
+                
+                // ==== NEW: Special handling for freelancer bookings ====
+                if (bookingType === 'freelancer') {
+                    console.log('Freelancer package selected - multiple location check:', {
+                        allowMultipleLocations: packageData.allow_multiple_locations,
+                        maxLocations: packageData.max_locations
+                    });
+                    
+                    // For freelancers, location type is always on-location
+                    $('#locationType').val('on-location');
+                    $('#locationType').prop('disabled', true);
+                    
+                    // Add visual indicator
+                    $('#locationType').closest('.col-12').find('.form-label').append(
+                        '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                        '<i class="ti ti-info-circle me-1"></i>On-Location only for freelancers</span>'
+                    );
+                    
+                    // Check if multiple locations are allowed
+                    const allowMultiple = packageData.allow_multiple_locations === true || 
+                                        packageData.allow_multiple_locations === '1' || 
+                                        packageData.allow_multiple_locations === 1;
+                    const maxLocations = parseInt(packageData.max_locations) || 1;
+                    
+                    // Store these for later use
+                    window.currentPackageSettings = {
+                        allowMultipleLocations: allowMultiple,
+                        maxLocations: maxLocations,
+                        locationType: 'on-location',
+                        bookingType: 'freelancer'
+                    };
+                    
+                    // Initialize multiple location UI if allowed and max > 1
+                    if (allowMultiple && maxLocations > 1) {
+                        console.log('Initializing multiple location UI for freelancer with max:', maxLocations);
+                        initMultipleLocationUI(packageData);
+                    } else {
+                        // Show single location UI
+                        showSingleLocationUI();
+                    }
+                    
                 } else {
-                    // Fallback to old behavior for backward compatibility
-                    console.warn('No location flexibility data, using fallback');
-                    if (packageData.package_location) {
-                        const packageLocation = packageData.package_location;
-                        
-                        // Handle different package_location scenarios
-                        if (Array.isArray(packageLocation)) {
-                            if (packageLocation.length === 1) {
-                                // Single option - auto-set
-                                const location = packageLocation[0];
-                                if (location === 'In-Studio') {
+                    // ==== Original studio logic (unchanged) ====
+                    if (packageData.location_flexibility) {
+                        handlePackageLocationFlexibility(packageData);
+                    } else {
+                        console.warn('No location flexibility data, using fallback');
+                        if (packageData.package_location) {
+                            const packageLocation = packageData.package_location;
+                            
+                            if (Array.isArray(packageLocation)) {
+                                if (packageLocation.length === 1) {
+                                    const location = packageLocation[0];
+                                    if (location === 'In-Studio') {
+                                        $('#locationType').val('in-studio');
+                                        $('#locationType').prop('disabled', true);
+                                        $('#locationType').closest('.col-12').find('.form-label').append(
+                                            '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                                            '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
+                                        );
+                                    } else if (location === 'On-Location') {
+                                        $('#locationType').val('on-location');
+                                        $('#locationType').prop('disabled', true);
+                                        $('#locationType').closest('.col-12').find('.form-label').append(
+                                            '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                                            '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
+                                        );
+                                    }
+                                } else if (packageLocation.length > 1) {
+                                    $('#locationType').prop('disabled', false);
+                                    $('#locationType').val('');
+                                }
+                            } else if (typeof packageLocation === 'string') {
+                                if (packageLocation === 'In-Studio') {
                                     $('#locationType').val('in-studio');
                                     $('#locationType').prop('disabled', true);
                                     $('#locationType').closest('.col-12').find('.form-label').append(
                                         '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
                                         '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
                                     );
-                                } else if (location === 'On-Location') {
+                                } else if (packageLocation === 'On-Location') {
                                     $('#locationType').val('on-location');
                                     $('#locationType').prop('disabled', true);
                                     $('#locationType').closest('.col-12').find('.form-label').append(
@@ -980,72 +1062,32 @@
                                         '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
                                     );
                                 }
-                            } else if (packageLocation.length > 1) {
-                                // Multiple options - user can choose
-                                $('#locationType').prop('disabled', false);
-                                $('#locationType').val('');
                             }
-                        } else if (typeof packageLocation === 'string') {
-                            // Single string value
-                            if (packageLocation === 'In-Studio') {
-                                $('#locationType').val('in-studio');
-                                $('#locationType').prop('disabled', true);
-                                $('#locationType').closest('.col-12').find('.form-label').append(
-                                    '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
-                                    '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
-                                );
-                            } else if (packageLocation === 'On-Location') {
-                                $('#locationType').val('on-location');
-                                $('#locationType').prop('disabled', true);
-                                $('#locationType').closest('.col-12').find('.form-label').append(
-                                    '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
-                                    '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
-                                );
-                            }
+                            
+                            $('#locationType').trigger('change');
                         }
-                        
-                        $('#locationType').trigger('change');
                     }
-                }
-                // ==== END: Handle location flexibility based on package_location ====
-                
-                // ==== START: Now handle multiple locations capability ====
-                // This is the NEW feature - if package allows multiple locations, show the repeater
-                const allowMultiple = packageData.allow_multiple_locations === true || 
-                                            packageData.allow_multiple_locations === '1' || 
-                                            packageData.allow_multiple_locations === 1;
-                const maxLocations = parseInt(packageData.max_locations) || 1;
-                
-                // Store these for later use
-                window.currentPackageSettings = {
-                    allowMultipleLocations: allowMultiple,
-                    maxLocations: maxLocations,
-                    locationType: $('#locationType').val() // Current location type (in-studio or on-location)
-                };
-                
-                console.log('Multiple location settings:', {
-                    allowMultiple: allowMultiple,
-                    maxLocations: maxLocations,
-                    currentLocationType: $('#locationType').val()
-                });
-                
-                // Only show multiple location UI if:
-                // 1. Package allows multiple locations AND
-                // 2. Current location type is 'on-location' (multiple locations only make sense for on-location)
-                // 3. maxLocations > 1
-                if (allowMultiple && maxLocations > 1 && $('#locationType').val() === 'on-location') {
-                    initMultipleLocationUI(packageData);
-                } else {
-                    // Hide multiple location UI and show single location UI if needed
-                    $('#singleLocationDetails').hide();
-                    $('#multipleLocationsContainer').hide();
                     
-                    // Show single location UI only if location type is 'on-location'
-                    if ($('#locationType').val() === 'on-location') {
-                        showSingleLocationUI();
+                    // Check if multiple locations are allowed (for studios)
+                    const allowMultiple = packageData.allow_multiple_locations === true || 
+                                        packageData.allow_multiple_locations === '1' || 
+                                        packageData.allow_multiple_locations === 1;
+                    const maxLocations = parseInt(packageData.max_locations) || 1;
+                    
+                    // Store these for later use
+                    window.currentPackageSettings = {
+                        allowMultipleLocations: allowMultiple,
+                        maxLocations: maxLocations,
+                        locationType: $('#locationType').val(),
+                        bookingType: 'studio'
+                    };
+                    
+                    // Only show multiple location UI for studios if location type is on-location
+                    if (allowMultiple && maxLocations > 1 && $('#locationType').val() === 'on-location') {
+                        initMultipleLocationUI(packageData);
                     }
                 }
-                // ==== END: Handle multiple locations capability ====
+                // ==== END: Special handling for freelancer bookings ====
                 
                 const paymentType = $('input[name="payment_type"]:checked').val();
                 getBookingSummaryWithPaymentType(packageData, paymentType);
@@ -1252,9 +1294,12 @@
                 
                 console.log('Form validation passed, preparing booking data');
                 
-                // Prepare booking data
+                // Get booking type
+                const bookingType = $('#bookingType').val();
+                
+                // Prepare booking data base
                 bookingData = {
-                    type: $('#bookingType').val(),
+                    type: bookingType,
                     provider_id: $('#providerId').val(),
                     category_id: $('#serviceCategory').val(),
                     package_id: selectedPackageId,
@@ -1266,9 +1311,28 @@
                     full_name: $('#fullName').val(),
                     contact_number: $('#contactNumber').val(),
                     email: $('#email').val(),
-                    payment_type: $('input[name="payment_type"]:checked').val(),
                     _token: '{{ csrf_token() }}'
                 };
+                
+                // ==== FIXED: Handle payment type based on booking type and policy ====
+                if (bookingType === 'freelancer') {
+                    // Check if freelancer has a deposit policy
+                    const hasPolicy = window.currentFreelancerSettings?.hasDepositPolicy === true;
+                    
+                    if (!hasPolicy) {
+                        // Only send payment_type if freelancer has no policy
+                        bookingData.payment_type = $('input[name="payment_type"]:checked').val();
+                        console.log('Freelancer (no policy) - sending payment_type:', bookingData.payment_type);
+                    } else {
+                        // Don't send payment_type - server will determine from policy
+                        console.log('Freelancer (has policy) - skipping payment_type');
+                    }
+                } else {
+                    // Studio always sends payment_type
+                    bookingData.payment_type = $('input[name="payment_type"]:checked').val();
+                    console.log('Studio booking - sending payment_type:', bookingData.payment_type);
+                }
+                // ==== END: Handle payment type ====
                 
                 // Handle multiple locations
                 if (allowMultipleLocations && currentMaxLocations > 1 && $('#locationType').val() === 'on-location') {
@@ -1642,46 +1706,91 @@
                     return false;
                 }
                 
-                // Get location type
+                // Get location type and booking type
                 const locationType = $('#locationType').val();
-                console.log('Location type:', locationType);
+                const bookingType = $('#bookingType').val();
                 
-                if (!locationType) {
-                    console.log('No location type selected');
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Location Type Required',
-                        text: 'Please select a location type.',
-                        confirmButtonColor: '#3475db'
-                    });
-                    return false;
-                }
+                console.log('Location type:', locationType, 'Booking type:', bookingType);
                 
-                // Validate based on location type and multiple location settings
-                if (locationType === 'on-location') {
-                    console.log('Validating on-location fields');
-                    console.log('Multiple location settings:', {
-                        allowMultipleLocations: allowMultipleLocations,
-                        currentMaxLocations: currentMaxLocations
-                    });
+                // ========== LOCATION VALIDATION ==========
+                if (bookingType === 'freelancer') {
+                    console.log('Validating freelancer booking - location must be on-location');
                     
-                    // Check if we're using multiple locations
+                    // Location type should already be set to on-location, but double-check
+                    if (locationType !== 'on-location') {
+                        console.error('Freelancer booking with invalid location type:', locationType);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Location',
+                            text: 'Freelancer bookings must be On-Location. Please refresh and try again.',
+                            confirmButtonColor: '#3475db'
+                        });
+                        return false;
+                    }
+                    
+                    // Check if multiple locations are enabled and validate accordingly
                     if (allowMultipleLocations && currentMaxLocations > 1) {
-                        console.log('Validating multiple locations');
-                        // Validate multiple locations
-                        const multipleLocationsValid = validateMultipleLocations();
-                        console.log('Multiple locations validation result:', multipleLocationsValid);
+                        console.log('Validating multiple locations for freelancer with max:', currentMaxLocations);
                         
-                        if (!multipleLocationsValid) {
+                        const locationEntries = $('.location-entry');
+                        console.log('Location entries found:', locationEntries.length);
+                        
+                        if (locationEntries.length === 0) {
+                            console.log('No location entries found');
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Location Required',
+                                text: 'Please add at least one location.',
+                                confirmButtonColor: '#3475db'
+                            });
                             return false;
                         }
+                        
+                        let allLocationsValid = true;
+                        let firstInvalidIndex = -1;
+                        
+                        $('.location-entry').each(function(index) {
+                            const elementIndex = $(this).data('index');
+                            const city = $(`select[name="locations[${elementIndex}][city]"]`).val();
+                            const barangay = $(`select[name="locations[${elementIndex}][barangay]"]`).val();
+                            
+                            if (!city || !barangay) {
+                                allLocationsValid = false;
+                                if (firstInvalidIndex === -1) {
+                                    firstInvalidIndex = index;
+                                }
+                            }
+                        });
+                        
+                        if (!allLocationsValid) {
+                            console.log('Some locations are incomplete');
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Incomplete Locations',
+                                text: `Location #${firstInvalidIndex + 1} is missing required fields (City/Municipality and Barangay).`,
+                                confirmButtonColor: '#3475db'
+                            });
+                            return false;
+                        }
+                        
+                        const validLocations = getMultipleLocationsData();
+                        if (validLocations.length > currentMaxLocations) {
+                            console.log('Too many locations:', validLocations.length, 'max:', currentMaxLocations);
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Too Many Locations',
+                                text: `Maximum of ${currentMaxLocations} location${currentMaxLocations > 1 ? 's' : ''} allowed.`,
+                                confirmButtonColor: '#3475db'
+                            });
+                            return false;
+                        }
+                        
+                        console.log('All multiple locations validated successfully for freelancer');
+                        
                     } else {
-                        console.log('Validating single location');
-                        // Validate single location
+                        console.log('Validating single location for freelancer');
                         const city = $('#city').val();
                         const barangay = $('#barangay').val();
-                        
-                        console.log('Single location values:', { city, barangay });
                         
                         if (!city) {
                             console.log('City missing');
@@ -1705,7 +1814,52 @@
                             return false;
                         }
                     }
+                } else {
+                    // Studio location validation
+                    if (!locationType) {
+                        console.log('No location type selected');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Location Type Required',
+                            text: 'Please select a location type.',
+                            confirmButtonColor: '#3475db'
+                        });
+                        return false;
+                    }
+                    
+                    if (locationType === 'on-location') {
+                        if (allowMultipleLocations && currentMaxLocations > 1) {
+                            const multipleLocationsValid = validateMultipleLocations();
+                            if (!multipleLocationsValid) {
+                                return false;
+                            }
+                        } else {
+                            const city = $('#city').val();
+                            const barangay = $('#barangay').val();
+                            
+                            if (!city) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'City/Municipality Required',
+                                    text: 'Please select a city/municipality.',
+                                    confirmButtonColor: '#3475db'
+                                });
+                                return false;
+                            }
+                            
+                            if (!barangay) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Barangay Required',
+                                    text: 'Please select a barangay.',
+                                    confirmButtonColor: '#3475db'
+                                });
+                                return false;
+                            }
+                        }
+                    }
                 }
+                // ========== END LOCATION VALIDATION ==========
                 
                 // Duration validation for fixed packages
                 if (selectedPackageFlexibility === false && selectedPackageDuration > 0) {
@@ -1747,20 +1901,52 @@
                     }
                 }
                 
-                // Payment type validation
+                // ========== FIXED: Payment type validation with freelancer policy check ==========
                 const paymentType = $('input[name="payment_type"]:checked').val();
                 console.log('Payment type:', paymentType);
                 
-                if (!paymentType) {
-                    console.log('No payment type selected');
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Payment Type Required',
-                        text: 'Please select a payment type.',
-                        confirmButtonColor: '#3475db'
+                // For freelancer bookings, check if they have a deposit policy
+                if (bookingType === 'freelancer') {
+                    // Check if we have freelancer settings stored
+                    const hasPolicy = window.currentFreelancerSettings?.hasDepositPolicy === true;
+                    
+                    console.log('Freelancer payment validation:', {
+                        hasPolicy: hasPolicy,
+                        paymentType: paymentType,
+                        settings: window.currentFreelancerSettings
                     });
-                    return false;
+                    
+                    if (hasPolicy) {
+                        // Freelancer has a policy - payment type is automatically determined by the server
+                        // We don't need to validate it here
+                        console.log('Freelancer has deposit policy - skipping payment type validation');
+                    } else {
+                        // Freelancer has no policy - require payment type selection
+                        if (!paymentType) {
+                            console.log('No payment type selected for freelancer without policy');
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Payment Type Required',
+                                text: 'Please select a payment type.',
+                                confirmButtonColor: '#3475db'
+                            });
+                            return false;
+                        }
+                    }
+                } else {
+                    // Studio always requires payment type
+                    if (!paymentType) {
+                        console.log('No payment type selected for studio');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Payment Type Required',
+                            text: 'Please select a payment type.',
+                            confirmButtonColor: '#3475db'
+                        });
+                        return false;
+                    }
                 }
+                // ========== END PAYMENT TYPE VALIDATION ==========
                 
                 console.log('========== VALIDATION PASSED ==========');
                 return true;
@@ -2425,7 +2611,24 @@
                 // Add first location by default
                 addLocation();
                 
-                // Show add button if max locations > 1
+                // ==== NEW: Customize UI based on booking type ====
+                const bookingType = $('#bookingType').val();
+                
+                if (bookingType === 'freelancer') {
+                    // For freelancers, we already set location type to on-location and disabled it
+                    // No additional changes needed
+                    console.log('Multiple location UI initialized for freelancer');
+                } else {
+                    // For studios, show add button based on max locations
+                    if (currentMaxLocations > 1) {
+                        $('#addLocationBtn').show();
+                    } else {
+                        $('#addLocationBtn').hide();
+                    }
+                }
+                // ==== END: Customize UI based on booking type ====
+                
+                // Show add button if max locations > 1 (for all types)
                 if (currentMaxLocations > 1) {
                     $('#addLocationBtn').show();
                 } else {

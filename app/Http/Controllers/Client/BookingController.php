@@ -237,10 +237,8 @@ class BookingController extends Controller
                     ->where('category_id', $request->category_id)
                     ->where('status', 'active')
                     ->get()
-                    ->map(function($package) {
-                        // ==== START: Enhanced location data handling for freelancer ====
-                        // Note: Freelancer packages might not have package_location field
-                        // Default to both options if not specified
+                    ->map(function($package) use ($profile) {
+                        // Parse package location - freelancers default to both options
                         $packageLocation = ['In-Studio', 'On-Location'];
                         
                         $locationCount = count($packageLocation);
@@ -250,7 +248,6 @@ class BookingController extends Controller
                             'is_flexible' => $locationCount > 1,
                             'single_option' => $locationCount === 1 ? $packageLocation[0] : null
                         ];
-                        // ==== END: Enhanced location data handling for freelancer ====
                         
                         return [
                             'id' => $package->id,
@@ -264,10 +261,12 @@ class BookingController extends Controller
                             'online_gallery' => $package->online_gallery ?? false,
                             'package_location' => $packageLocation,
                             'location_flexibility' => $locationFlexibility,
-                            // ==== NEW: Multiple location fields ====
                             'allow_multiple_locations' => $package->allow_multiple_locations ?? false,
                             'max_locations' => $package->max_locations ?? 1,
-                            // ==== END: Multiple location fields ====
+                            'freelancer_has_policy' => $profile->deposit_policy === 'required',
+                            'freelancer_deposit_policy' => $profile->deposit_policy,
+                            'freelancer_deposit_type' => $profile->deposit_type,
+                            'freelancer_deposit_amount' => $profile->deposit_amount,
                             'allow_time_customization' => $package->allow_time_customization,
                             'gallery_badge' => ($package->online_gallery ?? false) ? 'Yes' : 'No',
                             'gallery_icon' => ($package->online_gallery ?? false) ? 'ti ti-photo' : 'ti ti-photo-off',
@@ -485,6 +484,24 @@ class BookingController extends Controller
             'contact_number' => 'required|string|max:20',
             'email' => 'required|email|max:255',
         ];
+
+        // ==== NEW: Conditional payment_type validation for freelancers ====
+        // For studios, payment_type is always required
+        // For freelancers, payment_type is only required if they have no deposit policy
+        if ($request->type === 'studio') {
+            $rules['payment_type'] = 'required|in:downpayment,full_payment';
+        } else {
+            // For freelancers, check if they have a deposit policy
+            $freelancer = \App\Models\Freelancer\ProfileModel::where('user_id', $request->provider_id)->first();
+            
+            // If freelancer has no deposit policy or policy is 'not_required', require payment_type
+            if (!$freelancer || $freelancer->deposit_policy !== 'required') {
+                $rules['payment_type'] = 'required|in:downpayment,full_payment';
+            }
+            // If freelancer HAS a required deposit policy, payment_type is NOT required
+            // It will be determined automatically based on their settings
+        }
+        // ==== END: Conditional payment_type validation ====
 
         // Add validation for multiple locations
         if ($request->has('locations') && is_array($request->locations)) {
