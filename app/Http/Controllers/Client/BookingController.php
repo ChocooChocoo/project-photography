@@ -210,7 +210,10 @@ class BookingController extends Controller
                             // ==== START: Enhanced location data in response ====
                             'package_location' => $packageLocation,
                             'location_flexibility' => $locationFlexibility,
-                            // ==== END: Enhanced location data in response ====
+                            // ==== NEW: Multiple location fields ====
+                            'allow_multiple_locations' => $package->allow_multiple_locations ?? false,
+                            'max_locations' => $package->max_locations ?? 1,
+                            // ==== END: Multiple location fields ====
                             'allow_time_customization' => $package->allow_time_customization,
                             'gallery_badge' => $package->online_gallery ? 'Yes' : 'No',
                             'gallery_icon' => $package->online_gallery ? 'ti ti-photo' : 'ti ti-photo-off',
@@ -261,6 +264,10 @@ class BookingController extends Controller
                             'online_gallery' => $package->online_gallery ?? false,
                             'package_location' => $packageLocation,
                             'location_flexibility' => $locationFlexibility,
+                            // ==== NEW: Multiple location fields ====
+                            'allow_multiple_locations' => $package->allow_multiple_locations ?? false,
+                            'max_locations' => $package->max_locations ?? 1,
+                            // ==== END: Multiple location fields ====
                             'allow_time_customization' => $package->allow_time_customization,
                             'gallery_badge' => ($package->online_gallery ?? false) ? 'Yes' : 'No',
                             'gallery_icon' => ($package->online_gallery ?? false) ? 'ti ti-photo' : 'ti ti-photo-off',
@@ -463,8 +470,8 @@ class BookingController extends Controller
     */
     public function store(Request $request)
     {
-        // Validate all input first
-        $request->validate([
+        // Validate all input first - MODIFIED to handle multiple locations
+        $rules = [
             'type' => 'required|in:studio,freelancer',
             'provider_id' => 'required|integer',
             'category_id' => 'required|exists:tbl_categories,id',
@@ -473,16 +480,42 @@ class BookingController extends Controller
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'location_type' => 'required|in:in-studio,on-location',
-            'venue_name' => 'nullable|string|max:255',
-            'street' => 'nullable|string|max:255',
-            'barangay' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
             'special_requests' => 'nullable|string|max:1000',
             'full_name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
             'email' => 'required|email|max:255',
-            // 'payment_type' is no longer required - we determine based on deposit policy
-        ]);
+        ];
+
+        // Add validation for multiple locations
+        if ($request->has('locations') && is_array($request->locations)) {
+            $rules['locations'] = 'required|array|min:1';
+            $rules['locations.*.venue_name'] = 'nullable|string|max:255';
+            $rules['locations.*.city'] = 'required|string|max:255';
+            $rules['locations.*.barangay'] = 'required|string|max:255';
+            $rules['locations.*.street'] = 'nullable|string|max:255';
+            
+            // Validate max locations based on package
+            $packageValidation = $this->validatePackage($request);
+            if ($packageValidation['valid']) {
+                $package = $packageValidation['package'];
+                $maxLocations = $package->max_locations ?? 1;
+                
+                if (count($request->locations) > $maxLocations) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Maximum of {$maxLocations} locations allowed for this package.",
+                    ], 400);
+                }
+            }
+        } else {
+            // Fallback to single location fields
+            $rules['venue_name'] = 'nullable|string|max:255';
+            $rules['street'] = 'nullable|string|max:255';
+            $rules['barangay'] = 'required|string|max:255';
+            $rules['city'] = 'required|string|max:255';
+        }
+
+        $request->validate($rules);
 
         try {
             // 1. Validate date availability first
@@ -506,11 +539,7 @@ class BookingController extends Controller
             }
 
             // 3. Get package details after validation
-            if ($request->type === 'studio') {
-                $package = StudioPackagesModel::findOrFail($request->package_id);
-            } else {
-                $package = FreelancerPackagesModel::findOrFail($request->package_id);
-            }
+            $package = $packageValidation['package'];
 
             // 4. Calculate amounts based on deposit policy
             $totalAmount = $package->package_price;
@@ -575,8 +604,8 @@ class BookingController extends Controller
             }
             // ========== End of deposit logic ==========
 
-            // 5. Create booking
-            $booking = BookingModel::create([
+            // 5. Prepare booking data
+            $bookingData = [
                 'booking_reference' => BookingModel::generateBookingReference(),
                 'client_id' => Auth::id(),
                 'booking_type' => $request->type,
@@ -586,11 +615,6 @@ class BookingController extends Controller
                 'start_time' => $request->start_time,
                 'end_time' => $request->end_time,
                 'location_type' => $request->location_type,
-                'venue_name' => $request->venue_name,
-                'street' => $request->street,
-                'barangay' => $request->barangay,
-                'city' => $request->city,
-                'province' => 'Cavite',
                 'special_requests' => $request->special_requests,
                 'total_amount' => $totalAmount,
                 'down_payment' => $downPayment,
@@ -599,7 +623,29 @@ class BookingController extends Controller
                 'payment_type' => $paymentType,
                 'status' => $bookingStatus,
                 'payment_status' => $paymentStatus,
-            ]);
+            ];
+
+            // Handle multiple locations
+            if ($request->has('locations') && is_array($request->locations)) {
+                $bookingData['multiple_locations'] = $request->locations;
+                // Clear single location fields
+                $bookingData['venue_name'] = null;
+                $bookingData['street'] = null;
+                $bookingData['barangay'] = null;
+                $bookingData['city'] = null;
+                $bookingData['province'] = 'Cavite';
+            } else {
+                // Single location
+                $bookingData['venue_name'] = $request->venue_name;
+                $bookingData['street'] = $request->street;
+                $bookingData['barangay'] = $request->barangay;
+                $bookingData['city'] = $request->city;
+                $bookingData['province'] = 'Cavite';
+                $bookingData['multiple_locations'] = null;
+            }
+
+            // Create booking
+            $booking = BookingModel::create($bookingData);
 
             // 6. Create booking package record
             BookingPackageModel::create([

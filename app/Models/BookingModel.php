@@ -63,6 +63,7 @@ class BookingModel extends Model
         'barangay',
         'city',
         'province',
+        'multiple_locations',
         'special_requests',
         'total_amount',
         'down_payment',
@@ -86,6 +87,7 @@ class BookingModel extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'multiple_locations' => 'array',
     ];
 
     /**
@@ -374,5 +376,54 @@ class BookingModel extends Model
         ];
         
         return $classes[$this->payment_status] ?? 'badge-soft-secondary';
+    }
+
+    /**
+     * Check if booking has multiple locations
+     */
+    public function hasMultipleLocations(): bool
+    {
+        return !empty($this->multiple_locations) && count($this->multiple_locations) > 1;
+    }
+
+    /**
+     * Get formatted locations for display
+     */
+    public function getFormattedLocationsAttribute(): array
+    {
+        if (empty($this->multiple_locations)) {
+            // Fallback to single location fields
+            return [[
+                'venue_name' => $this->venue_name,
+                'street' => $this->street,
+                'barangay' => $this->barangay,
+                'city' => $this->city,
+                'province' => $this->province,
+            ]];
+        }
+
+        return $this->multiple_locations;
+    }
+
+    /**
+     * Get primary location for display (first location)
+     */
+    public function getPrimaryLocationAttribute(): ?array
+    {
+        $locations = $this->formatted_locations;
+        return $locations[0] ?? null;
+    }
+
+    /**
+     * Get location count
+     */
+    public function getLocationCountAttribute(): int
+    {
+        if (!empty($this->multiple_locations)) {
+            return count($this->multiple_locations);
+        }
+        
+        // If using single location fields
+        return !empty($this->city) ? 1 : 0;
     }
 }

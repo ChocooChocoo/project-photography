@@ -333,7 +333,8 @@
                                             </small>
                                         </div>
 
-                                        <div id="locationDetails" style="display: none;">
+                                        {{-- SINGLE LOCATION DETAILS (Default) --}}
+                                        <div id="singleLocationDetails" style="display: none;">
                                             <div class="col-12 mb-3">
                                                 <label class="form-label">Venue Name</label>
                                                 <input type="text" class="form-control" id="venueName" name="venue_name" 
@@ -368,6 +369,24 @@
                                                 <input type="text" class="form-control" id="province" name="province" 
                                                     value="Cavite" readonly>
                                             </div>
+                                        </div>
+
+                                        {{-- MULTIPLE LOCATIONS CONTAINER --}}
+                                        <div id="multipleLocationsContainer" style="display: none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h6 class="mb-0 text-primary">Event Locations</h6>
+                                                <span class="badge badge-soft-info" id="locationCounter">0/0 locations</span>
+                                            </div>
+                                            
+                                            <div id="locationsList">
+                                                {{-- Dynamic locations will be added here --}}
+                                            </div>
+                                            
+                                            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addLocationBtn" style="display: none;">
+                                                <i class="ti ti-plus me-1"></i> Add Another Location
+                                            </button>
+                                            
+                                            <small class="text-muted d-block mt-2" id="multipleLocationsNote"></small>
                                         </div>
                                     </div>
                                 </div>
@@ -530,6 +549,11 @@
             let selectedPackageFlexibility = null;
             let selectedPackageDuration = null;
             let currentPackageLocationFlexibility = null;
+            
+            // ========== MULTIPLE LOCATION VARIABLES ==========
+            let currentMaxLocations = 1;
+            let allowMultipleLocations = false;
+            let locationCount = 0;
 
             // ========== Operating Days Enforcement ==========
             const operatingDays = JSON.parse($('#operatingDays').val() || '[]');
@@ -568,230 +592,7 @@
                 return operatingDays.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
             }
 
-            // Debug function to check available categories and packages
-            function debugFreelancerPackages() {
-                const type = $('#bookingType').val();
-                const providerId = $('#providerId').val();
-                
-                console.log('Debug Info:', {
-                    type: type,
-                    providerId: providerId,
-                    categories: $('#serviceCategory').html()
-                });
-                
-                if (type === 'freelancer') {
-                    $.ajax({
-                        url: '{{ route("client.bookings.packages") }}',
-                        type: 'POST',
-                        data: {
-                            type: type,
-                            provider_id: providerId,
-                            category_id: 1,
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            console.log('Debug Package Response:', response);
-                        }
-                    });
-                }
-            }
-
-            const originalCheckDateHandler = $('#eventDate, #startTime, #endTime').on('change', function() {
-                const selectedDate = $('#eventDate').val();
-                const startTime    = $('#startTime').val();
-                const endTime      = $('#endTime').val();
-
-                if (!selectedDate) {
-                    $('#dateStatusIcon').empty();
-                    $('#dateStatusText').text('Select a date to check availability');
-                    $('#closedDayNote').hide();
-                    $('#submitBookingBtn').prop('disabled', false);
-                    return;
-                }
-
-                // ==== Start: Validate duration for fixed packages ====
-                if (selectedPackageFlexibility === false && selectedPackageDuration > 0 && startTime && endTime) {
-                    // Calculate duration between start and end time
-                    const [startHours, startMinutes] = startTime.split(':').map(Number);
-                    const [endHours, endMinutes] = endTime.split(':').map(Number);
-                    
-                    const startDate = new Date();
-                    startDate.setHours(startHours, startMinutes, 0);
-                    
-                    const endDate = new Date();
-                    endDate.setHours(endHours, endMinutes, 0);
-                    
-                    // If end time is less than start time, assume it's the next day
-                    if (endDate < startDate) {
-                        endDate.setDate(endDate.getDate() + 1);
-                    }
-                    
-                    const durationMs = endDate - startDate;
-                    const durationHours = durationMs / (1000 * 60 * 60);
-                    
-                    // Allow small floating point differences (e.g., 4.99 vs 5.00)
-                    const isExactMatch = Math.abs(durationHours - selectedPackageDuration) < 0.01;
-                    
-                    if (!isExactMatch) {
-                        $('#dateStatusIcon').html('<i class="ti ti-alert-circle text-warning"></i>');
-                        $('#dateStatusText').html(`
-                            <span class="text-warning fw-medium">Duration Mismatch</span>
-                            <span class="text-muted d-block small">This package requires exactly ${selectedPackageDuration} ${selectedPackageDuration > 1 ? 'hours' : 'hour'}.</span>
-                        `);
-                        $('#submitBookingBtn').prop('disabled', true);
-                        return;
-                    }
-                }
-                // ==== End: Validate duration for fixed packages ====
-
-                // Block non-operating days immediately without server call
-                if (!isOperatingDay(selectedDate)) {
-                    const parts   = selectedDate.split('-');
-                    const dayName = new Date(parts[0], parts[1] - 1, parts[2])
-                        .toLocaleDateString('en-US', { weekday: 'long' });
-
-                    $('#dateStatusIcon').html('<i class="ti ti-circle-x text-danger"></i>');
-                    $('#dateStatusText').html(
-                        `<span class="text-danger fw-medium">${dayName} is not an operating day</span>`
-                    );
-                    $('#closedDayNote').text('Operating days: ' + formatOperatingDays()).show();
-                    $('#submitBookingBtn').prop('disabled', true);
-                    return;
-                }
-
-                // Only auto-check if all three fields are filled
-                if (selectedDate && startTime && endTime) {
-                    $('#closedDayNote').hide();
-                    $('#checkDateBtn').trigger('click');
-                } else {
-                    $('#dateStatusIcon').html('<i class="ti ti-info-circle text-info"></i>');
-                    $('#dateStatusText').html('<span class="text-muted">Please fill in start and end time to check availability</span>');
-                }
-            });
-
-            const originalCheckAvailability = $('#checkDateBtn').on('click', function() {
-                const selectedDate = $('#eventDate').val();
-                const startTime    = $('#startTime').val();
-                const endTime      = $('#endTime').val();
-                const type         = $('#bookingType').val();
-                const providerId   = $('#providerId').val();
-
-                if (!selectedDate) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'No Date Selected',
-                        text: 'Please select a date first.',
-                        confirmButtonColor: '#3475db'
-                    });
-                    return;
-                }
-
-                if (!startTime || !endTime) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Time Required',
-                        text: 'Please enter both start time and end time before checking availability.',
-                        confirmButtonColor: '#3475db'
-                    });
-                    return;
-                }
-
-                // ==== Start: Validate duration for fixed packages before checking availability ====
-                if (selectedPackageFlexibility === false && selectedPackageDuration > 0) {
-                    // Calculate duration between start and end time
-                    const [startHours, startMinutes] = startTime.split(':').map(Number);
-                    const [endHours, endMinutes] = endTime.split(':').map(Number);
-                    
-                    const startDate = new Date();
-                    startDate.setHours(startHours, startMinutes, 0);
-                    
-                    const endDate = new Date();
-                    endDate.setHours(endHours, endMinutes, 0);
-                    
-                    // If end time is less than start time, assume it's the next day
-                    if (endDate < startDate) {
-                        endDate.setDate(endDate.getDate() + 1);
-                    }
-                    
-                    const durationMs = endDate - startDate;
-                    const durationHours = durationMs / (1000 * 60 * 60);
-                    
-                    // Allow small floating point differences (e.g., 4.99 vs 5.00)
-                    const isExactMatch = Math.abs(durationHours - selectedPackageDuration) < 0.01;
-                    
-                    if (!isExactMatch) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Invalid Duration',
-                            html: `This package requires exactly <strong>${selectedPackageDuration} ${selectedPackageDuration > 1 ? 'hours' : 'hour'}</strong>.<br>
-                                Current selection: ${durationHours.toFixed(1)} hours.<br>
-                                <small class="text-muted">Please adjust your start and end times.</small>`,
-                            confirmButtonColor: '#3475db'
-                        });
-                        
-                        $('#dateStatusIcon').html('<i class="ti ti-alert-circle text-warning"></i>');
-                        $('#dateStatusText').html(`
-                            <span class="text-warning fw-medium">Duration Mismatch</span>
-                            <span class="text-muted d-block small">Package requires ${selectedPackageDuration} hours, selected is ${durationHours.toFixed(1)} hours.</span>
-                        `);
-                        $('#submitBookingBtn').prop('disabled', true);
-                        return;
-                    }
-                }
-                // ==== End: Validate duration for fixed packages before checking availability ====
-
-                // Show checking status
-                $('#dateStatusIcon').html('<i class="ti ti-clock text-info"></i>');
-                $('#dateStatusText').text('Checking availability...');
-
-                $.ajax({
-                    url: '{{ route("client.bookings.check-availability") }}',
-                    type: 'POST',
-                    data: {
-                        type:        type,
-                        provider_id: providerId,
-                        date:        selectedDate,
-                        start_time:  startTime,
-                        end_time:    endTime,
-                        _token:      '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        if (response.success && response.available) {
-                            $('#dateStatusIcon').html('<i class="ti ti-circle-check text-success"></i>');
-                            $('#dateStatusText').html(`
-                                <span class="text-success fw-medium">Available</span> 
-                                <span class="text-muted">(${response.existing_bookings}/${response.max_bookings} bookings)</span>
-                            `);
-                            $('#submitBookingBtn').prop('disabled', false);
-                        } else {
-                            $('#dateStatusIcon').html('<i class="ti ti-circle-x text-danger"></i>');
-                            $('#dateStatusText').html(`
-                                <span class="text-danger fw-medium">${response.message || 'Not Available'}</span>
-                            `);
-                            $('#submitBookingBtn').prop('disabled', true);
-
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Not Available',
-                                text: response.message || 'This time slot is not available.',
-                                confirmButtonColor: '#3475db'
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        $('#dateStatusIcon').html('<i class="ti ti-alert-circle text-danger"></i>');
-                        $('#dateStatusText').html('<span class="text-danger fw-medium">Error checking availability</span>');
-                        $('#submitBookingBtn').prop('disabled', true);
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Failed to check availability. Please try again.',
-                            confirmButtonColor: '#3475db'
-                        });
-                    }
-                });
-            });
+            // ========== EVENT HANDLERS ==========
 
             // Handle payment option selection
             $('input[name="payment_type"]').on('change', function() {
@@ -817,7 +618,6 @@
                 // Reset location type when category changes
                 $('#locationType').val('').prop('disabled', false);
                 $('#locationType').closest('.col-12').find('.badge.badge-soft-info').remove();
-                $('#locationDetails').hide();
                 
                 const categoryId = $(this).val();
                 const type = $('#bookingType').val();
@@ -863,7 +663,6 @@
                                     .replace(/"/g, '&quot;') // Escape quotes for HTML attribute
                                     .replace(/'/g, "&#39;"); // Escape single quotes
                                 
-                                const durationText = package.duration === 1 ? '1 Hour' : `${package.duration} Hours`;
                                 const priceText = `₱${parseFloat(package.package_price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                                 
                                 // Parse inclusions safely
@@ -1102,7 +901,7 @@
                 });
             });
             
-            // Handle package selection
+            // ========== PACKAGE SELECTION HANDLER ==========
             $(document).on('change', '.package-radio', function() {
                 selectedPackageId = $(this).val();
                 selectedPackageFlexibility = $(this).data('allow-time-customization') === '1';
@@ -1145,9 +944,14 @@
                     return;
                 }
                 
-                // ==== START: Handle location flexibility based on package ====
-                resetLocationUI(); // Clear any existing location UI
+                // ==== START: Handle location flexibility based on package_location FIRST ====
+                // This preserves the original behavior where package_location determines if
+                // the user needs to choose or if it's auto-set
                 
+                // Reset location UI first
+                resetLocationUI();
+                
+                // Check if package has location_flexibility data (from the enhanced getPackages method)
                 if (packageData.location_flexibility) {
                     handlePackageLocationFlexibility(packageData);
                 } else {
@@ -1156,23 +960,92 @@
                     if (packageData.package_location) {
                         const packageLocation = packageData.package_location;
                         
-                        if (packageLocation === 'In-Studio') {
-                            $('#locationType').val('in-studio');
-                        } else if (packageLocation === 'On-Location') {
-                            $('#locationType').val('on-location');
-                        } else {
-                            $('#locationType').val('');
+                        // Handle different package_location scenarios
+                        if (Array.isArray(packageLocation)) {
+                            if (packageLocation.length === 1) {
+                                // Single option - auto-set
+                                const location = packageLocation[0];
+                                if (location === 'In-Studio') {
+                                    $('#locationType').val('in-studio');
+                                    $('#locationType').prop('disabled', true);
+                                    $('#locationType').closest('.col-12').find('.form-label').append(
+                                        '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                                        '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
+                                    );
+                                } else if (location === 'On-Location') {
+                                    $('#locationType').val('on-location');
+                                    $('#locationType').prop('disabled', true);
+                                    $('#locationType').closest('.col-12').find('.form-label').append(
+                                        '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                                        '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
+                                    );
+                                }
+                            } else if (packageLocation.length > 1) {
+                                // Multiple options - user can choose
+                                $('#locationType').prop('disabled', false);
+                                $('#locationType').val('');
+                            }
+                        } else if (typeof packageLocation === 'string') {
+                            // Single string value
+                            if (packageLocation === 'In-Studio') {
+                                $('#locationType').val('in-studio');
+                                $('#locationType').prop('disabled', true);
+                                $('#locationType').closest('.col-12').find('.form-label').append(
+                                    '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                                    '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
+                                );
+                            } else if (packageLocation === 'On-Location') {
+                                $('#locationType').val('on-location');
+                                $('#locationType').prop('disabled', true);
+                                $('#locationType').closest('.col-12').find('.form-label').append(
+                                    '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                                    '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
+                                );
+                            }
                         }
                         
-                        $('#locationType').prop('disabled', true);
-                        $('#locationType').closest('.col-12').find('.form-label').append(
-                            '<span class="badge badge-soft-info ms-2" style="font-size: 0.65rem;">' +
-                            '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
-                        );
                         $('#locationType').trigger('change');
                     }
                 }
-                // ==== END: Handle location flexibility based on package ====
+                // ==== END: Handle location flexibility based on package_location ====
+                
+                // ==== START: Now handle multiple locations capability ====
+                // This is the NEW feature - if package allows multiple locations, show the repeater
+                const allowMultiple = packageData.allow_multiple_locations === true || 
+                                            packageData.allow_multiple_locations === '1' || 
+                                            packageData.allow_multiple_locations === 1;
+                const maxLocations = parseInt(packageData.max_locations) || 1;
+                
+                // Store these for later use
+                window.currentPackageSettings = {
+                    allowMultipleLocations: allowMultiple,
+                    maxLocations: maxLocations,
+                    locationType: $('#locationType').val() // Current location type (in-studio or on-location)
+                };
+                
+                console.log('Multiple location settings:', {
+                    allowMultiple: allowMultiple,
+                    maxLocations: maxLocations,
+                    currentLocationType: $('#locationType').val()
+                });
+                
+                // Only show multiple location UI if:
+                // 1. Package allows multiple locations AND
+                // 2. Current location type is 'on-location' (multiple locations only make sense for on-location)
+                // 3. maxLocations > 1
+                if (allowMultiple && maxLocations > 1 && $('#locationType').val() === 'on-location') {
+                    initMultipleLocationUI(packageData);
+                } else {
+                    // Hide multiple location UI and show single location UI if needed
+                    $('#singleLocationDetails').hide();
+                    $('#multipleLocationsContainer').hide();
+                    
+                    // Show single location UI only if location type is 'on-location'
+                    if ($('#locationType').val() === 'on-location') {
+                        showSingleLocationUI();
+                    }
+                }
+                // ==== END: Handle multiple locations capability ====
                 
                 const paymentType = $('input[name="payment_type"]:checked').val();
                 getBookingSummaryWithPaymentType(packageData, paymentType);
@@ -1180,8 +1053,18 @@
                 // Show/hide duration info based on package flexibility
                 updateTimeRestrictionInfo();
             });
+
+            // ========== ADD LOCATION BUTTON HANDLER ==========
+            $(document).on('click', '#addLocationBtn', function() {
+                addLocation();
+            });
+
+            // ========== REMOVE LOCATION BUTTON HANDLER ==========
+            $(document).on('click', '.remove-location-btn', function() {
+                removeLocation($(this));
+            });
             
-            // Toggle location details based on location type
+            // ========== LOCATION TYPE CHANGE HANDLER ==========
             $('#locationType').on('change', function() {
                 const locationValue = $(this).val();
                 
@@ -1189,11 +1072,20 @@
                 const isFlexible = currentPackageLocationFlexibility && 
                                 currentPackageLocationFlexibility.is_flexible;
                 
+                // Remove any existing auto-set badges when user changes location
+                $('.location-auto-set-badge').remove();
+                
                 if (locationValue === 'on-location') {
-                    $('#locationDetails').show();
-                    $('#venueName').prop('required', true);
-                    $('#city').prop('required', true);
-                    $('#barangay').prop('required', true);
+                    // Check if we have package settings and if multiple locations are allowed
+                    if (window.currentPackageSettings && 
+                        window.currentPackageSettings.allowMultipleLocations && 
+                        window.currentPackageSettings.maxLocations > 1) {
+                        // Show multiple location UI
+                        initMultipleLocationUI(window.currentPackageSettings);
+                    } else {
+                        // Show single location UI
+                        showSingleLocationUI();
+                    }
                     
                     // If from flexible selection, add visual indicator
                     if (isFlexible) {
@@ -1201,12 +1093,15 @@
                         $('input[value="on-location"]').next('label').addClass('active');
                     }
                 } else if (locationValue === 'in-studio') {
-                    $('#locationDetails').hide();
-                    $('#venueName').prop('required', false);
-                    $('#city').prop('required', false);
-                    $('#barangay').prop('required', false);
+                    // Hide all location details for in-studio
+                    $('#singleLocationDetails').hide();
+                    $('#multipleLocationsContainer').hide();
+                    
+                    // Clear any location data
+                    $('#venueName').val('');
                     $('#city').val('').trigger('change');
                     $('#barangay').prop('disabled', true).html('<option value="">Select Barangay</option>');
+                    $('#street').val('');
                     
                     // If from flexible selection, add visual indicator
                     if (isFlexible) {
@@ -1214,11 +1109,13 @@
                         $('input[value="in-studio"]').next('label').addClass('active');
                     }
                 } else {
-                    $('#locationDetails').hide();
+                    // No location type selected
+                    $('#singleLocationDetails').hide();
+                    $('#multipleLocationsContainer').hide();
                 }
             });
             
-            // Check date availability
+            // ========== CHECK DATE AVAILABILITY ==========
             $('#checkDateBtn').on('click', function() {
                 const selectedDate = $('#eventDate').val();
                 const startTime    = $('#startTime').val();
@@ -1299,7 +1196,7 @@
                 });
             });
 
-            // Auto-check when date or time changes
+            // ========== AUTO-CHECK DATE/TIME CHANGES ==========
             $('#eventDate, #startTime, #endTime').on('change', function() {
                 const selectedDate = $('#eventDate').val();
                 const startTime    = $('#startTime').val();
@@ -1338,16 +1235,24 @@
                 }
             });
             
-            // View calendar modal
-            $('#viewCalendarBtn').on('click', function() {
-                generateAvailabilityCalendar();
-                $('#calendarModal').modal('show');
-            });
-            
-            // Submit booking button
+            // ========== SUBMIT BOOKING BUTTON ==========
             $('#submitBookingBtn').on('click', function() {
-                if (!validateBookingForm()) return;
+                console.log('Submit button clicked');
+                console.log('Current state:', {
+                    allowMultipleLocations: allowMultipleLocations,
+                    currentMaxLocations: currentMaxLocations,
+                    locationCount: locationCount,
+                    locationType: $('#locationType').val()
+                });
                 
+                if (!validateBookingForm()) {
+                    console.log('Form validation failed');
+                    return;
+                }
+                
+                console.log('Form validation passed, preparing booking data');
+                
+                // Prepare booking data
                 bookingData = {
                     type: $('#bookingType').val(),
                     provider_id: $('#providerId').val(),
@@ -1356,11 +1261,7 @@
                     event_date: $('#eventDate').val(),
                     start_time: $('#startTime').val(),
                     end_time: $('#endTime').val(),
-                    location_type: $('#locationType').val(), // This is now auto-populated from package
-                    venue_name: $('#venueName').val(),
-                    street: $('#street').val(),
-                    barangay: $('#barangay').val(),
-                    city: $('#city').val(),
+                    location_type: $('#locationType').val(),
                     special_requests: $('#specialRequests').val(),
                     full_name: $('#fullName').val(),
                     contact_number: $('#contactNumber').val(),
@@ -1369,15 +1270,46 @@
                     _token: '{{ csrf_token() }}'
                 };
                 
+                // Handle multiple locations
+                if (allowMultipleLocations && currentMaxLocations > 1 && $('#locationType').val() === 'on-location') {
+                    const locations = getMultipleLocationsData();
+                    console.log('Multiple locations data:', locations);
+                    
+                    if (locations && locations.length > 0) {
+                        bookingData.locations = locations;
+                        // Clear single location fields
+                        bookingData.venue_name = null;
+                        bookingData.street = null;
+                        bookingData.barangay = null;
+                        bookingData.city = null;
+                    } else {
+                        console.error('No valid location data found');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Location Error',
+                            text: 'Please fill in all required location fields.',
+                            confirmButtonColor: '#3475db'
+                        });
+                        return;
+                    }
+                } else {
+                    // Single location
+                    bookingData.venue_name = $('#venueName').val();
+                    bookingData.street = $('#street').val();
+                    bookingData.barangay = $('#barangay').val();
+                    bookingData.city = $('#city').val();
+                }
+                
+                console.log('Final booking data:', bookingData);
                 showBookingSummary();
             });
             
-            // Proceed to payment
+            // ========== PROCEED TO PAYMENT ==========
             $('#proceedToPaymentBtn').on('click', function() {
                 processBooking();
             });
 
-            // City/Municipality change handler - Load Barangays
+            // ========== CITY CHANGE HANDLER (for single location) ==========
             $(document).on('change', '#city', function() {
                 const municipality = $(this).val();
                 const barangaySelect = $('#barangay');
@@ -1427,8 +1359,11 @@
                 });
             });
             
-            // ========== Functions ==========
+            // ========== FUNCTIONS ==========
 
+            /**
+             * Update time restriction info based on package flexibility
+             */
             function updateTimeRestrictionInfo() {
                 const timeHelpText = $('#dateStatusText').parent().find('.time-restriction-info');
                 timeHelpText.remove();
@@ -1477,6 +1412,9 @@
                 }
             }
 
+            /**
+             * Calculate end time based on start time and duration
+             */
             function calculateEndTime(startTime, durationHours) {
                 if (!startTime || !durationHours) return;
                 
@@ -1497,8 +1435,10 @@
                 $('#endTime').trigger('change');
             }
 
+            /**
+             * Get booking summary with payment type
+             */
             function getBookingSummaryWithPaymentType(packageData, paymentType) {
-                // ADDED: Better validation
                 if (!packageData) {
                     console.error('Package data is null or undefined');
                     return;
@@ -1517,7 +1457,7 @@
                     data: {
                         package_id: packageData.id,
                         type: $('#bookingType').val(),
-                        payment_type: paymentType, // This will be used for studio, but for freelancer the server will use deposit policy
+                        payment_type: paymentType,
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
@@ -1530,14 +1470,12 @@
                                 updateSummaryPriceDisplay(response.summary);
                             }
                             
-                            // ========== FIX: Handle fixed deposit display for freelancer ==========
+                            // Handle fixed deposit display for freelancer
                             @if($type === 'freelancer')
-                                // Check if this is a fixed deposit freelancer
                                 if (response.summary.deposit_type === 'fixed') {
                                     $('#downPaymentLabel').text('Fixed Deposit:');
                                     $('#downPayment').text('₱' + response.summary.down_payment);
                                     
-                                    // Add info about fixed deposit
                                     const depositInfo = `
                                         <div class="alert alert-info mt-2 py-2 small">
                                             <i class="ti ti-info-circle me-1"></i>
@@ -1548,7 +1486,6 @@
                                         </div>
                                     `;
                                     
-                                    // Remove existing deposit info if any
                                     $('.fixed-deposit-info').remove();
                                     $('#downPaymentRow').after(depositInfo);
                                 } else {
@@ -1559,13 +1496,6 @@
                             @else
                                 const percentage = response.summary.downpayment_percentage || 30;
                                 $('#downPaymentLabel').text(`Down Payment (${percentage}%):`);
-                            @endif
-                            // ========== End of fixed deposit handling ==========
-                            
-                            // Hide payment type toggle for freelancers if deposit policy is configured
-                            @if($type === 'freelancer')
-                                // Payment type is handled by the server based on deposit policy
-                                // No need to show/hide anything here
                             @endif
                         } else {
                             console.error('Summary response error:', response.message);
@@ -1578,20 +1508,107 @@
                 });
             }
 
+            /**
+             * Validate booking form
+             */
             function validateBookingForm() {
-                const form = document.getElementById('bookingForm');
-                if (!form.checkValidity()) {
-                    form.classList.add('was-validated');
+                console.log('========== VALIDATION START ==========');
+                
+                // Manual validation for required fields (skip HTML5 checkValidity)
+                const fullName = $('#fullName').val()?.trim();
+                const contactNumber = $('#contactNumber').val()?.trim();
+                const email = $('#email').val()?.trim();
+                const serviceCategory = $('#serviceCategory').val();
+                const eventDate = $('#eventDate').val();
+                const startTime = $('#startTime').val();
+                const endTime = $('#endTime').val();
+
+                console.log('Validating required fields:', {
+                    fullName, contactNumber, email, serviceCategory, eventDate, startTime, endTime
+                });
+
+                if (!fullName) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Full Name Required',
+                        text: 'Please enter your full name.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return false;
+                }
+
+                if (!contactNumber) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Contact Number Required',
+                        text: 'Please enter your contact number.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return false;
+                }
+
+                if (!email) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Email Required',
+                        text: 'Please enter your email address.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return false;
+                }
+
+                // Basic email format validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Email',
+                        text: 'Please enter a valid email address.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return false;
+                }
+
+                if (!serviceCategory) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Service Category Required',
+                        text: 'Please select a service category.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return false;
+                }
+
+                if (!eventDate) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Event Date Required',
+                        text: 'Please select an event date.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return false;
+                }
+
+                if (!startTime || !endTime) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Time Required',
+                        text: 'Please select both start and end time.',
+                        confirmButtonColor: '#3475db'
+                    });
                     return false;
                 }
                 
                 // Check date availability status
                 const dateStatusText = $('#dateStatusText').text().toLowerCase();
+                console.log('Date status text:', dateStatusText);
+                
                 if (dateStatusText.includes('fully booked') || 
                     dateStatusText.includes('not available') || 
                     dateStatusText.includes('error') ||
                     dateStatusText.includes('not an operating day') ||
                     dateStatusText.includes('duration mismatch')) {
+                    console.log('Date availability check failed');
                     Swal.fire({
                         icon: 'error',
                         title: 'Date/Time Not Available',
@@ -1603,6 +1620,7 @@
                 
                 // Check if date has been checked
                 if ($('#dateStatusText').text() === 'Select a date to check availability') {
+                    console.log('Date not checked');
                     Swal.fire({
                         icon: 'warning',
                         title: 'Date Not Checked',
@@ -1614,6 +1632,7 @@
                 
                 // Check if package is selected
                 if (!selectedPackageId) {
+                    console.log('No package selected');
                     Swal.fire({
                         icon: 'warning',
                         title: 'Package Required',
@@ -1623,33 +1642,74 @@
                     return false;
                 }
                 
-                // ==== START: Validate location selection for flexible packages ====
+                // Get location type
                 const locationType = $('#locationType').val();
+                console.log('Location type:', locationType);
                 
-                // Check if this is a flexible package that requires manual selection
-                if (currentPackageLocationFlexibility && currentPackageLocationFlexibility.is_flexible) {
-                    if (!locationType) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Location Required',
-                            text: 'Please select your preferred location type (In-Studio or On-Location).',
-                            confirmButtonColor: '#3475db'
-                        });
-                        return false;
-                    }
-                } else if (!locationType) {
+                if (!locationType) {
+                    console.log('No location type selected');
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Location Type Error',
-                        text: 'Please select a package first to determine location type.',
+                        title: 'Location Type Required',
+                        text: 'Please select a location type.',
                         confirmButtonColor: '#3475db'
                     });
                     return false;
                 }
-                // ==== END: Validate location selection for flexible packages ====
+                
+                // Validate based on location type and multiple location settings
+                if (locationType === 'on-location') {
+                    console.log('Validating on-location fields');
+                    console.log('Multiple location settings:', {
+                        allowMultipleLocations: allowMultipleLocations,
+                        currentMaxLocations: currentMaxLocations
+                    });
+                    
+                    // Check if we're using multiple locations
+                    if (allowMultipleLocations && currentMaxLocations > 1) {
+                        console.log('Validating multiple locations');
+                        // Validate multiple locations
+                        const multipleLocationsValid = validateMultipleLocations();
+                        console.log('Multiple locations validation result:', multipleLocationsValid);
+                        
+                        if (!multipleLocationsValid) {
+                            return false;
+                        }
+                    } else {
+                        console.log('Validating single location');
+                        // Validate single location
+                        const city = $('#city').val();
+                        const barangay = $('#barangay').val();
+                        
+                        console.log('Single location values:', { city, barangay });
+                        
+                        if (!city) {
+                            console.log('City missing');
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'City/Municipality Required',
+                                text: 'Please select a city/municipality.',
+                                confirmButtonColor: '#3475db'
+                            });
+                            return false;
+                        }
+                        
+                        if (!barangay) {
+                            console.log('Barangay missing');
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Barangay Required',
+                                text: 'Please select a barangay.',
+                                confirmButtonColor: '#3475db'
+                            });
+                            return false;
+                        }
+                    }
+                }
                 
                 // Duration validation for fixed packages
                 if (selectedPackageFlexibility === false && selectedPackageDuration > 0) {
+                    console.log('Validating fixed duration package');
                     const startTime = $('#startTime').val();
                     const endTime = $('#endTime').val();
                     
@@ -1667,15 +1727,19 @@
                             endDate.setDate(endDate.getDate() + 1);
                         }
                         
-                        const durationMs = endDate - startDate;
-                        const durationHours = durationMs / (1000 * 60 * 60);
+                        const durationInHours = (endDate - startDate) / (1000 * 60 * 60);
                         
-                        if (Math.abs(durationHours - selectedPackageDuration) >= 0.01) {
+                        console.log('Duration check:', {
+                            selectedDuration: selectedPackageDuration,
+                            calculatedDuration: durationInHours
+                        });
+                        
+                        if (Math.abs(durationInHours - selectedPackageDuration) > 0.1) {
+                            console.log('Duration mismatch');
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Invalid Duration',
-                                html: `This package requires exactly <strong>${selectedPackageDuration} ${selectedPackageDuration > 1 ? 'hours' : 'hour'}</strong>.<br>
-                                    Current selection: ${durationHours.toFixed(1)} hours.`,
+                                title: 'Duration Mismatch',
+                                text: `This package requires exactly ${selectedPackageDuration} hours. Please adjust your time selection.`,
                                 confirmButtonColor: '#3475db'
                             });
                             return false;
@@ -1683,57 +1747,28 @@
                     }
                 }
                 
-                // Only validate payment_type for studio
-                @if($type === 'studio')
-                    const paymentType = $('input[name="payment_type"]:checked').val();
-                    if (!paymentType) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Payment Type Required',
-                            text: 'Please select a payment type.',
-                            confirmButtonColor: '#3475db'
-                        });
-                        return false;
-                    }
-                @endif
+                // Payment type validation
+                const paymentType = $('input[name="payment_type"]:checked').val();
+                console.log('Payment type:', paymentType);
                 
-                // Validate on-location details if applicable
-                if ($('#locationType').val() === 'on-location') {
-                    if (!$('#city').val()) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'City/Municipality Required',
-                            text: 'Please select a city/municipality.',
-                            confirmButtonColor: '#3475db'
-                        });
-                        return false;
-                    }
-                    
-                    if (!$('#barangay').val()) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Barangay Required',
-                            text: 'Please select a barangay.',
-                            confirmButtonColor: '#3475db'
-                        });
-                        return false;
-                    }
-                }
-                
-                // Validate terms agreement
-                if (!$('#termsCheck').is(':checked')) {
+                if (!paymentType) {
+                    console.log('No payment type selected');
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Terms Required',
-                        text: 'You must agree to the Booking Terms and Conditions.',
+                        title: 'Payment Type Required',
+                        text: 'Please select a payment type.',
                         confirmButtonColor: '#3475db'
                     });
                     return false;
                 }
                 
+                console.log('========== VALIDATION PASSED ==========');
                 return true;
             }
             
+            /**
+             * Get booking summary
+             */
             function getBookingSummary(packageData) {
                 $.ajax({
                     url: '{{ route("client.bookings.summary") }}',
@@ -1754,6 +1789,9 @@
                 });
             }
             
+            /**
+             * Show booking summary modal
+             */
             function showBookingSummary() {
                 // Populate client information
                 $('#summaryFullName').text(bookingData.full_name);
@@ -1765,14 +1803,13 @@
                 const packageData = packageRadio.data('package');
                 const packageName = packageData.package_name;
 
-                // ========== FIX: Clear existing dynamic content to prevent duplicates ==========
-                $('#summaryPackage').siblings('.package-type-badge, .package-location-badge, .gallery-info, .photographer-info, .fixed-deposit-info').remove();
-                // ========== End of cleanup ==========
+                // Clear existing dynamic content to prevent duplicates
+                $('#summaryPackage').siblings('.package-type-badge, .package-location-badge, .gallery-info, .photographer-info, .fixed-deposit-info, .multiple-locations-info').remove();
 
                 // Package name
                 $('#summaryPackage').text(packageName);
 
-                // ========== FIX: Show package flexibility in summary ==========
+                // Show package flexibility in summary
                 const flexibilityHtml = selectedPackageFlexibility
                     ? '<span class="badge badge-soft-success package-type-badge"><i class="ti ti-clock-edit me-1"></i> Flexible Time Package</span>'
                     : '<span class="badge badge-soft-secondary package-type-badge"><i class="ti ti-clock me-1"></i> Fixed Duration: ' + selectedPackageDuration + ' hours</span>';
@@ -1781,9 +1818,8 @@
                     <p class="text-muted small mb-1">Package Type:</p>
                     <p class="fw-medium mb-2 package-type-badge">${flexibilityHtml}</p>
                 `);
-                // ========== End of package flexibility display ==========
 
-                // ========== FIX: Show package location badge ==========
+                // Show package location badge
                 const locationBadge = packageData.package_location === 'On-Location'
                     ? '<span class="badge badge-soft-info package-location-badge"><i class="ti ti-map-pin me-1"></i> On-Location Package</span>'
                     : '<span class="badge badge-soft-primary package-location-badge"><i class="ti ti-building me-1"></i> In-Studio Package</span>';
@@ -1792,7 +1828,6 @@
                     <p class="text-muted small mb-1">Package Location:</p>
                     <p class="fw-medium mb-2 package-location-badge">${locationBadge}</p>
                 `);
-                // ========== End of package location display ==========
 
                 // Event date
                 const eventDate = new Date(bookingData.event_date);
@@ -1807,12 +1842,11 @@
                     formatTime(bookingData.start_time) + ' - ' + formatTime(bookingData.end_time)
                 );
 
-                // ========== FIX: Show duration info in summary for fixed packages ==========
+                // Show duration info in summary for fixed packages
                 if (!selectedPackageFlexibility && selectedPackageDuration > 0) {
                     const startTime = bookingData.start_time;
                     const endTime = bookingData.end_time;
 
-                    // Calculate duration
                     const [startHours, startMinutes] = startTime.split(':').map(Number);
                     const [endHours, endMinutes] = endTime.split(':').map(Number);
 
@@ -1834,37 +1868,37 @@
                         <p class="fw-medium mb-2">${durationHours.toFixed(1)} hours (matches package fixed duration)</p>
                     `);
                 }
-                // ========== End of duration info ==========
 
-                // ────────────────────────────────────────────────
-                // Location type – UPDATED with flexible location choice support
-                // ────────────────────────────────────────────────
-                let locationTypeDisplay = '';
-
-                if (currentPackageLocationFlexibility && currentPackageLocationFlexibility.is_flexible) {
-                    // For flexible packages, show the user's selection
-                    const selectedLocation = $('.flexible-location-option:checked').val();
-                    locationTypeDisplay = selectedLocation === 'in-studio' ? 'In-Studio' : 'On-Location';
-
-                    // Add note about user's choice
-                    $('#summaryLocationType').after(`
-                        <p class="text-muted small mb-1 mt-1">Location Choice:</p>
-                        <p class="fw-medium mb-2">
-                            <span class="badge badge-soft-info">
-                                <i class="ti ti-check me-1"></i> User selected: ${locationTypeDisplay}
-                            </span>
-                        </p>
-                    `);
-                } else {
-                    // Standard (non-flexible) behavior
-                    locationTypeDisplay = bookingData.location_type === 'in-studio' ? 'In-Studio' : 'On-Location';
-                }
-
+                // Location type
+                let locationTypeDisplay = bookingData.location_type === 'in-studio' ? 'In-Studio' : 'On-Location';
                 $('#summaryLocationType').text(locationTypeDisplay);
-                // ────────────────────────────────────────────────
 
-                // Location details for on-location bookings
-                if (bookingData.location_type === 'on-location') {
+                // Location details
+                $('#summaryLocationDetails').empty();
+                
+                if (allowMultipleLocations && currentMaxLocations > 1 && bookingData.locations && bookingData.locations.length > 0) {
+                    // Multiple locations
+                    let locationsHtml = '<p class="text-muted small mb-1 mt-2">Event Locations:</p>';
+                    
+                    bookingData.locations.forEach(function(loc, index) {
+                        let locationText = '';
+                        if (loc.venue_name) locationText += `<strong>${loc.venue_name}</strong><br>`;
+                        if (loc.street) locationText += loc.street + ', ';
+                        if (loc.barangay) locationText += 'Brgy. ' + loc.barangay + ', ';
+                        if (loc.city) locationText += loc.city + ', ';
+                        locationText += 'Cavite';
+                        
+                        locationsHtml += `
+                            <div class="mb-2 p-2 border rounded multiple-locations-info">
+                                <span class="badge badge-soft-primary mb-1">Location #${index + 1}</span>
+                                <p class="mb-0 small">${locationText}</p>
+                            </div>
+                        `;
+                    });
+                    
+                    $('#summaryLocationDetails').html(locationsHtml).show();
+                } else if (bookingData.location_type === 'on-location') {
+                    // Single on-location
                     let locationText = '';
                     if (bookingData.venue_name) locationText += `<strong>${bookingData.venue_name}</strong><br>`;
                     if (bookingData.street) locationText += bookingData.street + ', ';
@@ -1880,7 +1914,7 @@
                     $('#summaryLocationDetails').hide();
                 }
 
-                // ========== FIX: Display price breakdown with proper formatting ==========
+                // Display price breakdown with proper formatting
                 if (window.bookingSummary) {
                     $('#packagePrice').text('₱' + window.bookingSummary.package_price);
                     $('#downPayment').text('₱' + window.bookingSummary.down_payment);
@@ -1893,7 +1927,6 @@
                             $('#downPaymentLabel').text('Fixed Deposit:');
                             $('#downPayment').text('₱' + window.bookingSummary.down_payment);
 
-                            // Add fixed deposit info
                             const depositInfo = `
                                 <div class="alert alert-info mt-2 py-2 small fixed-deposit-info">
                                     <i class="ti ti-info-circle me-1"></i>
@@ -1923,7 +1956,7 @@
                         $('#remainingBalanceRow').show();
                     }
 
-                    // ========== FIX: Display gallery info ==========
+                    // Display gallery info
                     const galleryHtml = `
                         <p class="text-muted small mb-1 mt-2">Online Gallery:</p>
                         <p class="fw-medium mb-2 gallery-info">
@@ -1935,7 +1968,7 @@
                     `;
                     $('#summaryPackage').after(galleryHtml);
 
-                    // ========== FIX: Display photographer info for studio ==========
+                    // Display photographer info for studio
                     @if($type === 'studio')
                         if (window.bookingSummary.photographer_count !== undefined) {
                             const photographerHtml = `
@@ -1950,9 +1983,8 @@
                             $('#summaryPackage').after(photographerHtml);
                         }
                     @endif
-                    // ========== End of photographer info ==========
 
-                    // ========== FIX: Display package inclusions ==========
+                    // Display package inclusions
                     let inclusionsHtml = '';
                     if (window.bookingSummary.inclusions && Array.isArray(window.bookingSummary.inclusions)) {
                         window.bookingSummary.inclusions.forEach(function(inclusion) {
@@ -1960,12 +1992,14 @@
                         });
                     }
                     $('#summaryInclusions').html(inclusionsHtml);
-                    // ========== End of inclusions display ==========
                 }
 
                 $('#bookingSummaryModal').modal('show');
             }
             
+            /**
+             * Process booking
+             */
             function processBooking() {
                 $('#proceedToPaymentBtn').prop('disabled', true);
                 $('#proceedToPaymentBtn').html(`
@@ -1977,11 +2011,14 @@
                     bookingData.payment_type = $('input[name="payment_type"]:checked').val();
                 }
                 
+                console.log('Sending booking data to server:', bookingData);
+                
                 $.ajax({
                     url: '{{ route("client.bookings.store") }}',
                     type: 'POST',
                     data: bookingData,
                     success: function(response) {
+                        console.log('Booking store response:', response);
                         if (response.success) {
                             bookingId = response.booking.id;
                             initializePayment();
@@ -1992,12 +2029,15 @@
                     },
                     error: function(xhr) {
                         console.error('Booking store error:', xhr);
+                        console.error('Error response:', xhr.responseJSON);
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
                             let errorMessages = [];
                             $.each(xhr.responseJSON.errors, function(field, messages) {
                                 errorMessages.push(messages.join(', '));
                             });
                             showError('Validation errors: ' + errorMessages.join('; '));
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            showError('Booking creation failed: ' + xhr.responseJSON.message);
                         } else {
                             showError('Booking creation failed. Please try again.');
                         }
@@ -2006,6 +2046,9 @@
                 });
             }
             
+            /**
+             * Initialize payment
+             */
             function initializePayment() {
                 Swal.fire({
                     title: 'Confirm Payment',
@@ -2025,6 +2068,9 @@
                 });
             }
 
+            /**
+             * Proceed with payment
+             */
             function proceedWithPayment() {
                 $('#proceedToPaymentBtn').prop('disabled', true);
                 $('#proceedToPaymentBtn').html(`
@@ -2062,6 +2108,9 @@
                 });
             }
             
+            /**
+             * Generate availability calendar
+             */
             function generateAvailabilityCalendar() {
                 const calendarEl = document.getElementById('availabilityCalendar');
                 const today = new Date();
@@ -2131,6 +2180,9 @@
                 });
             }
 
+            /**
+             * Get calendar availability
+             */
             function getCalendarAvailability(year, month) {
                 const type = $('#bookingType').val();
                 const providerId = $('#providerId').val();
@@ -2154,6 +2206,9 @@
                 });
             }
             
+            /**
+             * Format time
+             */
             function formatTime(timeString) {
                 const [hours, minutes] = timeString.split(':');
                 const hour = parseInt(hours);
@@ -2162,6 +2217,9 @@
                 return `${formattedHour}:${minutes} ${ampm}`;
             }
             
+            /**
+             * Show error message
+             */
             function showError(message) {
                 Swal.fire({
                     icon: 'error',
@@ -2171,6 +2229,9 @@
                 });
             }
             
+            /**
+             * Reset payment button
+             */
             function resetPaymentButton() {
                 $('#proceedToPaymentBtn').prop('disabled', false);
                 $('#proceedToPaymentBtn').html(`
@@ -2178,6 +2239,9 @@
                 `);
             }
 
+            /**
+             * Update summary price display
+             */
             function updateSummaryPriceDisplay(summary) {
                 $('#packagePrice').text('₱' + summary.package_price);
                 $('#downPayment').text('₱' + summary.down_payment);
@@ -2220,17 +2284,19 @@
                 }
             }
 
+            /**
+             * Handle package location flexibility
+             */
             function handlePackageLocationFlexibility(packageData) {
                 // Store current package flexibility data
                 currentPackageLocationFlexibility = packageData.location_flexibility;
                 
                 // Get the location container elements
                 const locationTypeSelect = $('#locationType');
-                const locationSelectionUI = $('#locationSelectionUI');
-                const locationDetails = $('#locationDetails');
                 
                 // Remove any existing custom UI first
                 $('.flexible-location-ui').remove();
+                $('.location-auto-set-badge').remove();
                 
                 // Check if package has location flexibility data
                 if (!currentPackageLocationFlexibility) {
@@ -2249,67 +2315,25 @@
                 });
                 
                 if (isFlexible) {
-                    // === CASE C: Both options available - Show selection UI ===
+                    // === CASE: Both options available ["In-Studio", "On-Location"] - Show selection UI ===
                     
-                    // Hide the original select
-                    locationTypeSelect.hide();
-                    locationTypeSelect.prop('required', false);
+                    // Show the original select but don't disable it
+                    locationTypeSelect.show();
+                    locationTypeSelect.prop('disabled', false);
+                    locationTypeSelect.val(''); // Clear any previous value
                     
-                    // Create custom selection UI
-                    const flexibleUI = `
-                        <div class="flexible-location-ui mb-3">
-                            <label class="form-label">Select Location Type</label>
-                            <div class="row g-2">
-                                <div class="col-md-6">
-                                    <input type="radio" class="btn-check flexible-location-option" 
-                                        name="flexible_location" value="in-studio" 
-                                        id="flexibleStudio" autocomplete="off">
-                                    <label class="btn btn-outline-primary w-100" for="flexibleStudio">
-                                        <i class="ti ti-building me-2"></i>In-Studio
-                                    </label>
-                                </div>
-                                <div class="col-md-6">
-                                    <input type="radio" class="btn-check flexible-location-option" 
-                                        name="flexible_location" value="on-location" 
-                                        id="flexibleLocation" autocomplete="off">
-                                    <label class="btn btn-outline-primary w-100" for="flexibleLocation">
-                                        <i class="ti ti-map-pin me-2"></i>On-Location
-                                    </label>
-                                </div>
-                            </div>
-                            <small class="text-muted d-block mt-2">
-                                <i class="ti ti-info-circle me-1"></i>
-                                This package is available at both locations. Please choose your preferred option.
-                            </small>
-                        </div>
-                    `;
+                    // Add info badge
+                    locationTypeSelect.closest('.col-12').find('.form-label').append(
+                        '<span class="badge badge-soft-success ms-2 flexible-location-badge" style="font-size: 0.65rem;">' +
+                        '<i class="ti ti-arrows-maximize me-1"></i>Flexible - Choose location</span>'
+                    );
                     
-                    // Insert the UI after the label
-                    locationTypeSelect.closest('.col-12').find('.form-label').after(flexibleUI);
-                    
-                    // Handle selection changes
-                    $('.flexible-location-option').on('change', function() {
-                        const selectedValue = $(this).val();
-                        
-                        // Update hidden select value for form submission
-                        locationTypeSelect.val(selectedValue);
-                        
-                        // Trigger location type change to show/hide details
-                        locationTypeSelect.trigger('change');
-                        
-                        // Visual feedback
-                        $('.flexible-location-ui .btn-outline-primary').removeClass('active');
-                        $(this).next('label').addClass('active');
-                    });
-                    
-                    // Initially hide location details until selection is made
-                    locationDetails.hide();
+                    // Hide location details until selection is made
+                    $('#singleLocationDetails').hide();
+                    $('#multipleLocationsContainer').hide();
                     
                 } else if (singleOption) {
-                    // === CASE A or B: Single option only - Auto-set ===
-                    
-                    // Remove any existing flexible UI
-                    $('.flexible-location-ui').remove();
+                    // === CASE: Single option only ["In-Studio"] or ["On-Location"] - Auto-set ===
                     
                     // Show and set the original select
                     locationTypeSelect.show();
@@ -2331,33 +2355,380 @@
                     locationTypeSelect.val(formValue);
                     
                     // Add visual indicator
-                    const indicator = `
-                        <div class="alert alert-info alert-sm py-2 mt-2 flexible-location-ui">
-                            <i class="ti ti-info-circle me-1"></i>
-                            <strong>Location auto-set:</strong> This package is only available as <strong>${displayText}</strong>
-                        </div>
-                    `;
-                    locationTypeSelect.closest('.col-12').append(indicator);
+                    locationTypeSelect.closest('.col-12').find('.form-label').append(
+                        '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                        '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
+                    );
                     
                     // Trigger change to show/hide location details
                     locationTypeSelect.trigger('change');
                 }
             }
 
+            /**
+             * Reset location UI
+             */
             function resetLocationUI() {
                 const locationTypeSelect = $('#locationType');
-                const locationDetails = $('#locationDetails');
+                const singleLocationDiv = $('#singleLocationDetails');
+                const multipleLocationsDiv = $('#multipleLocationsContainer');
+                const locationsList = $('#locationsList');
+                const addLocationBtn = $('#addLocationBtn');
                 
-                // Remove any custom UI
-                $('.flexible-location-ui').remove();
+                // Reset values
+                locationCount = 0;
+                currentMaxLocations = 1;
+                allowMultipleLocations = false;
                 
-                // Reset select
-                locationTypeSelect.show();
+                // Clear locations list
+                locationsList.empty();
+                
+                // Hide both containers initially
+                singleLocationDiv.hide();
+                multipleLocationsDiv.hide();
+                addLocationBtn.hide();
+                
+                // Remove any badges
+                $('.flexible-location-badge').remove();
+                $('.location-auto-set-badge').remove();
+                
+                // Reset location type select
                 locationTypeSelect.prop('disabled', false);
-                locationTypeSelect.val('');
+                $('.flexible-location-ui').remove();
+            }
+
+            /**
+             * Initialize multiple location UI
+             */
+            function initMultipleLocationUI(packageData) {
+                resetLocationUI();
                 
-                // Hide details
-                locationDetails.hide();
+                // Get package location settings
+                allowMultipleLocations = packageData.allow_multiple_locations === true || packageData.allow_multiple_locations === '1' || packageData.allow_multiple_locations === 1;
+                currentMaxLocations = parseInt(packageData.max_locations) || 1;
+                
+                console.log('Initializing multiple location UI:', {
+                    allowMultiple: allowMultipleLocations,
+                    maxLocations: currentMaxLocations
+                });
+                
+                // Update location counter
+                $('#locationCounter').text(`0/${currentMaxLocations} locations`);
+                $('#multipleLocationsNote').text(`You can add up to ${currentMaxLocations} location${currentMaxLocations > 1 ? 's' : ''} for this package.`);
+                
+                // Hide single location UI
+                $('#singleLocationDetails').hide();
+                
+                // Show multiple location container
+                $('#multipleLocationsContainer').show();
+                
+                // Add first location by default
+                addLocation();
+                
+                // Show add button if max locations > 1
+                if (currentMaxLocations > 1) {
+                    $('#addLocationBtn').show();
+                } else {
+                    $('#addLocationBtn').hide();
+                }
+                
+                // Update location counter
+                updateLocationCounter();
+            }
+
+            /**
+             * Show single location UI
+             */
+            function showSingleLocationUI() {
+                const singleLocationDiv = $('#singleLocationDetails');
+                const multipleLocationsDiv = $('#multipleLocationsContainer');
+                
+                singleLocationDiv.show();
+                multipleLocationsDiv.hide();
+                
+                // Reset single location fields
+                $('#venueName').val('');
+                $('#street').val('');
+                $('#barangay').val('').prop('disabled', true);
+                $('#city').val('').trigger('change');
+            }
+
+            /**
+             * Add a new location entry
+             */
+            function addLocation() {
+                if (locationCount >= currentMaxLocations) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Maximum Locations Reached',
+                        text: `You can only add up to ${currentMaxLocations} location${currentMaxLocations > 1 ? 's' : ''}.`,
+                        confirmButtonColor: '#3475db'
+                    });
+                    return;
+                }
+                
+                locationCount++;
+                const locationIndex = locationCount - 1;
+                
+                const locationHtml = `
+                    <div class="location-entry card mb-3" data-index="${locationIndex}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="card-subtitle text-muted">Location #${locationCount}</h6>
+                                ${locationCount > 1 ? `
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-location-btn">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="mb-2">
+                                <label class="form-label small">Venue Name</label>
+                                <input type="text" class="form-control form-control-sm" 
+                                    name="locations[${locationIndex}][venue_name]" 
+                                    placeholder="Enter venue name (optional)">
+                            </div>
+                            
+                            <div class="mb-2">
+                                <label class="form-label small">City/Municipality <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm location-city" 
+                                    name="locations[${locationIndex}][city]" required>
+                                    <option value="">Select City/Municipality</option>
+                                    @foreach($municipalities as $municipality)
+                                        <option value="{{ $municipality }}">{{ $municipality }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <label class="form-label small">Barangay <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm location-barangay" 
+                                    name="locations[${locationIndex}][barangay]" required disabled>
+                                    <option value="">Select Barangay</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <label class="form-label small">Street / Building / Unit No.</label>
+                                <input type="text" class="form-control form-control-sm" 
+                                    name="locations[${locationIndex}][street]" 
+                                    placeholder="Enter street name, building, unit number (optional)">
+                            </div>
+                            
+                            <input type="hidden" name="locations[${locationIndex}][province]" value="Cavite">
+                        </div>
+                    </div>
+                `;
+                
+                $('#locationsList').append(locationHtml);
+                updateLocationCounter();
+                
+                // Attach city change handler for this location
+                attachLocationCityHandler(locationIndex);
+            }
+
+            /**
+             * Attach city change handler for a specific location
+             */
+            function attachLocationCityHandler(index) {
+                $(document).off('change', `select[name="locations[${index}][city]"]`).on('change', `select[name="locations[${index}][city]"]`, function() {
+                    const municipality = $(this).val();
+                    const barangaySelect = $(`select[name="locations[${index}][barangay]"]`);
+                    
+                    if (!municipality) {
+                        barangaySelect.prop('disabled', true).html('<option value="">Select Barangay</option>');
+                        return;
+                    }
+                    
+                    barangaySelect.prop('disabled', true).html('<option value="">Loading barangays...</option>');
+                    
+                    $.ajax({
+                        url: '{{ route("client.locations.barangays") }}',
+                        type: 'POST',
+                        data: {
+                            municipality: municipality,
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            if (response.success && response.barangays && response.barangays.length > 0) {
+                                let options = '<option value="">Select Barangay</option>';
+                                const sortedBarangays = response.barangays.sort();
+                                sortedBarangays.forEach(function(barangay) {
+                                    options += `<option value="${barangay}">${barangay}</option>`;
+                                });
+                                barangaySelect.html(options).prop('disabled', false);
+                            } else {
+                                barangaySelect.html('<option value="">No barangays available</option>').prop('disabled', true);
+                            }
+                        },
+                        error: function() {
+                            barangaySelect.html('<option value="">Error loading barangays</option>').prop('disabled', true);
+                        }
+                    });
+                });
+            }
+
+            /**
+             * Remove a location entry
+             */
+            function removeLocation(entry) {
+                if (locationCount <= 1) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Cannot Remove',
+                        text: 'At least one location is required.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return;
+                }
+                
+                Swal.fire({
+                    title: 'Remove Location',
+                    text: 'Are you sure you want to remove this location?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, remove it'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        entry.closest('.location-entry').remove();
+                        locationCount--;
+                        
+                        // Re-index remaining locations
+                        $('#locationsList .location-entry').each(function(newIndex) {
+                            $(this).attr('data-index', newIndex);
+                            $(this).find('input, select').each(function() {
+                                const name = $(this).attr('name');
+                                if (name) {
+                                    $(this).attr('name', name.replace(/\[\d+\]/, `[${newIndex}]`));
+                                }
+                            });
+                        });
+                        
+                        updateLocationCounter();
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Removed',
+                            text: 'Location has been removed.',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    }
+                });
+            }
+
+            /**
+             * Update location counter display
+             */
+            function updateLocationCounter() {
+                $('#locationCounter').text(`${locationCount}/${currentMaxLocations} locations`);
+                
+                // Enable/disable add button
+                if (locationCount >= currentMaxLocations) {
+                    $('#addLocationBtn').prop('disabled', true);
+                } else {
+                    $('#addLocationBtn').prop('disabled', false);
+                }
+            }
+
+            /**
+             * Get multiple locations data for form submission
+             */
+            function getMultipleLocationsData() {
+                console.log('Collecting multiple locations data');
+                const locations = [];
+                
+                $('.location-entry').each(function(index) {
+                    const elementIndex = $(this).data('index');
+                    console.log(`Processing location entry #${index + 1}, stored index: ${elementIndex}`);
+                    
+                    const location = {
+                        venue_name: $(`input[name="locations[${elementIndex}][venue_name]"]`).val() || '',
+                        city: $(`select[name="locations[${elementIndex}][city]"]`).val(),
+                        barangay: $(`select[name="locations[${elementIndex}][barangay]"]`).val(),
+                        street: $(`input[name="locations[${elementIndex}][street]"]`).val() || '',
+                        province: 'Cavite'
+                    };
+                    
+                    console.log(`Location #${index + 1} data:`, location);
+                    
+                    // Only add if required fields are filled
+                    if (location.city && location.barangay) {
+                        locations.push(location);
+                        console.log(`Location #${index + 1} is valid, added to submission`);
+                    } else {
+                        console.warn(`Location #${index + 1} is incomplete, skipping:`, {
+                            hasCity: !!location.city,
+                            hasBarangay: !!location.barangay
+                        });
+                    }
+                });
+                
+                console.log('Total valid locations collected:', locations.length);
+                return locations;
+            }
+
+            /**
+             * Validate multiple locations
+             */
+            function validateMultipleLocations() {
+                console.log('Validating multiple locations');
+                
+                if (!allowMultipleLocations || currentMaxLocations <= 1) {
+                    console.log('Multiple locations not enabled, skipping validation');
+                    return true;
+                }
+                
+                // First, check if there are any location entries
+                const locationEntries = $('.location-entry');
+                console.log('Location entries found:', locationEntries.length);
+                
+                if (locationEntries.length === 0) {
+                    console.log('No location entries found');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Location Required',
+                        text: 'Please add at least one location.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return false;
+                }
+                
+                const locations = getMultipleLocationsData();
+                console.log('Collected locations data:', locations);
+                
+                if (locations.length === 0) {
+                    console.log('No valid locations found (all incomplete)');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Location Required',
+                        text: 'Please fill in at least one complete location with City/Municipality and Barangay.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return false;
+                }
+                
+                // Check if all locations have required fields
+                for (let i = 0; i < locations.length; i++) {
+                    const loc = locations[i];
+                    console.log(`Location #${i + 1}:`, loc);
+                    
+                    if (!loc.city || !loc.barangay) {
+                        console.log(`Location #${i + 1} missing required fields`);
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Incomplete Location',
+                            text: `Location #${i + 1} is missing required fields (City/Municipality and Barangay).`,
+                            confirmButtonColor: '#3475db'
+                        });
+                        return false;
+                    }
+                }
+                
+                console.log('All locations validated successfully');
+                return true;
             }
         });
     </script>
