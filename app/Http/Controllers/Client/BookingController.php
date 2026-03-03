@@ -485,20 +485,21 @@ class BookingController extends Controller
             'email' => 'required|email|max:255',
         ];
 
-        // ==== NEW: Conditional payment_type validation for freelancers ====
+        // ==== FIXED: Conditional payment_type validation for freelancers ====
         // For studios, payment_type is always required
-        // For freelancers, payment_type is only required if they have no deposit policy
         if ($request->type === 'studio') {
             $rules['payment_type'] = 'required|in:downpayment,full_payment';
         } else {
             // For freelancers, check if they have a deposit policy
             $freelancer = \App\Models\Freelancer\ProfileModel::where('user_id', $request->provider_id)->first();
             
-            // If freelancer has no deposit policy or policy is 'not_required', require payment_type
+            // If freelancer has no deposit policy or policy is 'not_required', payment_type should be 'full_payment'
+            // But we don't need to validate it from the request - we'll set it in the backend
             if (!$freelancer || $freelancer->deposit_policy !== 'required') {
-                $rules['payment_type'] = 'required|in:downpayment,full_payment';
+                // No validation rule for payment_type - we'll set it manually
+                // The frontend may or may not send it
             }
-            // If freelancer HAS a required deposit policy, payment_type is NOT required
+            // If freelancer HAS a required deposit policy, payment_type is NOT required from request
             // It will be determined automatically based on their settings
         }
         // ==== END: Conditional payment_type validation ====

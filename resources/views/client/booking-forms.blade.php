@@ -1319,16 +1319,20 @@
                     // Check if freelancer has a deposit policy
                     const hasPolicy = window.currentFreelancerSettings?.hasDepositPolicy === true;
                     
-                    if (!hasPolicy) {
-                        // Only send payment_type if freelancer has no policy
-                        bookingData.payment_type = $('input[name="payment_type"]:checked').val();
-                        console.log('Freelancer (no policy) - sending payment_type:', bookingData.payment_type);
-                    } else {
-                        // Don't send payment_type - server will determine from policy
+                    if (hasPolicy) {
+                        // Freelancer has policy - don't send payment_type, server will determine
                         console.log('Freelancer (has policy) - skipping payment_type');
+                    } else {
+                        // Freelancer has no policy - send the hidden payment_type value
+                        // Get the hidden input value
+                        const hiddenPaymentType = $('input[name="payment_type"][type="hidden"]').val();
+                        if (hiddenPaymentType) {
+                            bookingData.payment_type = hiddenPaymentType;
+                            console.log('Freelancer (no policy) - sending payment_type from hidden:', hiddenPaymentType);
+                        }
                     }
                 } else {
-                    // Studio always sends payment_type
+                    // Studio always sends payment_type from radio selection
                     bookingData.payment_type = $('input[name="payment_type"]:checked').val();
                     console.log('Studio booking - sending payment_type:', bookingData.payment_type);
                 }
@@ -1902,8 +1906,15 @@
                 }
                 
                 // ========== FIXED: Payment type validation with freelancer policy check ==========
-                const paymentType = $('input[name="payment_type"]:checked').val();
-                console.log('Payment type:', paymentType);
+                // Get payment type - handle both radio buttons and hidden inputs
+                let paymentType = null;
+                const paymentTypeRadio = $('input[name="payment_type"]:checked').val();
+                const paymentTypeHidden = $('input[name="payment_type"][type="hidden"]').val();
+                
+                // Use radio value if available, otherwise use hidden value
+                paymentType = paymentTypeRadio || paymentTypeHidden;
+                
+                console.log('Payment type found:', paymentType);
                 
                 // For freelancer bookings, check if they have a deposit policy
                 if (bookingType === 'freelancer') {
@@ -1921,9 +1932,9 @@
                         // We don't need to validate it here
                         console.log('Freelancer has deposit policy - skipping payment type validation');
                     } else {
-                        // Freelancer has no policy - require payment type selection
+                        // Freelancer has no policy - require payment type (should be set by hidden input)
                         if (!paymentType) {
-                            console.log('No payment type selected for freelancer without policy');
+                            console.log('No payment type found for freelancer without policy');
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Payment Type Required',
