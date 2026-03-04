@@ -190,6 +190,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/subscription/success/{reference}',         [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentSuccess'])->name('owner.subscription.success');
         Route::get('/subscription/failed/{reference}',          [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentFailed'])->name('owner.subscription.failed');
 
+        // Manage Employee  
+        Route::get('/view/employee',                            [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'index'])->name('owner.employee.index');
+        Route::get('/create/employee',                          [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'create'])->name('owner.employee.create');
+
     });
 
     // Freelancer Routes ===================================================================================================================================================

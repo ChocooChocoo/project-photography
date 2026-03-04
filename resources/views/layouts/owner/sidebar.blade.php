@@ -174,7 +174,7 @@
 
             <li class="side-nav-item {{ $manageStudioPhotographersRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageStudioPhotographers" aria-expanded="{{ $manageStudioPhotographersRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageStudioPhotographers" class="side-nav-link {{ $manageStudioPhotographersRoutes ? 'active' : '' }}">
-                    <span class="menu-icon"><i class="ti ti-user-circle"></i></span>
+                    <span class="menu-icon"><i class="ti ti-user-plus"></i></span>
                     <span class="menu-text" data-lang="manage-studio-photographers">Photographers</span>
                     <span class="menu-arrow"></span>
                 </a>
@@ -188,6 +188,33 @@
                         <li class="side-nav-item">
                             <a href="{{ route('owner.studio-photographers.create') }}" class="side-nav-link">
                                 <span class="menu-text" data-lang="add-photographer">Add Photographer</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            {{-- Manage Employee --}}
+            @php
+                $manageEmployeeRoutes = Route::is('owner.employee.index');
+            @endphp
+            
+            <li class="side-nav-item {{ $manageEmployeeRoutes ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarManageEmployee" aria-expanded="{{ $manageEmployeeRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageEmployee" class="side-nav-link {{ $manageEmployeeRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-user-shield"></i></span>
+                    <span class="menu-text" data-lang="manage-employee">Employee</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse {{ $manageEmployeeRoutes ? 'show' : '' }}" id="sidebarManageEmployee">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="{{ route('owner.employee.index') }}" class="side-nav-link {{ $manageEmployeeRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="manage-employee">View Employee</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('owner.employee.create') }}" class="side-nav-link">
+                                <span class="menu-text" data-lang="create-employee">Create Employee</span>
                             </a>
                         </li>
                     </ul>
