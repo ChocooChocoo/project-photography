@@ -468,7 +468,7 @@
                                     <div class="col-12 col-lg-8">
                                         <div class="d-flex align-items-center flex-column flex-md-row">
                                             <div class="flex-shrink-0 mb-3 mb-md-0">
-                                                <img src="${emp.profile_photo}" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;" onerror="this.src='{{ asset('assets/images/users/user-3.jpg') }}'" alt="${emp.full_name}">
+                                                <img src="${emp.profile_photo ? emp.profile_photo : '{{ asset('assets/images/users/user-3.jpg') }}'}" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;" onerror="this.src='{{ asset('assets/images/users/user-3.jpg') }}'" alt="${emp.full_name}">
                                             </div>
                                         
                                             <div class="flex-grow-1 ms-md-4 text-center text-md-start">

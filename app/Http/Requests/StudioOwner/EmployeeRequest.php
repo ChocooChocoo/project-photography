@@ -61,11 +61,12 @@ class EmployeeRequest extends FormRequest
             $rules['role_type'] = 'required|in:Manager,Staff';
         }
 
+        $rules['profile_photo'] = 'nullable|image|mimes:jpg,jpeg,png|max:2048';
+
         if ($this->role === 'studio-photographer') {
             $rules['position'] = 'required|string|max:100';
             $rules['specialization'] = 'required|exists:tbl_categories,id';
             $rules['years_experience'] = 'required|integer|min:0|max:50';
-            $rules['profile_photo'] = 'nullable|image|mimes:jpg,jpeg,png|max:2048';
         }
 
         return $rules;

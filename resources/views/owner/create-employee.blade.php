@@ -78,6 +78,20 @@
                                         </div>
                                     </div>
 
+                                    {{-- PROFILE PHOTO --}}
+                                    <div class="form-group mb-3">
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <label class="form-label">Profile Photo</label>
+                                                <input type="file" class="form-control" name="profile_photo" accept=".jpg,.jpeg,.png">
+                                                <div class="form-text">
+                                                    <i class="ti ti-info-circle me-1"></i>
+                                                    Upload a clear profile photo (optional). Accepted formats: JPG, JPEG, PNG (max 2MB).
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     {{-- STUDIO POSITION --}}
                                     <div class="form-group mb-3">
                                         <h4 class="card-title text-primary mb-3">Studio Position</h4>
@@ -142,12 +156,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        
-                                        <div class="form-group mb-3">
-                                            <label class="form-label">Profile Photo</label>
-                                            <input type="file" class="form-control" name="profile_photo" accept=".jpg,.jpeg,.png">
-                                            <div class="form-text">Upload a clear profile photo (optional).</div>
                                         </div>
                                     </div>
 

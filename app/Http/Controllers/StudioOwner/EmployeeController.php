@@ -76,9 +76,9 @@ class EmployeeController extends Controller
                 'verification_token' => null,
                 'token_expiry' => null,
             ];
-            
-            // Add profile photo for photographers
-            if ($request->role === 'studio-photographer' && $request->hasFile('profile_photo')) {
+
+            // Add profile photo for ALL employees if uploaded
+            if ($request->hasFile('profile_photo')) {
                 $userData['profile_photo'] = $this->handleProfilePhoto($request);
             }
             
@@ -337,7 +337,7 @@ class EmployeeController extends Controller
             'last_name' => $employee->last_name,
             'email' => $employee->email,
             'mobile_number' => $employee->mobile_number,
-            'profile_photo' => $employee->profile_photo_url,
+            'profile_photo' => $employee->profile_photo ? asset('storage/profile-photos/' . $employee->profile_photo) : null,
             'role' => $employee->role,
             'role_display' => $this->getRoleDisplay($employee->role),
             'status' => $employee->status,
