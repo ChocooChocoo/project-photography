@@ -191,8 +191,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/subscription/failed/{reference}',          [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentFailed'])->name('owner.subscription.failed');
 
         // Manage Employee  
-        Route::get('/view/employee',                            [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'index'])->name('owner.employee.index');
-        Route::get('/create/employee',                          [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'create'])->name('owner.employee.create');
+        Route::get('/view/employee',                                [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'index'])->name('owner.employee.index');
+        Route::get('/create/employee',                              [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'create'])->name('owner.employee.create');
+        Route::post('/employee',                                    [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'store'])->name('owner.employee.store');
+        Route::get('/employees/data',                               [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getEmployees'])->name('owner.employee.data');
+        Route::get('/employee/categories',                          [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getCategories'])->name('owner.employee.categories');
+        Route::get('/employee/{id}',                                [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'show'])->name('owner.employee.show');
+        Route::put('/employee/{id}/status',                         [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'updateStatus'])->name('owner.employee.update-status');
+        Route::put('/employee/{id}/permissions',                    [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'updatePermissions'])->name('owner.employee.update-permissions');
+        Route::put('/employee/{id}/schedule',                       [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'updateSchedule'])->name('owner.employee.update-schedule');
+        Route::delete('/employee/{id}',                             [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'destroy'])->name('owner.employee.destroy');
+        Route::get('/employee/{studioId}/services/{categoryId}',    [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getServicesByCategory'])->name('owner.employee.services-by-category');
 
     });
 

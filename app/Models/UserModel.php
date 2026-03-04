@@ -277,4 +277,60 @@ class UserModel extends Authenticatable
     {
         return !empty($this->cover_photo);
     }
+
+    /**
+     * Check if user is studio-hr
+     */
+    public function isStudioHr(): bool
+    {
+        return $this->role === 'studio-hr';
+    }
+
+    /**
+     * Check if user is studio-finance
+     */
+    public function isStudioFinance(): bool
+    {
+        return $this->role === 'studio-finance';
+    }
+
+    /**
+     * Check if user is studio-staff (for HR/Finance staff)
+     */
+    public function isStudioStaff(): bool
+    {
+        return $this->role === 'studio-staff' || 
+            $this->role === 'studio-hr' || 
+            $this->role === 'studio-finance';
+    }
+
+    /**
+     * Get all available employee roles
+     */
+    public static function getEmployeeRoles(): array
+    {
+        return [
+            'studio-hr' => 'Human Resource',
+            'studio-finance' => 'Finance',
+            'studio-photographer' => 'Photographer',
+            'studio-staff' => 'Studio Staff',
+        ];
+    }
+
+    /**
+     * Get the RBAC permissions for this user.
+     */
+    public function rbac()
+    {
+        return $this->hasMany(\App\Models\StudioOwner\RbacModel::class, 'user_id');
+    }
+
+    /**
+     * Get the employee schedule for this user.
+     */
+    public function employeeSchedule()
+    {
+        return $this->hasMany(\App\Models\StudioOwner\EmployeeScheduleModel::class, 'user_id');
+    }
+
 }
