@@ -56,6 +56,15 @@ class GeneralProfileController extends Controller
     }
 
     /**
+     * Display studio hr profile page
+     */
+    public function studioHR()
+    {
+        $user = auth()->user();
+        return view('studio-hr.view-user-profile', compact('user'));
+    }
+
+    /**
      * Get user data for AJAX request
      */
     public function getUserData()

@@ -12,12 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'client' => \App\Http\Middleware\ClientMiddleware::class,
-            'owner' => \App\Http\Middleware\OwnerMiddleware::class,
-            'freelancer' => \App\Http\Middleware\FreelancerMiddleware::class,
-            'studio.photographer' => \App\Http\Middleware\StudioPhotographerMiddleware::class,
-            'check.studio.limit' => \App\Http\Middleware\CheckStudioRegistrationLimit::class, // ADDED
+            'admin'                 => \App\Http\Middleware\AdminMiddleware::class,
+            'client'                => \App\Http\Middleware\ClientMiddleware::class,
+            'owner'                 => \App\Http\Middleware\OwnerMiddleware::class,
+            'freelancer'            => \App\Http\Middleware\FreelancerMiddleware::class,
+            'studio.photographer'   => \App\Http\Middleware\StudioPhotographerMiddleware::class,
+            'studio.hr'             => \App\Http\Middleware\StudioHRMiddleware::class,
+            'check.studio.limit'    => \App\Http\Middleware\CheckStudioRegistrationLimit::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

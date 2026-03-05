@@ -6,6 +6,7 @@ use App\Http\Middleware\ClientMiddleware;
 use App\Http\Middleware\OwnerMiddleware;
 use App\Http\Middleware\FreelancerMiddleware;
 use App\Http\Middleware\StudioPhotographerMiddleware;
+use App\Http\Middleware\StudioHRMiddleware;
 
 // Auth Routes =========================================================================================================================================================
 Route::prefix('auth')->group(function () {
@@ -214,6 +215,17 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'update'])->name('owner.payroll-settings.update');
         Route::put('/payroll-settings/{id}/status',                [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'updateStatus'])->name('owner.payroll-settings.status');
         Route::delete('/payroll-settings/{id}',                    [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'destroy'])->name('owner.payroll-settings.destroy');
+    });
+
+    // Studio HR Routes ====================================================================================================================================================
+    Route::prefix('studio-hr')->middleware([StudioHRMiddleware::class])->group(function () {
+
+        // Profile
+        Route::get('/profile',                                      [\App\Http\Controllers\GeneralProfileController::class, 'studioHR'])->name('studio-hr.profile');
+
+        // Dashboard
+        Route::get('/dashboard',                                    [\App\Http\Controllers\StudioHR\DashboardController::class, 'index'])->name('studio-hr.dashboard');
+
     });
 
     // Freelancer Routes ===================================================================================================================================================
