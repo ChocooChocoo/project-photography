@@ -203,6 +203,17 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/employee/{id}',                             [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'destroy'])->name('owner.employee.destroy');
         Route::get('/employee/{studioId}/services/{categoryId}',    [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getServicesByCategory'])->name('owner.employee.services-by-category');
 
+        // Manage Payroll  
+        Route::get('/payroll-settings',                            [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'index'])->name('owner.payroll-settings.index');
+        Route::get('/payroll-settings/create',                     [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'create'])->name('owner.payroll-settings.create');
+        Route::post('/payroll-settings',                           [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'store'])->name('owner.payroll-settings.store');
+        Route::get('/payroll-settings/employees',                  [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'getEmployees'])->name('owner.payroll-settings.employees');
+        Route::get('/payroll-settings/data',                       [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'getPayrollSettings'])->name('owner.payroll-settings.data');
+        Route::get('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'show'])->name('owner.payroll-settings.show');
+        Route::get('/payroll-settings/{id}/edit',                  [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'edit'])->name('owner.payroll-settings.edit');
+        Route::put('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'update'])->name('owner.payroll-settings.update');
+        Route::put('/payroll-settings/{id}/status',                [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'updateStatus'])->name('owner.payroll-settings.status');
+        Route::delete('/payroll-settings/{id}',                    [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'destroy'])->name('owner.payroll-settings.destroy');
     });
 
     // Freelancer Routes ===================================================================================================================================================
