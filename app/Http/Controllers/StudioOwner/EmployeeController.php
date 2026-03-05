@@ -25,9 +25,78 @@ class EmployeeController extends Controller
     /**
      * Display a listing of employees.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('owner.view-employee');
+        $ownerId = auth()->id();
+        
+        // Get studios owned by this owner
+        $studios = StudiosModel::where('user_id', $ownerId)
+            ->whereIn('status', ['verified', 'active'])
+            ->get();
+        
+        // Get studio IDs for filtering
+        $studioIds = StudiosModel::where('user_id', $ownerId)->pluck('id');
+        
+        // Build query for employees
+        $query = UserModel::with(['rbac' => function($q) use ($studioIds) {
+                $q->whereIn('studio_id', $studioIds);
+            }, 'rbac.studio', 'employeeSchedule' => function($q) use ($studioIds) {
+                $q->whereIn('studio_id', $studioIds);
+            }])
+            ->whereIn('role', ['studio-hr', 'studio-finance', 'studio-photographer'])
+            ->whereExists(function ($q) use ($studioIds) {
+                $q->select(DB::raw(1))
+                ->from('tbl_rbac')
+                ->whereColumn('tbl_rbac.user_id', 'tbl_users.id')
+                ->whereIn('tbl_rbac.studio_id', $studioIds);
+            });
+        
+        // Apply filters from request
+        if ($request->filled('studio_id')) {
+            $query->whereHas('rbac', function ($q) use ($request) {
+                $q->where('studio_id', $request->studio_id);
+            });
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('mobile_number', 'like', "%{$search}%");
+            });
+        }
+        
+        // Get paginated results
+        $employees = $query->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString(); // Preserve query parameters for pagination
+        
+        // Transform employees for view
+        foreach ($employees as $employee) {
+            $rbac = $employee->rbac->first();
+            $schedule = $employee->employeeSchedule->first();
+            
+            // Get photographer details if applicable
+            if ($employee->role === 'studio-photographer') {
+                $employee->photographer_details = StudioPhotographersModel::where('photographer_id', $employee->id)->first();
+            }
+            
+            $employee->rbac_data = $rbac;
+            $employee->schedule_data = $schedule;
+            $employee->studio_data = $rbac ? $rbac->studio : null;
+        }
+        
+        return view('owner.view-employee', compact('employees', 'studios'));
     }
 
     /**

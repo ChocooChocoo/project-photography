@@ -16,8 +16,11 @@
                         <div class="card-header border-light justify-content-between">
                             <div class="d-flex gap-2">
                                 <div class="app-search">
-                                    <input data-table-search type="search" class="form-control" placeholder="Search employees..." id="searchInput">
-                                    <i data-lucide="search" class="app-search-icon text-muted"></i>
+                                    <form method="GET" action="{{ route('owner.employee.index') }}" id="filterForm">
+                                        <input type="search" name="search" class="form-control" placeholder="Search employees..." 
+                                            value="{{ request('search') }}" id="searchInput">
+                                        <i data-lucide="search" class="app-search-icon text-muted"></i>
+                                    </form>
                                 </div>
                             </div>
 
@@ -26,27 +29,29 @@
                                     <i class="ti ti-filter me-1"></i>Filter By:
                                 </span>
                                 <div class="app-filter">
-                                    <select data-table-filter="studio" class="me-0 form-select form-control" id="studioFilter">
+                                    <select name="studio" class="me-0 form-select form-control" id="studioFilter" onchange="document.getElementById('filterForm').submit()">
                                         <option value="">All Studios</option>
-                                        @foreach(\App\Models\StudioOwner\StudiosModel::where('user_id', auth()->id())->get() as $studio)
-                                            <option value="{{ $studio->id }}">{{ $studio->studio_name }}</option>
+                                        @foreach($studios as $studio)
+                                            <option value="{{ $studio->id }}" {{ request('studio') == $studio->id ? 'selected' : '' }}>
+                                                {{ $studio->studio_name }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="app-filter">
-                                    <select data-table-filter="role" class="me-0 form-select form-control" id="roleFilter">
+                                    <select name="role" class="me-0 form-select form-control" id="roleFilter" onchange="document.getElementById('filterForm').submit()">
                                         <option value="">All Roles</option>
-                                        <option value="studio-hr">Human Resource</option>
-                                        <option value="studio-finance">Finance</option>
-                                        <option value="studio-photographer">Photographer</option>
+                                        <option value="studio-hr" {{ request('role') == 'studio-hr' ? 'selected' : '' }}>Human Resource</option>
+                                        <option value="studio-finance" {{ request('role') == 'studio-finance' ? 'selected' : '' }}>Finance</option>
+                                        <option value="studio-photographer" {{ request('role') == 'studio-photographer' ? 'selected' : '' }}>Photographer</option>
                                     </select>
                                 </div>
                                 <div class="app-filter">
-                                    <select data-table-filter="status" class="me-0 form-select form-control" id="statusFilter">
+                                    <select name="status" class="me-0 form-select form-control" id="statusFilter" onchange="document.getElementById('filterForm').submit()">
                                         <option value="">All Status</option>
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                        <option value="suspended">Suspended</option>
+                                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                        <option value="suspended" {{ request('status') == 'suspended' ? 'selected' : '' }}>Suspended</option>
                                     </select>
                                 </div>
                             </div>
@@ -67,14 +72,140 @@
                                     </tr>
                                 </thead>
                                 <tbody id="employeesTableBody">
-                                    {{-- Data will be loaded via AJAX --}}
-                                    <tr>
-                                        <td colspan="8" class="text-center py-4">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    @forelse($employees as $employee)
+                                        @php
+                                            $statusBadgeClass = [
+                                                'active' => 'badge-soft-success',
+                                                'inactive' => 'badge-soft-secondary',
+                                                'suspended' => 'badge-soft-danger'
+                                            ][$employee->status] ?? 'badge-soft-secondary';
+                                            
+                                            $roleDisplay = [
+                                                'studio-hr' => 'Human Resource',
+                                                'studio-finance' => 'Finance',
+                                                'studio-photographer' => 'Photographer'
+                                            ][$employee->role] ?? $employee->role;
+                                            
+                                            $roleTypeDisplay = $employee->rbac_data && $employee->rbac_data->role_type 
+                                                ? " - {$employee->rbac_data->role_type}" 
+                                                : '';
+                                                
+                                            $permissionColors = [
+                                                'create' => 'success',
+                                                'read' => 'info',
+                                                'update' => 'warning',
+                                                'delete' => 'danger'
+                                            ];
+                                        @endphp
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex">
+                                                    <div>
+                                                        <h5 class="mb-1">
+                                                            <a href="#" class="link-reset">{{ $employee->studio_data->studio_name ?? 'N/A' }}</a>
+                                                        </h5>
+                                                        <p class="mb-0 fs-xxs">
+                                                            <span class="fw-medium">Studio ID:</span>
+                                                            <span class="text-muted">{{ $employee->studio_data->id ?? 'N/A' }}</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div>
+                                                        <h5 class="mb-1">
+                                                            <a href="javascript:void(0)" class="link-reset view-employee" data-id="{{ $employee->id }}">
+                                                                {{ $employee->full_name }}
+                                                            </a>
+                                                        </h5>
+                                                        <p class="mb-0 fs-xxs">
+                                                            <span class="fw-medium">UUID:</span>
+                                                            <span class="text-muted">{{ substr($employee->uuid, 0, 8) }}...</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ $employee->email }}</td>
+                                            <td>{{ $employee->mobile_number }}</td>
+                                            <td>
+                                                {{ $roleDisplay }}{{ $roleTypeDisplay }}
+                                                @if($employee->photographer_details)
+                                                    <br><small class="text-muted">{{ $employee->photographer_details->position }}</small>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="d-flex justify-content-center gap-4 align-items-center">
+                                                    {{-- Create Permission --}}
+                                                    <div class="d-flex flex-column align-items-center">
+                                                        <span class="fs-xxs text-muted mb-1">CREATE</span>
+                                                        <div class="form-check form-check-success form-switch">
+                                                            <input class="form-check-input permission-switch" type="checkbox" role="switch" 
+                                                                data-permission="create" data-employee-id="{{ $employee->id }}" 
+                                                                {{ $employee->rbac_data->can_create ?? false ? 'checked' : '' }} 
+                                                                style="width: 2.5em; height: 1.3em;">
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {{-- Read Permission --}}
+                                                    <div class="d-flex flex-column align-items-center">
+                                                        <span class="fs-xxs text-muted mb-1">READ</span>
+                                                        <div class="form-check form-check-info form-switch">
+                                                            <input class="form-check-input permission-switch" type="checkbox" role="switch" 
+                                                                data-permission="read" data-employee-id="{{ $employee->id }}" 
+                                                                {{ $employee->rbac_data->can_read ?? false ? 'checked' : '' }} 
+                                                                style="width: 2.5em; height: 1.3em;">
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {{-- Update Permission --}}
+                                                    <div class="d-flex flex-column align-items-center">
+                                                        <span class="fs-xxs text-muted mb-1">UPDATE</span>
+                                                        <div class="form-check form-check-warning form-switch">
+                                                            <input class="form-check-input permission-switch" type="checkbox" role="switch" 
+                                                                data-permission="update" data-employee-id="{{ $employee->id }}" 
+                                                                {{ $employee->rbac_data->can_update ?? false ? 'checked' : '' }} 
+                                                                style="width: 2.5em; height: 1.3em;">
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {{-- Delete Permission --}}
+                                                    <div class="d-flex flex-column align-items-center">
+                                                        <span class="fs-xxs text-muted mb-1">DELETE</span>
+                                                        <div class="form-check form-check-danger form-switch">
+                                                            <input class="form-check-input permission-switch" type="checkbox" role="switch" 
+                                                                data-permission="delete" data-employee-id="{{ $employee->id }}" 
+                                                                {{ $employee->rbac_data->can_delete ?? false ? 'checked' : '' }} 
+                                                                style="width: 2.5em; height: 1.3em;">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ $statusBadgeClass }} fs-8 px-1 w-100">{{ strtoupper($employee->status) }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <a href="javascript:void(0)" class="btn btn-sm view-employee" data-id="{{ $employee->id }}" title="View Details">
+                                                        <i class="ti ti-eye fs-lg"></i>
+                                                    </a>
+                                                    <a href="javascript:void(0)" class="btn btn-sm edit-schedule" data-id="{{ $employee->id }}" title="Edit Schedule">
+                                                        <i class="ti ti-calendar-time fs-lg"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm delete-employee" data-id="{{ $employee->id }}" data-name="{{ $employee->full_name }}" title="Delete">
+                                                        <i class="ti ti-trash fs-lg"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4">
+                                                <i class="ti ti-users fs-1 text-muted"></i>
+                                                <p class="mt-2">No employees found.</p>
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
@@ -122,169 +253,6 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            // ==================== LOAD EMPLOYEES ====================
-            function loadEmployees() {
-                const search = $('#searchInput').val();
-                const studioId = $('#studioFilter').val();
-                const role = $('#roleFilter').val();
-                const status = $('#statusFilter').val();
-                
-                $.ajax({
-                    url: "{{ route('owner.employee.data') }}",
-                    method: 'GET',
-                    data: {
-                        search: search,
-                        studio_id: studioId,
-                        role: role,
-                        status: status,
-                        per_page: 10
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            renderEmployeesTable(response.data);
-                        }
-                    },
-                    error: function() {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Failed to load employees.'
-                        });
-                    }
-                });
-            }
-
-            // ==================== RENDER EMPLOYEES TABLE ====================
-            function renderEmployeesTable(data) {
-                const $tbody = $('#employeesTableBody');
-                
-                if (!data.data || data.data.length === 0) {
-                    $tbody.html(`
-                        <tr>
-                            <td colspan="8" class="text-center py-4">
-                                <i class="ti ti-users fs-1 text-muted"></i>
-                                <p class="mt-2">No employees found.</p>
-                            </td>
-                        </tr>
-                    `);
-                    return;
-                }
-                
-                let html = '';
-                
-                data.data.forEach(employee => {
-                    const statusBadgeClass = {
-                        'active': 'badge-soft-success',
-                        'inactive': 'badge-soft-secondary',
-                        'suspended': 'badge-soft-danger'
-                    }[employee.status] || 'badge-soft-secondary';
-                    
-                    const roleDisplay = {
-                        'studio-hr': 'Human Resource',
-                        'studio-finance': 'Finance',
-                        'studio-photographer': 'Photographer'
-                    }[employee.role] || employee.role;
-                    
-                    const roleTypeDisplay = employee.role_type ? ` - ${employee.role_type}` : '';
-                    
-                    html += `
-                        <tr>
-                            <td>
-                                <div class="d-flex">
-                                    <div>
-                                        <h5 class="mb-1">
-                                            <a href="#" class="link-reset">${employee.studio?.name || 'N/A'}</a>
-                                        </h5>
-                                        <p class="mb-0 fs-xxs">
-                                            <span class="fw-medium">Studio ID:</span>
-                                            <span class="text-muted">${employee.studio?.id || 'N/A'}</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div>
-                                        <h5 class="mb-1">
-                                            <a href="javascript:void(0)" class="link-reset view-employee" data-id="${employee.id}">
-                                                ${employee.full_name}
-                                            </a>
-                                        </h5>
-                                        <p class="mb-0 fs-xxs">
-                                            <span class="fw-medium">UUID:</span>
-                                            <span class="text-muted">${employee.uuid.substring(0, 8)}...</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>${employee.email}</td>
-                            <td>${employee.mobile_number}</td>
-                            <td>
-                                ${roleDisplay}${roleTypeDisplay}
-                                ${employee.photographer_details ? `
-                                    <br><small class="text-muted">${employee.photographer_details.position}</small>
-                                ` : ''}
-                            </td>
-                            <td>
-                                <div class="d-flex justify-content-center gap-4 align-items-center">
-                                    ${renderPermissionSwitch('create', employee.rbac?.can_create, employee.id)}
-                                    ${renderPermissionSwitch('read', employee.rbac?.can_read, employee.id)}
-                                    ${renderPermissionSwitch('update', employee.rbac?.can_update, employee.id)}
-                                    ${renderPermissionSwitch('delete', employee.rbac?.can_delete, employee.id)}
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge ${statusBadgeClass} fs-8 px-1 w-100">${employee.status.toUpperCase()}</span>
-                            </td>
-                            <td>
-                                <div class="d-flex justify-content-center gap-1">
-                                    <a href="javascript:void(0)" class="btn btn-sm view-employee" data-id="${employee.id}" title="View Details">
-                                        <i class="ti ti-eye fs-lg"></i>
-                                    </a>
-                                    <a href="javascript:void(0)" class="btn btn-sm edit-schedule" data-id="${employee.id}" title="Edit Schedule">
-                                        <i class="ti ti-calendar-time fs-lg"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-sm delete-employee" data-id="${employee.id}" data-name="${employee.full_name}" title="Delete">
-                                        <i class="ti ti-trash fs-lg"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                $tbody.html(html);
-                
-                // Update pagination info
-                $('[data-table-pagination-info="employees"]').html(
-                    `Showing ${data.from || 0} to ${data.to || 0} of ${data.total || 0} employees`
-                );
-            }
-
-            // ==================== RENDER PERMISSION SWITCH ====================
-            function renderPermissionSwitch(permission, value, employeeId) {
-                const colors = {
-                    'create': 'success',
-                    'read': 'info',
-                    'update': 'warning',
-                    'delete': 'danger'
-                };
-                
-                const checked = value ? 'checked' : '';
-                const color = colors[permission];
-                
-                return `
-                    <div class="d-flex flex-column align-items-center">
-                        <span class="fs-xxs text-muted mb-1">${permission.toUpperCase()}</span>
-                        <div class="form-check form-check-${color} form-switch">
-                            <input class="form-check-input permission-switch" type="checkbox" role="switch" 
-                                data-permission="${permission}" data-employee-id="${employeeId}" 
-                                ${checked} style="width: 2.5em; height: 1.3em;">
-                        </div>
-                    </div>
-                `;
-            }
-
             // ==================== VIEW EMPLOYEE DETAILS ====================
             $(document).on('click', '.view-employee', function() {
                 const employeeId = $(this).data('id');
@@ -636,20 +604,15 @@
                 const permission = $(this).data('permission');
                 const isChecked = $(this).is(':checked');
                 
-                // Create data object with explicit values
                 const data = {
                     _token: $('meta[name="csrf-token"]').attr('content'),
                     _method: 'PUT'
                 };
                 
-                // Send explicit '1' for true, '0' for false
                 data[`can_${permission}`] = isChecked ? '1' : '0';
                 
-                // Show loading state on the switch
                 const $switch = $(this);
                 $switch.prop('disabled', true);
-                
-                // Add a small visual indicator that it's saving
                 const $parent = $switch.closest('.d-flex');
                 $parent.css('opacity', '0.6');
                 
@@ -660,7 +623,6 @@
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
-                            // DEFAULT SWEETALERT - NOT TOAST
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Success!',
@@ -669,17 +631,8 @@
                                 timer: 1500,
                                 timerProgressBar: true
                             });
-                            
-                            // Visual feedback - briefly highlight
-                            $parent.find('.text-muted').addClass('text-success');
-                            setTimeout(() => {
-                                $parent.find('.text-muted').removeClass('text-success');
-                            }, 1000);
                         } else {
-                            // Revert switch on error
                             $switch.prop('checked', !isChecked);
-                            
-                            // DEFAULT SWEETALERT ERROR - NOT TOAST
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error!',
@@ -690,22 +643,13 @@
                         }
                     },
                     error: function(xhr) {
-                        // Revert switch on error
                         $switch.prop('checked', !isChecked);
                         
                         let errorMessage = 'Failed to update permission.';
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            const errors = xhr.responseJSON.errors;
-                            // Get the first error message
-                            for (let key in errors) {
-                                errorMessage = errors[key][0];
-                                break;
-                            }
-                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMessage = xhr.responseJSON.message;
                         }
                         
-                        // DEFAULT SWEETALERT ERROR - NOT TOAST
                         Swal.fire({
                             icon: 'error',
                             title: 'Error!',
@@ -726,7 +670,6 @@
                 const employeeId = $(this).data('id');
                 const employeeName = $(this).data('name');
                 
-                // CONFIRMATION SWEETALERT
                 Swal.fire({
                     icon: 'warning',
                     title: 'Delete Employee',
@@ -746,7 +689,6 @@
                             },
                             success: function(response) {
                                 if (response.success) {
-                                    // SUCCESS SWEETALERT
                                     Swal.fire({
                                         icon: 'success',
                                         title: 'Deleted!',
@@ -755,11 +697,10 @@
                                         timer: 1500,
                                         timerProgressBar: true,
                                         didClose: () => {
-                                            loadEmployees(); // Reload table
+                                            window.location.reload();
                                         }
                                     });
                                 } else {
-                                    // ERROR SWEETALERT
                                     Swal.fire({
                                         icon: 'error',
                                         title: 'Error!',
@@ -770,7 +711,6 @@
                                 }
                             },
                             error: function() {
-                                // ERROR SWEETALERT
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error!',
@@ -783,14 +723,6 @@
                     }
                 });
             });
-
-            // ==================== FILTER CHANGE HANDLERS ====================
-            $('#searchInput, #studioFilter, #roleFilter, #statusFilter').on('input change', function() {
-                loadEmployees();
-            });
-
-            // Initial load
-            loadEmployees();
         });
     </script>
 @endsection
