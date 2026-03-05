@@ -16,9 +16,9 @@
                         <div class="card-header border-light justify-content-between">
                             <div class="d-flex gap-2">
                                 <div class="app-search">
-                                    <form method="GET" action="{{ route('owner.employee.index') }}" id="filterForm">
-                                        <input type="search" name="search" class="form-control" placeholder="Search employees..." 
-                                            value="{{ request('search') }}" id="searchInput">
+                                    {{-- FIX: Form no longer submits to server. JS intercepts and runs applyFilters() instead. --}}
+                                    <form id="filterForm">
+                                        <input type="search" class="form-control" placeholder="Search employees..." id="searchInput">
                                         <i data-lucide="search" class="app-search-icon text-muted"></i>
                                     </form>
                                 </div>
@@ -28,30 +28,37 @@
                                 <span class="fw-semibold">
                                     <i class="ti ti-filter me-1"></i>Filter By:
                                 </span>
+
+                                {{-- FIX: Removed name attributes and onchange form submits.
+                                     All filtering is now handled client-side by applyFilters(). --}}
+
+                                {{-- Studio Filter --}}
                                 <div class="app-filter">
-                                    <select name="studio" class="me-0 form-select form-control" id="studioFilter" onchange="document.getElementById('filterForm').submit()">
+                                    <select class="me-0 form-select form-control" id="studioFilter">
                                         <option value="">All Studios</option>
                                         @foreach($studios as $studio)
-                                            <option value="{{ $studio->id }}" {{ request('studio') == $studio->id ? 'selected' : '' }}>
-                                                {{ $studio->studio_name }}
-                                            </option>
+                                            <option value="{{ $studio->id }}">{{ $studio->studio_name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
+
+                                {{-- Role Filter --}}
                                 <div class="app-filter">
-                                    <select name="role" class="me-0 form-select form-control" id="roleFilter" onchange="document.getElementById('filterForm').submit()">
+                                    <select class="me-0 form-select form-control" id="roleFilter">
                                         <option value="">All Roles</option>
-                                        <option value="studio-hr" {{ request('role') == 'studio-hr' ? 'selected' : '' }}>Human Resource</option>
-                                        <option value="studio-finance" {{ request('role') == 'studio-finance' ? 'selected' : '' }}>Finance</option>
-                                        <option value="studio-photographer" {{ request('role') == 'studio-photographer' ? 'selected' : '' }}>Photographer</option>
+                                        <option value="studio-hr">Human Resource</option>
+                                        <option value="studio-finance">Finance</option>
+                                        <option value="studio-photographer">Photographer</option>
                                     </select>
                                 </div>
+
+                                {{-- Status Filter --}}
                                 <div class="app-filter">
-                                    <select name="status" class="me-0 form-select form-control" id="statusFilter" onchange="document.getElementById('filterForm').submit()">
+                                    <select class="me-0 form-select form-control" id="statusFilter">
                                         <option value="">All Status</option>
-                                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                        <option value="suspended" {{ request('status') == 'suspended' ? 'selected' : '' }}>Suspended</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                        <option value="suspended">Suspended</option>
                                     </select>
                                 </div>
                             </div>
@@ -97,7 +104,9 @@
                                                 'delete' => 'danger'
                                             ];
                                         @endphp
-                                        <tr>
+
+                                        {{-- FIX: Added data-employee-id so applyFilters() can target and show/hide rows --}}
+                                        <tr data-employee-id="{{ $employee->id }}">
                                             <td>
                                                 <div class="d-flex">
                                                     <div>
@@ -199,13 +208,22 @@
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr>
+                                        {{-- Shown when the database returns zero employees (no filters applied yet) --}}
+                                        <tr id="dbEmptyRow">
                                             <td colspan="8" class="text-center py-4">
                                                 <i class="ti ti-users fs-1 text-muted"></i>
                                                 <p class="mt-2">No employees found.</p>
                                             </td>
                                         </tr>
                                     @endforelse
+
+                                    {{-- FIX: Shown by JS when active filters return zero matching rows. Hidden by default. --}}
+                                    <tr id="noResultsRow" style="display: none;">
+                                        <td colspan="8" class="text-center py-4">
+                                            <i class="ti ti-filter-off fs-1 text-muted"></i>
+                                            <p class="mt-2">No employees match the selected filters.</p>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -252,7 +270,79 @@
 {{-- SCRIPTS --}}
 @section('scripts')
     <script>
+        const allEmployees = {!! $employeesJson !!};
+    </script>
+
+    <script>
         $(document).ready(function() {
+
+            // ==================== CLIENT-SIDE FILTERING ====================
+
+            /**
+             * Reads the current values of all three filter dropdowns and the search input,
+             * then shows/hides table rows that match ALL active filters simultaneously.
+             *
+             * Runs entirely in the browser — no server requests, no page reloads.
+             */
+            function applyFilters() {
+                const selectedStudio = $('#studioFilter').val();    // studio id as string, or ''
+                const selectedRole   = $('#roleFilter').val();      // role slug, or ''
+                const selectedStatus = $('#statusFilter').val();    // status string, or ''
+                const searchTerm     = $('#searchInput').val().toLowerCase().trim();
+
+                // Filter the master employee list against all active criteria
+                const filtered = allEmployees.filter(function(emp) {
+                    // FIX: Compare studio_id as strings — option values are always strings in the DOM
+                    const matchesStudio = !selectedStudio || String(emp.studio_id) === String(selectedStudio);
+
+                    // Role must match exactly
+                    const matchesRole = !selectedRole || emp.role === selectedRole;
+
+                    // Status must match exactly
+                    const matchesStatus = !selectedStatus || emp.status === selectedStatus;
+
+                    // Search checks full name, email, and mobile number
+                    const matchesSearch = !searchTerm ||
+                        emp.full_name.toLowerCase().includes(searchTerm) ||
+                        emp.email.toLowerCase().includes(searchTerm) ||
+                        (emp.mobile_number && emp.mobile_number.toLowerCase().includes(searchTerm));
+
+                    // All conditions must pass for the row to be visible
+                    return matchesStudio && matchesRole && matchesStatus && matchesSearch;
+                });
+
+                // Build a Set of matching IDs for O(1) lookup when iterating rows
+                const matchedIds = new Set(filtered.map(function(emp) { return emp.id; }));
+
+                let visibleCount = 0;
+
+                // Show or hide each data row based on whether its ID is in the matched set
+                $('#employeesTableBody tr[data-employee-id]').each(function() {
+                    const rowId = parseInt($(this).data('employee-id'));
+                    if (matchedIds.has(rowId)) {
+                        $(this).show();
+                        visibleCount++;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                // Toggle the "no results" row — only visible when filters return zero matches
+                $('#noResultsRow').toggle(visibleCount === 0);
+            }
+
+            // Bind filter dropdowns — each change triggers an instant re-filter
+            $('#studioFilter, #roleFilter, #statusFilter').on('change', applyFilters);
+
+            // Bind search input — filters on every keystroke
+            $('#searchInput').on('input', applyFilters);
+
+            // Prevent the search form from triggering a full page reload
+            $('#filterForm').on('submit', function(e) {
+                e.preventDefault();
+                applyFilters();
+            });
+
             // ==================== VIEW EMPLOYEE DETAILS ====================
             $(document).on('click', '.view-employee', function() {
                 const employeeId = $(this).data('id');

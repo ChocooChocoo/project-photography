@@ -96,7 +96,20 @@ class EmployeeController extends Controller
             $employee->studio_data = $rbac ? $rbac->studio : null;
         }
         
-        return view('owner.view-employee', compact('employees', 'studios'));
+        $employeesJson = json_encode($employees->map(function ($emp) {
+            return [
+                'id'            => $emp->id,
+                'studio_id'     => $emp->studio_data->id ?? null,
+                'studio_name'   => $emp->studio_data->studio_name ?? 'N/A',
+                'full_name'     => $emp->full_name,
+                'email'         => $emp->email,
+                'mobile_number' => $emp->mobile_number,
+                'role'          => $emp->role,
+                'status'        => $emp->status,
+            ];
+        })->values());
+
+        return view('owner.view-employee', compact('employees', 'studios', 'employeesJson'));
     }
 
     /**
