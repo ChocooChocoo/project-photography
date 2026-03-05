@@ -38,6 +38,33 @@
                     <span class="menu-text" data-lang="dashboard">Dashboard</span>
                 </a>
             </li>
+
+            {{-- Manage Employee --}}
+            @php
+                $manageEmployeeRoutes = Route::is('studio-hr.employee.index');
+            @endphp
+
+            <li class="side-nav-item {{ $manageEmployeeRoutes || $manageEmployeePayrollRoutes || $createPayrollSettingsRoute ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarManageEmployee" aria-expanded="{{ $manageEmployeeRoutes || $manageEmployeePayrollRoutes || $createPayrollSettingsRoute ? 'true' : 'false' }}" aria-controls="sidebarManageEmployee" class="side-nav-link {{ $manageEmployeeRoutes || $manageEmployeePayrollRoutes || $createPayrollSettingsRoute ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-user-shield"></i></span>
+                    <span class="menu-text" data-lang="manage-employee">Employee</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse {{ $manageEmployeeRoutes || $manageEmployeePayrollRoutes || $createPayrollSettingsRoute ? 'show' : '' }}" id="sidebarManageEmployee">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-hr.employee.index') }}" class="side-nav-link {{ $manageEmployeeRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="manage-employee">View Employee</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-hr.employee.create') }}" class="side-nav-link">
+                                <span class="menu-text" data-lang="create-employee">Create Employee</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
         </ul>
     </div>
 </div>

@@ -226,6 +226,17 @@ Route::middleware(['auth'])->group(function () {
         // Dashboard
         Route::get('/dashboard',                                    [\App\Http\Controllers\StudioHR\DashboardController::class, 'index'])->name('studio-hr.dashboard');
 
+        Route::get('/view/employee',                                [\App\Http\Controllers\StudioHR\EmployeeController::class, 'index'])->name('studio-hr.employee.index');
+        Route::get('/create/employee',                              [\App\Http\Controllers\StudioHR\EmployeeController::class, 'create'])->name('studio-hr.employee.create');
+        Route::post('/employee',                                    [\App\Http\Controllers\StudioHR\EmployeeController::class, 'store'])->name('studio-hr.employee.store');
+        Route::get('/employees/data',                               [\App\Http\Controllers\StudioHR\EmployeeController::class, 'getEmployees'])->name('studio-hr.employee.data');
+        Route::get('/employee/categories',                          [\App\Http\Controllers\StudioHR\EmployeeController::class, 'getCategories'])->name('studio-hr.employee.categories');
+        Route::get('/employee/{id}',                                [\App\Http\Controllers\StudioHR\EmployeeController::class, 'show'])->name('studio-hr.employee.show');
+        Route::put('/employee/{id}/status',                         [\App\Http\Controllers\StudioHR\EmployeeController::class, 'updateStatus'])->name('studio-hr.employee.update-status');
+        Route::put('/employee/{id}/permissions',                    [\App\Http\Controllers\StudioHR\EmployeeController::class, 'updatePermissions'])->name('studio-hr.employee.update-permissions');
+        Route::put('/employee/{id}/schedule',                       [\App\Http\Controllers\StudioHR\EmployeeController::class, 'updateSchedule'])->name('studio-hr.employee.update-schedule');
+        Route::delete('/employee/{id}',                             [\App\Http\Controllers\StudioHR\EmployeeController::class, 'destroy'])->name('studio-hr.employee.destroy');
+        Route::get('/employee/{studioId}/services/{categoryId}',    [\App\Http\Controllers\StudioHR\EmployeeController::class, 'getServicesByCategory'])->name('studio-hr.employee.services-by-category');
     });
 
     // Freelancer Routes ===================================================================================================================================================
