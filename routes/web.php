@@ -226,6 +226,7 @@ Route::middleware(['auth'])->group(function () {
         // Dashboard
         Route::get('/dashboard',                                    [\App\Http\Controllers\StudioHR\DashboardController::class, 'index'])->name('studio-hr.dashboard');
 
+        // Manage Employee
         Route::get('/view/employee',                                [\App\Http\Controllers\StudioHR\EmployeeController::class, 'index'])->name('studio-hr.employee.index');
         Route::get('/create/employee',                              [\App\Http\Controllers\StudioHR\EmployeeController::class, 'create'])->name('studio-hr.employee.create');
         Route::post('/employee',                                    [\App\Http\Controllers\StudioHR\EmployeeController::class, 'store'])->name('studio-hr.employee.store');
@@ -237,6 +238,18 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/employee/{id}/schedule',                       [\App\Http\Controllers\StudioHR\EmployeeController::class, 'updateSchedule'])->name('studio-hr.employee.update-schedule');
         Route::delete('/employee/{id}',                             [\App\Http\Controllers\StudioHR\EmployeeController::class, 'destroy'])->name('studio-hr.employee.destroy');
         Route::get('/employee/{studioId}/services/{categoryId}',    [\App\Http\Controllers\StudioHR\EmployeeController::class, 'getServicesByCategory'])->name('studio-hr.employee.services-by-category');
+
+        // Manage Payroll  
+        Route::get('/payroll-settings',                            [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'index'])->name('studio-hr.payroll-settings.index');
+        Route::get('/payroll-settings/create',                     [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'create'])->name('studio-hr.payroll-settings.create');
+        Route::post('/payroll-settings',                           [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'store'])->name('studio-hr.payroll-settings.store');
+        Route::get('/payroll-settings/employees',                  [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'getEmployees'])->name('studio-hr.payroll-settings.employees');
+        Route::get('/payroll-settings/data',                       [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'getPayrollSettings'])->name('studio-hr.payroll-settings.data');
+        Route::get('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'show'])->name('studio-hr.payroll-settings.show');
+        Route::get('/payroll-settings/{id}/edit',                  [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'edit'])->name('studio-hr.payroll-settings.edit');
+        Route::put('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'update'])->name('studio-hr.payroll-settings.update');
+        Route::put('/payroll-settings/{id}/status',                [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'updateStatus'])->name('studio-hr.payroll-settings.status');
+        Route::delete('/payroll-settings/{id}',                    [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'destroy'])->name('studio-hr.payroll-settings.destroy');
     });
 
     // Freelancer Routes ===================================================================================================================================================
