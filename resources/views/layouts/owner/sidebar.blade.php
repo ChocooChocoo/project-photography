@@ -197,17 +197,15 @@
             {{-- Manage Employee --}}
             @php
                 $manageEmployeeRoutes = Route::is('owner.employee.index');
-                $manageEmployeePayrollRoutes = Route::is('owner.payroll-settings.index');
-                $createPayrollSettingsRoute = Route::is('owner.payroll-settings.create');
             @endphp
 
-            <li class="side-nav-item {{ $manageEmployeeRoutes || $manageEmployeePayrollRoutes || $createPayrollSettingsRoute ? 'active' : '' }}">
-                <a data-bs-toggle="collapse" href="#sidebarManageEmployee" aria-expanded="{{ $manageEmployeeRoutes || $manageEmployeePayrollRoutes || $createPayrollSettingsRoute ? 'true' : 'false' }}" aria-controls="sidebarManageEmployee" class="side-nav-link {{ $manageEmployeeRoutes || $manageEmployeePayrollRoutes || $createPayrollSettingsRoute ? 'active' : '' }}">
+            <li class="side-nav-item {{ $manageEmployeeRoutes ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarManageEmployee" aria-expanded="{{ $manageEmployeeRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageEmployee" class="side-nav-link {{ $manageEmployeeRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-user-shield"></i></span>
                     <span class="menu-text" data-lang="manage-employee">Employee</span>
                     <span class="menu-arrow"></span>
                 </a>
-                <div class="collapse {{ $manageEmployeeRoutes || $manageEmployeePayrollRoutes || $createPayrollSettingsRoute ? 'show' : '' }}" id="sidebarManageEmployee">
+                <div class="collapse {{ $manageEmployeeRoutes ? 'show' : '' }}" id="sidebarManageEmployee">
                     <ul class="sub-menu">
                         <li class="side-nav-item">
                             <a href="{{ route('owner.employee.index') }}" class="side-nav-link {{ $manageEmployeeRoutes ? 'active' : '' }}">
@@ -219,9 +217,27 @@
                                 <span class="menu-text" data-lang="create-employee">Create Employee</span>
                             </a>
                         </li>
+                    </ul>
+                </div>
+            </li>
+
+            {{-- Manage Payroll --}}
+            @php
+                $managePayrollRoutes = Route::is('owner.payroll-settings.index');
+                $createPayrollSettingsRoute = Route::is('owner.payroll-settings.create');
+            @endphp
+
+            <li class="side-nav-item {{ $managePayrollRoutes || $createPayrollSettingsRoute ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarManagePayroll" aria-expanded="{{ $managePayrollRoutes || $createPayrollSettingsRoute ? 'true' : 'false' }}" aria-controls="sidebarManagePayroll" class="side-nav-link {{ $managePayrollRoutes || $createPayrollSettingsRoute ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-cash-banknote-edit"></i></span>
+                    <span class="menu-text" data-lang="manage-payroll">Payroll</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse {{ $managePayrollRoutes || $createPayrollSettingsRoute ? 'show' : '' }}" id="sidebarManagePayroll">
+                    <ul class="sub-menu">
                         <li class="side-nav-item">
-                            <a href="{{ route('owner.payroll-settings.index') }}" class="side-nav-link {{ $manageEmployeePayrollRoutes ? 'active' : '' }}">
-                                <span class="menu-text" data-lang="employee-payroll">View Payroll</span>
+                            <a href="{{ route('owner.payroll-settings.index') }}" class="side-nav-link {{ $managePayrollRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="manage-payroll">View Payroll</span>
                             </a>
                         </li>
                         <li class="side-nav-item">

@@ -10,9 +10,6 @@
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="card-title">Employees Payroll Settings</h5>
-                            <a href="{{ route('owner.payroll-settings.create') }}" class="btn btn-primary">
-                                <i class="ti ti-plus me-1"></i> Setup New Payroll
-                            </a>
                         </div>
 
                         <div class="card-header border-light justify-content-between">
