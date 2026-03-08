@@ -107,9 +107,20 @@
                                                 <a href="#" class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#studioModal{{ $studio->id }}">
                                                     <i class="ti ti-eye fs-lg"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-sm delete-studio" data-id="{{ $studio->id }}" data-name="{{ $studio->studio_name }}">
-                                                    <i class="ti ti-cancel fs-lg"></i>
-                                                </button>
+                                                
+                                                {{-- Show Cancel button only for pending studios --}}
+                                                @if($studio->status === 'pending')
+                                                    <button type="button" class="btn btn-sm delete-studio" data-id="{{ $studio->id }}" data-name="{{ $studio->studio_name }}" title="Cancel Registration">
+                                                        <i class="ti ti-cancel fs-lg"></i>
+                                                    </button>
+                                                @endif
+                                                
+                                                {{-- You can add an Edit button here in the future if needed --}}
+                                                @if($studio->status === 'pending' || $studio->status === 'verified')
+                                                    <a href="{{ route('owner.studio.edit', $studio->id) }}" class="btn btn-sm" title="Edit Studio">
+                                                        <i class="ti ti-edit fs-lg"></i>
+                                                    </a>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -890,8 +901,8 @@
                 showCancelButton: true,
                 confirmButtonColor: '#DC3545',
                 cancelButtonColor: '#6C757D',
-                confirmButtonText: 'Yes, Cancel',
-                cancelButtonText: 'Cancel'
+                confirmButtonText: 'Yes, Cancel Registration',
+                cancelButtonText: 'No, Keep It'
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Show loading
@@ -904,9 +915,9 @@
                         }
                     });
                     
-                    // AJAX request to delete studio - using the correct URL
+                    // AJAX request to delete studio
                     $.ajax({
-                        url: '/owner/studio/' + studioId, // Direct URL approach
+                        url: '/owner/studio/' + studioId,
                         type: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

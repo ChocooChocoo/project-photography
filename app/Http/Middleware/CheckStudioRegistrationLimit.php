@@ -53,60 +53,57 @@ class CheckStudioRegistrationLimit
             'method' => $request->method()
         ]);
         
-        // If user already has at least one studio, check subscription
-        if ($studioCount >= 1) {
-            if (!$activeSubscription) {
-                // No active subscription - block registration of additional studios
-                if ($request->expectsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'You need an active subscription plan to register multiple studios.',
-                        'alert_color' => '#DC3545',
-                        'redirect' => route('owner.subscription.index')
-                    ], 403);
-                }
-                
-                return redirect()->route('owner.subscription.index')
-                    ->with('error', 'You need an active subscription plan to register multiple studios.');
-            }
-            
-            // Check if subscription allows multiple studios
-            if ($activeSubscription && $activeSubscription->plan) {
-                $maxStudios = $activeSubscription->plan->max_studios;
-                
-                \Log::info('Subscription Limits', [
-                    'max_studios' => $maxStudios,
-                    'current_count' => $studioCount
-                ]);
-                
-                // If max_studios is null, it means unlimited
-                if ($maxStudios !== null) {
-                    // For store request, we need to check if adding one more would exceed limit
-                    if ($request->isMethod('post') && $studioCount >= $maxStudios) {
-                        if ($request->expectsJson()) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => "Your subscription plan only allows up to {$maxStudios} studio(s). You have already reached this limit.",
-                                'alert_color' => '#DC3545'
-                            ], 403);
-                        }
-                        
-                        return redirect()->route('owner.subscription.index')
-                            ->with('error', "Your subscription plan only allows up to {$maxStudios} studio(s). You have already reached this limit.");
+        // ===== MODIFIED: Allow access to create page for all users =====
+        // The view will handle UI changes based on subscription status
+        
+        // If this is a GET request to the create page, ALWAYS allow access
+        if ($request->isMethod('get') && $request->route()->getName() === 'owner.studio.create') {
+            return $next($request);
+        }
+        
+        // For POST requests (actually submitting the form) - CHECK SUBSCRIPTION
+        if ($request->isMethod('post')) {
+            // If user already has at least one studio, check subscription
+            if ($studioCount >= 1) {
+                if (!$activeSubscription) {
+                    // No active subscription - block registration of additional studios
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'You need an active subscription plan to register multiple studios.',
+                            'alert_color' => '#DC3545',
+                            'redirect' => route('owner.subscription.index')
+                        ], 403);
                     }
                     
-                    // For create form access, check if already at limit
-                    if ($request->isMethod('get') && $studioCount >= $maxStudios) {
-                        if ($request->expectsJson()) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => "Your subscription plan only allows up to {$maxStudios} studio(s).",
-                                'alert_color' => '#DC3545'
-                            ], 403);
+                    return redirect()->route('owner.subscription.index')
+                        ->with('error', 'You need an active subscription plan to register multiple studios.');
+                }
+                
+                // Check if subscription allows multiple studios
+                if ($activeSubscription && $activeSubscription->plan) {
+                    $maxStudios = $activeSubscription->plan->max_studios;
+                    
+                    \Log::info('Subscription Limits', [
+                        'max_studios' => $maxStudios,
+                        'current_count' => $studioCount
+                    ]);
+                    
+                    // If max_studios is null, it means unlimited
+                    if ($maxStudios !== null) {
+                        // Check if adding one more would exceed limit
+                        if ($studioCount >= $maxStudios) {
+                            if ($request->expectsJson()) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => "Your subscription plan only allows up to {$maxStudios} studio(s). You have already reached this limit.",
+                                    'alert_color' => '#DC3545'
+                                ], 403);
+                            }
+                            
+                            return redirect()->route('owner.subscription.index')
+                                ->with('error', "Your subscription plan only allows up to {$maxStudios} studio(s). You have already reached this limit.");
                         }
-                        
-                        return redirect()->route('owner.subscription.index')
-                            ->with('error', "Your subscription plan only allows up to {$maxStudios} studio(s).");
                     }
                 }
             }

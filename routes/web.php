@@ -111,12 +111,16 @@ Route::middleware(['auth'])->group(function () {
 
         // Manage Studio - Limit
         Route::middleware(['check.studio.limit'])->group(function () {
+
             Route::get('/create/studio',                        [\App\Http\Controllers\StudioOwner\StudioController::class, 'create'])->name('owner.studio.create');
             Route::post('/studio',                              [\App\Http\Controllers\StudioOwner\StudioController::class, 'store'])->name('owner.studio.store');
+            
         });
 
         // Manage Studio                            
         Route::get('/view/studio',                              [\App\Http\Controllers\StudioOwner\StudioController::class, 'index'])->name('owner.studio.index');
+        Route::get('/edit/studio/{id}',                         [\App\Http\Controllers\StudioOwner\StudioController::class, 'edit'])->name('owner.studio.edit');
+        Route::put('/studio/{id}',                              [\App\Http\Controllers\StudioOwner\StudioController::class, 'update'])->name('owner.studio.update');
         Route::get('/studio/barangays/{municipality}',          [\App\Http\Controllers\StudioOwner\StudioController::class, 'getBarangays'])->name('owner.studio.get-barangays');
         Route::delete('/studio/{id}',                           [\App\Http\Controllers\StudioOwner\StudioController::class, 'destroy'])->name('owner.studio.destroy');
 

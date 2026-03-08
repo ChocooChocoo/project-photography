@@ -10,6 +10,7 @@ use App\Models\StudioOwner\StudioCategoryModel;
 use App\Models\Admin\LocationModel;
 use App\Models\Admin\CategoriesModel;
 use App\Models\StudioOwner\UserModel;
+use App\Models\StudioPlanModel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -409,6 +410,180 @@ class StudioController extends Controller
     {
         if ($filePath && Storage::disk('public')->exists($filePath)) {
             Storage::disk('public')->delete($filePath);
+        }
+    }
+
+    /**
+     * Show the form for editing the specified studio.
+     *
+     * @param int $id
+     * @return \Illuminate\View\View
+     */
+    public function edit($id)
+    {
+        $user = Auth::user();
+        $studio = StudiosModel::with(['location', 'categories'])
+            ->where('id', $id)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+        
+        $categories = CategoriesModel::where('status', 'active')->get();
+        $municipalities = LocationModel::select('municipality')->distinct()->pluck('municipality');
+        
+        return view('owner.edit-studio', compact('studio', 'categories', 'municipalities'));
+    }
+
+    /**
+     * Update the specified studio in storage.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $user = Auth::user();
+            $studio = StudiosModel::where('id', $id)
+                ->where('user_id', $user->id)
+                ->firstOrFail();
+
+            // Validate the request
+            $rules = StudiosModel::rules();
+            // Make certain fields optional for update
+            $rules['studio_logo'] = 'nullable|image|mimes:jpg,jpeg,png|max:3072';
+            $rules['business_permit'] = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:3072';
+            $rules['owner_id_document'] = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:3072';
+            
+            $validatedData = $request->validate($rules);
+
+            // Handle file uploads if new files are provided
+            if ($request->hasFile('studio_logo')) {
+                // Delete old logo
+                $this->deleteFile($studio->studio_logo);
+                $studioLogoPath = $this->uploadFile($request->file('studio_logo'), 'studio_logo');
+                $studio->studio_logo = $studioLogoPath;
+            }
+
+            if ($request->hasFile('business_permit')) {
+                $this->deleteFile($studio->business_permit);
+                $businessPermitPath = $this->uploadFile($request->file('business_permit'), 'studio_documents');
+                $studio->business_permit = $businessPermitPath;
+            }
+
+            if ($request->hasFile('owner_id_document')) {
+                $this->deleteFile($studio->owner_id_document);
+                $ownerIdPath = $this->uploadFile($request->file('owner_id_document'), 'studio_documents');
+                $studio->owner_id_document = $ownerIdPath;
+            }
+
+            // Find location based on municipality and barangay
+            $municipality = $validatedData['municipality'];
+            $barangay = $validatedData['barangay'];
+
+            $location = LocationModel::where('municipality', $municipality)->first();
+
+            if (!$location) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected municipality does not exist in our system.',
+                    'errors' => ['municipality' => ['The selected municipality is not available.']],
+                    'alert_color' => '#DC3545'
+                ], 422);
+            }
+
+            // Verify barangay exists
+            $barangays = $location->barangay;
+            $barangaysArray = is_string($barangays) ? json_decode($barangays, true) ?? [$barangays] : $barangays;
+            
+            if (!in_array($barangay, $barangaysArray)) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected barangay does not exist for this municipality.',
+                    'errors' => ['barangay' => ['The selected barangay is not available.']],
+                    'alert_color' => '#DC3545'
+                ], 422);
+            }
+
+            // Update studio fields
+            $studio->fill([
+                'category_id' => $validatedData['service_categories'][0] ?? null,
+                'location_id' => $location->id,
+                'street' => $validatedData['street'],
+                'barangay' => $validatedData['barangay'],
+                'contact_number' => $validatedData['contact_number'],
+                'studio_email' => $validatedData['studio_email'],
+                'facebook_url' => $validatedData['facebook_url'] ?? null,
+                'instagram_url' => $validatedData['instagram_url'] ?? null,
+                'website_url' => $validatedData['website_url'] ?? null,
+                'studio_name' => $validatedData['studio_name'],
+                'studio_type' => $validatedData['studio_type'],
+                'year_established' => $validatedData['year_established'],
+                'studio_description' => $validatedData['studio_description'],
+                'starting_price' => $validatedData['starting_price'],
+                'downpayment_percentage' => $validatedData['downpayment_percentage'] ?? 30.00,
+                'operating_days' => json_encode($validatedData['operating_days']),
+                'start_time' => $validatedData['start_time'],
+                'end_time' => $validatedData['end_time'],
+                'max_clients_per_day' => $validatedData['max_clients_per_day'],
+                'advance_booking_days' => $validatedData['advance_booking_days'],
+            ]);
+
+            $studio->save();
+
+            // Update studio schedule
+            $schedule = StudioScheduleModel::where('studio_id', $studio->id)->first();
+            if ($schedule) {
+                $schedule->update([
+                    'location_id' => $location->id,
+                    'operating_days' => json_encode($validatedData['operating_days']),
+                    'opening_time' => $validatedData['start_time'],
+                    'closing_time' => $validatedData['end_time'],
+                    'booking_limit' => $validatedData['max_clients_per_day'],
+                    'advance_booking' => $validatedData['advance_booking_days'],
+                ]);
+            } else {
+                $this->createStudioSchedule($studio, $location, $validatedData);
+            }
+
+            // Update studio categories
+            StudioCategoryModel::where('studio_id', $studio->id)->delete();
+            $this->createStudioCategories($studio, $user, $validatedData['service_categories']);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Studio updated successfully!',
+                'alert_color' => '#007BFF',
+                'redirect' => route('owner.studio.index')
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+                'alert_color' => '#DC3545'
+            ], 422);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Studio Update Error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update studio: ' . $e->getMessage(),
+                'alert_color' => '#DC3545'
+            ], 500);
         }
     }
 }
