@@ -73,7 +73,28 @@ class EmployeePayrollRequest extends FormRequest
             ],
             
             // Payroll Basis
-            'payroll_basis' => 'required|in:attendance_only,booking_and_attendance',
+            'payroll_basis' => [
+                'required',
+                'in:attendance_only,booking_and_attendance',
+                function ($attribute, $value, $fail) {
+                    // Get the user role
+                    $user = \App\Models\UserModel::find($this->user_id);
+                    
+                    if (!$user) {
+                        return $fail('Selected employee not found.');
+                    }
+                    
+                    // Photographers must use booking_and_attendance
+                    if ($user->role === 'studio-photographer' && $value !== 'booking_and_attendance') {
+                        $fail('Photographers must use "Booking + Attendance" payroll basis.');
+                    }
+                    
+                    // HR and Finance must use attendance_only
+                    if (in_array($user->role, ['studio-hr', 'studio-finance']) && $value !== 'attendance_only') {
+                        $fail('HR and Finance staff must use "Attendance Only" payroll basis.');
+                    }
+                },
+            ],
             
             // Salary Information (conditional)
             'daily_rate' => 'nullable|numeric|min:0|max:999999.99',

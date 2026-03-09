@@ -107,7 +107,6 @@ class PayrollSettingsController extends Controller
     }
 
     /**
-     * Show the form for creating a new payroll setting.
      * RBAC: Requires can_create permission
      */
     public function create()
@@ -123,18 +122,65 @@ class PayrollSettingsController extends Controller
             session()->flash('permission_warning', 'Your account has restricted permissions. You can view the form but cannot submit it.');
         }
         
-        // Get HR user's assigned studio from RBAC
-        $studioId = $rbac->studio_id;
+        // Get HR user's assigned studio from RBAC or try alternative methods
+        $studioId = null;
+        $studio = null;
+        
+        if ($rbac && $rbac->studio_id) {
+            // Case 1: RBAC exists with studio_id
+            $studioId = $rbac->studio_id;
+            $studio = StudiosModel::find($studioId);
+        } else {
+            // Case 2: RBAC is null or has no studio_id - try alternative lookup methods
+            \Log::warning('HR user has no RBAC studio assignment', [
+                'user_id' => $hrUser->id,
+                'email' => $hrUser->email
+            ]);
+            
+            // Method A: Check if user is directly associated with a studio via studio_members
+            $studioMember = \DB::table('tbl_studio_members')
+                ->where('freelancer_id', $hrUser->id)
+                ->where('status', 'approved')
+                ->first();
+                
+            if ($studioMember) {
+                $studioId = $studioMember->studio_id;
+                $studio = StudiosModel::find($studioId);
+                \Log::info('Found studio via studio_members', ['studio_id' => $studioId]);
+            }
+            
+            // Method B: If user is a photographer, check studio_photographers
+            if (!$studio && $hrUser->role === 'studio-photographer') {
+                $studioPhotographer = \DB::table('tbl_studio_photographers')
+                    ->where('photographer_id', $hrUser->id)
+                    ->first();
+                    
+                if ($studioPhotographer) {
+                    $studioId = $studioPhotographer->studio_id;
+                    $studio = StudiosModel::find($studioId);
+                    \Log::info('Found studio via studio_photographers', ['studio_id' => $studioId]);
+                }
+            }
+        }
+        
+        if (!$studioId || !$studio) {
+            // No studio found - redirect with error
+            $errorMessage = 'No studio assigned to your account. Please contact your studio owner.';
+            
+            if ($hrUser->role === 'studio-hr') {
+                $errorMessage = 'Your HR account is not properly configured. Please contact your studio owner to set up your RBAC permissions.';
+            } elseif ($hrUser->role === 'studio-finance') {
+                $errorMessage = 'Your Finance account is not properly configured. Please contact your studio owner to set up your RBAC permissions.';
+            } elseif ($hrUser->role === 'studio-photographer') {
+                $errorMessage = 'Your Photographer account is not properly configured. Please contact your studio owner to set up your RBAC permissions.';
+            }
+            
+            return redirect()->route('studio-hr.payroll-settings.index')
+                ->with('error', $errorMessage);
+        }
         
         // Get the studio (only the HR's assigned studio)
-        $studios = StudiosModel::where('id', $studioId)
-            ->whereIn('status', ['verified', 'active'])
-            ->get();
-        
-        if ($studios->isEmpty()) {
-            return redirect()->route('studio-hr.payroll-settings.index')
-                ->with('error', 'No active studio assigned to your account.');
-        }
+        $studios = collect([$studio]);
         
         return view('studio-hr.create-payroll-settings', compact('studios', 'canCreate'));
     }

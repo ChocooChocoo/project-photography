@@ -1,6 +1,23 @@
 @extends('layouts.owner.app')
 @section('title', 'Edit Employee Payroll')
 
+{{-- STYLES --}}
+@section('styles')
+    <style>
+        .disabled-option {
+            cursor: not-allowed !important;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .btn-check:disabled + .btn-outline-primary {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    </style>
+@endsection
+
 {{-- CONTENTS --}}
 @section('content')
     <div class="content-page">
@@ -854,6 +871,53 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            // ==================== GET CURRENT EMPLOYEE ROLE ====================
+            const currentEmployeeRole = '{{ $payroll->employee->role }}';
+            
+            // ==================== RESTRICT PAYROLL BASIS BASED ON EMPLOYEE ROLE ====================
+            function restrictPayrollBasisByRole(role) {
+                const $basisAttendance = $('#basisAttendance');
+                const $basisBooking = $('#basisBooking');
+                const $basisAttendanceLabel = $('label[for="basisAttendance"]');
+                const $basisBookingLabel = $('label[for="basisBooking"]');
+                const $hint = $('#payrollBasisHint');
+                
+                // Reset all states first
+                $basisAttendance.prop('disabled', false);
+                $basisBooking.prop('disabled', false);
+                $basisAttendanceLabel.removeClass('disabled-option').css('opacity', '1');
+                $basisBookingLabel.removeClass('disabled-option').css('opacity', '1');
+                
+                // Apply restrictions based on role
+                if (role === 'studio-photographer') {
+                    // Photographers: Only Booking + Attendance allowed
+                    $basisAttendance.prop('disabled', true);
+                    $basisAttendanceLabel.addClass('disabled-option').css('opacity', '0.5');
+                    
+                    // Add title/tooltip
+                    $basisAttendanceLabel.attr('title', 'Attendance Only is not available for Photographers');
+                    $basisBookingLabel.attr('title', '');
+                    
+                    // Update hint
+                    $hint.html('<span class="text-info"><i class="ti ti-info-circle me-1"></i>Photographers can only use "Booking + Attendance" payroll basis.</span>');
+                    
+                } else if (role === 'studio-hr' || role === 'studio-finance') {
+                    // HR/Finance: Only Attendance Only allowed
+                    $basisBooking.prop('disabled', true);
+                    $basisBookingLabel.addClass('disabled-option').css('opacity', '0.5');
+                    
+                    // Add title/tooltip
+                    $basisBookingLabel.attr('title', 'Booking + Attendance is only for Photographers');
+                    $basisAttendanceLabel.attr('title', '');
+                    
+                    // Update hint
+                    $hint.html('<span class="text-info"><i class="ti ti-info-circle me-1"></i>HR and Finance staff can only use "Attendance Only" payroll basis.</span>');
+                }
+            }
+
+            // Apply restriction on page load
+            restrictPayrollBasisByRole(currentEmployeeRole);
+
             // ==================== CUSTOM ALLOWANCES ====================
             let allowanceIndex = {{ $payroll->custom_allowances ? count($payroll->custom_allowances) : 0 }};
 
@@ -1006,6 +1070,29 @@
                 const $submitBtn = $('#submitBtn');
                 const $submitText = $('#submitText');
                 const $spinner = $('#spinner');
+
+                // Validate payroll basis based on employee role
+                const selectedBasis = $('input[name="payroll_basis"]:checked').val();
+                
+                if (currentEmployeeRole === 'studio-photographer' && selectedBasis !== 'booking_and_attendance') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Selection',
+                        text: 'Photographers must use "Booking + Attendance" payroll basis.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return;
+                }
+                
+                if ((currentEmployeeRole === 'studio-hr' || currentEmployeeRole === 'studio-finance') && selectedBasis !== 'attendance_only') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Selection',
+                        text: 'HR and Finance staff must use "Attendance Only" payroll basis.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return;
+                }
 
                 if (!$form[0].checkValidity()) {
                     e.stopPropagation();

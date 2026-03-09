@@ -239,7 +239,7 @@ class PayrollSettingsController extends Controller
                     'id' => $employee->id,
                     'full_name' => trim($employee->first_name . ' ' . $employee->last_name),
                     'email' => $employee->email,
-                    'role' => $employee->role,
+                    'role' => $employee->role, // Keep the raw role for JS to evaluate
                     'role_display' => $roleDisplay,
                     'studio_id' => $employee->studio_id,
                     'studio_name' => null, // Will be populated if needed
