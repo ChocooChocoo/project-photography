@@ -71,29 +71,14 @@ class EmployeePayrollRequest extends FormRequest
             'per_booking_rate' => 'nullable|numeric|min:0|max:999999.99',
             'booking_commission_percentage' => 'nullable|numeric|min:0|max:100',
             
-            // Allowances
-            'rice_allowance' => 'nullable|numeric|min:0|max:999999.99',
-            'clothing_allowance' => 'nullable|numeric|min:0|max:999999.99',
-            'laundry_allowance' => 'nullable|numeric|min:0|max:999999.99',
-            'transportation_allowance' => 'nullable|numeric|min:0|max:999999.99',
-            'meal_allowance' => 'nullable|numeric|min:0|max:999999.99',
-            'other_allowances' => 'nullable|numeric|min:0|max:999999.99',
-            'custom_allowances' => 'nullable|array',
-            'custom_allowances.*.name' => 'required_with:custom_allowances|string|max:100',
-            'custom_allowances.*.amount' => 'required_with:custom_allowances|numeric|min:0|max:999999.99',
-            
-            // Deductions
+            // Remaining standard deductions
             'sss_deduction' => 'nullable|numeric|min:0|max:999999.99',
             'phic_deduction' => 'nullable|numeric|min:0|max:999999.99',
             'hdmf_deduction' => 'nullable|numeric|min:0|max:999999.99',
             'tax_withholding' => 'nullable|numeric|min:0|max:999999.99',
             'sss_loan_deduction' => 'nullable|numeric|min:0|max:999999.99',
             'hdmf_loan_deduction' => 'nullable|numeric|min:0|max:999999.99',
-            'cash_advance_deduction' => 'nullable|numeric|min:0|max:999999.99',
             'other_deductions' => 'nullable|numeric|min:0|max:999999.99',
-            'custom_deductions' => 'nullable|array',
-            'custom_deductions.*.name' => 'required_with:custom_deductions|string|max:100',
-            'custom_deductions.*.amount' => 'required_with:custom_deductions|numeric|min:0|max:999999.99',
             
             // Tax Settings
             'is_taxable' => 'boolean',
@@ -114,25 +99,6 @@ class EmployeePayrollRequest extends FormRequest
             'absent_deduction_method' => 'nullable|in:deduct_daily_rate,deduct_fixed_amount,deduct_percentage',
             'absent_fixed_deduction' => 'required_if:absent_deduction_method,deduct_fixed_amount|nullable|numeric|min:0|max:999999.99',
             'absent_percentage_deduction' => 'required_if:absent_deduction_method,deduct_percentage|nullable|numeric|min:0|max:100',
-            
-            // Overtime Settings
-            'overtime_enabled' => 'boolean',
-            'overtime_rate_multiplier' => 'required_if:overtime_enabled,true|numeric|min:1|max:5',
-            'night_differential_rate' => 'nullable|numeric|min:1|max:5',
-            'night_differential_start' => 'nullable|date_format:H:i',
-            'night_differential_end' => 'nullable|date_format:H:i',
-            'holiday_overtime_enabled' => 'boolean',
-            'holiday_overtime_rate' => 'required_if:holiday_overtime_enabled,true|numeric|min:1|max:5',
-            
-            // Leave Settings
-            'regular_holidays_per_year' => 'nullable|integer|min:0|max:365',
-            'special_holidays_per_year' => 'nullable|integer|min:0|max:365',
-            'paid_holidays' => 'boolean',
-            'vacation_leave_days_per_year' => 'nullable|integer|min:0|max:365',
-            'sick_leave_days_per_year' => 'nullable|integer|min:0|max:365',
-            'emergency_leave_days_per_year' => 'nullable|integer|min:0|max:365',
-            'leave_conversion_enabled' => 'boolean',
-            'leave_conversion_rate' => 'required_if:leave_conversion_enabled,true|nullable|numeric|min:0|max:100',
             
             // Payment Schedule
             'payment_schedule' => 'required|in:weekly,bi_weekly,semi_monthly,monthly',
@@ -187,16 +153,6 @@ class EmployeePayrollRequest extends FormRequest
             'per_booking_rate.required_without' => 'Either per booking rate or commission percentage is required for photographers.',
             'booking_commission_percentage.required_without' => 'Either per booking rate or commission percentage is required for photographers.',
             
-            // Custom Allowances
-            'custom_allowances.*.name.required_with' => 'Allowance name is required.',
-            'custom_allowances.*.amount.required_with' => 'Allowance amount is required.',
-            'custom_allowances.*.amount.numeric' => 'Allowance amount must be a number.',
-            
-            // Custom Deductions
-            'custom_deductions.*.name.required_with' => 'Deduction name is required.',
-            'custom_deductions.*.amount.required_with' => 'Deduction amount is required.',
-            'custom_deductions.*.amount.numeric' => 'Deduction amount must be a number.',
-            
             // Tax Validation
             'tax_type.required_if' => 'Please select a tax type.',
             'tax_percentage.required_if' => 'Tax percentage is required for withholding tax.',
@@ -211,14 +167,6 @@ class EmployeePayrollRequest extends FormRequest
             'absent_deduction_method.in' => 'Invalid absence deduction method.',
             'absent_fixed_deduction.required_if' => 'Fixed deduction amount is required for this method.',
             'absent_percentage_deduction.required_if' => 'Percentage deduction is required for this method.',
-            
-            // Overtime Validation
-            'overtime_rate_multiplier.required_if' => 'Overtime rate multiplier is required.',
-            'overtime_rate_multiplier.min' => 'Overtime rate must be at least 1x.',
-            'overtime_rate_multiplier.max' => 'Overtime rate cannot exceed 5x.',
-            
-            // Leave Validation
-            'leave_conversion_rate.required_if' => 'Leave conversion rate is required.',
             
             // Payment Schedule
             'payday_1.required_if' => 'First payday is required.',
@@ -239,10 +187,6 @@ class EmployeePayrollRequest extends FormRequest
         $booleanFields = [
             'is_taxable',
             'subject_to_vat',
-            'overtime_enabled',
-            'holiday_overtime_enabled',
-            'paid_holidays',
-            'leave_conversion_enabled',
             'is_active',
         ];
         
@@ -255,15 +199,12 @@ class EmployeePayrollRequest extends FormRequest
         // Convert empty strings to null for numeric fields
         $numericFields = [
             'daily_rate', 'monthly_salary', 'hourly_rate', 'per_booking_rate',
-            'booking_commission_percentage', 'rice_allowance', 'clothing_allowance',
-            'laundry_allowance', 'transportation_allowance', 'meal_allowance',
-            'other_allowances', 'sss_deduction', 'phic_deduction', 'hdmf_deduction',
-            'tax_withholding', 'sss_loan_deduction', 'hdmf_loan_deduction',
-            'cash_advance_deduction', 'other_deductions', 'tax_percentage',
+            'booking_commission_percentage', 'sss_deduction', 'phic_deduction',
+            'hdmf_deduction', 'tax_withholding', 'sss_loan_deduction',
+            'hdmf_loan_deduction', 'other_deductions', 'tax_percentage',
             'vat_percentage', 'absence_deduction_per_day', 'undertime_deduction_per_hour',
             'late_deduction_per_minute', 'absent_fixed_deduction',
-            'absent_percentage_deduction', 'overtime_rate_multiplier',
-            'night_differential_rate', 'holiday_overtime_rate', 'leave_conversion_rate',
+            'absent_percentage_deduction',
         ];
         
         foreach ($numericFields as $field) {

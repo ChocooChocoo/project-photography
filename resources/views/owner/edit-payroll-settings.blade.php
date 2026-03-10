@@ -27,6 +27,9 @@
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h4 class="card-title mb-0">Edit Employee Payroll</h4>
+                            <a href="{{ route('owner.payroll-settings.index') }}" class="btn btn-soft-primary">
+                                <i class="ti ti-arrow-left me-1"></i> Back to List
+                            </a>
                         </div>
                         <div class="card-body">
                             <form class="needs-validation" novalidate id="payrollForm">
@@ -170,116 +173,6 @@
                                     </div>
                                 </div>
 
-                                {{-- ALLOWANCES --}}
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <h4 class="card-title text-primary mb-3">Allowances</h4>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Rice Allowance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="rice_allowance"
-                                                   value="{{ $payroll->rice_allowance }}" step="0.01" min="0"
-                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Clothing Allowance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="clothing_allowance"
-                                                   value="{{ $payroll->clothing_allowance }}" step="0.01" min="0"
-                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Laundry Allowance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="laundry_allowance"
-                                                   value="{{ $payroll->laundry_allowance }}" step="0.01" min="0"
-                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Transportation Allowance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="transportation_allowance"
-                                                   value="{{ $payroll->transportation_allowance }}" step="0.01" min="0"
-                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Meal Allowance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="meal_allowance"
-                                                   value="{{ $payroll->meal_allowance }}" step="0.01" min="0"
-                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Other Allowances</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="other_allowances"
-                                                   value="{{ $payroll->other_allowances }}" step="0.01" min="0"
-                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- CUSTOM ALLOWANCES --}}
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label class="form-label fw-bold mb-0">Custom Allowances</label>
-                                            @if(!isset($canUpdate) || $canUpdate)
-                                                <button type="button" class="btn btn-sm btn-soft-primary" id="addCustomAllowance">
-                                                    <i class="ti ti-plus"></i> Add Allowance
-                                                </button>
-                                            @endif
-                                        </div>
-                                        <div id="customAllowancesContainer">
-                                            @if($payroll->custom_allowances && count($payroll->custom_allowances) > 0)
-                                                @foreach($payroll->custom_allowances as $index => $allowance)
-                                                <div class="row mb-2 custom-allowance-item">
-                                                    <div class="col-md-5">
-                                                        <input type="text" class="form-control"
-                                                               name="custom_allowances[{{ $index }}][name]"
-                                                               value="{{ $allowance['name'] }}" placeholder="Allowance Name"
-                                                               {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                                    </div>
-                                                    <div class="col-md-5">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text">₱</span>
-                                                            <input type="number" class="form-control"
-                                                                   name="custom_allowances[{{ $index }}][amount]"
-                                                                   value="{{ $allowance['amount'] }}" step="0.01" min="0" placeholder="Amount"
-                                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <button type="button" class="btn btn-sm btn-soft-danger remove-custom-item"
-                                                            {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                                            <i class="ti ti-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                @endforeach
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-
                                 {{-- DEDUCTIONS --}}
                                 <div class="row mb-3">
                                     <div class="col-12">
@@ -347,16 +240,6 @@
                                     </div>
 
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label">Cash Advance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="cash_advance_deduction"
-                                                   value="{{ $payroll->cash_advance_deduction }}" step="0.01" min="0"
-                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
                                         <label class="form-label">Other Deductions</label>
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
@@ -364,50 +247,6 @@
                                                    value="{{ $payroll->other_deductions }}" step="0.01" min="0"
                                                    {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
                                         </div>
-                                    </div>
-                                </div>
-
-                                {{-- CUSTOM DEDUCTIONS --}}
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label class="form-label fw-bold mb-0">Custom Deductions</label>
-                                            @if(!isset($canUpdate) || $canUpdate)
-                                                <button type="button" class="btn btn-sm btn-soft-danger" id="addCustomDeduction">
-                                                    <i class="ti ti-plus"></i> Add Deduction
-                                                </button>
-                                            @endif
-                                        </div>
-                                        <div id="customDeductionsContainer">
-                                            @if($payroll->custom_deductions && count($payroll->custom_deductions) > 0)
-                                                @foreach($payroll->custom_deductions as $index => $deduction)
-                                                <div class="row mb-2 custom-deduction-item">
-                                                    <div class="col-md-5">
-                                                        <input type="text" class="form-control"
-                                                               name="custom_deductions[{{ $index }}][name]"
-                                                               value="{{ $deduction['name'] }}" placeholder="Deduction Name"
-                                                               {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                                    </div>
-                                                    <div class="col-md-5">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text">₱</span>
-                                                            <input type="number" class="form-control"
-                                                                   name="custom_deductions[{{ $index }}][amount]"
-                                                                   value="{{ $deduction['amount'] }}" step="0.01" min="0" placeholder="Amount"
-                                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <button type="button" class="btn btn-sm btn-soft-danger remove-custom-item"
-                                                            {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                                            <i class="ti ti-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                @endforeach
-                                            @endif
-                                        </div>
-                                        <small class="text-muted">Add custom deduction types if needed</small>
                                     </div>
                                 </div>
 
@@ -561,162 +400,6 @@
                                         <div class="input-group">
                                             <input type="number" class="form-control" name="absent_percentage_deduction"
                                                    value="{{ $payroll->absent_percentage_deduction }}" step="0.01" min="0" max="100"
-                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                            <span class="input-group-text">%</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- OVERTIME SETTINGS --}}
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <h4 class="card-title text-primary mb-3">Overtime Settings</h4>
-                                    </div>
-
-                                    {{-- Overtime Toggle Row --}}
-                                    <div class="col-12 mb-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="form-check form-switch mb-0">
-                                                <input class="form-check-input" type="checkbox" role="switch"
-                                                       id="overtimeEnabled" name="overtime_enabled" value="1"
-                                                       {{ $payroll->overtime_enabled ? 'checked' : '' }}
-                                                       {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                            </div>
-                                            <span class="fw-medium">Enable Overtime</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3 overtime-field" style="{{ !$payroll->overtime_enabled ? 'display: none;' : '' }}">
-                                        <label class="form-label">Overtime Rate Multiplier</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="overtime_rate_multiplier"
-                                                   value="{{ $payroll->overtime_rate_multiplier }}" step="0.01" min="1" max="5"
-                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                            <span class="input-group-text">x</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3 overtime-field" style="{{ !$payroll->overtime_enabled ? 'display: none;' : '' }}">
-                                        <label class="form-label">Night Differential Rate</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="night_differential_rate"
-                                                   value="{{ $payroll->night_differential_rate }}" step="0.01" min="1" max="5"
-                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                            <span class="input-group-text">x</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3 overtime-field" style="{{ !$payroll->overtime_enabled ? 'display: none;' : '' }}">
-                                        <label class="form-label">Night Diff Start</label>
-                                        <input type="time" class="form-control" name="night_differential_start"
-                                               value="{{ $payroll->night_differential_start }}"
-                                               {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3 overtime-field" style="{{ !$payroll->overtime_enabled ? 'display: none;' : '' }}">
-                                        <label class="form-label">Night Diff End</label>
-                                        <input type="time" class="form-control" name="night_differential_end"
-                                               value="{{ $payroll->night_differential_end }}"
-                                               {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    {{-- Holiday Overtime Toggle Row --}}
-                                    <div class="col-12 mb-2 mt-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="form-check form-switch mb-0">
-                                                <input class="form-check-input" type="checkbox" role="switch"
-                                                       id="holidayOvertimeEnabled" name="holiday_overtime_enabled" value="1"
-                                                       {{ $payroll->holiday_overtime_enabled ? 'checked' : '' }}
-                                                       {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                            </div>
-                                            <span class="fw-medium">Enable Holiday Overtime</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3 holiday-field" style="{{ !$payroll->holiday_overtime_enabled ? 'display: none;' : '' }}">
-                                        <label class="form-label">Holiday Overtime Rate</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="holiday_overtime_rate"
-                                                   value="{{ $payroll->holiday_overtime_rate }}" step="0.01" min="1" max="5"
-                                                   {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                            <span class="input-group-text">x</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- LEAVE SETTINGS --}}
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <h4 class="card-title text-primary mb-3">Leave Settings</h4>
-                                    </div>
-
-                                    {{-- Paid Holidays Toggle Row --}}
-                                    <div class="col-12 mb-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="form-check form-switch mb-0">
-                                                <input class="form-check-input" type="checkbox" role="switch"
-                                                       id="paidHolidays" name="paid_holidays" value="1"
-                                                       {{ $payroll->paid_holidays ? 'checked' : '' }}
-                                                       {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                            </div>
-                                            <span class="fw-medium">Paid Holidays</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Regular Holidays/Year</label>
-                                        <input type="number" class="form-control" name="regular_holidays_per_year"
-                                               value="{{ $payroll->regular_holidays_per_year }}" min="0" max="365"
-                                               {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Special Holidays/Year</label>
-                                        <input type="number" class="form-control" name="special_holidays_per_year"
-                                               value="{{ $payroll->special_holidays_per_year }}" min="0" max="365"
-                                               {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Vacation Leave Days</label>
-                                        <input type="number" class="form-control" name="vacation_leave_days_per_year"
-                                               value="{{ $payroll->vacation_leave_days_per_year }}" min="0" max="365"
-                                               {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Sick Leave Days</label>
-                                        <input type="number" class="form-control" name="sick_leave_days_per_year"
-                                               value="{{ $payroll->sick_leave_days_per_year }}" min="0" max="365"
-                                               {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Emergency Leave Days</label>
-                                        <input type="number" class="form-control" name="emergency_leave_days_per_year"
-                                               value="{{ $payroll->emergency_leave_days_per_year }}" min="0" max="365"
-                                               {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    {{-- Leave Conversion Toggle Row --}}
-                                    <div class="col-12 mb-2 mt-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="form-check form-switch mb-0">
-                                                <input class="form-check-input" type="checkbox" role="switch"
-                                                       id="leaveConversion" name="leave_conversion_enabled" value="1"
-                                                       {{ $payroll->leave_conversion_enabled ? 'checked' : '' }}
-                                                       {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
-                                            </div>
-                                            <span class="fw-medium">Leave Conversion</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3 leave-conversion-field"
-                                         style="{{ !$payroll->leave_conversion_enabled ? 'display: none;' : '' }}">
-                                        <label class="form-label">Conversion Rate (%)</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="leave_conversion_rate"
-                                                   value="{{ $payroll->leave_conversion_rate }}" step="0.01" min="0" max="100"
                                                    {{ isset($canUpdate) && !$canUpdate ? 'disabled' : '' }}>
                                             <span class="input-group-text">%</span>
                                         </div>
@@ -918,69 +601,6 @@
             // Apply restriction on page load
             restrictPayrollBasisByRole(currentEmployeeRole);
 
-            // ==================== CUSTOM ALLOWANCES ====================
-            let allowanceIndex = {{ $payroll->custom_allowances ? count($payroll->custom_allowances) : 0 }};
-
-            $('#addCustomAllowance').on('click', function() {
-                const container = $('#customAllowancesContainer');
-                const index = allowanceIndex++;
-
-                const html = `
-                    <div class="row mb-2 custom-allowance-item">
-                        <div class="col-md-5">
-                            <input type="text" class="form-control" name="custom_allowances[${index}][name]" placeholder="Allowance Name">
-                        </div>
-                        <div class="col-md-5">
-                            <div class="input-group">
-                                <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" name="custom_allowances[${index}][amount]" step="0.01" min="0" placeholder="Amount">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-sm btn-soft-danger remove-custom-item">
-                                <i class="ti ti-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                container.append(html);
-            });
-
-            // ==================== CUSTOM DEDUCTIONS ====================
-            let deductionIndex = {{ $payroll->custom_deductions ? count($payroll->custom_deductions) : 0 }};
-
-            $('#addCustomDeduction').on('click', function() {
-                const container = $('#customDeductionsContainer');
-                const index = deductionIndex++;
-
-                const html = `
-                    <div class="row mb-2 custom-deduction-item">
-                        <div class="col-md-5">
-                            <input type="text" class="form-control" name="custom_deductions[${index}][name]" placeholder="Deduction Name">
-                        </div>
-                        <div class="col-md-5">
-                            <div class="input-group">
-                                <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" name="custom_deductions[${index}][amount]" step="0.01" min="0" placeholder="Amount">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-sm btn-soft-danger remove-custom-item">
-                                <i class="ti ti-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                container.append(html);
-            });
-
-            // ==================== REMOVE CUSTOM ITEM ====================
-            $(document).on('click', '.remove-custom-item', function() {
-                $(this).closest('.row').remove();
-            });
-
             // ==================== TAX TOGGLE ====================
             $('#isTaxable').on('change', function() {
                 if ($(this).is(':checked')) {
@@ -1018,32 +638,6 @@
                     $('.absent-fixed-field').show();
                 } else if (method === 'deduct_percentage') {
                     $('.absent-percentage-field').show();
-                }
-            });
-
-            // ==================== LEAVE CONVERSION ====================
-            $('#leaveConversion').on('change', function() {
-                if ($(this).is(':checked')) {
-                    $('.leave-conversion-field').show();
-                } else {
-                    $('.leave-conversion-field').hide();
-                }
-            });
-
-            // ==================== OVERTIME FIELDS ====================
-            $('#overtimeEnabled').on('change', function() {
-                if ($(this).is(':checked')) {
-                    $('.overtime-field').show();
-                } else {
-                    $('.overtime-field').hide();
-                }
-            });
-
-            $('#holidayOvertimeEnabled').on('change', function() {
-                if ($(this).is(':checked')) {
-                    $('.holiday-field').show();
-                } else {
-                    $('.holiday-field').hide();
                 }
             });
 

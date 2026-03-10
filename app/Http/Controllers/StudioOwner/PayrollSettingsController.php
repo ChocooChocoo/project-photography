@@ -285,7 +285,7 @@ class PayrollSettingsController extends Controller
                 ->whereIn('studio_id', $studioIds)
                 ->findOrFail($id);
             
-            // Format response data
+            // Format response data - REMOVED ALLOWANCES, OVERTIME, LEAVE sections
             $data = [
                 'id' => $payroll->id,
                 'user_id' => $payroll->user_id,
@@ -309,26 +309,16 @@ class PayrollSettingsController extends Controller
                 'per_booking_rate' => $payroll->per_booking_rate,
                 'booking_commission_percentage' => $payroll->booking_commission_percentage,
                 
-                // Allowances
-                'rice_allowance' => $payroll->rice_allowance,
-                'clothing_allowance' => $payroll->clothing_allowance,
-                'laundry_allowance' => $payroll->laundry_allowance,
-                'transportation_allowance' => $payroll->transportation_allowance,
-                'meal_allowance' => $payroll->meal_allowance,
-                'other_allowances' => $payroll->other_allowances,
-                'custom_allowances' => $payroll->custom_allowances,
-                'total_allowances' => $payroll->total_allowances,
+                // ALLOWANCES SECTION REMOVED COMPLETELY
                 
-                // Deductions
+                // Deductions (only kept fields)
                 'sss_deduction' => $payroll->sss_deduction,
                 'phic_deduction' => $payroll->phic_deduction,
                 'hdmf_deduction' => $payroll->hdmf_deduction,
                 'tax_withholding' => $payroll->tax_withholding,
                 'sss_loan_deduction' => $payroll->sss_loan_deduction,
                 'hdmf_loan_deduction' => $payroll->hdmf_loan_deduction,
-                'cash_advance_deduction' => $payroll->cash_advance_deduction,
                 'other_deductions' => $payroll->other_deductions,
-                'custom_deductions' => $payroll->custom_deductions,
                 'total_deductions' => $payroll->total_deductions,
                 
                 // Tax Settings
@@ -351,24 +341,8 @@ class PayrollSettingsController extends Controller
                 'absent_fixed_deduction' => $payroll->absent_fixed_deduction,
                 'absent_percentage_deduction' => $payroll->absent_percentage_deduction,
                 
-                // Overtime Settings
-                'overtime_enabled' => $payroll->overtime_enabled,
-                'overtime_rate_multiplier' => $payroll->overtime_rate_multiplier,
-                'night_differential_rate' => $payroll->night_differential_rate,
-                'night_differential_start' => $payroll->night_differential_start ? $payroll->night_differential_start->format('H:i') : null,
-                'night_differential_end' => $payroll->night_differential_end ? $payroll->night_differential_end->format('H:i') : null,
-                'holiday_overtime_enabled' => $payroll->holiday_overtime_enabled,
-                'holiday_overtime_rate' => $payroll->holiday_overtime_rate,
-                
-                // Leave Settings
-                'regular_holidays_per_year' => $payroll->regular_holidays_per_year,
-                'special_holidays_per_year' => $payroll->special_holidays_per_year,
-                'paid_holidays' => $payroll->paid_holidays,
-                'vacation_leave_days_per_year' => $payroll->vacation_leave_days_per_year,
-                'sick_leave_days_per_year' => $payroll->sick_leave_days_per_year,
-                'emergency_leave_days_per_year' => $payroll->emergency_leave_days_per_year,
-                'leave_conversion_enabled' => $payroll->leave_conversion_enabled,
-                'leave_conversion_rate' => $payroll->leave_conversion_rate,
+                // OVERTIME SETTINGS REMOVED COMPLETELY
+                // LEAVE SETTINGS REMOVED COMPLETELY
                 
                 // Payment Schedule
                 'payment_schedule' => $payroll->payment_schedule,

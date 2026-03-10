@@ -119,8 +119,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="monthly_salary"
-                                                   step="0.01" min="0" placeholder="0.00"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" placeholder="0.00"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                         <small class="text-muted">Fixed monthly salary (if applicable)</small>
                                     </div>
@@ -130,8 +130,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="daily_rate"
-                                                   step="0.01" min="0" placeholder="0.00"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" placeholder="0.00"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                         <small class="text-muted">Per day rate</small>
                                     </div>
@@ -141,8 +141,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="hourly_rate"
-                                                   step="0.01" min="0" placeholder="0.00"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" placeholder="0.00"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                         <small class="text-muted">Per hour rate (auto-calculated if empty)</small>
                                     </div>
@@ -160,8 +160,8 @@
                                             <div class="input-group">
                                                 <span class="input-group-text">₱</span>
                                                 <input type="number" class="form-control" name="per_booking_rate"
-                                                       step="0.01" min="0" placeholder="0.00"
-                                                       {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                    step="0.01" min="0" placeholder="0.00"
+                                                    {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                             </div>
                                             <small class="text-muted">Fixed amount per booking</small>
                                         </div>
@@ -170,8 +170,8 @@
                                             <label class="form-label">Commission Percentage</label>
                                             <div class="input-group">
                                                 <input type="number" class="form-control" name="booking_commission_percentage"
-                                                       step="0.01" min="0" max="100" placeholder="0"
-                                                       {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                    step="0.01" min="0" max="100" placeholder="0"
+                                                    {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                                 <span class="input-group-text">%</span>
                                             </div>
                                             <small class="text-muted">Percentage of booking amount</small>
@@ -179,88 +179,8 @@
                                     </div>
                                 </div>
 
-                                {{-- ALLOWANCES --}}
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <h4 class="card-title text-primary mb-3">Allowances</h4>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Rice Allowance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="rice_allowance"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Clothing Allowance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="clothing_allowance"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Laundry Allowance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="laundry_allowance"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Transportation Allowance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="transportation_allowance"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Meal Allowance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="meal_allowance"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Other Allowances</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="other_allowances"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- CUSTOM ALLOWANCES --}}
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label class="form-label fw-bold mb-0">Custom Allowances</label>
-                                            @if(!isset($canCreate) || $canCreate)
-                                                <button type="button" class="btn btn-sm btn-soft-primary" id="addCustomAllowance">
-                                                    <i class="ti ti-plus"></i> Add Allowance
-                                                </button>
-                                            @endif
-                                        </div>
-                                        <div id="customAllowancesContainer"></div>
-                                        <small class="text-muted">Add custom allowance types if needed</small>
-                                    </div>
-                                </div>
+                                {{-- ALLOWANCES SECTION REMOVED COMPLETELY --}}
+                                {{-- CUSTOM ALLOWANCES SECTION REMOVED COMPLETELY --}}
 
                                 {{-- DEDUCTIONS --}}
                                 <div class="row mb-3">
@@ -273,8 +193,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="sss_deduction"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" value="0"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                     </div>
 
@@ -283,8 +203,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="phic_deduction"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" value="0"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                     </div>
 
@@ -293,8 +213,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="hdmf_deduction"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" value="0"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                     </div>
 
@@ -303,8 +223,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="tax_withholding"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" value="0"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                     </div>
 
@@ -313,8 +233,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="sss_loan_deduction"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" value="0"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                     </div>
 
@@ -323,47 +243,25 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="hdmf_loan_deduction"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" value="0"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                     </div>
 
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Cash Advance</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">₱</span>
-                                            <input type="number" class="form-control" name="cash_advance_deduction"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                        </div>
-                                    </div>
+                                    {{-- CASH ADVANCE FIELD REMOVED --}}
 
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Other Deductions</label>
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="other_deductions"
-                                                   step="0.01" min="0" value="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" value="0"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                     </div>
                                 </div>
 
-                                {{-- CUSTOM DEDUCTIONS --}}
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label class="form-label fw-bold mb-0">Custom Deductions</label>
-                                            @if(!isset($canCreate) || $canCreate)
-                                                <button type="button" class="btn btn-sm btn-soft-danger" id="addCustomDeduction">
-                                                    <i class="ti ti-plus"></i> Add Deduction
-                                                </button>
-                                            @endif
-                                        </div>
-                                        <div id="customDeductionsContainer"></div>
-                                        <small class="text-muted">Add custom deduction types if needed</small>
-                                    </div>
-                                </div>
+                                {{-- CUSTOM DEDUCTIONS SECTION REMOVED COMPLETELY --}}
 
                                 {{-- TAX AND VAT SETTINGS --}}
                                 <div class="row mb-3">
@@ -376,8 +274,8 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="form-check form-switch mb-0">
                                                 <input class="form-check-input" type="checkbox" role="switch"
-                                                       id="isTaxable" name="is_taxable" value="1" checked
-                                                       {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                    id="isTaxable" name="is_taxable" value="1" checked
+                                                    {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                             </div>
                                             <span class="fw-medium">Taxable</span>
                                         </div>
@@ -386,7 +284,7 @@
                                     {{-- Tax Fields Row --}}
                                     <div class="col-md-4 mb-3 tax-fields">
                                         <label class="form-label">Tax Type</label>
-                                        <select class="form-select" name="tax_type"
+                                        <select class="form-select" name="tax_type" id="taxType"
                                             {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                             <option value="withholding">Withholding Tax</option>
                                             <option value="graduated">Graduated Tax</option>
@@ -398,8 +296,8 @@
                                         <label class="form-label">Tax Percentage</label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" name="tax_percentage"
-                                                   step="0.01" min="0" max="100" placeholder="Tax %"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" max="100" placeholder="Tax %"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                             <span class="input-group-text">%</span>
                                         </div>
                                     </div>
@@ -407,7 +305,7 @@
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Tax Code</label>
                                         <input type="text" class="form-control" name="tax_code" placeholder="e.g., WITH-2024"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                            {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                     </div>
 
                                     {{-- VAT Toggle Row --}}
@@ -415,8 +313,8 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="form-check form-switch mb-0">
                                                 <input class="form-check-input" type="checkbox" role="switch"
-                                                       id="subjectToVat" name="subject_to_vat" value="1"
-                                                       {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                    id="subjectToVat" name="subject_to_vat" value="1"
+                                                    {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                             </div>
                                             <span class="fw-medium">Subject to VAT</span>
                                         </div>
@@ -427,8 +325,8 @@
                                         <label class="form-label">VAT Percentage</label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" name="vat_percentage"
-                                                   value="12" step="0.01" min="0" max="100"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                value="12" step="0.01" min="0" max="100"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                             <span class="input-group-text">%</span>
                                         </div>
                                     </div>
@@ -454,8 +352,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="absence_deduction_per_day"
-                                                   step="0.01" min="0" placeholder="0.00"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" placeholder="0.00"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                     </div>
 
@@ -464,16 +362,16 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="undertime_deduction_per_hour"
-                                                   step="0.01" min="0" placeholder="0.00"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" placeholder="0.00"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                     </div>
 
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Late Grace Period (minutes)</label>
                                         <input type="number" class="form-control" name="late_grace_period_minutes"
-                                               value="15" min="0" max="120"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                            value="15" min="0" max="120"
+                                            {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                     </div>
 
                                     <div class="col-md-4 mb-3">
@@ -481,8 +379,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="late_deduction_per_minute"
-                                                   step="0.01" min="0" placeholder="0.00"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" placeholder="0.00"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                     </div>
 
@@ -501,8 +399,8 @@
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="absent_fixed_deduction"
-                                                   step="0.01" min="0" placeholder="0.00"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" placeholder="0.00"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                         </div>
                                     </div>
 
@@ -510,160 +408,15 @@
                                         <label class="form-label">Percentage Deduction</label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" name="absent_percentage_deduction"
-                                                   step="0.01" min="0" max="100" placeholder="0"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                step="0.01" min="0" max="100" placeholder="0"
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                             <span class="input-group-text">%</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {{-- OVERTIME SETTINGS --}}
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <h4 class="card-title text-primary mb-3">Overtime Settings</h4>
-                                    </div>
-
-                                    {{-- Overtime Toggle Row --}}
-                                    <div class="col-12 mb-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="form-check form-switch mb-0">
-                                                <input class="form-check-input" type="checkbox" role="switch"
-                                                       id="overtimeEnabled" name="overtime_enabled" value="1" checked
-                                                       {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                            </div>
-                                            <span class="fw-medium">Enable Overtime</span>
-                                        </div>
-                                    </div>
-
-                                    {{-- Overtime Fields Row --}}
-                                    <div class="col-md-3 mb-3 overtime-field">
-                                        <label class="form-label">Overtime Rate Multiplier</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="overtime_rate_multiplier"
-                                                   value="1.25" step="0.01" min="1" max="5"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                            <span class="input-group-text">x</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3 overtime-field">
-                                        <label class="form-label">Night Differential Rate</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="night_differential_rate"
-                                                   value="1.10" step="0.01" min="1" max="5"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                            <span class="input-group-text">x</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3 overtime-field">
-                                        <label class="form-label">Night Diff Start</label>
-                                        <input type="time" class="form-control" name="night_differential_start" value="22:00"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3 overtime-field">
-                                        <label class="form-label">Night Diff End</label>
-                                        <input type="time" class="form-control" name="night_differential_end" value="06:00"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    {{-- Holiday Overtime Toggle Row --}}
-                                    <div class="col-12 mb-2 mt-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="form-check form-switch mb-0">
-                                                <input class="form-check-input" type="checkbox" role="switch"
-                                                       id="holidayOvertimeEnabled" name="holiday_overtime_enabled" value="1" checked
-                                                       {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                            </div>
-                                            <span class="fw-medium">Enable Holiday Overtime</span>
-                                        </div>
-                                    </div>
-
-                                    {{-- Holiday Overtime Fields Row --}}
-                                    <div class="col-md-3 mb-3 holiday-field">
-                                        <label class="form-label">Holiday Overtime Rate</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="holiday_overtime_rate"
-                                                   value="2.00" step="0.01" min="1" max="5"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                            <span class="input-group-text">x</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- LEAVE SETTINGS --}}
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <h4 class="card-title text-primary mb-3">Leave Settings</h4>
-                                    </div>
-
-                                    {{-- Paid Holidays Toggle Row --}}
-                                    <div class="col-12 mb-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="form-check form-switch mb-0">
-                                                <input class="form-check-input" type="checkbox" role="switch"
-                                                       id="paidHolidays" name="paid_holidays" value="1" checked
-                                                       {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                            </div>
-                                            <span class="fw-medium">Paid Holidays</span>
-                                        </div>
-                                    </div>
-
-                                    {{-- Holiday Fields Row --}}
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Regular Holidays/Year</label>
-                                        <input type="number" class="form-control" name="regular_holidays_per_year" value="12" min="0" max="365"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Special Holidays/Year</label>
-                                        <input type="number" class="form-control" name="special_holidays_per_year" value="5" min="0" max="365"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Vacation Leave Days</label>
-                                        <input type="number" class="form-control" name="vacation_leave_days_per_year" value="15" min="0" max="365"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Sick Leave Days</label>
-                                        <input type="number" class="form-control" name="sick_leave_days_per_year" value="15" min="0" max="365"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Emergency Leave Days</label>
-                                        <input type="number" class="form-control" name="emergency_leave_days_per_year" value="3" min="0" max="365"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                    </div>
-
-                                    {{-- Leave Conversion Toggle Row --}}
-                                    <div class="col-12 mb-2 mt-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="form-check form-switch mb-0">
-                                                <input class="form-check-input" type="checkbox" role="switch"
-                                                       id="leaveConversion" name="leave_conversion_enabled" value="1"
-                                                       {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                            </div>
-                                            <span class="fw-medium">Leave Conversion</span>
-                                        </div>
-                                    </div>
-
-                                    {{-- Leave Conversion Fields Row --}}
-                                    <div class="col-md-3 mb-3 leave-conversion-field" style="display: none;">
-                                        <label class="form-label">Conversion Rate (%)</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="leave_conversion_rate"
-                                                   step="0.01" min="0" max="100" placeholder="100"
-                                                   {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
-                                            <span class="input-group-text">%</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                {{-- OVERTIME SETTINGS SECTION REMOVED COMPLETELY --}}
+                                {{-- LEAVE SETTINGS SECTION REMOVED COMPLETELY --}}
 
                                 {{-- PAYMENT SCHEDULE --}}
                                 <div class="row mb-3">
@@ -687,13 +440,13 @@
                                     <div class="col-md-4 mb-3 payday-fields" id="payday1Field" style="display: none;">
                                         <label class="form-label">Payday 1 (Day of Month) <span class="text-danger">*</span></label>
                                         <input type="number" class="form-control" name="payday_1" min="1" max="31"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                            {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                     </div>
 
                                     <div class="col-md-4 mb-3 payday-fields" id="payday2Field" style="display: none;">
                                         <label class="form-label">Payday 2 (Day of Month) <span class="text-danger">*</span></label>
                                         <input type="number" class="form-control" name="payday_2" min="1" max="31"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                            {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                     </div>
 
                                     <div class="col-md-4 mb-3 payday-fields" id="paydayWeeklyField" style="display: none;">
@@ -719,19 +472,29 @@
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Bank Name</label>
                                         <input type="text" class="form-control" name="bank_name" placeholder="e.g., BDO, BPI, MetroBank"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                            {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                     </div>
 
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Account Number</label>
                                         <input type="text" class="form-control" name="bank_account_number" placeholder="Account number"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                            {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                     </div>
 
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Account Name</label>
                                         <input type="text" class="form-control" name="bank_account_name" placeholder="Account holder name"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                            {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <select class="form-select" name="payment_method"
+                                            {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                            <option value="bank_transfer">Bank Transfer</option>
+                                            <option value="cash">Cash</option>
+                                            <option value="check">Check</option>
+                                        </select>
                                     </div>
                                 </div>
 
@@ -746,8 +509,8 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="form-check form-switch mb-0">
                                                 <input class="form-check-input" type="checkbox" role="switch"
-                                                       id="isActive" name="is_active" value="1" checked
-                                                       {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                                    id="isActive" name="is_active" value="1" checked
+                                                    {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                             </div>
                                             <span class="fw-medium">Active</span>
                                         </div>
@@ -757,19 +520,19 @@
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Effective Date</label>
                                         <input type="date" class="form-control" name="effective_date" value="{{ date('Y-m-d') }}"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                            {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                     </div>
 
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Expiry Date</label>
                                         <input type="date" class="form-control" name="expiry_date"
-                                               {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
+                                            {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}>
                                     </div>
 
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label">Notes</label>
                                         <textarea class="form-control" name="notes" rows="2" placeholder="Additional notes about payroll settings..."
-                                                  {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}></textarea>
+                                                {{ isset($canCreate) && !$canCreate ? 'disabled' : '' }}></textarea>
                                     </div>
                                 </div>
 
@@ -1034,69 +797,6 @@
                 }
             });
 
-            // ==================== CUSTOM ALLOWANCES ====================
-            let allowanceIndex = 0;
-
-            $('#addCustomAllowance').on('click', function() {
-                const container = $('#customAllowancesContainer');
-                const index = allowanceIndex++;
-
-                const html = `
-                    <div class="row mb-2 custom-allowance-item">
-                        <div class="col-md-5">
-                            <input type="text" class="form-control" name="custom_allowances[${index}][name]" placeholder="Allowance Name">
-                        </div>
-                        <div class="col-md-5">
-                            <div class="input-group">
-                                <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" name="custom_allowances[${index}][amount]" step="0.01" min="0" placeholder="Amount">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-sm btn-soft-danger remove-custom-item h-100">
-                                <i class="ti ti-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                container.append(html);
-            });
-
-            // ==================== CUSTOM DEDUCTIONS ====================
-            let deductionIndex = 0;
-
-            $('#addCustomDeduction').on('click', function() {
-                const container = $('#customDeductionsContainer');
-                const index = deductionIndex++;
-
-                const html = `
-                    <div class="row mb-2 custom-deduction-item">
-                        <div class="col-md-5">
-                            <input type="text" class="form-control" name="custom_deductions[${index}][name]" placeholder="Deduction Name">
-                        </div>
-                        <div class="col-md-5">
-                            <div class="input-group">
-                                <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" name="custom_deductions[${index}][amount]" step="0.01" min="0" placeholder="Amount">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-sm btn-soft-danger remove-custom-item h-100">
-                                <i class="ti ti-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                container.append(html);
-            });
-
-            // ==================== REMOVE CUSTOM ITEM ====================
-            $(document).on('click', '.remove-custom-item', function() {
-                $(this).closest('.row').remove();
-            });
-
             // ==================== TAX TOGGLE ====================
             $('#isTaxable').on('change', function() {
                 if ($(this).is(':checked')) {
@@ -1133,32 +833,6 @@
                     $('.absent-fixed-field').show();
                 } else if (method === 'deduct_percentage') {
                     $('.absent-percentage-field').show();
-                }
-            });
-
-            // ==================== LEAVE CONVERSION ====================
-            $('#leaveConversion').on('change', function() {
-                if ($(this).is(':checked')) {
-                    $('.leave-conversion-field').show();
-                } else {
-                    $('.leave-conversion-field').hide();
-                }
-            });
-
-            // ==================== OVERTIME FIELDS ====================
-            $('#overtimeEnabled').on('change', function() {
-                if ($(this).is(':checked')) {
-                    $('.overtime-field').show();
-                } else {
-                    $('.overtime-field').hide();
-                }
-            });
-
-            $('#holidayOvertimeEnabled').on('change', function() {
-                if ($(this).is(':checked')) {
-                    $('.holiday-field').show();
-                } else {
-                    $('.holiday-field').hide();
                 }
             });
 

@@ -301,49 +301,11 @@
                             // Basis badge
                             const basisBadgeClass = p.payroll_basis === 'booking_and_attendance' ? 'badge-soft-info' : 'badge-soft-primary';
                             
-                            // Format custom allowances
-                            let customAllowancesHtml = '';
-                            if (p.custom_allowances && p.custom_allowances.length > 0) {
-                                p.custom_allowances.forEach(function(item) {
-                                    customAllowancesHtml += `
-                                        <div class="col-12 col-md-6">
-                                            <div class="d-flex align-items-start">
-                                                <div class="flex-shrink-0">
-                                                    <div class="bg-light-primary rounded-circle p-2">
-                                                        <i class="ti ti-star fs-20 text-primary"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-grow-1 ms-3">
-                                                    <label class="text-muted small mb-1">${item.name}</label>
-                                                    <p class="mb-0 fw-medium">₱${parseFloat(item.amount).toFixed(2)}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `;
-                                });
-                            }
+                            // ALLOWANCES SECTION REMOVED COMPLETELY
+                            // CUSTOM ALLOWANCES REMOVED COMPLETELY
                             
-                            // Format custom deductions
-                            let customDeductionsHtml = '';
-                            if (p.custom_deductions && p.custom_deductions.length > 0) {
-                                p.custom_deductions.forEach(function(item) {
-                                    customDeductionsHtml += `
-                                        <div class="col-12 col-md-6">
-                                            <div class="d-flex align-items-start">
-                                                <div class="flex-shrink-0">
-                                                    <div class="bg-light-primary rounded-circle p-2">
-                                                        <i class="ti ti-star fs-20 text-primary"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-grow-1 ms-3">
-                                                    <label class="text-muted small mb-1">${item.name}</label>
-                                                    <p class="mb-0 fw-medium">₱${parseFloat(item.amount).toFixed(2)}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `;
-                                });
-                            }
+                            // DEDUCTIONS - Only kept fields (custom deductions removed)
+                            // CUSTOM DEDUCTIONS REMOVED COMPLETELY
                             
                             const content = `
                                 <div class="row align-items-center mb-4">
@@ -441,102 +403,7 @@
                                             ` : ''}
                                         </div>
 
-                                        {{-- ALLOWANCES --}}
-                                        <div class="row g-2 mb-3">
-                                            <h5 class="card-title text-success">Allowances</h5>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-success rounded-circle p-2">
-                                                            <i class="ti ti-bowl fs-20 text-success"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Rice Allowance</label>
-                                                        <p class="mb-0 fw-medium">₱${parseFloat(p.rice_allowance).toFixed(2)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-success rounded-circle p-2">
-                                                            <i class="ti ti-shirt fs-20 text-success"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Clothing Allowance</label>
-                                                        <p class="mb-0 fw-medium">₱${parseFloat(p.clothing_allowance).toFixed(2)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-success rounded-circle p-2">
-                                                            <i class="ti ti-wash fs-20 text-success"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Laundry Allowance</label>
-                                                        <p class="mb-0 fw-medium">₱${parseFloat(p.laundry_allowance).toFixed(2)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-success rounded-circle p-2">
-                                                            <i class="ti ti-bus fs-20 text-success"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Transportation Allowance</label>
-                                                        <p class="mb-0 fw-medium">₱${parseFloat(p.transportation_allowance).toFixed(2)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-success rounded-circle p-2">
-                                                            <i class="ti ti-tools-kitchen fs-20 text-success"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Meal Allowance</label>
-                                                        <p class="mb-0 fw-medium">₱${parseFloat(p.meal_allowance).toFixed(2)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-success rounded-circle p-2">
-                                                            <i class="ti ti-coins fs-20 text-success"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Other Allowances</label>
-                                                        <p class="mb-0 fw-medium">₱${parseFloat(p.other_allowances).toFixed(2)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            ${customAllowancesHtml}
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-success rounded-circle p-2">
-                                                            <i class="ti ti-sum fs-20 text-success"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1 fw-bold">Total Allowances</label>
-                                                        <p class="mb-0 fw-bold text-success">₱${parseFloat(p.total_allowances).toFixed(2)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        {{-- ALLOWANCES SECTION REMOVED COMPLETELY --}}
 
                                         {{-- DEDUCTIONS --}}
                                         <div class="row g-2 mb-3">
@@ -619,19 +486,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-danger rounded-circle p-2">
-                                                            <i class="ti ti-cash fs-20 text-danger"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Cash Advance</label>
-                                                        <p class="mb-0 fw-medium">₱${parseFloat(p.cash_advance_deduction).toFixed(2)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            {{-- CASH ADVANCE REMOVED --}}
                                             <div class="col-12 col-md-6">
                                                 <div class="d-flex align-items-start">
                                                     <div class="flex-shrink-0">
@@ -645,7 +500,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            ${customDeductionsHtml}
+                                            {{-- CUSTOM DEDUCTIONS REMOVED --}}
                                             <div class="col-12 col-md-6">
                                                 <div class="d-flex align-items-start">
                                                     <div class="flex-shrink-0">
@@ -731,10 +586,13 @@
                                             </div>
                                         </div>
 
+                                        {{-- OVERTIME SETTINGS REMOVED COMPLETELY --}}
+                                        {{-- LEAVE SETTINGS REMOVED COMPLETELY --}}
+
                                         {{-- SUMMARY --}}
                                         <div class="row g-2 mb-3">
                                             <h5 class="card-title text-warning">Summary</h5>
-                                            <div class="col-12 col-md-3">
+                                            <div class="col-12 col-md-4">
                                                 <div class="d-flex align-items-start">
                                                     <div class="flex-shrink-0">
                                                         <div class="bg-light-warning rounded-circle p-2">
@@ -742,25 +600,12 @@
                                                         </div>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Base Monthly</label>
+                                                        <label class="text-muted small mb-1">Base Salary</label>
                                                         <p class="mb-0 fw-medium">₱${p.monthly_salary ? parseFloat(p.monthly_salary).toFixed(2) : '0.00'}</p>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-12 col-md-3">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-warning rounded-circle p-2">
-                                                            <i class="ti ti-plus fs-20 text-warning"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">+ Allowances</label>
-                                                        <p class="mb-0 fw-medium">₱${parseFloat(p.total_allowances).toFixed(2)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-3">
+                                            <div class="col-12 col-md-4">
                                                 <div class="d-flex align-items-start">
                                                     <div class="flex-shrink-0">
                                                         <div class="bg-light-warning rounded-circle p-2">
@@ -773,7 +618,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-12 col-md-3">
+                                            <div class="col-12 col-md-4">
                                                 <div class="d-flex align-items-start">
                                                     <div class="flex-shrink-0">
                                                         <div class="bg-light-warning rounded-circle p-2">

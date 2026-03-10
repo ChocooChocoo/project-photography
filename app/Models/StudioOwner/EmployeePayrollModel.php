@@ -41,22 +41,13 @@ class EmployeePayrollModel extends Model
         'hourly_rate',
         'per_booking_rate',
         'booking_commission_percentage',
-        'rice_allowance',
-        'clothing_allowance',
-        'laundry_allowance',
-        'transportation_allowance',
-        'meal_allowance',
-        'other_allowances',
-        'custom_allowances',
         'sss_deduction',
         'phic_deduction',
         'hdmf_deduction',
         'tax_withholding',
         'sss_loan_deduction',
         'hdmf_loan_deduction',
-        'cash_advance_deduction',
         'other_deductions',
-        'custom_deductions',
         'is_taxable',
         'tax_type',
         'tax_percentage',
@@ -71,21 +62,7 @@ class EmployeePayrollModel extends Model
         'absent_deduction_method',
         'absent_fixed_deduction',
         'absent_percentage_deduction',
-        'overtime_enabled',
-        'overtime_rate_multiplier',
-        'night_differential_rate',
-        'night_differential_start',
-        'night_differential_end',
-        'holiday_overtime_enabled',
-        'holiday_overtime_rate',
-        'regular_holidays_per_year',
-        'special_holidays_per_year',
         'paid_holidays',
-        'vacation_leave_days_per_year',
-        'sick_leave_days_per_year',
-        'emergency_leave_days_per_year',
-        'leave_conversion_enabled',
-        'leave_conversion_rate',
         'payment_schedule',
         'payday_1',
         'payday_2',
@@ -106,60 +83,37 @@ class EmployeePayrollModel extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'daily_rate' => 'decimal:2',
-        'monthly_salary' => 'decimal:2',
-        'hourly_rate' => 'decimal:2',
-        'per_booking_rate' => 'decimal:2',
+        'daily_rate'                    => 'decimal:2',
+        'monthly_salary'                => 'decimal:2',
+        'hourly_rate'                   => 'decimal:2',
+        'per_booking_rate'              => 'decimal:2',
         'booking_commission_percentage' => 'decimal:2',
-        'rice_allowance' => 'decimal:2',
-        'clothing_allowance' => 'decimal:2',
-        'laundry_allowance' => 'decimal:2',
-        'transportation_allowance' => 'decimal:2',
-        'meal_allowance' => 'decimal:2',
-        'other_allowances' => 'decimal:2',
-        'custom_allowances' => 'array',
-        'sss_deduction' => 'decimal:2',
-        'phic_deduction' => 'decimal:2',
-        'hdmf_deduction' => 'decimal:2',
-        'tax_withholding' => 'decimal:2',
-        'sss_loan_deduction' => 'decimal:2',
-        'hdmf_loan_deduction' => 'decimal:2',
-        'cash_advance_deduction' => 'decimal:2',
-        'other_deductions' => 'decimal:2',
-        'custom_deductions' => 'array',
-        'is_taxable' => 'boolean',
-        'tax_percentage' => 'decimal:2',
-        'subject_to_vat' => 'boolean',
-        'vat_percentage' => 'decimal:2',
-        'absence_deduction_per_day' => 'decimal:2',
-        'undertime_deduction_per_hour' => 'decimal:2',
-        'late_grace_period_minutes' => 'integer',
-        'late_deduction_per_minute' => 'decimal:2',
-        'absent_fixed_deduction' => 'decimal:2',
-        'absent_percentage_deduction' => 'decimal:2',
-        'overtime_enabled' => 'boolean',
-        'overtime_rate_multiplier' => 'decimal:2',
-        'night_differential_rate' => 'decimal:2',
-        'night_differential_start' => 'datetime:H:i:s',
-        'night_differential_end' => 'datetime:H:i:s',
-        'holiday_overtime_enabled' => 'boolean',
-        'holiday_overtime_rate' => 'decimal:2',
-        'regular_holidays_per_year' => 'integer',
-        'special_holidays_per_year' => 'integer',
-        'paid_holidays' => 'boolean',
-        'vacation_leave_days_per_year' => 'integer',
-        'sick_leave_days_per_year' => 'integer',
-        'emergency_leave_days_per_year' => 'integer',
-        'leave_conversion_enabled' => 'boolean',
-        'leave_conversion_rate' => 'decimal:2',
-        'payday_1' => 'integer',
-        'payday_2' => 'integer',
-        'is_active' => 'boolean',
-        'effective_date' => 'date',
-        'expiry_date' => 'date',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
+        'sss_deduction'                 => 'decimal:2',
+        'phic_deduction'                => 'decimal:2',
+        'hdmf_deduction'                => 'decimal:2',
+        'tax_withholding'               => 'decimal:2',
+        'sss_loan_deduction'            => 'decimal:2',
+        'hdmf_loan_deduction'           => 'decimal:2',
+        'other_deductions'              => 'decimal:2',
+        'is_taxable'                    => 'boolean',
+        'tax_percentage'                => 'decimal:2',
+        'subject_to_vat'                => 'boolean',
+        'vat_percentage'                => 'decimal:2',
+        'absence_deduction_per_day'     => 'decimal:2',
+        'undertime_deduction_per_hour'  => 'decimal:2',
+        'late_grace_period_minutes'     => 'integer',
+        'late_deduction_per_minute'     => 'decimal:2',
+        'absent_fixed_deduction'        => 'decimal:2',
+        'absent_percentage_deduction'   => 'decimal:2',
+        'paid_holidays'                 => 'boolean',
+        'payday_1'                      => 'integer',
+        'payday_2'                      => 'integer',
+        'is_active'                     => 'boolean',
+        'effective_date'                => 'date',
+        'expiry_date'                   => 'date',
+        'created_at'                    => 'datetime',
+        'updated_at'                    => 'datetime',
+        'deleted_at'                    => 'datetime',
     ];
 
     /**
@@ -243,47 +197,17 @@ class EmployeePayrollModel extends Model
     }
 
     /**
-     * Calculate total allowances.
-     */
-    public function getTotalAllowancesAttribute(): float
-    {
-        $total = (float) $this->rice_allowance +
-                 (float) $this->clothing_allowance +
-                 (float) $this->laundry_allowance +
-                 (float) $this->transportation_allowance +
-                 (float) $this->meal_allowance +
-                 (float) $this->other_allowances;
-        
-        // Add custom allowances
-        if ($this->custom_allowances && is_array($this->custom_allowances)) {
-            foreach ($this->custom_allowances as $allowance) {
-                $total += (float) ($allowance['amount'] ?? 0);
-            }
-        }
-        
-        return round($total, 2);
-    }
-
-    /**
      * Calculate total deductions.
      */
     public function getTotalDeductionsAttribute(): float
     {
         $total = (float) $this->sss_deduction +
-                 (float) $this->phic_deduction +
-                 (float) $this->hdmf_deduction +
-                 (float) $this->tax_withholding +
-                 (float) $this->sss_loan_deduction +
-                 (float) $this->hdmf_loan_deduction +
-                 (float) $this->cash_advance_deduction +
-                 (float) $this->other_deductions;
-        
-        // Add custom deductions
-        if ($this->custom_deductions && is_array($this->custom_deductions)) {
-            foreach ($this->custom_deductions as $deduction) {
-                $total += (float) ($deduction['amount'] ?? 0);
-            }
-        }
+                (float) $this->phic_deduction +
+                (float) $this->hdmf_deduction +
+                (float) $this->tax_withholding +
+                (float) $this->sss_loan_deduction +
+                (float) $this->hdmf_loan_deduction +
+                (float) $this->other_deductions;
         
         return round($total, 2);
     }
