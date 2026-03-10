@@ -254,6 +254,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'update'])->name('studio-hr.payroll-settings.update');
         Route::put('/payroll-settings/{id}/status',                [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'updateStatus'])->name('studio-hr.payroll-settings.status');
         Route::delete('/payroll-settings/{id}',                    [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'destroy'])->name('studio-hr.payroll-settings.destroy');
+        Route::post('/payroll-settings/bulk-store',                [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'bulkStore'])->name('studio-hr.payroll-settings.bulk-store');
     });
 
     // Freelancer Routes ===================================================================================================================================================

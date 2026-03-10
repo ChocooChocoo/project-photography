@@ -808,4 +808,232 @@ class PayrollSettingsController extends Controller
         
         return $roles[$role] ?? ucfirst(str_replace('-', ' ', $role));
     }
+
+    /**
+     * Store multiple payroll settings in bulk.
+     * RBAC: Requires can_create permission
+     */
+    public function bulkStore(Request $request)
+    {
+        DB::beginTransaction();
+        
+        try {
+            $hrUser = auth()->user();
+            
+            // Get HR user's RBAC permissions
+            $rbac = RbacModel::where('user_id', $hrUser->id)->first();
+            
+            // Double-check create permission
+            if (!$rbac || !$rbac->can_create) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to create payroll settings.'
+                ], 403);
+            }
+            
+            // Validate request
+            $validated = $request->validate([
+                'studio_id' => 'required|exists:tbl_studios,id',
+                'employees' => 'required|array|min:1',
+                'employees.*.user_id' => 'required|exists:tbl_users,id',
+                'employees.*.payroll_basis' => 'required|in:attendance_only,booking_and_attendance',
+                'employees.*.monthly_salary' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.daily_rate' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.hourly_rate' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.per_booking_rate' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.booking_commission_percentage' => 'nullable|numeric|min:0|max:100',
+                'employees.*.sss_deduction' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.phic_deduction' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.hdmf_deduction' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.tax_withholding' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.sss_loan_deduction' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.hdmf_loan_deduction' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.other_deductions' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.is_taxable' => 'boolean',
+                'employees.*.tax_type' => 'nullable|in:withholding,graduated,exempt',
+                'employees.*.tax_percentage' => 'nullable|numeric|min:0|max:100',
+                'employees.*.subject_to_vat' => 'boolean',
+                'employees.*.vat_percentage' => 'nullable|numeric|min:0|max:100',
+                'employees.*.vat_type' => 'nullable|in:inclusive,exclusive',
+                'employees.*.absence_deduction_per_day' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.undertime_deduction_per_hour' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.late_grace_period_minutes' => 'nullable|integer|min:0|max:120',
+                'employees.*.late_deduction_per_minute' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.absent_deduction_method' => 'nullable|in:deduct_daily_rate,deduct_fixed_amount,deduct_percentage',
+                'employees.*.absent_fixed_deduction' => 'nullable|numeric|min:0|max:999999.99',
+                'employees.*.absent_percentage_deduction' => 'nullable|numeric|min:0|max:100',
+                'employees.*.payment_schedule' => 'required|in:weekly,bi_weekly,semi_monthly,monthly',
+                'employees.*.payday_1' => 'nullable|integer|min:1|max:31',
+                'employees.*.payday_2' => 'nullable|integer|min:1|max:31',
+                'employees.*.payday_weekly' => 'nullable|in:monday,tuesday,wednesday,thursday,friday',
+                'employees.*.bank_name' => 'nullable|string|max:100',
+                'employees.*.bank_account_number' => 'nullable|string|max:50',
+                'employees.*.bank_account_name' => 'nullable|string|max:255',
+                'employees.*.payment_method' => 'nullable|in:bank_transfer,cash,check',
+                'employees.*.is_active' => 'boolean',
+                'employees.*.effective_date' => 'nullable|date',
+                'employees.*.expiry_date' => 'nullable|date|after_or_equal:employees.*.effective_date',
+                'employees.*.notes' => 'nullable|string|max:1000',
+            ]);
+            
+            $studioId = $validated['studio_id'];
+            $createdPayrolls = [];
+            $errors = [];
+            
+            // Get all user IDs from the request
+            $userIds = collect($validated['employees'])->pluck('user_id')->toArray();
+            
+            // Check for existing payroll settings (bulk check)
+            $existingPayrolls = EmployeePayrollModel::where('studio_id', $studioId)
+                ->whereIn('user_id', $userIds)
+                ->pluck('user_id')
+                ->toArray();
+            
+            // Get user roles for validation
+            $users = UserModel::whereIn('id', $userIds)
+                ->get()
+                ->keyBy('id');
+            
+            // Process each employee
+            foreach ($validated['employees'] as $index => $employeeData) {
+                $userId = $employeeData['user_id'];
+                
+                // Check if already exists
+                if (in_array($userId, $existingPayrolls)) {
+                    $errors[] = "Employee ID {$userId} already has payroll settings.";
+                    continue;
+                }
+                
+                // Get user role
+                $user = $users->get($userId);
+                if (!$user) {
+                    $errors[] = "Employee ID {$userId} not found.";
+                    continue;
+                }
+                
+                // Validate payroll basis based on role
+                $payrollBasis = $employeeData['payroll_basis'];
+                $role = $user->role;
+                
+                if ($role === 'studio-photographer' && $payrollBasis !== 'booking_and_attendance') {
+                    $errors[] = "Employee {$user->full_name} (Photographer) must use 'Booking + Attendance' payroll basis.";
+                    continue;
+                }
+                
+                if (in_array($role, ['studio-hr', 'studio-finance']) && $payrollBasis !== 'attendance_only') {
+                    $errors[] = "Employee {$user->full_name} (HR/Finance) must use 'Attendance Only' payroll basis.";
+                    continue;
+                }
+                
+                // Validate photographer fields if applicable
+                if ($payrollBasis === 'booking_and_attendance') {
+                    if (empty($employeeData['per_booking_rate']) && empty($employeeData['booking_commission_percentage'])) {
+                        $errors[] = "Employee {$user->full_name} (Photographer) requires either Per Booking Rate or Commission Percentage.";
+                        continue;
+                    }
+                }
+                
+                // Prepare data for creation
+                $data = [
+                    'user_id' => $userId,
+                    'studio_id' => $studioId,
+                    'created_by' => $hrUser->id,
+                    'payroll_basis' => $payrollBasis,
+                    'daily_rate' => $employeeData['daily_rate'] ?? null,
+                    'monthly_salary' => $employeeData['monthly_salary'] ?? null,
+                    'hourly_rate' => $employeeData['hourly_rate'] ?? null,
+                    'per_booking_rate' => $employeeData['per_booking_rate'] ?? null,
+                    'booking_commission_percentage' => $employeeData['booking_commission_percentage'] ?? null,
+                    'sss_deduction' => $employeeData['sss_deduction'] ?? 0,
+                    'phic_deduction' => $employeeData['phic_deduction'] ?? 0,
+                    'hdmf_deduction' => $employeeData['hdmf_deduction'] ?? 0,
+                    'tax_withholding' => $employeeData['tax_withholding'] ?? 0,
+                    'sss_loan_deduction' => $employeeData['sss_loan_deduction'] ?? 0,
+                    'hdmf_loan_deduction' => $employeeData['hdmf_loan_deduction'] ?? 0,
+                    'other_deductions' => $employeeData['other_deductions'] ?? 0,
+                    'is_taxable' => $employeeData['is_taxable'] ?? true,
+                    'tax_type' => $employeeData['tax_type'] ?? 'withholding',
+                    'tax_percentage' => $employeeData['tax_percentage'] ?? null,
+                    'tax_code' => $employeeData['tax_code'] ?? null,
+                    'subject_to_vat' => $employeeData['subject_to_vat'] ?? false,
+                    'vat_percentage' => $employeeData['vat_percentage'] ?? 12,
+                    'vat_type' => $employeeData['vat_type'] ?? 'exclusive',
+                    'absence_deduction_per_day' => $employeeData['absence_deduction_per_day'] ?? null,
+                    'undertime_deduction_per_hour' => $employeeData['undertime_deduction_per_hour'] ?? null,
+                    'late_grace_period_minutes' => $employeeData['late_grace_period_minutes'] ?? 15,
+                    'late_deduction_per_minute' => $employeeData['late_deduction_per_minute'] ?? null,
+                    'absent_deduction_method' => $employeeData['absent_deduction_method'] ?? 'deduct_daily_rate',
+                    'absent_fixed_deduction' => $employeeData['absent_fixed_deduction'] ?? null,
+                    'absent_percentage_deduction' => $employeeData['absent_percentage_deduction'] ?? null,
+                    'paid_holidays' => true, // Default value
+                    'payment_schedule' => $employeeData['payment_schedule'],
+                    'payday_1' => $employeeData['payday_1'] ?? null,
+                    'payday_2' => $employeeData['payday_2'] ?? null,
+                    'payday_weekly' => $employeeData['payday_weekly'] ?? null,
+                    'bank_name' => $employeeData['bank_name'] ?? null,
+                    'bank_account_number' => $employeeData['bank_account_number'] ?? null,
+                    'bank_account_name' => $employeeData['bank_account_name'] ?? null,
+                    'payment_method' => $employeeData['payment_method'] ?? 'bank_transfer',
+                    'is_active' => $employeeData['is_active'] ?? true,
+                    'effective_date' => $employeeData['effective_date'] ?? now()->toDateString(),
+                    'expiry_date' => $employeeData['expiry_date'] ?? null,
+                    'notes' => $employeeData['notes'] ?? null,
+                ];
+                
+                // Calculate hourly rate if not provided
+                if (empty($data['hourly_rate']) && !empty($data['daily_rate'])) {
+                    $data['hourly_rate'] = $data['daily_rate'] / 8;
+                }
+                
+                // Create payroll setting
+                $createdPayrolls[] = EmployeePayrollModel::create($data);
+            }
+            
+            DB::commit();
+            
+            $successCount = count($createdPayrolls);
+            $errorCount = count($errors);
+            
+            $message = "Successfully created {$successCount} payroll setting(s).";
+            if ($errorCount > 0) {
+                $message .= " Failed to create {$errorCount} setting(s).";
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'created_count' => $successCount,
+                    'created_payrolls' => collect($createdPayrolls)->map(function($payroll) {
+                        return [
+                            'id' => $payroll->id,
+                            'employee_name' => $payroll->employee->full_name ?? 'N/A',
+                        ];
+                    }),
+                    'errors' => $errors,
+                ]
+            ]);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Failed to bulk create payroll settings: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request_data' => $request->all()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create payroll settings: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
