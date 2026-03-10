@@ -12,12 +12,14 @@
                             <h4 class="card-title">Create Studio Employee</h4>
                         </div>
                         <div class="card-body">
-                            @if(!$canCreate ?? true)
+                            @php $fieldState = (isset($canCreate) && !$canCreate) ? 'disabled' : ''; @endphp
+
+                            @if(isset($canCreate) && !$canCreate)
                                 <div class="alert alert-warning">
                                     <i class="ti ti-alert-triangle me-2"></i>
                                     You do not have permission to create employees. Please contact the studio owner.
                                 </div>
-                            @else
+                            @endif
                             <form class="needs-validation" novalidate id="employeeForm">
                                 @csrf
                                 
@@ -26,7 +28,7 @@
                                     <div class="form-group mb-3">
                                         <h4 class="card-title text-primary mb-3">Studio Selection</h4>
                                         <label class="form-label">Select Studio <span class="text-danger">*</span></label>
-                                        <select class="form-select" name="studio_id" id="studioSelect" required>
+                                        <select class="form-select" name="studio_id" id="studioSelect" required {{ $fieldState }}>
                                             <option value="">Select Studio</option>
                                             @foreach($studios as $studio)
                                                 <option value="{{ $studio->id }}">{{ $studio->studio_name }}</option>
@@ -43,21 +45,21 @@
                                         <div class="row">
                                             <div class="col-md-4 mb-3">
                                                 <label class="form-label">First Name <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="first_name" placeholder="Enter first name" required>
+                                                <input type="text" class="form-control" name="first_name" placeholder="Enter first name" required {{ $fieldState }}>
                                                 <div class="invalid-feedback">
                                                     Please enter a valid first name.
                                                 </div>
                                             </div>
                                             <div class="col-md-4 mb-3">
                                                 <label class="form-label">Middle Name</label>
-                                                <input type="text" class="form-control" name="middle_name" placeholder="Enter middle name">
+                                                <input type="text" class="form-control" name="middle_name" placeholder="Enter middle name" {{ $fieldState }}>
                                                 <div class="invalid-feedback">
                                                     Please enter a valid middle name.
                                                 </div>
                                             </div>
                                             <div class="col-md-4 mb-3">
                                                 <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="last_name" placeholder="Enter last name" required>
+                                                <input type="text" class="form-control" name="last_name" placeholder="Enter last name" required {{ $fieldState }}>
                                                 <div class="invalid-feedback">
                                                     Please enter a valid last name.
                                                 </div>
@@ -69,14 +71,14 @@
                                         <div class="row g-3">
                                             <div class="col-md-6">
                                                 <label class="form-label">Email Address <span class="text-danger">*</span></label>
-                                                <input type="email" class="form-control" name="email" placeholder="Enter email address" required>
+                                                <input type="email" class="form-control" name="email" placeholder="Enter email address" required {{ $fieldState }}>
                                                 <div class="invalid-feedback">
                                                     Please enter a valid email address.
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="mobile_number" placeholder="Enter contact number" required data-toggle="input-mask" data-mask-format="+(63)000 000 0000">
+                                                <input type="text" class="form-control" name="mobile_number" placeholder="Enter contact number" required data-toggle="input-mask" data-mask-format="+(63)000 000 0000" {{ $fieldState }}>
                                                 <div class="invalid-feedback">
                                                     Please enter a valid contact number.
                                                 </div>
@@ -89,7 +91,7 @@
                                         <div class="row">
                                             <div class="col-12">
                                                 <label class="form-label">Profile Photo</label>
-                                                <input type="file" class="form-control" name="profile_photo" accept=".jpg,.jpeg,.png">
+                                                <input type="file" class="form-control" name="profile_photo" accept=".jpg,.jpeg,.png" {{ $fieldState }}>
                                                 <div class="form-text">
                                                     <i class="ti ti-info-circle me-1"></i>
                                                     Upload a clear profile photo (optional). Accepted formats: JPG, JPEG, PNG (max 2MB).
@@ -104,7 +106,7 @@
                                         <div class="row g-3">
                                             <div class="col-md-6">
                                                 <label class="form-label">Employee's Role <span class="text-danger">*</span></label>
-                                                <select class="form-select" name="role" id="roleSelect" required>
+                                                <select class="form-select" name="role" id="roleSelect" required {{ $fieldState }}>
                                                     <option value="">Select Role</option>
                                                     <option value="studio-hr">Human Resource</option>
                                                     <option value="studio-finance">Finance</option>
@@ -116,7 +118,7 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">Role Type <span class="text-danger">*</span></label>
-                                                <select class="form-select" name="role_type" id="roleTypeSelect" required>
+                                                <select class="form-select" name="role_type" id="roleTypeSelect" required {{ $fieldState }}>
                                                     <option value="">Select Role Type</option>
                                                 </select>
                                                 <div class="invalid-feedback" id="roleTypeFeedback">
@@ -133,7 +135,7 @@
                                             <div class="row g-3">
                                                 <div class="col-md-4">
                                                     <label class="form-label">Position <span class="text-danger">*</span></label>
-                                                    <select class="form-select" name="position" id="positionSelect">
+                                                    <select class="form-select" name="position" id="positionSelect" {{ $fieldState }}>
                                                         <option value="">Select Position</option>
                                                         <option value="Lead Photographer">Lead Photographer</option>
                                                         <option value="Senior Photographer">Senior Photographer</option>
@@ -147,7 +149,7 @@
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="form-label">Specialization <span class="text-danger">*</span></label>
-                                                    <select class="form-select" name="specialization" id="specializationSelect">
+                                                    <select class="form-select" name="specialization" id="specializationSelect" {{ $fieldState }}>
                                                         <option value="">Select Specialization</option>
                                                     </select>
                                                     <div class="invalid-feedback">
@@ -156,7 +158,7 @@
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="form-label">Years of Experience <span class="text-danger">*</span></label>
-                                                    <input type="number" class="form-control" name="years_experience" placeholder="Enter years" min="0" max="50">
+                                                    <input type="number" class="form-control" name="years_experience" placeholder="Enter years" min="0" max="50" {{ $fieldState }}>
                                                     <div class="invalid-feedback">
                                                         Please enter valid years of experience (0-50).
                                                     </div>
@@ -168,7 +170,7 @@
                                     {{-- STATUS --}}
                                     <div class="form-group mb-3">
                                         <label class="form-label">Status <span class="text-danger">*</span></label>
-                                        <select class="form-select" name="status" required>
+                                        <select class="form-select" name="status" required {{ $fieldState }}>
                                             <option value="">Select Status</option>
                                             <option value="active">Active</option>
                                             <option value="inactive">Inactive</option>
@@ -197,7 +199,7 @@
                                                                 <span class="fw-medium">Create</span>
                                                             </div>
                                                             <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacCreate" name="can_create" value="1">
+                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacCreate" name="can_create" value="1" {{ $fieldState }}>
                                                                 <label class="form-check-label" for="rbacCreate"></label>
                                                             </div>
                                                         </div>
@@ -214,7 +216,7 @@
                                                                 <span class="fw-medium">Read</span>
                                                             </div>
                                                             <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacRead" name="can_read" value="1">
+                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacRead" name="can_read" value="1" {{ $fieldState }}>
                                                                 <label class="form-check-label" for="rbacRead"></label>
                                                             </div>
                                                         </div>
@@ -231,7 +233,7 @@
                                                                 <span class="fw-medium">Update</span>
                                                             </div>
                                                             <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacUpdate" name="can_update" value="1">
+                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacUpdate" name="can_update" value="1" {{ $fieldState }}>
                                                                 <label class="form-check-label" for="rbacUpdate"></label>
                                                             </div>
                                                         </div>
@@ -248,7 +250,7 @@
                                                                 <span class="fw-medium">Delete</span>
                                                             </div>
                                                             <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacDelete" name="can_delete" value="1">
+                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacDelete" name="can_delete" value="1" {{ $fieldState }}>
                                                                 <label class="form-check-label" for="rbacDelete"></label>
                                                             </div>
                                                         </div>
@@ -267,7 +269,7 @@
                                         <div class="row g-4 mb-4">
                                             <div class="col-md-6">
                                                 <label class="form-label">Start Time <span class="text-danger">*</span></label>
-                                                <input type="time" class="form-control" name="start_time" value="09:00" required>
+                                                <input type="time" class="form-control" name="start_time" value="09:00" required {{ $fieldState }}>
                                                 <small class="text-muted">
                                                     <i class="ti ti-info-circle me-1"></i>
                                                     Regular work start time
@@ -279,7 +281,7 @@
                                             
                                             <div class="col-md-6">
                                                 <label class="form-label">End Time <span class="text-danger">*</span></label>
-                                                <input type="time" class="form-control" name="end_time" value="18:00" required>
+                                                <input type="time" class="form-control" name="end_time" value="18:00" required {{ $fieldState }}>
                                                 <small class="text-muted">
                                                     <i class="ti ti-info-circle me-1"></i>
                                                     Regular work end time
@@ -294,25 +296,25 @@
                                             <label class="form-label mb-2">Select Operating Days <span class="text-danger">*</span></label>
                                             <div class="mb-2">
                                                 <div class="btn-group w-100 mb-1" role="group" aria-label="Weekday toggle button group" id="operatingDaysGroup">
-                                                    <input type="checkbox" class="btn-check" id="btnMonday" name="operating_days[]" value="monday" autocomplete="off">
+                                                    <input type="checkbox" class="btn-check" id="btnMonday" name="operating_days[]" value="monday" autocomplete="off" {{ $fieldState }}>
                                                     <label class="btn btn-outline-primary" for="btnMonday">Monday</label>
 
-                                                    <input type="checkbox" class="btn-check" id="btnTuesday" name="operating_days[]" value="tuesday" autocomplete="off">
+                                                    <input type="checkbox" class="btn-check" id="btnTuesday" name="operating_days[]" value="tuesday" autocomplete="off" {{ $fieldState }}>
                                                     <label class="btn btn-outline-primary" for="btnTuesday">Tuesday</label>
 
-                                                    <input type="checkbox" class="btn-check" id="btnWednesday" name="operating_days[]" value="wednesday" autocomplete="off">
+                                                    <input type="checkbox" class="btn-check" id="btnWednesday" name="operating_days[]" value="wednesday" autocomplete="off" {{ $fieldState }}>
                                                     <label class="btn btn-outline-primary" for="btnWednesday">Wednesday</label>
 
-                                                    <input type="checkbox" class="btn-check" id="btnThursday" name="operating_days[]" value="thursday" autocomplete="off">
+                                                    <input type="checkbox" class="btn-check" id="btnThursday" name="operating_days[]" value="thursday" autocomplete="off" {{ $fieldState }}>
                                                     <label class="btn btn-outline-primary" for="btnThursday">Thursday</label>
 
-                                                    <input type="checkbox" class="btn-check" id="btnFriday" name="operating_days[]" value="friday" autocomplete="off">
+                                                    <input type="checkbox" class="btn-check" id="btnFriday" name="operating_days[]" value="friday" autocomplete="off" {{ $fieldState }}>
                                                     <label class="btn btn-outline-primary" for="btnFriday">Friday</label>
 
-                                                    <input type="checkbox" class="btn-check" id="btnSaturday" name="operating_days[]" value="saturday" autocomplete="off">
+                                                    <input type="checkbox" class="btn-check" id="btnSaturday" name="operating_days[]" value="saturday" autocomplete="off" {{ $fieldState }}>
                                                     <label class="btn btn-outline-primary" for="btnSaturday">Saturday</label>
 
-                                                    <input type="checkbox" class="btn-check" id="btnSunday" name="operating_days[]" value="sunday" autocomplete="off">
+                                                    <input type="checkbox" class="btn-check" id="btnSunday" name="operating_days[]" value="sunday" autocomplete="off" {{ $fieldState }}>
                                                     <label class="btn btn-outline-primary" for="btnSunday">Sunday</label>
                                                 </div>
                                                 <small class="d-block text-muted">Check which days the employee will work</small>
@@ -323,14 +325,13 @@
 
                                     {{-- SUBMIT BUTTON --}}
                                     <div class="d-flex justify-content-start">
-                                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                                        <button type="submit" class="btn btn-primary" id="submitBtn" {{ $fieldState }}>
                                             <span id="submitText">Submit Employee</span>
                                             <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
                                         </button>
                                     </div>
                                 </div>
                             </form>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -429,6 +430,16 @@
             // ==================== FORM SUBMIT HANDLER ====================
             $('#employeeForm').on('submit', function(e) {
                 e.preventDefault();
+
+                @if(isset($canCreate) && !$canCreate)
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Permission Denied',
+                        text: 'Your account does not have permission to create employees.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return;
+                @endif
                 
                 const $form = $(this);
                 const $submitBtn = $('#submitBtn');

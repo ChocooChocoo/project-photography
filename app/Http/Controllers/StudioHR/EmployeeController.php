@@ -34,6 +34,10 @@ class EmployeeController extends Controller
             ->whereIn('role', ['studio-hr', 'studio-finance', 'studio-photographer'])
             ->pluck('studio_id');
         
+        // Get logged-in HR user's own RBAC permissions
+        $hrRbac = RbacModel::where('user_id', $hrId)->first();
+        $canUpdate = $hrRbac && (bool) $hrRbac->can_update;
+
         // Get studios details for filter dropdown
         $studios = StudiosModel::whereIn('id', $assignedStudioIds)
             ->whereIn('status', ['verified', 'active'])
@@ -49,9 +53,9 @@ class EmployeeController extends Controller
             ->where('id', '!=', $hrId) // Exclude self
             ->whereExists(function ($q) use ($assignedStudioIds) {
                 $q->select(DB::raw(1))
-                  ->from('tbl_rbac')
-                  ->whereColumn('tbl_rbac.user_id', 'tbl_users.id')
-                  ->whereIn('tbl_rbac.studio_id', $assignedStudioIds);
+                ->from('tbl_rbac')
+                ->whereColumn('tbl_rbac.user_id', 'tbl_users.id')
+                ->whereIn('tbl_rbac.studio_id', $assignedStudioIds);
             });
         
         // Apply filters from request
@@ -73,9 +77,9 @@ class EmployeeController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('mobile_number', 'like', "%{$search}%");
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('mobile_number', 'like', "%{$search}%");
             });
         }
         
@@ -112,7 +116,7 @@ class EmployeeController extends Controller
             ];
         })->values());
 
-        return view('studio-hr.view-employee', compact('employees', 'studios', 'employeesJson'));
+        return view('studio-hr.view-employee', compact('employees', 'studios', 'employeesJson', 'canUpdate'));
     }
 
     /**

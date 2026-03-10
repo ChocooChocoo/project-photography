@@ -62,8 +62,7 @@
                         </div>
 
                         <div class="table-responsive">
-                            <table
-                                class="table table-custom table-centered table-select table-hover table-bordered w-100 mb-0">
+                            <table class="table table-custom table-centered table-select table-hover table-bordered w-100 mb-0">
                                 <thead class="bg-light align-middle bg-opacity-25 thead-sm">
                                     <tr class="text-uppercase fs-xxs">
                                         <th data-table-sort="studio">Studio Name</th>
@@ -151,6 +150,7 @@
                                                                 type="checkbox" role="switch" data-permission="create"
                                                                 data-employee-id="{{ $employee->id }}"
                                                                 {{ $employee->rbac_data->can_create ?? false ? 'checked' : '' }}
+                                                                {{ !$canUpdate ? 'disabled' : '' }}
                                                                 style="width: 2.5em; height: 1.3em;">
                                                         </div>
                                                     </div>
@@ -163,6 +163,7 @@
                                                                 type="checkbox" role="switch" data-permission="read"
                                                                 data-employee-id="{{ $employee->id }}"
                                                                 {{ $employee->rbac_data->can_read ?? false ? 'checked' : '' }}
+                                                                {{ !$canUpdate ? 'disabled' : '' }}
                                                                 style="width: 2.5em; height: 1.3em;">
                                                         </div>
                                                     </div>
@@ -175,6 +176,7 @@
                                                                 type="checkbox" role="switch" data-permission="update"
                                                                 data-employee-id="{{ $employee->id }}"
                                                                 {{ $employee->rbac_data->can_update ?? false ? 'checked' : '' }}
+                                                                {{ !$canUpdate ? 'disabled' : '' }}
                                                                 style="width: 2.5em; height: 1.3em;">
                                                         </div>
                                                     </div>
@@ -187,6 +189,7 @@
                                                                 type="checkbox" role="switch" data-permission="delete"
                                                                 data-employee-id="{{ $employee->id }}"
                                                                 {{ $employee->rbac_data->can_delete ?? false ? 'checked' : '' }}
+                                                                {{ !$canUpdate ? 'disabled' : '' }}
                                                                 style="width: 2.5em; height: 1.3em;">
                                                         </div>
                                                     </div>
@@ -747,6 +750,16 @@
 
             // ==================== PERMISSION SWITCH TOGGLE ====================
             $(document).on('change', '.permission-switch', function() {
+                @if(!$canUpdate)
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Permission Denied',
+                        text: 'You do not have permission to update employee access.',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return;
+                @endif
+
                 const employeeId = $(this).data('employee-id');
                 const permission = $(this).data('permission');
                 const isChecked = $(this).is(':checked');
@@ -764,7 +777,7 @@
                 $parent.css('opacity', '0.6');
 
                 $.ajax({
-                    url: `/studio-hr/employee/${employeeId}/permissions`, // FIXED: Removed spaces
+                    url: `/studio-hr/employee/${employeeId}/permissions`,
                     method: 'POST',
                     data: data,
                     dataType: 'json',
@@ -783,8 +796,7 @@
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error!',
-                                text: response.message ||
-                                    'Failed to update permission.',
+                                text: response.message || 'Failed to update permission.',
                                 showConfirmButton: true,
                                 confirmButtonColor: '#3475db'
                             });

@@ -29,6 +29,12 @@
                             <h4 class="card-title text-primary mb-0">Edit Employee Payroll</h4>
                         </div>
                         <div class="card-body">
+                            @if(!$canUpdate)
+                                <div class="alert alert-warning alert-dismissible fade show mb-3" role="alert">
+                                    <i class="ti ti-lock me-2"></i>
+                                    <strong>Restricted Access:</strong> Your account has view-only permissions. You can browse the form but cannot update payroll settings.
+                                </div>
+                            @endif
                             <form class="needs-validation" novalidate id="payrollForm">
                                 @csrf
                                 @method('PUT')

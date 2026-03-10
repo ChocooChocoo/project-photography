@@ -525,29 +525,31 @@ class PayrollSettingsController extends Controller
     public function edit($id)
     {
         $hrUser = auth()->user();
-        
+
         // Get HR user's RBAC permissions
         $rbac = RbacModel::where('user_id', $hrUser->id)->first();
-        
-        // Check if HR has update permission
-        if (!$rbac || !$rbac->can_update) {
-            return redirect()->route('studio-hr.payroll-settings.index')
-                ->with('error', 'You do not have permission to edit payroll settings.');
-        }
-        
+
         // Get HR's assigned studio
-        $studioId = $rbac->studio_id;
-        
+        $studioId = $rbac ? $rbac->studio_id : null;
+
+        if (!$studioId) {
+            return redirect()->route('studio-hr.payroll-settings.index')
+                ->with('error', 'No studio assigned to your account.');
+        }
+
         $payroll = EmployeePayrollModel::with(['employee', 'studio'])
-            ->where('studio_id', $studioId) // Ensure it belongs to HR's studio
+            ->where('studio_id', $studioId)
             ->findOrFail($id);
-        
+
         // Get studios for dropdown (only the HR's assigned studio)
         $studios = StudiosModel::where('id', $studioId)
             ->whereIn('status', ['verified', 'active'])
             ->get();
-        
-        return view('studio-hr.edit-payroll-settings', compact('payroll', 'studios'));
+
+        // Resolve can_update — allow access but disable fields if no permission
+        $canUpdate = $rbac && $rbac->can_update;
+
+        return view('studio-hr.edit-payroll-settings', compact('payroll', 'studios', 'canUpdate'));
     }
 
     /**
