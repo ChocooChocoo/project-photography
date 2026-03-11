@@ -78,6 +78,18 @@
                     <span class="menu-text" data-lang="online-gallery">Online Gallery</span>
                 </a>
             </li>
+
+            {{-- Budget --}}
+            @php
+                $budgetRoutes = Route::is('client.budget.index');
+            @endphp
+            
+            <li class="side-nav-item {{ $budgetRoutes ? 'active' : '' }}">
+                <a href="{{ route('client.budget.index') }}" class="side-nav-link {{ $budgetRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-wallet"></i></span>
+                    <span class="menu-text" data-lang="budget">Budget</span>
+                </a>
+            </li>
         </ul>
     </div>
 </div>

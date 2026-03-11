@@ -397,6 +397,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/payment/success/{reference}',              [\App\Http\Controllers\Client\BookingController::class, 'paymentSuccess'])->name('client.payment.success');
         Route::get('/payment/failed/{reference}',               [\App\Http\Controllers\Client\BookingController::class, 'paymentFailed'])->name('client.payment.failed');
 
+        // Budget
+        Route::get('/budget',                                   [\App\Http\Controllers\Client\BudgetController::class, 'index'])->name('client.budget.index');
+        Route::get('/budget/data',                              [\App\Http\Controllers\Client\BudgetController::class, 'getBudgets'])->name('client.budget.data');
+        Route::post('/budget',                                  [\App\Http\Controllers\Client\BudgetController::class, 'store'])->name('client.budget.store');
+        Route::get('/budget/{id}',                              [\App\Http\Controllers\Client\BudgetController::class, 'show'])->name('client.budget.show');
+        Route::put('/budget/{id}',                              [\App\Http\Controllers\Client\BudgetController::class, 'update'])->name('client.budget.update');
+        Route::delete('/budget/{id}',                           [\App\Http\Controllers\Client\BudgetController::class, 'destroy'])->name('client.budget.destroy');
+        Route::post('/budget/{id}/toggle-status',               [\App\Http\Controllers\Client\BudgetController::class, 'toggleStatus'])->name('client.budget.toggle');
+        Route::get('/budget/categories/list',                   [\App\Http\Controllers\Client\BudgetController::class, 'getCategories'])->name('client.budget.categories');
+        Route::get('/budget/statistics/data',                   [\App\Http\Controllers\Client\BudgetController::class, 'getStatistics'])->name('client.budget.statistics');
+
     });
 
     // Home redirect based on authentication
