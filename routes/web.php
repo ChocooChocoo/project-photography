@@ -255,6 +255,17 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/payroll-settings/{id}/status',                [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'updateStatus'])->name('studio-hr.payroll-settings.status');
         Route::delete('/payroll-settings/{id}',                    [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'destroy'])->name('studio-hr.payroll-settings.destroy');
         Route::post('/payroll-settings/bulk-store',                [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'bulkStore'])->name('studio-hr.payroll-settings.bulk-store');
+
+        // Attendance
+        Route::get('/view/attendance',                              [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'index'])->name('studio-hr.attendance.index');
+        Route::get('/attendance/current-time',                      [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getCurrentTime'])->name('studio-hr.attendance.current-time');
+        Route::get('/attendance/schedule',                          [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getEmployeeSchedule'])->name('studio-hr.attendance.schedule');
+        Route::post('/attendance/check-in',                         [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'checkIn'])->name('studio-hr.attendance.check-in');
+        Route::post('/attendance/check-out',                        [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'checkOut'])->name('studio-hr.attendance.check-out');
+        Route::get('/attendance/today',                             [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getTodaysAttendance'])->name('studio-hr.attendance.today');
+        Route::get('/attendance/history',                           [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceHistory'])->name('studio-hr.attendance.history');
+        Route::get('/attendance/stats',                             [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceStats'])->name('studio-hr.attendance.stats');
+        Route::get('/attendance/{id}/details',                      [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceDetails'])->name('studio-hr.attendance.details');
     });
 
     // Freelancer Routes ===================================================================================================================================================

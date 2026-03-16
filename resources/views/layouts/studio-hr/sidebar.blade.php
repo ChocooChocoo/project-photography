@@ -93,6 +93,28 @@
                     </ul>
                 </div>
             </li>
+
+            {{-- Manage Attendance --}}
+            @php
+                $manageAttendanceRoutes = Route::is('studio-hr.attendance.index');
+            @endphp
+
+            <li class="side-nav-item {{ $manageAttendanceRoutes ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarManageAttendance" aria-expanded="{{ $manageAttendanceRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageAttendance" class="side-nav-link {{ $manageAttendanceRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-calendar"></i></span>
+                    <span class="menu-text" data-lang="manage-attendance">Attendance</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse {{ $manageAttendanceRoutes ? 'show' : '' }}" id="sidebarManageAttendance">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-hr.attendance.index') }}" class="side-nav-link {{ $manageAttendanceRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="manage-attendance">View Attendance</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
         </ul>
     </div>
 </div>
