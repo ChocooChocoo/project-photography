@@ -592,6 +592,158 @@
                 return operatingDays.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
             }
 
+            // ========== START: DSS - Client Budget Data from Server ==========
+            // Get client budgets passed from controller
+            const clientBudgets = @json($clientBudgets);
+            const hasBudgets = Object.keys(clientBudgets).length > 0;
+            console.log('Client budgets loaded:', clientBudgets);
+            
+            // Store available categories from provider
+            const providerCategories = [];
+            @foreach($categories as $category)
+                providerCategories.push({{ $category->id }});
+            @endforeach
+            console.log('Provider categories:', providerCategories);
+            // ========== END: DSS - Client Budget Data ==========
+
+            // ========== START: MULTIPLE BUDGET CATEGORY TABS ==========
+            let currentBudgetCategory = null;
+            const budgetCategoryIds = hasBudgets ? Object.keys(clientBudgets).map(Number) : [];
+            
+            // Filter to only include categories that the provider actually offers
+            const availableBudgetCategories = budgetCategoryIds.filter(catId => providerCategories.includes(catId));
+            
+            console.log('Available budget categories for this provider:', availableBudgetCategories);
+
+            /**
+             * Render budget category tabs
+             */
+            function renderBudgetCategoryTabs() {
+                if (availableBudgetCategories.length === 0) {
+                    return;
+                }
+                
+                let tabsHtml = `
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Your Budget Categories</label>
+                        <div class="d-flex flex-wrap gap-2" id="budgetCategoryTabs">
+                `;
+                
+                availableBudgetCategories.forEach((catId, index) => {
+                    const budget = clientBudgets[catId];
+                    const isActive = index === 0 ? 'active' : '';
+                    
+                    // Get category name from the dropdown options
+                    let categoryName = 'Category';
+                    $(`#serviceCategory option`).each(function() {
+                        if ($(this).val() == catId) {
+                            categoryName = $(this).text();
+                            return false;
+                        }
+                    });
+                    
+                    tabsHtml += `
+                        <button class="btn btn-outline-primary budget-category-tab ${isActive}" 
+                                data-category-id="${catId}"
+                                data-bs-toggle="button"
+                                autocomplete="off">
+                            <i class="ti ti-wallet me-1"></i>
+                            ${categoryName}
+                            <span class="ms-1"> | ₱${formatBudgetRange(budget)}</span>
+                        </button>
+                    `;
+                });
+                
+                tabsHtml += `
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            <i class="ti ti-info-circle me-1"></i>
+                            Click any budget category to see matching packages
+                        </small>
+                    </div>
+                `;
+                
+                // Insert tabs before the packages container
+                $('#packagesContainer').before(tabsHtml);
+            }
+
+            /**
+             * Format budget range for display in tab
+             */
+            function formatBudgetRange(budget) {
+                if (budget.minimum_budget && budget.maximum_budget) {
+                    const min = parseInt(budget.minimum_budget).toLocaleString();
+                    const max = parseInt(budget.maximum_budget).toLocaleString();
+                    return `${min} - ${max}`;
+                } else if (budget.minimum_budget) {
+                    return `From ${parseInt(budget.minimum_budget).toLocaleString()}`;
+                } else if (budget.maximum_budget) {
+                    return `Up to ${parseInt(budget.maximum_budget).toLocaleString()}`;
+                } else if (budget.preferred_budget) {
+                    return `₱${parseInt(budget.preferred_budget).toLocaleString()}`;
+                }
+                return 'Budget Set';
+            }
+
+            /**
+             * Handle budget category tab click
+             */
+            $(document).on('click', '.budget-category-tab', function(e) {
+                e.preventDefault();
+                
+                const categoryId = $(this).data('category-id');
+                
+                // Update active state
+                $('.budget-category-tab').removeClass('active');
+                $(this).addClass('active');
+                
+                // Set the dropdown value
+                $('#serviceCategory').val(categoryId);
+                
+                // Load packages for this category
+                $('#serviceCategory').trigger('change');
+                
+                console.log('Switched to budget category:', categoryId);
+            });
+            // ========== END: MULTIPLE BUDGET CATEGORY TABS ==========
+
+            // ========== START: AUTOMATIC SUGGESTIONS ON PAGE LOAD ==========
+            // If client has budgets, render tabs and load first available category
+            if (hasBudgets && availableBudgetCategories.length > 0) {
+                console.log('Client has budgets - rendering category tabs');
+                
+                // Render the budget category tabs
+                renderBudgetCategoryTabs();
+                
+                // Get the first available category
+                const firstCategoryId = availableBudgetCategories[0];
+                console.log('Auto-loading packages for first available budget category:', firstCategoryId);
+                
+                // Set the dropdown value
+                $('#serviceCategory').val(firstCategoryId);
+                
+                // Trigger the change event to load packages
+                setTimeout(function() {
+                    $('#serviceCategory').trigger('change');
+                }, 150); // Slightly longer delay to ensure tabs are rendered
+                
+            } else if (hasBudgets && availableBudgetCategories.length === 0) {
+                // Client has budgets but provider doesn't offer those categories
+                console.log('Client has budgets but provider does not offer those categories');
+                
+                // Show a notice but don't auto-load anything
+                $('#packagesContainer').before(`
+                    <div class="alert alert-warning mb-4">
+                        <i class="ti ti-wallet me-2"></i>
+                        <strong>Budget Notice:</strong> You have set budgets for categories that this provider doesn't offer. 
+                        Please select a category from the dropdown below to see available packages.
+                    </div>
+                `);
+            } else {
+                console.log('Client has no budgets - showing normal dropdown only');
+            }
+            // ========== END: AUTOMATIC SUGGESTIONS ON PAGE LOAD ==========
+
             // ========== EVENT HANDLERS ==========
 
             // Handle payment option selection
@@ -617,7 +769,7 @@
             $('#serviceCategory').on('change', function() {
                 // Reset location type when category changes
                 $('#locationType').val('').prop('disabled', false);
-                $('#locationType').closest('.col-12').find('.badge.badge-soft-info').remove();
+                $('#locationType').closest('.col-12').find('.badge.bg-info').remove();
                 
                 const categoryId = $(this).val();
                 const type = $('#bookingType').val();
@@ -630,6 +782,12 @@
                         </div>
                     `);
                     return;
+                }
+                
+                // Update active tab if this category is a budget category
+                if (availableBudgetCategories.includes(parseInt(categoryId))) {
+                    $('.budget-category-tab').removeClass('active');
+                    $(`.budget-category-tab[data-category-id="${categoryId}"]`).addClass('active');
                 }
                 
                 // Show loading
@@ -656,6 +814,25 @@
                         
                         if (response.success && response.packages && response.packages.length > 0) {
                             let packagesHtml = '<div class="row g-3">';
+                            
+                            // ========== START: DSS - Display budget info header if available (Bootstrap only) ==========
+                            if (response.has_budget && response.budget_info) {
+                                packagesHtml += `
+                                    <div class="col-12 mb-3">
+                                        <div class="alert alert-info d-flex align-items-center">
+                                            <i class="ti ti-wallet fs-4 me-3"></i>
+                                            <div>
+                                                <strong>Your Budget: ${response.budget_info.budget_name || 'Budget'}</strong><br>
+                                                <span>Budget Range: ${response.budget_info.budget_range || 'Not specified'}</span>
+                                                ${response.budget_info.preferred_budget ? 
+                                                    `<br><small>Preferred: ₱${parseFloat(response.budget_info.preferred_budget).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</small>` 
+                                                    : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            // ========== END: DSS - Display budget info header ==========
                             
                             response.packages.forEach(function(package, index) {
                                 // FIXED: Ensure package data is properly stringified for the data-package attribute
@@ -759,6 +936,37 @@
                                 }
                                 // ==== End: Display package flexibility status ====
                                 
+                                // ========== START: DSS - Determine Bootstrap classes based on budget match ==========
+                                let cardClass = 'card h-100 package-card border';
+                                let badgeHtml = '';
+                                let borderClass = '';
+                                
+                                if (package.budget_info && package.budget_info.has_budget) {
+                                    if (package.budget_info.match_level === 'perfect_match') {
+                                        borderClass = ' border-success border-2';
+                                        badgeHtml = `
+                                            <span class="position-absolute top-0 end-0 badge badge-soft-success m-2">
+                                                <i class="ti ti-star me-1"></i> Best Match
+                                            </span>
+                                        `;
+                                    } else if (package.budget_info.match_level === 'within_range') {
+                                        borderClass = ' border-info';
+                                        badgeHtml = `
+                                            <span class="position-absolute top-0 end-0 badge badge-soft-info m-2">
+                                                <i class="ti ti-wallet me-1"></i> Within Budget
+                                            </span>
+                                        `;
+                                    } else if (package.budget_info.match_level === 'above_budget') {
+                                        borderClass = ' border-danger';
+                                        badgeHtml = `
+                                            <span class="position-absolute top-0 end-0 badge badge-soft-secondary m-2">
+                                                <i class="ti ti-arrow-up me-1"></i> Above Budget
+                                            </span>
+                                        `;
+                                    }
+                                }
+                                // ========== END: DSS - Determine Bootstrap classes ==========
+                                
                                 packagesHtml += `
                                     <div class="col-md-6 col-xl-4">
                                         <input type="radio" class="btn-check package-radio" 
@@ -769,9 +977,10 @@
                                             data-duration="${package.duration || 0}"
                                             style="display: none;">
                                         
-                                        <label class="card border h-100 package-card" for="package${package.id}" style="cursor: pointer;">
+                                        <label class="${cardClass}${borderClass}" for="package${package.id}" style="cursor: pointer; position: relative;">
+                                            ${badgeHtml}
                                             <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div class="d-flex justify-content-between align-items-start mb-2 mt-3">
                                                     <h6 class="card-title fw-bold mb-0">${package.package_name}</h6>
                                                     <span class="text-success fw-bold">${priceText}</span>
                                                 </div>
@@ -794,7 +1003,7 @@
                                                         `<span class="p-1 badge badge-soft-success">
                                                             <i class="ti ti-photo me-1"></i> Online Gallery: Included
                                                         </span>` : 
-                                                        `<span class="p-1 badge badge-soft-warning">
+                                                        `<span class="p-1 badge badge-soft-warning text-dark">
                                                             <i class="ti ti-photo-off me-1"></i> Online Gallery: Not Included
                                                         </span>`
                                                     }
@@ -810,7 +1019,37 @@
                                                     </div>
                                                 ` : ''}
                                                 
-                                                <div class="col">
+                                                <!-- ========== START: DSS - Budget match indicator (Bootstrap only) ========== -->
+                                                ${package.budget_info && package.budget_info.has_budget ? `
+                                                    <div class="mt-3 pt-2 border-top">
+                                                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                                                            <span class="text-muted" title="Your budget range: ${package.budget_info.budget_range || 'Not specified'}">
+                                                                <i class="ti ti-info-circle me-1"></i> Budget Match
+                                                            </span>
+                                                            <span class="fw-medium ${package.budget_info.match_level === 'perfect_match' ? 'text-success' : (package.budget_info.match_level === 'within_range' ? 'text-info' : 'text-secondary')}">
+                                                                ${package.budget_info.match_percentage > 0 ? package.budget_info.match_percentage + '%' : ''}
+                                                                ${package.budget_info.match_level === 'perfect_match' ? '★' : ''}
+                                                            </span>
+                                                        </div>
+                                                        <div class="progress" style="height: 4px;">
+                                                            <div class="progress-bar ${package.budget_info.match_level === 'perfect_match' ? 'bg-success' : (package.budget_info.match_level === 'within_range' ? 'bg-info' : 'bg-secondary')}" 
+                                                                 role="progressbar" 
+                                                                 style="width: ${package.budget_info.match_percentage}%" 
+                                                                 aria-valuenow="${package.budget_info.match_percentage}" 
+                                                                 aria-valuemin="0" 
+                                                                 aria-valuemax="100">
+                                                            </div>
+                                                        </div>
+                                                        ${package.budget_info.preferred_budget ? `
+                                                            <small class="text-muted d-block mt-1">
+                                                                Preferred: ₱${parseFloat(package.budget_info.preferred_budget).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                                            </small>
+                                                        ` : ''}
+                                                    </div>
+                                                ` : ''}
+                                                <!-- ========== END: DSS - Budget match indicator ========== -->
+                                                
+                                                <div class="col mt-2">
                                                     <small class="text-muted d-block mb-2"><i class="ti ti-checklist me-1"></i> Package Includes:</small>
                                                     <ul class="list-unstyled small mb-0">
                                                         ${!package.allow_time_customization ? `
@@ -864,7 +1103,8 @@
                                 .prop('type', 'text/css')
                                 .html(`
                                     .btn-check:checked + .package-card {
-                                        border-color: #3475db !important;
+                                        border-color: #0d6efd !important;
+                                        border-width: 2px;
                                     }
                                 `)
                                 .appendTo('head');
@@ -895,7 +1135,7 @@
                             icon: 'error',
                             title: 'Loading Error',
                             text: 'Failed to load packages. Please try again.',
-                            confirmButtonColor: '#3475db'
+                            confirmButtonColor: '#0d6efd'
                         });
                     }
                 });
@@ -923,7 +1163,7 @@
                             icon: 'error',
                             title: 'Package Data Error',
                             text: 'Unable to load package details. Please try again.',
-                            confirmButtonColor: '#3475db'
+                            confirmButtonColor: '#0d6efd'
                         });
                         return;
                     }
@@ -939,7 +1179,7 @@
                         icon: 'error',
                         title: 'Package Data Error',
                         text: 'Unable to parse package details. Please refresh and try again.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return;
                 }
@@ -988,7 +1228,7 @@
                     
                     // Add visual indicator
                     $('#locationType').closest('.col-12').find('.form-label').append(
-                        '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                        '<span class="badge badge-soft-info ms-2" style="font-size: 0.65rem;">' +
                         '<i class="ti ti-info-circle me-1"></i>On-Location only for freelancers</span>'
                     );
                     
@@ -1031,14 +1271,14 @@
                                         $('#locationType').val('in-studio');
                                         $('#locationType').prop('disabled', true);
                                         $('#locationType').closest('.col-12').find('.form-label').append(
-                                            '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                                            '<span class="badge badge-soft-info ms-2" style="font-size: 0.65rem;">' +
                                             '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
                                         );
                                     } else if (location === 'On-Location') {
                                         $('#locationType').val('on-location');
                                         $('#locationType').prop('disabled', true);
                                         $('#locationType').closest('.col-12').find('.form-label').append(
-                                            '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                                            '<span class="badge badge-soft-info ms-2" style="font-size: 0.65rem;">' +
                                             '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
                                         );
                                     }
@@ -1051,14 +1291,14 @@
                                     $('#locationType').val('in-studio');
                                     $('#locationType').prop('disabled', true);
                                     $('#locationType').closest('.col-12').find('.form-label').append(
-                                        '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                                        '<span class="badge badge-soft-info ms-2" style="font-size: 0.65rem;">' +
                                         '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
                                     );
                                 } else if (packageLocation === 'On-Location') {
                                     $('#locationType').val('on-location');
                                     $('#locationType').prop('disabled', true);
                                     $('#locationType').closest('.col-12').find('.form-label').append(
-                                        '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
+                                        '<span class="badge badge-soft-info ms-2" style="font-size: 0.65rem;">' +
                                         '<i class="ti ti-info-circle me-1"></i>Auto-set by package</span>'
                                     );
                                 }
@@ -1170,7 +1410,7 @@
                         icon: 'warning',
                         title: 'No Date Selected',
                         text: 'Please select a date first.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return;
                 }
@@ -1180,7 +1420,7 @@
                         icon: 'warning',
                         title: 'Time Required',
                         text: 'Please enter both start time and end time before checking availability.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return;
                 }
@@ -1219,7 +1459,7 @@
                                 icon: 'warning',
                                 title: 'Not Available',
                                 text: response.message || 'This time slot is not available.',
-                                confirmButtonColor: '#3475db'
+                                confirmButtonColor: '#0d6efd'
                             });
                         }
                     },
@@ -1232,7 +1472,7 @@
                             icon: 'error',
                             title: 'Error',
                             text: 'Failed to check availability. Please try again.',
-                            confirmButtonColor: '#3475db'
+                            confirmButtonColor: '#0d6efd'
                         });
                     }
                 });
@@ -1356,7 +1596,7 @@
                             icon: 'error',
                             title: 'Location Error',
                             text: 'Please fill in all required location fields.',
-                            confirmButtonColor: '#3475db'
+                            confirmButtonColor: '#0d6efd'
                         });
                         return;
                     }
@@ -1410,7 +1650,7 @@
                                 icon: 'warning',
                                 title: 'No Barangays Found',
                                 text: 'No barangay data available for this municipality.',
-                                confirmButtonColor: '#3475db'
+                                confirmButtonColor: '#0d6efd'
                             });
                         }
                     },
@@ -1421,7 +1661,7 @@
                             icon: 'error',
                             title: 'Error',
                             text: 'Failed to load barangays. Please try again.',
-                            confirmButtonColor: '#3475db'
+                            confirmButtonColor: '#0d6efd'
                         });
                     }
                 });
@@ -1600,7 +1840,7 @@
                         icon: 'warning',
                         title: 'Full Name Required',
                         text: 'Please enter your full name.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -1610,7 +1850,7 @@
                         icon: 'warning',
                         title: 'Contact Number Required',
                         text: 'Please enter your contact number.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -1620,7 +1860,7 @@
                         icon: 'warning',
                         title: 'Email Required',
                         text: 'Please enter your email address.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -1632,7 +1872,7 @@
                         icon: 'warning',
                         title: 'Invalid Email',
                         text: 'Please enter a valid email address.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -1642,7 +1882,7 @@
                         icon: 'warning',
                         title: 'Service Category Required',
                         text: 'Please select a service category.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -1652,7 +1892,7 @@
                         icon: 'warning',
                         title: 'Event Date Required',
                         text: 'Please select an event date.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -1662,7 +1902,7 @@
                         icon: 'warning',
                         title: 'Time Required',
                         text: 'Please select both start and end time.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -1681,7 +1921,7 @@
                         icon: 'error',
                         title: 'Date/Time Not Available',
                         text: 'Please select an available date and valid time before proceeding.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -1693,7 +1933,7 @@
                         icon: 'warning',
                         title: 'Date Not Checked',
                         text: 'Please check the availability of your selected date first.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -1705,7 +1945,7 @@
                         icon: 'warning',
                         title: 'Package Required',
                         text: 'Please select a package.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -1727,7 +1967,7 @@
                             icon: 'error',
                             title: 'Invalid Location',
                             text: 'Freelancer bookings must be On-Location. Please refresh and try again.',
-                            confirmButtonColor: '#3475db'
+                            confirmButtonColor: '#0d6efd'
                         });
                         return false;
                     }
@@ -1745,7 +1985,7 @@
                                 icon: 'warning',
                                 title: 'Location Required',
                                 text: 'Please add at least one location.',
-                                confirmButtonColor: '#3475db'
+                                confirmButtonColor: '#0d6efd'
                             });
                             return false;
                         }
@@ -1772,7 +2012,7 @@
                                 icon: 'warning',
                                 title: 'Incomplete Locations',
                                 text: `Location #${firstInvalidIndex + 1} is missing required fields (City/Municipality and Barangay).`,
-                                confirmButtonColor: '#3475db'
+                                confirmButtonColor: '#0d6efd'
                             });
                             return false;
                         }
@@ -1784,7 +2024,7 @@
                                 icon: 'warning',
                                 title: 'Too Many Locations',
                                 text: `Maximum of ${currentMaxLocations} location${currentMaxLocations > 1 ? 's' : ''} allowed.`,
-                                confirmButtonColor: '#3475db'
+                                confirmButtonColor: '#0d6efd'
                             });
                             return false;
                         }
@@ -1802,7 +2042,7 @@
                                 icon: 'warning',
                                 title: 'City/Municipality Required',
                                 text: 'Please select a city/municipality.',
-                                confirmButtonColor: '#3475db'
+                                confirmButtonColor: '#0d6efd'
                             });
                             return false;
                         }
@@ -1813,7 +2053,7 @@
                                 icon: 'warning',
                                 title: 'Barangay Required',
                                 text: 'Please select a barangay.',
-                                confirmButtonColor: '#3475db'
+                                confirmButtonColor: '#0d6efd'
                             });
                             return false;
                         }
@@ -1826,7 +2066,7 @@
                             icon: 'warning',
                             title: 'Location Type Required',
                             text: 'Please select a location type.',
-                            confirmButtonColor: '#3475db'
+                            confirmButtonColor: '#0d6efd'
                         });
                         return false;
                     }
@@ -1846,17 +2086,16 @@
                                     icon: 'warning',
                                     title: 'City/Municipality Required',
                                     text: 'Please select a city/municipality.',
-                                    confirmButtonColor: '#3475db'
+                                    confirmButtonColor: '#0d6efd'
                                 });
                                 return false;
                             }
-                            
-                            if (!barangay) {
+                                            if (!barangay) {
                                 Swal.fire({
                                     icon: 'warning',
                                     title: 'Barangay Required',
                                     text: 'Please select a barangay.',
-                                    confirmButtonColor: '#3475db'
+                                    confirmButtonColor: '#0d6efd'
                                 });
                                 return false;
                             }
@@ -1898,7 +2137,7 @@
                                 icon: 'error',
                                 title: 'Duration Mismatch',
                                 text: `This package requires exactly ${selectedPackageDuration} hours. Please adjust your time selection.`,
-                                confirmButtonColor: '#3475db'
+                                confirmButtonColor: '#0d6efd'
                             });
                             return false;
                         }
@@ -1939,7 +2178,7 @@
                                 icon: 'warning',
                                 title: 'Payment Type Required',
                                 text: 'Please select a payment type.',
-                                confirmButtonColor: '#3475db'
+                                confirmButtonColor: '#0d6efd'
                             });
                             return false;
                         }
@@ -1952,7 +2191,7 @@
                             icon: 'warning',
                             title: 'Payment Type Required',
                             text: 'Please select a payment type.',
-                            confirmButtonColor: '#3475db'
+                            confirmButtonColor: '#0d6efd'
                         });
                         return false;
                     }
@@ -2157,7 +2396,7 @@
                     const galleryHtml = `
                         <p class="text-muted small mb-1 mt-2">Online Gallery:</p>
                         <p class="fw-medium mb-2 gallery-info">
-                            <span class="badge badge-soft-${window.bookingSummary.online_gallery ? 'success' : 'warning'}">
+                            <span class="badge badge-soft-${window.bookingSummary.online_gallery ? 'success' : 'warning text-dark'}">
                                 <i class="${window.bookingSummary.online_gallery ? 'ti ti-photo' : 'ti ti-photo-off'} me-1"></i>
                                 ${window.bookingSummary.gallery_status || (window.bookingSummary.online_gallery ? 'Included' : 'Not Included')}
                             </span>
@@ -2254,7 +2493,7 @@
                     showCancelButton: true,
                     confirmButtonText: 'Yes, Proceed to Payment',
                     cancelButtonText: 'Cancel',
-                    confirmButtonColor: '#3475db',
+                    confirmButtonColor: '#0d6efd',
                     cancelButtonColor: '#6c757d'
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -2422,7 +2661,7 @@
                     icon: 'error',
                     title: 'Error',
                     text: message,
-                    confirmButtonColor: '#3475db'
+                    confirmButtonColor: '#0d6efd'
                 });
             }
             
@@ -2676,7 +2915,7 @@
                         icon: 'warning',
                         title: 'Maximum Locations Reached',
                         text: `You can only add up to ${currentMaxLocations} location${currentMaxLocations > 1 ? 's' : ''}.`,
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return;
                 }
@@ -2791,7 +3030,7 @@
                         icon: 'warning',
                         title: 'Cannot Remove',
                         text: 'At least one location is required.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return;
                 }
@@ -2905,7 +3144,7 @@
                         icon: 'warning',
                         title: 'Location Required',
                         text: 'Please add at least one location.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -2919,7 +3158,7 @@
                         icon: 'warning',
                         title: 'Location Required',
                         text: 'Please fill in at least one complete location with City/Municipality and Barangay.',
-                        confirmButtonColor: '#3475db'
+                        confirmButtonColor: '#0d6efd'
                     });
                     return false;
                 }
@@ -2935,7 +3174,7 @@
                             icon: 'warning',
                             title: 'Incomplete Location',
                             text: `Location #${i + 1} is missing required fields (City/Municipality and Barangay).`,
-                            confirmButtonColor: '#3475db'
+                            confirmButtonColor: '#0d6efd'
                         });
                         return false;
                     }

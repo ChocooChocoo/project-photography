@@ -16,6 +16,7 @@ use App\Models\BookingModel;
 use App\Models\PaymentModel;
 use App\Models\BookingPackageModel;
 use App\Models\SystemRevenueModel;
+use App\Models\ClientBudgetModel;
 use App\Services\StripeService;
 use Carbon\Carbon;
 
@@ -28,7 +29,7 @@ class BookingController extends Controller
         $this->stripeService = $stripeService;
     }
 
-    /**
+    /*
     * Show booking form with dynamic data
     */
     public function create($type, $id)
@@ -117,6 +118,16 @@ class BookingController extends Controller
         // Get available dates for the next 60 days
         $availableDates = $this->getAvailableDates($type, $id);
         
+        // ========== START: DSS - Load client budgets for this session ==========
+        $clientBudgets = [];
+        if (Auth::check()) {
+            $clientBudgets = ClientBudgetModel::where('client_id', Auth::id())
+                ->where('status', 'active')
+                ->get()
+                ->keyBy('category_id');
+        }
+        // ========== END: DSS - Load client budgets ==========
+        
         return view('client.booking-forms', compact(
             'type', 
             'id', 
@@ -130,164 +141,9 @@ class BookingController extends Controller
             'depositPolicy',
             'depositType',
             'depositAmount',
-            'depositDisplay'
+            'depositDisplay',
+            'clientBudgets' // ADD THIS
         ));
-    }
-
-    /**
-     * Get packages for selected category
-     */
-    public function getPackages(Request $request)
-    {
-        $request->validate([
-            'type' => 'required|in:studio,freelancer',
-            'provider_id' => 'required|integer',
-            'category_id' => 'required|exists:tbl_categories,id',
-        ]);
-
-        try {
-            if ($request->type === 'studio') {
-                // For studio, provider_id is studio_id
-                $packages = StudioPackagesModel::where('studio_id', $request->provider_id)
-                    ->where('category_id', $request->category_id)
-                    ->where('status', 'active')
-                    ->get()
-                    ->map(function($package) {
-                        // ==== START: Enhanced location data handling with proper JSON parsing ====
-                        // Get package location - handle JSON array format
-                        $packageLocation = $package->package_location;
-                        
-                        // If it's a JSON string, decode it
-                        if (is_string($packageLocation)) {
-                            // Check if it looks like a JSON array
-                            if (str_starts_with(trim($packageLocation), '[')) {
-                                $decoded = json_decode($packageLocation, true);
-                                $packageLocation = is_array($decoded) ? $decoded : [$packageLocation];
-                            } else {
-                                // If it's a single value without JSON brackets
-                                $packageLocation = [$packageLocation];
-                            }
-                        }
-                        
-                        // Ensure it's always an array
-                        if (!is_array($packageLocation)) {
-                            $packageLocation = $packageLocation ? [$packageLocation] : ['In-Studio'];
-                        }
-                        
-                        // Clean up values (remove any extra quotes or whitespace)
-                        $packageLocation = array_map(function($location) {
-                            return trim($location, '"\' ');
-                        }, $packageLocation);
-                        
-                        // Remove any empty values
-                        $packageLocation = array_filter($packageLocation);
-                        
-                        // Re-index array
-                        $packageLocation = array_values($packageLocation);
-                        
-                        // Determine flexibility
-                        $locationCount = count($packageLocation);
-                        $locationFlexibility = [
-                            'options' => $packageLocation,
-                            'count' => $locationCount,
-                            'is_flexible' => $locationCount > 1,
-                            'single_option' => $locationCount === 1 ? $packageLocation[0] : null,
-                            'raw' => $package->package_location // Keep raw for debugging if needed
-                        ];
-                        // ==== END: Enhanced location data handling with proper JSON parsing ====
-                        
-                        return [
-                            'id' => $package->id,
-                            'package_name' => $package->package_name,
-                            'package_description' => $package->package_description,
-                            'package_price' => $package->package_price,
-                            'duration' => $package->duration,
-                            'maximum_edited_photos' => $package->maximum_edited_photos,
-                            'package_inclusions' => $package->package_inclusions,
-                            'coverage_scope' => $package->coverage_scope,
-                            'online_gallery' => $package->online_gallery,
-                            'photographer_count' => $package->photographer_count ?? 1,
-                            // ==== START: Enhanced location data in response ====
-                            'package_location' => $packageLocation,
-                            'location_flexibility' => $locationFlexibility,
-                            // ==== NEW: Multiple location fields ====
-                            'allow_multiple_locations' => $package->allow_multiple_locations ?? false,
-                            'max_locations' => $package->max_locations ?? 1,
-                            // ==== END: Multiple location fields ====
-                            'allow_time_customization' => $package->allow_time_customization,
-                            'gallery_badge' => $package->online_gallery ? 'Yes' : 'No',
-                            'gallery_icon' => $package->online_gallery ? 'ti ti-photo' : 'ti ti-photo-off',
-                            'gallery_class' => $package->online_gallery ? 'success' : 'secondary',
-                            'photographer_text' => $package->photographer_count . ' photographer' . ($package->photographer_count > 1 ? 's' : ''),
-                        ];
-                    });
-            } else {
-                // For freelancer, provider_id is user_id
-                $profile = ProfileModel::where('user_id', $request->provider_id)->first();
-                
-                if (!$profile) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Freelancer profile not found.',
-                        'packages' => [],
-                    ]);
-                }
-                
-                $packages = FreelancerPackagesModel::where('user_id', $request->provider_id)
-                    ->where('category_id', $request->category_id)
-                    ->where('status', 'active')
-                    ->get()
-                    ->map(function($package) use ($profile) {
-                        // Parse package location - freelancers default to both options
-                        $packageLocation = ['In-Studio', 'On-Location'];
-                        
-                        $locationCount = count($packageLocation);
-                        $locationFlexibility = [
-                            'options' => $packageLocation,
-                            'count' => $locationCount,
-                            'is_flexible' => $locationCount > 1,
-                            'single_option' => $locationCount === 1 ? $packageLocation[0] : null
-                        ];
-                        
-                        return [
-                            'id' => $package->id,
-                            'package_name' => $package->package_name,
-                            'package_description' => $package->package_description,
-                            'package_price' => $package->package_price,
-                            'duration' => $package->duration,
-                            'maximum_edited_photos' => $package->maximum_edited_photos,
-                            'package_inclusions' => $package->package_inclusions,
-                            'coverage_scope' => $package->coverage_scope,
-                            'online_gallery' => $package->online_gallery ?? false,
-                            'package_location' => $packageLocation,
-                            'location_flexibility' => $locationFlexibility,
-                            'allow_multiple_locations' => $package->allow_multiple_locations ?? false,
-                            'max_locations' => $package->max_locations ?? 1,
-                            'freelancer_has_policy' => $profile->deposit_policy === 'required',
-                            'freelancer_deposit_policy' => $profile->deposit_policy,
-                            'freelancer_deposit_type' => $profile->deposit_type,
-                            'freelancer_deposit_amount' => $profile->deposit_amount,
-                            'allow_time_customization' => $package->allow_time_customization,
-                            'gallery_badge' => ($package->online_gallery ?? false) ? 'Yes' : 'No',
-                            'gallery_icon' => ($package->online_gallery ?? false) ? 'ti ti-photo' : 'ti ti-photo-off',
-                            'gallery_class' => ($package->online_gallery ?? false) ? 'success' : 'secondary',
-                        ];
-                    });
-            }
-
-            return response()->json([
-                'success' => true,
-                'packages' => $packages,
-                'total' => $packages->count(),
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to load packages: ' . $e->getMessage(),
-                'packages' => [],
-            ], 500);
-        }
     }
 
     /**
@@ -2052,6 +1908,308 @@ class BookingController extends Controller
                 'success' => false,
                 'message' => 'Failed to load barangays: ' . $e->getMessage(),
                 'barangays' => []
+            ], 500);
+        }
+    }
+
+    /**
+     * Get client budget for a specific category
+     *
+     * @param int $clientId
+     * @param int $categoryId
+     * @return \App\Models\ClientBudgetModel|null
+     */
+    private function getClientBudgetForCategory($clientId, $categoryId)
+    {
+        return ClientBudgetModel::where('client_id', $clientId)
+            ->where('category_id', $categoryId)
+            ->where('status', 'active')
+            ->first();
+    }
+
+    /**
+     * Calculate how well a package matches client budget
+     *
+     * @param float $packagePrice
+     * @param \App\Models\ClientBudgetModel|null $clientBudget
+     * @return array
+     */
+    private function calculateBudgetMatch($packagePrice, $clientBudget)
+    {
+        $match = [
+            'has_budget' => false,
+            'match_level' => 'no_budget',
+            'match_percentage' => 0,
+            'is_recommended' => false,
+            'budget_range' => null
+        ];
+        
+        if (!$clientBudget) {
+            return $match;
+        }
+        
+        $match['has_budget'] = true;
+        $match['minimum_budget'] = $clientBudget->minimum_budget ? (float) $clientBudget->minimum_budget : null;
+        $match['maximum_budget'] = $clientBudget->maximum_budget ? (float) $clientBudget->maximum_budget : null;
+        $match['preferred_budget'] = $clientBudget->preferred_budget ? (float) $clientBudget->preferred_budget : null;
+        
+        // Format budget range for display
+        $match['budget_range'] = $this->formatBudgetRange($clientBudget);
+        
+        // Determine if within range
+        $min = $match['minimum_budget'] ?? 0;
+        $max = $match['maximum_budget'] ?? PHP_FLOAT_MAX;
+        $preferred = $match['preferred_budget'];
+        
+        if ($packagePrice >= $min && $packagePrice <= $max) {
+            $match['match_level'] = 'within_range';
+            
+            // Calculate match percentage based on preferred budget if available
+            if ($preferred && $preferred > 0) {
+                $diff = abs($packagePrice - $preferred);
+                $match['match_percentage'] = max(0, 100 - round(($diff / $preferred) * 100, 2));
+                
+                // Perfect match if within 10% of preferred budget
+                if ($match['match_percentage'] >= 90) {
+                    $match['match_level'] = 'perfect_match';
+                    $match['is_recommended'] = true;
+                }
+            } else {
+                // If no preferred budget, calculate based on position in range
+                $rangeSize = $max - $min;
+                if ($rangeSize > 0) {
+                    $position = ($packagePrice - $min) / $rangeSize;
+                    $match['match_percentage'] = round(100 - (abs(0.5 - $position) * 100), 2);
+                    
+                    if ($match['match_percentage'] >= 75) {
+                        $match['is_recommended'] = true;
+                    }
+                }
+            }
+        } else {
+            $match['match_level'] = 'above_budget';
+            $match['match_percentage'] = 0;
+        }
+        
+        return $match;
+    }
+
+    /**
+     * Format budget range for display
+     *
+     * @param \App\Models\ClientBudgetModel $budget
+     * @return string|null
+     */
+    private function formatBudgetRange($budget)
+    {
+        if (!$budget) {
+            return null;
+        }
+        
+        $parts = [];
+        
+        if ($budget->minimum_budget) {
+            $parts[] = '₱' . number_format($budget->minimum_budget, 2);
+        }
+        
+        if ($budget->maximum_budget) {
+            $parts[] = '₱' . number_format($budget->maximum_budget, 2);
+        }
+        
+        if (empty($parts)) {
+            return null;
+        }
+        
+        if (count($parts) === 1) {
+            return $parts[0];
+        }
+        
+        return implode(' - ', $parts);
+    }
+
+    /**
+     * Get packages for selected category
+     */
+    public function getPackages(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|in:studio,freelancer',
+            'provider_id' => 'required|integer',
+            'category_id' => 'required|exists:tbl_categories,id',
+        ]);
+
+        try {
+            // ========== START: DSS - Get client budget for this category ==========
+            $clientBudget = null;
+            if (Auth::check()) {
+                $clientBudget = $this->getClientBudgetForCategory(Auth::id(), $request->category_id);
+            }
+            // ========== END: DSS - Get client budget ==========
+
+            if ($request->type === 'studio') {
+                // For studio, provider_id is studio_id
+                $packages = StudioPackagesModel::where('studio_id', $request->provider_id)
+                    ->where('category_id', $request->category_id)
+                    ->where('status', 'active')
+                    ->get()
+                    ->map(function($package) use ($clientBudget) { // ADD clientBudget parameter
+                        // ==== START: Enhanced location data handling with proper JSON parsing ====
+                        // Get package location - handle JSON array format
+                        $packageLocation = $package->package_location;
+                        
+                        // If it's a JSON string, decode it
+                        if (is_string($packageLocation)) {
+                            // Check if it looks like a JSON array
+                            if (str_starts_with(trim($packageLocation), '[')) {
+                                $decoded = json_decode($packageLocation, true);
+                                $packageLocation = is_array($decoded) ? $decoded : [$packageLocation];
+                            } else {
+                                // If it's a single value without JSON brackets
+                                $packageLocation = [$packageLocation];
+                            }
+                        }
+                        
+                        // Ensure it's always an array
+                        if (!is_array($packageLocation)) {
+                            $packageLocation = $packageLocation ? [$packageLocation] : ['In-Studio'];
+                        }
+                        
+                        // Clean up values (remove any extra quotes or whitespace)
+                        $packageLocation = array_map(function($location) {
+                            return trim($location, '"\' ');
+                        }, $packageLocation);
+                        
+                        // Remove any empty values
+                        $packageLocation = array_filter($packageLocation);
+                        
+                        // Re-index array
+                        $packageLocation = array_values($packageLocation);
+                        
+                        // Determine flexibility
+                        $locationCount = count($packageLocation);
+                        $locationFlexibility = [
+                            'options' => $packageLocation,
+                            'count' => $locationCount,
+                            'is_flexible' => $locationCount > 1,
+                            'single_option' => $locationCount === 1 ? $packageLocation[0] : null,
+                            'raw' => $package->package_location // Keep raw for debugging if needed
+                        ];
+                        // ==== END: Enhanced location data handling with proper JSON parsing ====
+                        
+                        // ========== START: DSS - Calculate budget match ==========
+                        $budgetMatch = $this->calculateBudgetMatch($package->package_price, $clientBudget);
+                        // ========== END: DSS - Calculate budget match ==========
+                        
+                        return [
+                            'id' => $package->id,
+                            'package_name' => $package->package_name,
+                            'package_description' => $package->package_description,
+                            'package_price' => $package->package_price,
+                            'duration' => $package->duration,
+                            'maximum_edited_photos' => $package->maximum_edited_photos,
+                            'package_inclusions' => $package->package_inclusions,
+                            'coverage_scope' => $package->coverage_scope,
+                            'online_gallery' => $package->online_gallery,
+                            'photographer_count' => $package->photographer_count ?? 1,
+                            // ==== START: Enhanced location data in response ====
+                            'package_location' => $packageLocation,
+                            'location_flexibility' => $locationFlexibility,
+                            // ==== NEW: Multiple location fields ====
+                            'allow_multiple_locations' => $package->allow_multiple_locations ?? false,
+                            'max_locations' => $package->max_locations ?? 1,
+                            // ==== END: Multiple location fields ====
+                            'allow_time_customization' => $package->allow_time_customization,
+                            'gallery_badge' => $package->online_gallery ? 'Yes' : 'No',
+                            'gallery_icon' => $package->online_gallery ? 'ti ti-photo' : 'ti ti-photo-off',
+                            'gallery_class' => $package->online_gallery ? 'success' : 'secondary',
+                            'photographer_text' => $package->photographer_count . ' photographer' . ($package->photographer_count > 1 ? 's' : ''),
+                            // ========== START: DSS - Add budget info to response ==========
+                            'budget_info' => $budgetMatch
+                            // ========== END: DSS - Add budget info ==========
+                        ];
+                    });
+            } else {
+                // For freelancer, provider_id is user_id
+                $profile = ProfileModel::where('user_id', $request->provider_id)->first();
+                
+                if (!$profile) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Freelancer profile not found.',
+                        'packages' => [],
+                    ]);
+                }
+                
+                $packages = FreelancerPackagesModel::where('user_id', $request->provider_id)
+                    ->where('category_id', $request->category_id)
+                    ->where('status', 'active')
+                    ->get()
+                    ->map(function($package) use ($profile, $clientBudget) { // ADD clientBudget parameter
+                        // Parse package location - freelancers default to both options
+                        $packageLocation = ['In-Studio', 'On-Location'];
+                        
+                        $locationCount = count($packageLocation);
+                        $locationFlexibility = [
+                            'options' => $packageLocation,
+                            'count' => $locationCount,
+                            'is_flexible' => $locationCount > 1,
+                            'single_option' => $locationCount === 1 ? $packageLocation[0] : null
+                        ];
+                        
+                        // ========== START: DSS - Calculate budget match ==========
+                        $budgetMatch = $this->calculateBudgetMatch($package->package_price, $clientBudget);
+                        // ========== END: DSS - Calculate budget match ==========
+                        
+                        return [
+                            'id' => $package->id,
+                            'package_name' => $package->package_name,
+                            'package_description' => $package->package_description,
+                            'package_price' => $package->package_price,
+                            'duration' => $package->duration,
+                            'maximum_edited_photos' => $package->maximum_edited_photos,
+                            'package_inclusions' => $package->package_inclusions,
+                            'coverage_scope' => $package->coverage_scope,
+                            'online_gallery' => $package->online_gallery ?? false,
+                            'package_location' => $packageLocation,
+                            'location_flexibility' => $locationFlexibility,
+                            'allow_multiple_locations' => $package->allow_multiple_locations ?? false,
+                            'max_locations' => $package->max_locations ?? 1,
+                            'freelancer_has_policy' => $profile->deposit_policy === 'required',
+                            'freelancer_deposit_policy' => $profile->deposit_policy,
+                            'freelancer_deposit_type' => $profile->deposit_type,
+                            'freelancer_deposit_amount' => $profile->deposit_amount,
+                            'allow_time_customization' => $package->allow_time_customization,
+                            'gallery_badge' => ($package->online_gallery ?? false) ? 'Yes' : 'No',
+                            'gallery_icon' => ($package->online_gallery ?? false) ? 'ti ti-photo' : 'ti ti-photo-off',
+                            'gallery_class' => ($package->online_gallery ?? false) ? 'success' : 'secondary',
+                            // ========== START: DSS - Add budget info to response ==========
+                            'budget_info' => $budgetMatch
+                            // ========== END: DSS - Add budget info ==========
+                        ];
+                    });
+            }
+
+            return response()->json([
+                'success' => true,
+                'packages' => $packages,
+                'total' => $packages->count(),
+                // ========== START: DSS - Include budget info in response metadata ==========
+                'has_budget' => !is_null($clientBudget),
+                'budget_info' => $clientBudget ? [
+                    'minimum_budget' => $clientBudget->minimum_budget,
+                    'maximum_budget' => $clientBudget->maximum_budget,
+                    'preferred_budget' => $clientBudget->preferred_budget,
+                    'budget_range' => $this->formatBudgetRange($clientBudget),
+                    'budget_name' => $clientBudget->budget_name
+                ] : null
+                // ========== END: DSS - Include budget info ==========
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load packages: ' . $e->getMessage(),
+                'packages' => [],
             ], 500);
         }
     }
