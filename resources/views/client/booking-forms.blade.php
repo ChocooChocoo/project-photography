@@ -1956,122 +1956,109 @@
                 
                 console.log('Location type:', locationType, 'Booking type:', bookingType);
                 
-                // ========== LOCATION VALIDATION ==========
-                if (bookingType === 'freelancer') {
-                    console.log('Validating freelancer booking - location must be on-location');
+                // ========== FIXED: LOCATION VALIDATION BASED ON LOCATION TYPE ==========
+                if (locationType === 'in-studio') {
+                    // For In-Studio bookings, location fields are NOT required
+                    console.log('In-Studio booking - location fields are optional');
                     
-                    // Location type should already be set to on-location, but double-check
-                    if (locationType !== 'on-location') {
-                        console.error('Freelancer booking with invalid location type:', locationType);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Invalid Location',
-                            text: 'Freelancer bookings must be On-Location. Please refresh and try again.',
-                            confirmButtonColor: '#0d6efd'
-                        });
-                        return false;
-                    }
+                    // No validation needed for location fields
+                    // We'll still collect them if provided, but they're not required
                     
-                    // Check if multiple locations are enabled and validate accordingly
-                    if (allowMultipleLocations && currentMaxLocations > 1) {
-                        console.log('Validating multiple locations for freelancer with max:', currentMaxLocations);
+                } else if (locationType === 'on-location') {
+                    // For On-Location bookings, location fields ARE required
+                    console.log('On-Location booking - validating location fields');
+                    
+                    if (bookingType === 'freelancer') {
+                        console.log('Validating freelancer booking - location must be on-location');
                         
-                        const locationEntries = $('.location-entry');
-                        console.log('Location entries found:', locationEntries.length);
-                        
-                        if (locationEntries.length === 0) {
-                            console.log('No location entries found');
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Location Required',
-                                text: 'Please add at least one location.',
-                                confirmButtonColor: '#0d6efd'
-                            });
-                            return false;
-                        }
-                        
-                        let allLocationsValid = true;
-                        let firstInvalidIndex = -1;
-                        
-                        $('.location-entry').each(function(index) {
-                            const elementIndex = $(this).data('index');
-                            const city = $(`select[name="locations[${elementIndex}][city]"]`).val();
-                            const barangay = $(`select[name="locations[${elementIndex}][barangay]"]`).val();
+                        // Check if multiple locations are enabled and validate accordingly
+                        if (allowMultipleLocations && currentMaxLocations > 1) {
+                            console.log('Validating multiple locations for freelancer with max:', currentMaxLocations);
                             
-                            if (!city || !barangay) {
-                                allLocationsValid = false;
-                                if (firstInvalidIndex === -1) {
-                                    firstInvalidIndex = index;
-                                }
+                            const locationEntries = $('.location-entry');
+                            console.log('Location entries found:', locationEntries.length);
+                            
+                            if (locationEntries.length === 0) {
+                                console.log('No location entries found');
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Location Required',
+                                    text: 'Please add at least one location.',
+                                    confirmButtonColor: '#0d6efd'
+                                });
+                                return false;
                             }
-                        });
-                        
-                        if (!allLocationsValid) {
-                            console.log('Some locations are incomplete');
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Incomplete Locations',
-                                text: `Location #${firstInvalidIndex + 1} is missing required fields (City/Municipality and Barangay).`,
-                                confirmButtonColor: '#0d6efd'
+                            
+                            let allLocationsValid = true;
+                            let firstInvalidIndex = -1;
+                            
+                            $('.location-entry').each(function(index) {
+                                const elementIndex = $(this).data('index');
+                                const city = $(`select[name="locations[${elementIndex}][city]"]`).val();
+                                const barangay = $(`select[name="locations[${elementIndex}][barangay]"]`).val();
+                                
+                                if (!city || !barangay) {
+                                    allLocationsValid = false;
+                                    if (firstInvalidIndex === -1) {
+                                        firstInvalidIndex = index;
+                                    }
+                                }
                             });
-                            return false;
+                            
+                            if (!allLocationsValid) {
+                                console.log('Some locations are incomplete');
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Incomplete Locations',
+                                    text: `Location #${firstInvalidIndex + 1} is missing required fields (City/Municipality and Barangay).`,
+                                    confirmButtonColor: '#0d6efd'
+                                });
+                                return false;
+                            }
+                            
+                            const validLocations = getMultipleLocationsData();
+                            if (validLocations.length > currentMaxLocations) {
+                                console.log('Too many locations:', validLocations.length, 'max:', currentMaxLocations);
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Too Many Locations',
+                                    text: `Maximum of ${currentMaxLocations} location${currentMaxLocations > 1 ? 's' : ''} allowed.`,
+                                    confirmButtonColor: '#0d6efd'
+                                });
+                                return false;
+                            }
+                            
+                            console.log('All multiple locations validated successfully for freelancer');
+                            
+                        } else {
+                            console.log('Validating single location for freelancer');
+                            const city = $('#city').val();
+                            const barangay = $('#barangay').val();
+                            
+                            if (!city) {
+                                console.log('City missing');
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'City/Municipality Required',
+                                    text: 'Please select a city/municipality.',
+                                    confirmButtonColor: '#0d6efd'
+                                });
+                                return false;
+                            }
+                            
+                            if (!barangay) {
+                                console.log('Barangay missing');
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Barangay Required',
+                                    text: 'Please select a barangay.',
+                                    confirmButtonColor: '#0d6efd'
+                                });
+                                return false;
+                            }
                         }
-                        
-                        const validLocations = getMultipleLocationsData();
-                        if (validLocations.length > currentMaxLocations) {
-                            console.log('Too many locations:', validLocations.length, 'max:', currentMaxLocations);
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Too Many Locations',
-                                text: `Maximum of ${currentMaxLocations} location${currentMaxLocations > 1 ? 's' : ''} allowed.`,
-                                confirmButtonColor: '#0d6efd'
-                            });
-                            return false;
-                        }
-                        
-                        console.log('All multiple locations validated successfully for freelancer');
-                        
                     } else {
-                        console.log('Validating single location for freelancer');
-                        const city = $('#city').val();
-                        const barangay = $('#barangay').val();
-                        
-                        if (!city) {
-                            console.log('City missing');
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'City/Municipality Required',
-                                text: 'Please select a city/municipality.',
-                                confirmButtonColor: '#0d6efd'
-                            });
-                            return false;
-                        }
-                        
-                        if (!barangay) {
-                            console.log('Barangay missing');
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Barangay Required',
-                                text: 'Please select a barangay.',
-                                confirmButtonColor: '#0d6efd'
-                            });
-                            return false;
-                        }
-                    }
-                } else {
-                    // Studio location validation
-                    if (!locationType) {
-                        console.log('No location type selected');
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Location Type Required',
-                            text: 'Please select a location type.',
-                            confirmButtonColor: '#0d6efd'
-                        });
-                        return false;
-                    }
-                    
-                    if (locationType === 'on-location') {
+                        // Studio location validation for on-location
                         if (allowMultipleLocations && currentMaxLocations > 1) {
                             const multipleLocationsValid = validateMultipleLocations();
                             if (!multipleLocationsValid) {
@@ -2090,7 +2077,8 @@
                                 });
                                 return false;
                             }
-                                            if (!barangay) {
+                            
+                            if (!barangay) {
                                 Swal.fire({
                                     icon: 'warning',
                                     title: 'Barangay Required',
@@ -2101,6 +2089,16 @@
                             }
                         }
                     }
+                } else {
+                    // No location type selected
+                    console.log('No location type selected');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Location Type Required',
+                        text: 'Please select a location type.',
+                        confirmButtonColor: '#0d6efd'
+                    });
+                    return false;
                 }
                 // ========== END LOCATION VALIDATION ==========
                 
@@ -3163,7 +3161,7 @@
                     return false;
                 }
                 
-                // Check if all locations have required fields
+                // Check if all locations have required fields (city and barangay)
                 for (let i = 0; i < locations.length; i++) {
                     const loc = locations[i];
                     console.log(`Location #${i + 1}:`, loc);

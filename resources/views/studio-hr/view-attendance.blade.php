@@ -18,7 +18,7 @@
                             </div>
                         </div>
 
-                        <ul class="nav nav-tabs nav-bordered border-bottom mt-2">
+                        <ul class="nav nav-tabs mt-2">
                             <li class="nav-item">
                                 <a href="#check-in-check-out" data-bs-toggle="tab" aria-expanded="true" class="nav-link active">
                                     <i class="ti ti-clock-check me-1"></i> Check-In / Check-Out
@@ -87,7 +87,7 @@
                                         </div>
 
                                         <!-- Today's Attendance Summary -->
-                                        <div class="row g-3 mb-4" id="attendanceSummary" style="display: none;">
+                                        {{-- <div class="row g-3 mb-4" id="attendanceSummary" style="display: none;">
                                             <div class="col-12">
                                                 <div class="card bg-light">
                                                     <div class="card-body">
@@ -101,7 +101,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </div> --}}
                                     </div>
                                 </div>
 
@@ -222,7 +222,7 @@
                                                                     </td>
                                                                     <td>
                                                                         @if($record->duration)
-                                                                            <span class="badge bg-soft-info">{{ $record->duration }}</span>
+                                                                            <span class="badge badge-soft-info">{{ $record->duration }}</span>
                                                                         @else
                                                                             <span class="text-muted">—</span>
                                                                         @endif
@@ -258,77 +258,197 @@
 
                             {{-- Employees Attendance --}}
                             <div class="tab-pane p-3" id="employees-attendance">
-                                <div data-table data-table-rows-per-page="10">
-                                    <div class="card-header border-light justify-content-between px-0 pt-0">
-                                        <div class="d-flex gap-2">
-                                            <div class="app-search">
-                                                <form id="filterForm">
-                                                    <input type="search" class="form-control" placeholder="Search employees..."
-                                                        id="attendanceSearchInput">
-                                                    <i data-lucide="search" class="app-search-icon text-muted"></i>
-                                                </form>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="fw-semibold">
-                                                <i class="ti ti-filter me-1"></i>Filter By:
-                                            </span>
-                                            <div class="app-filter">
-                                                <select class="me-0 form-select form-control" id="filterDate">
-                                                    <option value="today">Today</option>
-                                                    <option value="yesterday">Yesterday</option>
-                                                    <option value="this-week">This Week</option>
-                                                    <option value="this-month">This Month</option>
-                                                    <option value="custom">Custom Range</option>
-                                                </select>
-                                            </div>
-                                            <div class="app-filter">
-                                                <select class="me-0 form-select form-control" id="filterStatus">
-                                                    <option value="">All Status</option>
-                                                    <option value="ON_TIME">On Time</option>
-                                                    <option value="LATE">Late</option>
-                                                    <option value="UNDERTIME">Undertime</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <button class="btn btn-soft-primary" id="refreshAttendanceBtn">
-                                                    <i class="ti ti-refresh"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="table-responsive">
-                                        <table class="table table-custom table-centered table-hover table-bordered w-100 mb-0" id="attendanceTable">
-                                            <thead class="bg-light align-middle bg-opacity-25 thead-sm">
-                                                <tr class="text-uppercase fs-xxs">
-                                                    <th>Employee</th>
-                                                    <th>Date</th>
-                                                    <th>Check-In</th>
-                                                    <th>Status (In)</th>
-                                                    <th>Check-Out</th>
-                                                    <th>Status (Out)</th>
-                                                    <th>Total Hours</th>
-                                                    <th class="text-center" style="width: 1%;">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <!-- Data will be loaded via AJAX -->
-                                                <tr>
-                                                    <td colspan="8" class="text-center py-4">
-                                                        <div class="spinner-border text-primary" role="status">
-                                                            <span class="visually-hidden">Loading...</span>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1 g-3 align-items-center mb-4">
+                                            <!-- Total Attendance Card -->
+                                            <div class="col">
+                                                <div class="card border shadow-none">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                                <span class="avatar-title bg-info-subtle text-info rounded fs-24">
+                                                                    <i class="ti ti-clipboard-list"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <h4 class="mb-0" id="totalAttendanceCount">0</h4>
+                                                                <p class="mb-0 text-muted">Total Attendance</p>
+                                                            </div>
                                                         </div>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                                        <div class="mt-4">
+                                                            <div class="d-flex justify-content-between mb-1">
+                                                                <span class="text-muted fs-xs fw-semibold">All time records</span>
+                                                                <span class="text-muted" id="totalAttendancePercent">100%</span>
+                                                            </div>
+                                                            <div class="progress" style="height: 6px;">
+                                                                <div class="progress-bar bg-info" id="totalAttendanceBar" style="width: 100%;"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Late Count Card -->
+                                            <div class="col">
+                                                <div class="card border shadow-none">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                                <span class="avatar-title bg-warning-subtle text-warning rounded fs-24">
+                                                                    <i class="ti ti-clock-hour-4"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <h4 class="mb-0" id="lateCount">0</h4>
+                                                                <p class="mb-0 text-muted">Lates</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-4">
+                                                            <div class="d-flex justify-content-between mb-1">
+                                                                <span class="text-muted fs-xs fw-semibold">This month</span>
+                                                                <span class="text-muted" id="latePercent">0%</span>
+                                                            </div>
+                                                            <div class="progress" style="height: 6px;">
+                                                                <div class="progress-bar bg-warning" id="lateBar" style="width: 0%;"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- On-Time Card -->
+                                            <div class="col">
+                                                <div class="card border shadow-none">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                                <span class="avatar-title bg-success-subtle text-success rounded fs-24">
+                                                                    <i class="ti ti-checklist"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <h4 class="mb-0" id="onTimeCount">0</h4>
+                                                                <p class="mb-0 text-muted">On-Time</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-4">
+                                                            <div class="d-flex justify-content-between mb-1">
+                                                                <span class="text-muted fs-xs fw-semibold">This month</span>
+                                                                <span class="text-muted" id="onTimePercent">0%</span>
+                                                            </div>
+                                                            <div class="progress" style="height: 6px;">
+                                                                <div class="progress-bar bg-success" id="onTimeBar" style="width: 0%;"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Undertime Card -->
+                                            <div class="col">
+                                                <div class="card border shadow-none">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                                <span class="avatar-title bg-danger-subtle text-danger rounded fs-24">
+                                                                    <i class="ti ti-user-cog"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <h4 class="mb-0" id="undertimeCount">0</h4>
+                                                                <p class="mb-0 text-muted">Undertime</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-4">
+                                                            <div class="d-flex justify-content-between mb-1">
+                                                                <span class="text-muted fs-xs fw-semibold">This month</span>
+                                                                <span class="text-muted" id="undertimePercent">0%</span>
+                                                            </div>
+                                                            <div class="progress" style="height: 6px;">
+                                                                <div class="progress-bar bg-danger" id="undertimeBar" style="width: 0%;"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div class="card-footer border-0 px-0 pb-0">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div data-table-pagination-info="attendance"></div>
-                                            <div data-table-pagination></div>
+                                    <div class="col-12">
+                                        <div data-table data-table-rows-per-page="10">
+                                            <div class="card-header border-light justify-content-between px-0 pt-0">
+                                                <div class="d-flex gap-2">
+                                                    <div class="app-search">
+                                                        <form id="filterForm">
+                                                            <input type="search" class="form-control" placeholder="Search employees..."
+                                                                id="attendanceSearchInput">
+                                                            <i data-lucide="search" class="app-search-icon text-muted"></i>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="fw-semibold">
+                                                        <i class="ti ti-filter me-1"></i>Filter By:
+                                                    </span>
+                                                    <div class="app-filter">
+                                                        <select class="me-0 form-select form-control" id="filterDate">
+                                                            <option value="today">Today</option>
+                                                            <option value="yesterday">Yesterday</option>
+                                                            <option value="this-week">This Week</option>
+                                                            <option value="this-month">This Month</option>
+                                                            <option value="custom">Custom Range</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="app-filter">
+                                                        <select class="me-0 form-select form-control" id="filterStatus">
+                                                            <option value="">All Status</option>
+                                                            <option value="ON_TIME">On Time</option>
+                                                            <option value="LATE">Late</option>
+                                                            <option value="UNDERTIME">Undertime</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <button class="btn btn-soft-primary" id="refreshAttendanceBtn">
+                                                            <i class="ti ti-refresh"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="table-responsive">
+                                                <table class="table table-custom table-centered table-hover table-bordered w-100 mb-0" id="attendanceTable">
+                                                    <thead class="bg-light align-middle bg-opacity-25 thead-sm">
+                                                        <tr class="text-uppercase fs-xxs">
+                                                            <th>Employee</th>
+                                                            <th>Date</th>
+                                                            <th>Check-In</th>
+                                                            <th>Status (In)</th>
+                                                            <th>Check-Out</th>
+                                                            <th>Status (Out)</th>
+                                                            <th>Total Hours</th>
+                                                            <th class="text-center" style="width: 1%;">Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <!-- Data will be loaded via AJAX -->
+                                                        <tr>
+                                                            <td colspan="8" class="text-center py-4">
+                                                                <div class="spinner-border text-primary" role="status">
+                                                                    <span class="visually-hidden">Loading...</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <div class="card-footer border-0 px-0 pb-0">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div data-table-pagination-info="attendance"></div>
+                                                    <div data-table-pagination></div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -457,7 +577,7 @@
                         </td>
                         <td>${record.duration || '—'}</td>
                         <td class="text-center">
-                            <button class="btn btn-sm btn-soft-info" onclick="viewAttendanceDetails(${record.id})">
+                            <button class="btn btn-sm" onclick="viewAttendanceDetails(${record.id})">
                                 <i class="ti ti-eye"></i>
                             </button>
                         </td>
@@ -503,6 +623,125 @@
                 checkOutBtn.prop('disabled', false).removeClass('disabled');
                 checkOutBtn.attr('title', 'Check out');
             }
+        }
+
+        // ==================== SCHEDULE MATCH INDICATOR ====================
+
+        function checkScheduleMatch() {
+            // Get the schedule info from the blade template
+            const scheduleInfo = @json($scheduleInfo ?? null);
+            
+            if (!scheduleInfo || !scheduleInfo.operating_days) {
+                console.log('No schedule info available');
+                return;
+            }
+            
+            // Get current day (lowercase)
+            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+            
+            // Check if today is in operating days
+            const operatingDaysLower = scheduleInfo.operating_days.map(day => day.toLowerCase());
+            
+            if (!operatingDaysLower.includes(today)) {
+                // Format the day name for display (capitalize first letter)
+                const displayDay = today.charAt(0).toUpperCase() + today.slice(1);
+                
+                // Create indicator message
+                const indicatorHtml = `
+                    <div class="alert alert-warning mt-3 schedule-mismatch-indicator" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="ti ti-alert-triangle fs-4 me-2 text-warning"></i>
+                            <div>
+                                <strong>Schedule Notice:</strong> You do not have schedule for ${displayDay}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Insert after the schedule alert
+                $('.alert-warning').first().after(indicatorHtml);
+                
+                console.log(`Schedule mismatch: Today is ${displayDay}, not in operating days`);
+            } else {
+                console.log(`Schedule match: Today (${today}) is a working day`);
+            }
+        }
+
+        // ==================== LOAD ATTENDANCE STATISTICS ====================
+
+        function loadAttendanceStats() {
+            $.ajax({
+                url: '/studio-hr/attendance/stats',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        updateDashboardCards(response.stats);
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Failed to load attendance stats:', xhr);
+                }
+            });
+        }
+
+        function updateDashboardCards(stats) {
+            // Update Total Attendance
+            $('#totalAttendanceCount').text(stats.month.total);
+            $('#totalAttendancePercent').text('100%');
+            $('#totalAttendanceBar').css('width', '100%');
+            
+            // Calculate percentages for month
+            const monthTotal = stats.month.total || 1; // Avoid division by zero
+            
+            // Late
+            const latePercent = Math.round((stats.month.late / monthTotal) * 100);
+            $('#lateCount').text(stats.month.late);
+            $('#latePercent').text(latePercent + '%');
+            $('#lateBar').css('width', latePercent + '%');
+            
+            // On-Time (total - late - undertime for month, but note: some may have both or neither)
+            // For simplicity, we'll use a calculation based on available data
+            const onTimeCount = stats.month.total - stats.month.late;
+            const onTimePercent = Math.round((onTimeCount / monthTotal) * 100);
+            $('#onTimeCount').text(onTimeCount);
+            $('#onTimePercent').text(onTimePercent + '%');
+            $('#onTimeBar').css('width', onTimePercent + '%');
+            
+            // Undertime
+            const undertimePercent = Math.round((stats.month.undertime / monthTotal) * 100);
+            $('#undertimeCount').text(stats.month.undertime);
+            $('#undertimePercent').text(undertimePercent + '%');
+            $('#undertimeBar').css('width', undertimePercent + '%');
+            
+            // Update today's stats in the hidden summary section (optional)
+            if (stats.today) {
+                updateTodaySummary(stats.today);
+            }
+        }
+
+        function updateTodaySummary(todayStats) {
+            const summaryHtml = `
+                <div class="row g-2">
+                    <div class="col-4 text-center">
+                        <span class="text-muted small d-block">Checked In</span>
+                        <span class="fw-bold">${todayStats.checked_in}</span>
+                    </div>
+                    <div class="col-4 text-center">
+                        <span class="text-muted small d-block">Checked Out</span>
+                        <span class="fw-bold">${todayStats.checked_out}</span>
+                    </div>
+                    <div class="col-4 text-center">
+                        <span class="text-muted small d-block">Late</span>
+                        <span class="fw-bold">${todayStats.late}</span>
+                    </div>
+                </div>
+                <div class="mt-2 text-center">
+                    <span class="text-muted small">Total Today: ${todayStats.total}</span>
+                </div>
+            `;
+            
+            $('#attendanceSummary').show();
+            $('#summaryContent').html(summaryHtml);
         }
 
         // ==================== CAMERA MODAL FUNCTIONS ====================
@@ -831,6 +1070,14 @@
             // Initial load
             loadEmployeeSchedule();
             loadTodaysAttendance();
+            loadAttendanceStats(); // Add this line
+            checkScheduleMatch();
+            
+            // Load stats when Employees Attendance tab is clicked
+            $('a[href="#employees-attendance"]').on('shown.bs.tab', function() {
+                loadAttendanceStats();
+                loadTodaysAttendance(); // Refresh table data when tab is shown
+            });
             
             // Check-in button click
             $('#checkInBtn').on('click', function(e) {
@@ -889,6 +1136,7 @@
             // Refresh button click
             $('#refreshAttendanceBtn').on('click', function() {
                 loadTodaysAttendance();
+                loadAttendanceStats(); // Also refresh stats
             });
         });
 
@@ -915,60 +1163,152 @@
         }
 
         function showAttendanceDetailsModal(attendance) {
+            // Format check-in image HTML
+            const checkInImageHtml = attendance.check_in_image 
+                ? `<img src="/storage/${attendance.check_in_image}" class="img-fluid rounded" style="max-height: 200px; width: 100%; object-fit: contain;">` 
+                : '<div class="bg-light rounded p-4 text-center"><i class="ti ti-camera-off fs-1 d-block mb-2 text-muted"></i><span class="text-muted">No check-in photo</span></div>';
+            
+            // Format check-out image HTML
+            const checkOutImageHtml = attendance.check_out_image 
+                ? `<img src="/storage/${attendance.check_out_image}" class="img-fluid rounded" style="max-height: 200px; width: 100%; object-fit: contain;">` 
+                : '<div class="bg-light rounded p-4 text-center"><i class="ti ti-camera-off fs-1 d-block mb-2 text-muted"></i><span class="text-muted">No check-out photo</span></div>';
+            
             const modalHtml = `
                 <div class="modal fade" id="attendanceDetailsModal" tabindex="-1">
-                    <div class="modal-dialog">
+                    <div class="modal-dialog modal-lg">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title">Attendance Details</h5>
+                                <h5 class="modal-title">
+                                    <i class="ti ti-clipboard-list me-2"></i>
+                                    Attendance Details
+                                </h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="text-center mb-3">
-                                    ${attendance.check_in_image ? 
-                                        `<img src="/storage/${attendance.check_in_image}" class="img-fluid rounded" style="max-height: 200px;">` : 
-                                        '<p class="text-muted">No check-in photo</p>'
-                                    }
+                                <!-- Employee Info Summary -->
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <span class="text-muted small d-block">Employee</span>
+                                            <span class="fw-medium">${attendance.employee_name}</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <span class="text-muted small d-block">Date</span>
+                                            <span class="fw-medium">${attendance.attendance_date}</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 
-                                <table class="table table-bordered">
-                                    <tr>
-                                        <th>Employee</th>
-                                        <td>${attendance.employee_name}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Date</th>
-                                        <td>${attendance.attendance_date}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Scheduled Time</th>
-                                        <td>${attendance.scheduled_start_time} - ${attendance.scheduled_end_time}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Check-In Time</th>
-                                        <td>
-                                            ${attendance.formatted_check_in}
-                                            ${attendance.late_display ? `<span class="badge badge-soft-warning ms-2">${attendance.late_display}</span>` : ''}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Check-Out Time</th>
-                                        <td>
-                                            ${attendance.formatted_check_out || '—'}
-                                            ${attendance.undertime_display ? `<span class="badge badge-soft-danger ms-2">${attendance.undertime_display}</span>` : ''}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Total Hours</th>
-                                        <td>${attendance.duration || '—'}</td>
-                                    </tr>
-                                    ${attendance.notes ? `
-                                    <tr>
-                                        <th>Notes</th>
-                                        <td>${attendance.notes}</td>
-                                    </tr>
-                                    ` : ''}
-                                </table>
+                                <!-- Tab Navigation -->
+                                <ul class="nav nav-tabs mb-3" id="attendanceDetailTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="checkin-tab" data-bs-toggle="tab" 
+                                            data-bs-target="#checkin-details" type="button" role="tab">
+                                            <i class="ti ti-login me-1"></i> Check In Details
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="checkout-tab" data-bs-toggle="tab" 
+                                            data-bs-target="#checkout-details" type="button" role="tab">
+                                            <i class="ti ti-logout me-1"></i> Check Out Details
+                                        </button>
+                                    </li>
+                                </ul>
+                                
+                                <!-- Tab Content -->
+                                <div class="tab-content" id="attendanceDetailTabsContent">
+                                    <!-- Check In Details Tab -->
+                                    <div class="tab-pane fade show active" id="checkin-details" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="text-center mb-3">
+                                                    <span class="text-muted small d-block mb-2">Check-In Photo</span>
+                                                    ${checkInImageHtml}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <table class="table table-borderless">
+                                                    <tr>
+                                                        <th class="ps-0 text-muted" width="40%">Check-In Time</th>
+                                                        <td class="fw-medium">${attendance.formatted_check_in}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Status</th>
+                                                        <td>
+                                                            ${attendance.check_in_status ? 
+                                                                `<span class="badge ${attendance.check_in_status === 'ON_TIME' ? 'badge-soft-success' : 'badge-soft-warning'}">${attendance.check_in_status}</span>` : 
+                                                                '—'
+                                                            }
+                                                            ${attendance.late_display ? `<small class="d-block text-muted">${attendance.late_display}</small>` : ''}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Scheduled Start</th>
+                                                        <td>${attendance.scheduled_start_time || '—'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Check-In IP</th>
+                                                        <td><span class="text-muted small">${attendance.check_in_ip || '—'}</span></td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Check Out Details Tab -->
+                                    <div class="tab-pane fade" id="checkout-details" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="text-center mb-3">
+                                                    <span class="text-muted small d-block mb-2">Check-Out Photo</span>
+                                                    ${checkOutImageHtml}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <table class="table table-borderless">
+                                                    <tr>
+                                                        <th class="ps-0 text-muted" width="40%">Check-Out Time</th>
+                                                        <td class="fw-medium">${attendance.formatted_check_out || '—'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Status</th>
+                                                        <td>
+                                                            ${attendance.check_out_status ? 
+                                                                `<span class="badge ${attendance.check_out_status === 'UNDERTIME' ? 'badge-soft-danger' : 'badge-soft-success'}">${attendance.check_out_status}</span>` : 
+                                                                '—'
+                                                            }
+                                                            ${attendance.undertime_display ? `<small class="d-block text-muted">${attendance.undertime_display}</small>` : ''}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Scheduled End</th>
+                                                        <td>${attendance.scheduled_end_time || '—'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="ps-0 text-muted">Check-Out IP</th>
+                                                        <td><span class="text-muted small">${attendance.check_out_ip || '—'}</span></td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Notes Section (if exists) -->
+                                ${attendance.notes ? `
+                                <div class="mt-3 p-3 bg-light rounded">
+                                    <span class="text-muted small d-block mb-1">Notes</span>
+                                    <p class="mb-0">${attendance.notes}</p>
+                                </div>
+                                ` : ''}
+                                
+                                <!-- Duration Summary -->
+                                <div class="mt-3 text-center">
+                                    <span class="badge badge-soft-info p-2">
+                                        <i class="ti ti-clock me-1"></i>
+                                        Total Hours: ${attendance.duration || '—'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -977,7 +1317,9 @@
             
             $('#attendanceDetailsModal').remove();
             $('body').append(modalHtml);
-            new bootstrap.Modal(document.getElementById('attendanceDetailsModal')).show();
+            
+            const modal = new bootstrap.Modal(document.getElementById('attendanceDetailsModal'));
+            modal.show();
         }
 
         // ==================== MY ATTENDANCE TABLE FILTERS ====================

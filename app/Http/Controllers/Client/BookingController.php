@@ -321,11 +321,11 @@ class BookingController extends Controller
     }
 
     /**
-    * Store booking with validation before storing
-    */
+     * Store booking with validation before storing
+     */
     public function store(Request $request)
     {
-        // Validate all input first - MODIFIED to handle multiple locations
+        // Validate all input first - MODIFIED to handle location-based validation
         $rules = [
             'type' => 'required|in:studio,freelancer',
             'provider_id' => 'required|integer',
@@ -341,6 +341,51 @@ class BookingController extends Controller
             'email' => 'required|email|max:255',
         ];
 
+        // ==== FIXED: Conditional validation based on location type ====
+        // For on-location bookings, validate location fields
+        if ($request->location_type === 'on-location') {
+            // Check if multiple locations are enabled
+            if ($request->has('locations') && is_array($request->locations) && count($request->locations) > 0) {
+                // Validate multiple locations
+                $rules['locations'] = 'required|array|min:1';
+                $rules['locations.*.venue_name'] = 'nullable|string|max:255';
+                $rules['locations.*.city'] = 'required|string|max:255';
+                $rules['locations.*.barangay'] = 'required|string|max:255'; // Barangay REQUIRED for on-location
+                $rules['locations.*.street'] = 'nullable|string|max:255';
+                
+                // Validate max locations based on package
+                $packageValidation = $this->validatePackage($request);
+                if ($packageValidation['valid']) {
+                    $package = $packageValidation['package'];
+                    $maxLocations = $package->max_locations ?? 1;
+                    
+                    if (count($request->locations) > $maxLocations) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Maximum of {$maxLocations} locations allowed for this package.",
+                        ], 400);
+                    }
+                }
+            } else {
+                // Single location validation for on-location bookings
+                $rules['venue_name'] = 'nullable|string|max:255';
+                $rules['street'] = 'nullable|string|max:255';
+                $rules['barangay'] = 'required|string|max:255'; // Barangay REQUIRED for on-location
+                $rules['city'] = 'required|string|max:255';
+            }
+        } else {
+            // For in-studio bookings, location fields are NOT required
+            // Only validate if they are present (optional)
+            $rules['venue_name'] = 'nullable|string|max:255';
+            $rules['street'] = 'nullable|string|max:255';
+            $rules['barangay'] = 'nullable|string|max:255'; // Barangay OPTIONAL for in-studio
+            $rules['city'] = 'nullable|string|max:255'; // City OPTIONAL for in-studio
+            
+            // Clear any multiple locations data for in-studio bookings
+            $request->merge(['locations' => null]);
+        }
+        // ==== END: Conditional validation based on location type ====
+
         // ==== FIXED: Conditional payment_type validation for freelancers ====
         // For studios, payment_type is always required
         if ($request->type === 'studio') {
@@ -353,41 +398,9 @@ class BookingController extends Controller
             // But we don't need to validate it from the request - we'll set it in the backend
             if (!$freelancer || $freelancer->deposit_policy !== 'required') {
                 // No validation rule for payment_type - we'll set it manually
-                // The frontend may or may not send it
             }
-            // If freelancer HAS a required deposit policy, payment_type is NOT required from request
-            // It will be determined automatically based on their settings
         }
         // ==== END: Conditional payment_type validation ====
-
-        // Add validation for multiple locations
-        if ($request->has('locations') && is_array($request->locations)) {
-            $rules['locations'] = 'required|array|min:1';
-            $rules['locations.*.venue_name'] = 'nullable|string|max:255';
-            $rules['locations.*.city'] = 'required|string|max:255';
-            $rules['locations.*.barangay'] = 'required|string|max:255';
-            $rules['locations.*.street'] = 'nullable|string|max:255';
-            
-            // Validate max locations based on package
-            $packageValidation = $this->validatePackage($request);
-            if ($packageValidation['valid']) {
-                $package = $packageValidation['package'];
-                $maxLocations = $package->max_locations ?? 1;
-                
-                if (count($request->locations) > $maxLocations) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "Maximum of {$maxLocations} locations allowed for this package.",
-                    ], 400);
-                }
-            }
-        } else {
-            // Fallback to single location fields
-            $rules['venue_name'] = 'nullable|string|max:255';
-            $rules['street'] = 'nullable|string|max:255';
-            $rules['barangay'] = 'required|string|max:255';
-            $rules['city'] = 'required|string|max:255';
-        }
 
         $request->validate($rules);
 
@@ -499,21 +512,33 @@ class BookingController extends Controller
                 'payment_status' => $paymentStatus,
             ];
 
-            // Handle multiple locations
-            if ($request->has('locations') && is_array($request->locations)) {
-                $bookingData['multiple_locations'] = $request->locations;
-                // Clear single location fields
-                $bookingData['venue_name'] = null;
-                $bookingData['street'] = null;
-                $bookingData['barangay'] = null;
-                $bookingData['city'] = null;
-                $bookingData['province'] = 'Cavite';
+            // Handle locations based on location type
+            if ($request->location_type === 'on-location') {
+                // For on-location bookings, handle multiple or single locations
+                if ($request->has('locations') && is_array($request->locations) && count($request->locations) > 0) {
+                    // Multiple locations
+                    $bookingData['multiple_locations'] = $request->locations;
+                    // Clear single location fields
+                    $bookingData['venue_name'] = null;
+                    $bookingData['street'] = null;
+                    $bookingData['barangay'] = null;
+                    $bookingData['city'] = null;
+                    $bookingData['province'] = 'Cavite';
+                } else {
+                    // Single on-location
+                    $bookingData['venue_name'] = $request->venue_name;
+                    $bookingData['street'] = $request->street;
+                    $bookingData['barangay'] = $request->barangay;
+                    $bookingData['city'] = $request->city;
+                    $bookingData['province'] = 'Cavite';
+                    $bookingData['multiple_locations'] = null;
+                }
             } else {
-                // Single location
-                $bookingData['venue_name'] = $request->venue_name;
-                $bookingData['street'] = $request->street;
-                $bookingData['barangay'] = $request->barangay;
-                $bookingData['city'] = $request->city;
+                // For in-studio bookings, location fields are optional
+                $bookingData['venue_name'] = $request->venue_name ?? null;
+                $bookingData['street'] = $request->street ?? null;
+                $bookingData['barangay'] = $request->barangay ?? null; // Will be null if not provided
+                $bookingData['city'] = $request->city ?? null;
                 $bookingData['province'] = 'Cavite';
                 $bookingData['multiple_locations'] = null;
             }
