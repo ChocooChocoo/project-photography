@@ -100,7 +100,8 @@
                                                     $statusBadge = [
                                                         'assigned' => 'badge-soft-info',
                                                         'confirmed' => 'badge-soft-primary',
-                                                        'in_progress' => 'badge-soft-warning',
+                                                        'on_site' => 'badge-soft-warning',
+                                                        'in_progress' => 'badge-soft-info',
                                                         'completed' => 'badge-soft-success',
                                                         'cancelled' => 'badge-soft-danger'
                                                     ][$assignment->status] ?? 'badge-soft-secondary';
@@ -271,6 +272,16 @@
                     return;
                 }
                 
+                // ========== ADD DEBUG LOGGING ==========
+                console.log('Assignment Data:', {
+                    id: assignment.id,
+                    status: assignment.status,
+                    on_site_at: assignment.on_site_at,
+                    client_confirmed_at: assignment.client_confirmed_at,
+                    has_on_site: !!assignment.on_site_at,
+                    has_client_confirmed: !!assignment.client_confirmed_at
+                });
+                
                 const client = booking.client;
                 const category = booking.category;
                 const packages = booking.packages || [];
@@ -293,7 +304,7 @@
                     });
                 }
                 
-                // Create status action buttons based on current status
+                // ========== FIXED: Status action buttons with corrected conditions ==========
                 let statusActions = '';
 
                 if (assignment.status === 'assigned') {
@@ -307,19 +318,57 @@
                         </button>
                     `;
                 } 
-                else if (assignment.status === 'confirmed') {
-                    // Photographer can start working (in progress) or cancel
-                    statusActions = `
-                        <button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
-                            <i data-lucide="x" class="me-1"></i> Cancel Assignment
-                        </button>
-                        <button class="btn btn-primary" id="startAssignmentBtn">
-                            <i data-lucide="play" class="me-1"></i> Mark as In Progress
-                        </button>
-                    `;
-                } 
+                // ========== FIX: Check for BOTH 'confirmed' AND 'on_site' status ==========
+                else if (assignment.status === 'confirmed' || assignment.status === 'on_site') {
+                    const hasOnSite = assignment.on_site_at !== null && assignment.on_site_at !== undefined;
+                    const hasClientConfirmed = assignment.client_confirmed_at !== null && assignment.client_confirmed_at !== undefined;
+                    
+                    console.log('Status check:', { 
+                        current_status: assignment.status,
+                        hasOnSite, 
+                        hasClientConfirmed 
+                    });
+                    
+                    if (!hasOnSite) {
+                        // Not marked on-site yet
+                        statusActions = `
+                            <button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
+                                <i data-lucide="x" class="me-1"></i> Cancel Assignment
+                            </button>
+                            <button class="btn btn-warning" id="onSiteAssignmentBtn">
+                                <i data-lucide="map-pin" class="me-1"></i> Mark as On-Site
+                            </button>
+                        `;
+                    } else if (hasOnSite && !hasClientConfirmed) {
+                        // Marked on-site but waiting for client confirmation
+                        statusActions = `
+                            <div class="alert alert-warning mb-3">
+                                <i data-lucide="clock" class="me-2"></i>
+                                You have marked as on-site. Waiting for client to confirm your presence.
+                            </div>
+                            <button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
+                                <i data-lucide="x" class="me-1"></i> Cancel Assignment
+                            </button>
+                        `;
+                    } else if (hasOnSite && hasClientConfirmed) {
+                        // Client confirmed - show "Start Work" button
+                        console.log('✅ Client confirmed - showing Start Work button');
+                        statusActions = `
+                            <div class="alert alert-success text-start mb-3">
+                                <i data-lucide="check-circle" class="me-2"></i>
+                                Client has confirmed your on-site presence. You may now begin working.
+                            </div>
+                            <button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
+                                <i data-lucide="x" class="me-1"></i> Cancel Assignment
+                            </button>
+                            <button class="btn btn-primary" id="startAssignmentBtn">
+                                <i data-lucide="play" class="me-1"></i> Mark as In Progress
+                            </button>
+                        `;
+                    }
+                }
                 else if (assignment.status === 'in_progress') {
-                    // Photographer can complete their work or cancel
+                    // Normal in_progress state
                     statusActions = `
                         <button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
                             <i data-lucide="x" class="me-1"></i> Cancel Assignment
@@ -342,6 +391,47 @@
                         <span class="badge badge-soft-danger fs-6 px-3 py-2">
                             <i data-lucide="x-circle" class="me-1"></i> Cancelled
                         </span>
+                    `;
+                }
+                
+                // Also update the onSiteStatusHtml to show correct status
+                let onSiteStatusHtml = '';
+                if (assignment.on_site_at) {
+                    const onSiteDate = new Date(assignment.on_site_at);
+                    const formattedOnSite = onSiteDate.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    const hasClientConfirmed = assignment.client_confirmed_at !== null && assignment.client_confirmed_at !== undefined;
+                    
+                    const clientConfirmed = hasClientConfirmed ? 
+                        `<span class="badge badge-soft-success ms-2"><i data-lucide="check-circle" class="me-1"></i>Confirmed by Client</span>` :
+                        `<span class="badge badge-soft-warning ms-2"><i data-lucide="clock" class="me-1"></i>Awaiting Client Confirmation</span>`;
+                    
+                    onSiteStatusHtml = `
+                        <div class="col-12">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-light-warning rounded-circle p-2">
+                                        <i data-lucide="map-pin" class="fs-20 text-warning"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <label class="text-muted small mb-1">On-Site Status</label>
+                                    <p class="mb-0 fw-medium">
+                                        Marked on-site at: ${formattedOnSite}
+                                        ${clientConfirmed}
+                                    </p>
+                                    ${assignment.client_confirmation_notes ? `
+                                        <small class="text-muted d-block mt-1">Client notes: ${assignment.client_confirmation_notes}</small>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
                     `;
                 }
                 
@@ -412,6 +502,8 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        
+                                        ${onSiteStatusHtml}
                                         
                                         ${assignment.assignment_notes ? `
                                         <div class="col-12">
@@ -643,7 +735,7 @@
                 loadIcons();
                 assignmentModal.show();
                 
-                // Bind status update buttons
+                // ========== UPDATED: Bind status update buttons with new on_site button ==========
                 bindStatusUpdateButtons();
             }
             
@@ -667,11 +759,29 @@
                     });
                 });
                 
-                // Start Assignment (In Progress)
+                // ========== NEW: On-Site Assignment ==========
+                $(document).off('click', '#onSiteAssignmentBtn').on('click', '#onSiteAssignmentBtn', function() {
+                    Swal.fire({
+                        title: 'Mark as On-Site',
+                        text: 'Have you arrived at the event location?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#f39c12',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, I am on-site',
+                        cancelButtonText: 'Not yet'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            updateAssignmentStatus('on_site');
+                        }
+                    });
+                });
+                
+                // Start Assignment (In Progress) - UPDATED
                 $(document).off('click', '#startAssignmentBtn').on('click', '#startAssignmentBtn', function() {
                     Swal.fire({
-                        title: 'Mark as In Progress',
-                        text: 'Are you ready to start working on this assignment?',
+                        title: 'Start Working',
+                        text: 'Are you ready to begin working on this assignment?',
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#3475db',
@@ -830,25 +940,18 @@
                         $('#confirmStatusUpdate').prop('disabled', true).html('<span class="loading-spinner"></span> Updating...');
                     },
                     success: function(response) {
-                        if (response.success) {
-                            statusUpdateModal.hide();
-                            setTimeout(() => {
-                                assignmentModal.hide();
-                            }, 300);
-                            
-                            // Show success message
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: response.message,
-                                showConfirmButton: false,
-                                timer: 2000,
-                                timerProgressBar: true
-                            }).then(() => {
-                                // Reload the page to update the table
-                                location.reload();
-                            });
-                        } else {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Confirmed!',
+                                    text: response.message, // This will show: "Photographer on-site presence confirmed successfully. The photographer can now begin working."
+                                    showConfirmButton: false,
+                                    timer: 2000,
+                                    timerProgressBar: true
+                                }).then(() => {
+                                    loadPendingConfirmations(); // Reload the list
+                                });
+                            } else {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',

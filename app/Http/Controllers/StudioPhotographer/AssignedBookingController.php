@@ -115,18 +115,43 @@ class AssignedBookingController extends Controller
                         $booking->save();
                     }
                     break;
-                    
-                case 'in_progress':
+                
+                // On-site status
+                case 'on_site':
                     // Check if photographer has confirmed first
                     if ($assignment->status !== 'confirmed') {
                         return response()->json([
                             'success' => false,
-                            'message' => 'You must confirm the assignment first before starting.'
+                            'message' => 'You must confirm the assignment first before marking as on-site.'
                         ]);
                     }
+                    
+                    $updateData['on_site_at'] = now();
+                    
+                    // Create notification for client to confirm on-site presence
+                    $this->createClientConfirmationNotification($assignment);
+                    break;
+                    
+                case 'in_progress':
+                    // ========== UPDATED: Check if client has confirmed on-site presence ==========
+                    if (!$assignment->on_site_at) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'You must mark as on-site first before starting work.'
+                        ]);
+                    }
+                    
+                    // Check if client has confirmed - this is now required before starting
+                    if (!$assignment->client_confirmed_at) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Waiting for client to confirm your on-site presence. Please ask the client to confirm via their dashboard before starting work.'
+                        ]);
+                    }
+                    
                     $updateData['started_at'] = now();
                     
-                    // Make sure booking is in_progress (should already be from confirmation, but just in case)
+                    // Make sure booking is in_progress
                     $booking = BookingModel::find($assignment->booking_id);
                     if ($booking->status !== 'in_progress') {
                         $booking->status = 'in_progress';
@@ -135,6 +160,14 @@ class AssignedBookingController extends Controller
                     break;
                     
                 case 'completed':
+                    // Check if client has confirmed
+                    if (!$assignment->client_confirmed_at) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Client must confirm your on-site presence before you can mark as completed.'
+                        ]);
+                    }
+                    
                     // Check if assignment is in progress first
                     if ($assignment->status !== 'in_progress') {
                         return response()->json([
@@ -170,10 +203,7 @@ class AssignedBookingController extends Controller
                     }
                     
                     // If this is the last photographer to complete, update booking status
-                    // to let owner know it's ready for final completion
                     if ($allPhotographersCompleted) {
-                        // You can add a note or just keep as in_progress
-                        // The owner will still need to click "Complete Booking"
                         \Log::info('All photographers completed for booking: ' . $assignment->booking_id);
                     }
                     break;
@@ -197,6 +227,48 @@ class AssignedBookingController extends Controller
                 'success' => false,
                 'message' => 'Error updating assignment status: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    // ========== NEW: Helper method to create client confirmation notification ==========
+    private function createClientConfirmationNotification($assignment)
+    {
+        try {
+            $booking = BookingModel::find($assignment->booking_id);
+            $clientId = $booking->client_id;
+            $photographer = Auth::user();
+            
+            // Use the existing notification system
+            if (trait_exists('App\Traits\Notifiable')) {
+                $notifiable = new class {
+                    use \App\Traits\Notifiable;
+                };
+                
+                $notifiable->createNotification(
+                    $clientId,
+                    'photographer_on_site',
+                    'Photographer On-Site Confirmation',
+                    "Photographer {$photographer->first_name} {$photographer->last_name} has arrived on-site. Please confirm their presence.",
+                    [
+                        'booking_id' => $booking->id,
+                        'booking_reference' => $booking->booking_reference,
+                        'assignment_id' => $assignment->id,
+                        'photographer_name' => $photographer->first_name . ' ' . $photographer->last_name,
+                        'route' => route('client.my-bookings.index', [], false)
+                    ],
+                    'map-pin',
+                    'info'
+                );
+            }
+            
+            \Log::info('Client confirmation notification sent', [
+                'client_id' => $clientId,
+                'booking_id' => $booking->id,
+                'assignment_id' => $assignment->id
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to send client confirmation notification: ' . $e->getMessage());
         }
     }
 }

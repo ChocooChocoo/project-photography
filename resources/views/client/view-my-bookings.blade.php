@@ -194,6 +194,31 @@
                     </div>
                 </div>
             </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="card-title">
+                                    Pending Photographer Confirmations
+                                </h5>
+                            </div>
+                            <div>
+                                <p class="text-muted small mb-0">Confirm when photographers arrive on-site to begin the session</p>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="pendingConfirmationsContainer">
+                                <div class="text-center py-3">
+                                    <div class="loading-spinner" style="width: 2rem; height: 2rem; margin: 0 auto;"></div>
+                                    <p class="mt-2 text-muted">Loading pending confirmations...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -1400,6 +1425,219 @@
                     lucide.createIcons();
                 }
             }
+
+            function loadPendingConfirmations() {
+                $.ajax({
+                    url: '{{ route("client.pending-confirmations") }}',
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            renderPendingConfirmations(response.pending_confirmations);
+                        } else {
+                            $('#pendingConfirmationsContainer').html(`
+                                <div class="alert alert-warning mb-0">
+                                    <i class="ti ti-alert-circle me-2"></i>
+                                    Failed to load pending confirmations.
+                                </div>
+                            `);
+                        }
+                    },
+                    error: function() {
+                        $('#pendingConfirmationsContainer').html(`
+                            <div class="alert alert-danger mb-0">
+                                <i class="ti ti-alert-circle me-2"></i>
+                                Error loading pending confirmations. Please refresh the page.
+                            </div>
+                        `);
+                    }
+                });
+            }
+
+            // Render pending confirmations
+            function renderPendingConfirmations(confirmations) {
+                if (!confirmations || confirmations.length === 0) {
+                    $('#pendingConfirmationsContainer').html(`
+                        <div class="text-center py-4">
+                            <p class="mb-0 text-muted">No pending photographer confirmations</p>
+                            <small class="text-muted">All photographers have been confirmed or no photographers are on-site yet.</small>
+                        </div>
+                    `);
+                    return;
+                }
+                
+                let html = '<div class="row">';
+                
+                confirmations.forEach(function(item) {
+                    const photographer = item.photographer;
+                    const booking = item.booking;
+                    const studio = item.studio;
+                    
+                    // Format date
+                    const eventDate = new Date(booking.event_date);
+                    const formattedDate = eventDate.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                    
+                    // Get photographer profile photo
+                    let photoUrl = '{{ asset("assets/images/users/user-3.jpg") }}';
+                    if (photographer && photographer.profile_photo) {
+                        photoUrl = '{{ asset("storage/") }}/' + photographer.profile_photo;
+                    }
+                    
+                    html += `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border h-100">
+                                <div class="card-body">
+                                    <div class="row g-2">
+                                        <div class="col-12">
+                                            <h6 class="mb-1 fw-semibold">${photographer ? photographer.first_name + ' ' + photographer.last_name : 'Photographer'}</h6>
+                                            <p class="mb-0 small text-muted">
+                                                <i class="ti ti-building-store me-1"></i>${studio ? studio.studio_name : 'Studio'}
+                                            </p>
+                                        </div>
+                                        <div class="col">
+                                            <span class="badge badge-soft-warning mb-2">Awaiting Confirmation</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-light p-3 rounded mb-3">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted small">Booking:</span>
+                                            <span class="fw-medium small">${booking.booking_reference}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted small">Event:</span>
+                                            <span class="fw-medium small">${booking.event_name}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted small">Date:</span>
+                                            <span class="fw-medium small">${formattedDate}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted small">Time:</span>
+                                            <span class="fw-medium small">${booking.start_time} - ${booking.end_time}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-warning py-2 mb-3">
+                                        <i class="ti ti-map-pin me-1"></i>
+                                        <small>Photographer marked as on-site. Please confirm their presence.</small>
+                                    </div>
+                                    
+                                    <div class="d-grid">
+                                        <button class="btn btn-primary confirm-photographer-btn" 
+                                                data-assignment-id="${item.id}"
+                                                data-photographer-name="${photographer ? photographer.first_name + ' ' + photographer.last_name : 'Photographer'}"
+                                                data-booking-ref="${booking.booking_reference}">
+                                            <i class="ti ti-check-circle me-1"></i> Confirm On-Site Presence
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="mt-2">
+                                        <textarea class="form-control form-control-sm confirmation-notes-${item.id}" 
+                                                placeholder="Optional notes (e.g., photographer arrived on time, etc.)" 
+                                                rows="2"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                
+                $('#pendingConfirmationsContainer').html(html);
+                
+                // Bind confirmation buttons
+                $('.confirm-photographer-btn').off('click').on('click', function() {
+                    const assignmentId = $(this).data('assignment-id');
+                    const photographerName = $(this).data('photographer-name');
+                    const bookingRef = $(this).data('booking-ref');
+                    const notes = $(`.confirmation-notes-${assignmentId}`).val();
+                    
+                    confirmPhotographerPresence(assignmentId, photographerName, bookingRef, notes);
+                });
+            }
+
+            // Confirm photographer presence
+            function confirmPhotographerPresence(assignmentId, photographerName, bookingRef, notes) {
+                Swal.fire({
+                    title: 'Confirm Photographer On-Site',
+                    html: `
+                        <p>Please confirm that photographer <strong>${photographerName}</strong> is physically present at your event location for booking <strong>${bookingRef}</strong>.</p>
+                        <p class="text-warning small">
+                            <i class="ti ti-alert-triangle me-1"></i>
+                            This confirmation verifies that the photographer has arrived on-site. Only confirm if they are actually present.
+                        </p>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3475db',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, Confirm Presence',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '{{ route("client.confirm-photographer", ":assignmentId") }}'.replace(':assignmentId', assignmentId),
+                            type: 'POST',
+                            data: {
+                                confirmation_notes: notes,
+                                _token: '{{ csrf_token() }}'
+                            },
+                            beforeSend: function() {
+                                Swal.fire({
+                                    title: 'Confirming...',
+                                    text: 'Please wait',
+                                    allowOutsideClick: false,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                    }
+                                });
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Confirmed!',
+                                        text: response.message,
+                                        showConfirmButton: false,
+                                        timer: 2000,
+                                        timerProgressBar: true
+                                    }).then(() => {
+                                        loadPendingConfirmations(); // Reload the list
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: response.message,
+                                        confirmButtonColor: '#3475db'
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                let message = 'Failed to confirm photographer. Please try again.';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    message = xhr.responseJSON.message;
+                                }
+                                
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: message,
+                                    confirmButtonColor: '#3475db'
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Call on page load
+            loadPendingConfirmations();
 
             // Load downpayment percentages for all bookings in the table
             function loadDownpaymentPercentages() {

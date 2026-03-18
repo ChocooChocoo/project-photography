@@ -374,6 +374,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bookings/{id}/cancel',                    [\App\Http\Controllers\Client\MyBookingsController::class, 'cancelBooking'])->name('client.booking.cancel');
         Route::get('/bookings/{id}/payment-details',            [\App\Http\Controllers\Client\MyBookingsController::class, 'getPaymentDetails'])->name('client.booking.payment.details');
         Route::post('/bookings/{id}/balance-payment',           [\App\Http\Controllers\Client\MyBookingsController::class, 'initializeBalancePayment'])->name('client.booking.balance.payment');
+        Route::post('/confirm-photographer/{assignmentId}',     [\App\Http\Controllers\Client\MyBookingsController::class, 'confirmPhotographerOnSite'])->name('client.confirm-photographer');
+        Route::get('/pending-confirmations',                    [\App\Http\Controllers\Client\MyBookingsController::class, 'getPendingConfirmations'])->name('client.pending-confirmations');
 
         // Online Gallery
         Route::get('/view/online-gallery',              [\App\Http\Controllers\Client\OnlineGalleryController::class, 'index'])->name('client.online-gallery.index');

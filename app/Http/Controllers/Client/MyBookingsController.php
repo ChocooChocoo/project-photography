@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\BookingModel;
 use App\Models\BookingPackageModel;
 use App\Models\PaymentModel;
+use App\Models\StudioOwner\BookingAssignedPhotographerModel;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -410,6 +411,144 @@ class MyBookingsController extends Controller
                 'success' => false,
                 'message' => 'Error initializing payment: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * ========== NEW METHOD: Client confirms photographer on-site presence ==========
+     */
+    public function confirmPhotographerOnSite(Request $request, $assignmentId)
+    {
+        try {
+            $userId = Auth::id();
+            
+            // Find the assignment and verify it belongs to a booking of this client
+            $assignment = BookingAssignedPhotographerModel::where('id', $assignmentId)
+                ->with('booking')
+                ->firstOrFail();
+            
+            // Verify that this booking belongs to the authenticated client
+            if ($assignment->booking->client_id !== $userId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access to this assignment.'
+                ], 403);
+            }
+            
+            // Check if photographer has marked as on-site
+            if (!$assignment->on_site_at) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Photographer has not marked as on-site yet.'
+                ]);
+            }
+            
+            // Check if already confirmed
+            if ($assignment->client_confirmed_at) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have already confirmed this photographer\'s presence.'
+                ]);
+            }
+            
+            // Validate request
+            $request->validate([
+                'confirmation_notes' => 'nullable|string|max:500'
+            ]);
+            
+            // ========== FIX: Only set client_confirmed_at, DO NOT change status ==========
+            $assignment->update([
+                'client_confirmed_at' => now(),
+                'client_confirmation_notes' => $request->confirmation_notes
+                // Removed: 'status' => 'in_progress' - Let photographer manually start work
+            ]);
+            
+            // Create notification for photographer
+            $this->notifyPhotographerConfirmed($assignment);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Photographer on-site presence confirmed successfully. The photographer can now begin working.',
+                'assignment' => $assignment
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error confirming photographer: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ========== NEW METHOD: Get assignments pending client confirmation ==========
+     */
+    public function getPendingConfirmations()
+    {
+        try {
+            $userId = Auth::id();
+            
+            $pendingConfirmations = BookingAssignedPhotographerModel::whereHas('booking', function($query) use ($userId) {
+                    $query->where('client_id', $userId)
+                          ->whereIn('status', ['confirmed', 'in_progress']);
+                })
+                ->whereNotNull('on_site_at')
+                ->whereNull('client_confirmed_at')
+                ->with([
+                    'booking:id,booking_reference,event_name,event_date,start_time,end_time',
+                    'photographer:id,first_name,last_name,profile_photo',
+                    'studio:id,studio_name'
+                ])
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'pending_confirmations' => $pendingConfirmations
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching pending confirmations: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ========== NEW METHOD: Notify photographer that client confirmed ==========
+     */
+    private function notifyPhotographerConfirmed($assignment)
+    {
+        try {
+            $photographerId = $assignment->photographer_id;
+            $booking = $assignment->booking;
+            $client = Auth::user();
+            
+            // Use the existing notification system
+            if (trait_exists('App\Traits\Notifiable')) {
+                $notifiable = new class {
+                    use \App\Traits\Notifiable;
+                };
+                
+                $notifiable->createNotification(
+                    $photographerId,
+                    'client_confirmed_on_site',
+                    'Client Confirmed Your Presence',
+                    "Client {$client->first_name} {$client->last_name} has confirmed your on-site presence for booking {$booking->booking_reference}. You may now begin working by marking as 'In Progress'.",
+                    [
+                        'booking_id' => $booking->id,
+                        'booking_reference' => $booking->booking_reference,
+                        'assignment_id' => $assignment->id,
+                        'client_name' => $client->first_name . ' ' . $client->last_name,
+                        'route' => route('assigned.bookings', [], false)
+                    ],
+                    'user-check',
+                    'success'
+                );
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to notify photographer of client confirmation: ' . $e->getMessage());
         }
     }
 }
