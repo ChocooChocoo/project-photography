@@ -19,3 +19,12 @@ Objective #1:
 
     8). Give the summary of the propose changes and modification before providing all the needed code.
         Wait for the "Go!" command and execute.
+
+Objective #2:
+
+    1). Now here in the client side, in the booking details, I added the Chat with Bot Agent button in the Contact Information
+        section where the user or client chat with bot.
+
+    2). When pressed, it shows the modal and they start talking.
+    
+    3). For now focus for Studio Bot Agent, and the freelancer should has the same feature but not now (Just focus on studio side).

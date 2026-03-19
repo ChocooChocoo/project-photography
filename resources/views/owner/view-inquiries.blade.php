@@ -1,4 +1,4 @@
-@extends('layouts.client.app')
+@extends('layouts.owner.app')
 @section('title', 'Inquiries')
 
 {{-- CONTENTS --}}

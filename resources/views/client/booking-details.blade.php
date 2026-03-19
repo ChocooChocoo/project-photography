@@ -643,10 +643,17 @@
                                             <i class="ti ti-phone me-2"></i>
                                             {{ $type === 'studio' ? 'Contact Studio' : 'Contact' }}
                                         </button>
-                                        <button class="btn btn-soft-primary">
+                                        @if($type === 'studio')
+                                        <button type="button" class="btn btn-soft-primary" data-bs-toggle="modal" data-bs-target="#studioChatbotModal" id="openChatbotModalBtn">
                                             <i class="ti ti-message-circle me-2"></i>
-                                            Send Message
+                                            Chat with our Studio Bot Agent
                                         </button>
+                                        @else
+                                        <button class="btn btn-soft-primary" disabled>
+                                            <i class="ti ti-message-circle me-2"></i>
+                                            Chat with Freelancer Bot Agent (Coming Soon)
+                                        </button>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -709,31 +716,73 @@
 
     {{-- All Reviews Modal --}}
     @if(($type === 'studio' ? ($studio->ratings_count ?? 0) : ($freelancer->ratings_count ?? 0)) > 0)
-    <div class="modal fade" id="allReviewsModal" tabindex="-1" aria-labelledby="allReviewsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="allReviewsModalLabel">
-                        <i class="ti ti-star me-2"></i>All Reviews
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    {{-- This will be loaded via AJAX --}}
-                    <div class="text-center py-4" id="reviews-loading">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2 text-muted">Loading reviews...</p>
+        <div class="modal fade" id="allReviewsModal" tabindex="-1" aria-labelledby="allReviewsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="allReviewsModalLabel">
+                            <i class="ti ti-star me-2"></i>All Reviews
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div id="reviews-container" style="display: none;"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <div class="modal-body">
+                        {{-- This will be loaded via AJAX --}}
+                        <div class="text-center py-4" id="reviews-loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Loading reviews...</p>
+                        </div>
+                        <div id="reviews-container" style="display: none;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endif
+
+    {{-- Studio Chatbot Modal --}}
+    @if($type === 'studio')
+        <div class="modal fade" id="studioChatbotModal" tabindex="-1" aria-labelledby="studioChatbotModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="studioChatbotModalLabel">
+                            <i class="ti ti-robot me-2"></i>
+                            <span id="modalBotName">Studio Assistant</span>
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div id="modalChatMessages" class="p-3">
+                            <div class="text-center py-4" id="modalLoadingMessages">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Connecting to assistant...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="p-3 border-top" id="modalChatInputArea" style="display: none;">
+                            <form id="modalChatForm" class="d-flex gap-2">
+                                <input type="text" class="form-control" id="modalMessageInput" 
+                                    placeholder="Type your message here..." autocomplete="off">
+                                <button type="submit" class="btn btn-primary" id="modalSendBtn">
+                                    <i class="ti ti-send"></i>
+                                </button>
+                            </form>
+                            <div class="mt-2 d-flex gap-2 flex-wrap" id="modalQuickReplies"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden fields for modal chat session -->
+        <input type="hidden" id="modalOwnerId" value="{{ $studio->user_id }}">
+        <input type="hidden" id="modalSessionId" value="">
     @endif
 @endsection
 
@@ -1042,4 +1091,294 @@
             });
         });
     </script>
+
+    {{-- Studio Chatbot Modal Script --}}
+    @if($type === 'studio')
+        <script>
+            $(document).ready(function() {
+                // ==================== STUDIO CHATBOT MODAL ====================
+                
+                const modalOwnerId = $('#modalOwnerId').val();
+                let modalSessionId = null;
+                let modalBotName = 'Studio Assistant';
+                let modalIsTyping = false;
+                
+                // Initialize chatbot when modal is opened
+                $('#studioChatbotModal').on('show.bs.modal', function() {
+                    loadModalChatbotConfig();
+                });
+                
+                // Reset chat when modal is closed
+                $('#studioChatbotModal').on('hidden.bs.modal', function() {
+                    // End the chat session
+                    if (modalSessionId) {
+                        $.ajax({
+                            url: '/client/chatbot/end',
+                            type: 'POST',
+                            data: {
+                                session_id: modalSessionId,
+                                _token: '{{ csrf_token() }}'
+                            }
+                        });
+                    }
+                    
+                    // Reset modal state
+                    modalSessionId = null;
+                    $('#modalSessionId').val('');
+                    $('#modalChatMessages').empty().html(`
+                        <div class="text-center py-4" id="modalLoadingMessages">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Connecting to assistant...</p>
+                        </div>
+                    `);
+                    $('#modalChatInputArea').hide();
+                    $('#modalQuickReplies').empty();
+                });
+                
+                function loadModalChatbotConfig() {
+                    if (!modalOwnerId) {
+                        showModalError('Studio information not available.');
+                        return;
+                    }
+                    
+                    $.ajax({
+                        url: '/client/chatbot/config',
+                        type: 'GET',
+                        data: { owner_id: modalOwnerId },
+                        success: function(response) {
+                            if (response.success && response.config) {
+                                modalBotName = response.config.bot_name || 'Studio Assistant';
+                                $('#modalBotName').text(modalBotName);
+                                
+                                if (response.config.is_active) {
+                                    startModalNewChat();
+                                } else {
+                                    showModalError('Chat support is currently unavailable. Please try again later.');
+                                }
+                            } else {
+                                showModalError('Failed to load chat configuration.');
+                            }
+                        },
+                        error: function() {
+                            showModalError('Failed to connect to chat service.');
+                        }
+                    });
+                }
+                
+                function startModalNewChat() {
+                    $.ajax({
+                        url: '/client/chatbot/start',
+                        type: 'POST',
+                        data: {
+                            owner_id: modalOwnerId,
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                modalSessionId = response.session_id;
+                                $('#modalSessionId').val(modalSessionId);
+                                
+                                // Clear loading and show chat
+                                $('#modalLoadingMessages').remove();
+                                $('#modalChatInputArea').show();
+                                
+                                // Add welcome message
+                                addModalBotMessage(response.welcome_message || `Hello! How can I assist you today?`);
+                            } else {
+                                showModalError(response.message || 'Failed to start chat.');
+                            }
+                        },
+                        error: function() {
+                            showModalError('Failed to start chat. Please try again.');
+                        }
+                    });
+                }
+                
+                // ==================== MODAL MESSAGE HANDLING ====================
+                
+                $('#modalChatForm').on('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const message = $('#modalMessageInput').val().trim();
+                    if (!message || modalIsTyping) return;
+                    
+                    // Clear input
+                    $('#modalMessageInput').val('');
+                    
+                    // Add user message to chat
+                    addModalUserMessage(message);
+                    
+                    // Show typing indicator
+                    showModalTypingIndicator();
+                    
+                    // Send to server
+                    $.ajax({
+                        url: '/client/chatbot/message',
+                        type: 'POST',
+                        data: {
+                            session_id: modalSessionId,
+                            owner_id: modalOwnerId,
+                            message: message,
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            // Remove typing indicator
+                            hideModalTypingIndicator();
+                            
+                            if (response.success) {
+                                // Add bot response
+                                addModalBotMessage(response.message);
+                                
+                                // Add quick replies if any
+                                if (response.quick_replies && response.quick_replies.length > 0) {
+                                    displayModalQuickReplies(response.quick_replies);
+                                } else {
+                                    clearModalQuickReplies();
+                                }
+                            } else {
+                                addModalBotMessage('I apologize, but I encountered an error. Please try again.');
+                            }
+                        },
+                        error: function() {
+                            hideModalTypingIndicator();
+                            addModalBotMessage('Sorry, I\'m having trouble connecting. Please try again.');
+                        }
+                    });
+                });
+                
+                function addModalUserMessage(message) {
+                    const messageHtml = `
+                        <div class="d-flex justify-content-end mb-3">
+                            <div class="bg-primary text-white p-2 rounded" style="max-width: 70%;">
+                                <small><i class="ti ti-user me-1"></i>You</small>
+                                <p class="mb-0">${escapeHtml(message)}</p>
+                                <small class="text-white-50">${new Date().toLocaleTimeString()}</small>
+                            </div>
+                        </div>
+                    `;
+                    $('#modalChatMessages').append(messageHtml);
+                    scrollModalToBottom();
+                }
+                
+                function addModalBotMessage(message) {
+                    const messageHtml = `
+                        <div class="d-flex justify-content-start mb-3">
+                            <div class="bg-light p-2 rounded" style="max-width: 70%;">
+                                <small><i class="ti ti-robot me-1"></i>${escapeHtml(modalBotName)}</small>
+                                <p class="mb-0">${escapeHtml(message)}</p>
+                                <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+                            </div>
+                        </div>
+                    `;
+                    $('#modalChatMessages').append(messageHtml);
+                    scrollModalToBottom();
+                }
+                
+                function showModalTypingIndicator() {
+                    modalIsTyping = true;
+                    const typingHtml = `
+                        <div class="d-flex justify-content-start mb-3" id="modalTypingIndicator">
+                            <div class="bg-light p-2 rounded">
+                                <small><i class="ti ti-robot me-1"></i>${escapeHtml(modalBotName)}</small>
+                                <p class="mb-0"><i class="ti ti-dots"></i> typing...</p>
+                            </div>
+                        </div>
+                    `;
+                    $('#modalChatMessages').append(typingHtml);
+                    scrollModalToBottom();
+                }
+                
+                function hideModalTypingIndicator() {
+                    modalIsTyping = false;
+                    $('#modalTypingIndicator').remove();
+                }
+                
+                function displayModalQuickReplies(replies) {
+                    let html = '';
+                    replies.forEach(reply => {
+                        html += `
+                            <button type="button" class="btn btn-sm btn-outline-primary modal-quick-reply-btn" 
+                                    data-text="${escapeHtml(reply.text)}" 
+                                    data-action="${escapeHtml(reply.action || '')}"
+                                    data-action-type="${reply.action_type || 'trigger_intent'}">
+                                ${escapeHtml(reply.text)}
+                            </button>
+                        `;
+                    });
+                    $('#modalQuickReplies').html(html);
+                }
+                
+                function clearModalQuickReplies() {
+                    $('#modalQuickReplies').empty();
+                }
+                
+                // Modal quick reply click handler
+                $(document).on('click', '.modal-quick-reply-btn', function() {
+                    const text = $(this).data('text');
+                    const action = $(this).data('action');
+                    const actionType = $(this).data('action-type');
+                    
+                    if (actionType === 'open_url' && action) {
+                        window.open(action, '_blank');
+                    } else {
+                        // Send as message
+                        $('#modalMessageInput').val(text);
+                        $('#modalChatForm').submit();
+                    }
+                });
+                
+                function scrollModalToBottom() {
+                    const chat = $('#modalChatMessages');
+                    chat.scrollTop(chat[0].scrollHeight);
+                }
+                
+                function showModalError(message) {
+                    $('#modalLoadingMessages').html(`
+                        <i class="ti ti-alert-circle fs-1 text-danger d-block mb-2"></i>
+                        <p class="text-danger">${escapeHtml(message)}</p>
+                        <button class="btn btn-primary mt-3" onclick="$('#studioChatbotModal').modal('hide')">
+                            <i class="ti ti-arrow-left me-1"></i> Close
+                        </button>
+                    `);
+                }
+                
+                // Helper function to escape HTML
+                function escapeHtml(text) {
+                    if (!text) return '';
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+                
+                // Load message history if returning to same session (optional)
+                function loadModalHistory() {
+                    if (!modalSessionId) return;
+                    
+                    $.ajax({
+                        url: '/client/chatbot/history',
+                        type: 'GET',
+                        data: { session_id: modalSessionId },
+                        success: function(response) {
+                            if (response.success && response.history) {
+                                $('#modalChatMessages').empty();
+                                
+                                response.history.forEach(msg => {
+                                    if (msg.sender_type === 'user') {
+                                        addModalUserMessage(msg.message);
+                                    } else {
+                                        addModalBotMessage(msg.message);
+                                    }
+                                });
+                                
+                                $('#modalLoadingMessages').remove();
+                                $('#modalChatInputArea').show();
+                            }
+                        }
+                    });
+                }
+            });
+        </script>
+    @endif
 @endsection

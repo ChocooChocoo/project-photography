@@ -339,22 +339,49 @@
                 </div>
             </li>
 
-            {{-- Inquiries --}}
+            {{-- Inquiries & Chatbot --}}
             @php
-                $inquiriesRoutes = Route::is('owner.inquiries.index');
+                $inquiriesRoutes      = Route::is('owner.inquiries.index');
+                $chatbotConfigRoutes  = Route::is('chatbot.config') || Route::is('chatbot.config.get') || Route::is('chatbot.config.save') || Route::is('chatbot.config.toggle');
+                $chatbotIntentsRoutes = Route::is('chatbot.intents.get') || Route::is('chatbot.intents.store') || Route::is('chatbot.intents.show') || Route::is('chatbot.intents.update') || Route::is('chatbot.intents.delete') || Route::is('chatbot.intents.toggle');
+                $chatbotConversationsRoutes = Route::is('chatbot.conversations') || Route::is('chatbot.conversations.details');
+                
+                $isChatbotActive = $chatbotConfigRoutes || $chatbotIntentsRoutes || $chatbotConversationsRoutes;
             @endphp
-            
-            <li class="side-nav-item {{ $inquiriesRoutes ? 'active' : '' }}">
-                <a data-bs-toggle="collapse" href="#sidebarInquiries" aria-expanded="{{ $inquiriesRoutes ? 'true' : 'false' }}" aria-controls="sidebarInquiries" class="side-nav-link {{ $inquiriesRoutes ? 'active' : '' }}">
+
+            <li class="side-nav-item {{ $inquiriesRoutes || $isChatbotActive ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarInquiries" aria-expanded="{{ $inquiriesRoutes || $isChatbotActive ? 'true' : 'false' }}" aria-controls="sidebarInquiries" class="side-nav-link {{ $inquiriesRoutes || $isChatbotActive ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-message-2-question"></i></span>
-                    <span class="menu-text" data-lang="inquiries">Inquiries</span>
+                    <span class="menu-text" data-lang="inquiries">Inquiries & Chatbot</span>
                     <span class="menu-arrow"></span>
                 </a>
-                <div class="collapse {{ $inquiriesRoutes ? 'show' : '' }}" id="sidebarInquiries">
+                <div class="collapse {{ $inquiriesRoutes || $isChatbotActive ? 'show' : '' }}" id="sidebarInquiries">
                     <ul class="sub-menu">
+                        {{-- View Inquiries --}}
                         <li class="side-nav-item">
                             <a href="{{ route('owner.inquiries.index') }}" class="side-nav-link {{ $inquiriesRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="view-inquiries">View Inquiries</span>
+                            </a>
+                        </li>
+                        
+                        {{-- Chatbot Configuration --}}
+                        <li class="side-nav-item">
+                            <a href="{{ route('chatbot.config') }}" class="side-nav-link {{ $chatbotConfigRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="chatbot-config">Chatbot Settings</span>
+                            </a>
+                        </li>
+                        
+                        {{-- Manage Intents --}}
+                        <li class="side-nav-item">
+                            <a href="{{ route('chatbot.config') }}#manage_intents" class="side-nav-link {{ $chatbotIntentsRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="manage-intents">Manage Intents</span>
+                            </a>
+                        </li>
+                        
+                        {{-- Conversation History --}}
+                        <li class="side-nav-item">
+                            <a href="{{ route('chatbot.conversations') }}" class="side-nav-link {{ $chatbotConversationsRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="conversation-history">Chat History</span>
                             </a>
                         </li>
                     </ul>

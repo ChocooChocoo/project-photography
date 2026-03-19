@@ -220,6 +220,24 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/payroll-settings/{id}/status',                [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'updateStatus'])->name('owner.payroll-settings.status');
         Route::delete('/payroll-settings/{id}',                    [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'destroy'])->name('owner.payroll-settings.destroy');
 
+        // Manage Chatbot
+        Route::prefix('chatbot')->name('chatbot.')->group(function () {
+            Route::get('/config', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'index'])->name('config');
+            Route::get('/config/data', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getConfig'])->name('config.get');
+            Route::post('/config/save', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'saveConfig'])->name('config.save');
+            Route::post('/config/toggle', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'toggleStatus'])->name('config.toggle');
+            
+            Route::get('/intents', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getIntents'])->name('intents.get');
+            Route::post('/intents', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'storeIntent'])->name('intents.store');
+            Route::get('/intents/{id}', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getIntent'])->name('intents.show');
+            Route::put('/intents/{id}', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'updateIntent'])->name('intents.update');
+            Route::delete('/intents/{id}', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'deleteIntent'])->name('intents.delete');
+            Route::post('/intents/{id}/toggle', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'toggleIntentStatus'])->name('intents.toggle');
+            
+            Route::get('/conversations', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getConversations'])->name('conversations');
+            Route::get('/conversations/{id}', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getConversationDetails'])->name('conversations.details');
+        });
+
         // Inquiries                            
         Route::get('/view/inquiries',                              [\App\Http\Controllers\StudioOwner\InquiryController::class, 'index'])->name('owner.inquiries.index');
     });
@@ -424,6 +442,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/budget/categories/list',                   [\App\Http\Controllers\Client\BudgetController::class, 'getCategories'])->name('client.budget.categories');
         Route::get('/budget/statistics/data',                   [\App\Http\Controllers\Client\BudgetController::class, 'getStatistics'])->name('client.budget.statistics');
 
+        // Chatbot
+        Route::prefix('chatbot')->name('chatbot.')->group(function () {
+            Route::get('/',                                     [\App\Http\Controllers\Client\ChatbotController::class, 'index'])->name('index');
+            Route::get('/config',                               [\App\Http\Controllers\Client\ChatbotController::class, 'getConfig'])->name('config');
+            Route::post('/start',                               [\App\Http\Controllers\Client\ChatbotController::class, 'startChat'])->name('start');
+            Route::post('/message',                             [\App\Http\Controllers\Client\ChatbotController::class, 'sendMessage'])->name('message');
+            Route::post('/end',                                 [\App\Http\Controllers\Client\ChatbotController::class, 'endChat'])->name('end');
+            Route::get('/history',                              [\App\Http\Controllers\Client\ChatbotController::class, 'getHistory'])->name('history');
+            Route::post('/helpful',                             [\App\Http\Controllers\Client\ChatbotController::class, 'markHelpful'])->name('helpful');
+            Route::post('/not-helpful',                         [\App\Http\Controllers\Client\ChatbotController::class, 'markNotHelpful'])->name('not-helpful');
+        });
     });
 
     // Home redirect based on authentication
