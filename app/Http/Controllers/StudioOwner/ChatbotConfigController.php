@@ -462,4 +462,39 @@ class ChatbotConfigController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get a single intent by ID
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getIntent($id)
+    {
+        try {
+            $ownerId = Auth::id();
+            
+            // Verify the intent belongs to this owner's config
+            $intent = ChatbotIntentModel::with(['quickReplies' => function($query) {
+                $query->orderBy('position');
+            }])
+            ->whereHas('config', function($query) use ($ownerId) {
+                $query->where('owner_id', $ownerId);
+            })
+            ->findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'intent' => $intent
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error fetching intent: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load intent: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

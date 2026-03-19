@@ -64,12 +64,12 @@
                                                     placeholder="https://example.com/avatar.jpg">
                                             </div>
                                             <div class="col-md-6">
-                                                <div class="form-check form-switch">
-                                                    <input type="checkbox" class="form-check-input" id="chatbotToggleSwitch">
-                                                    <label class="form-check-label" for="chatbotToggleSwitch">Enable Chatbot</label>
-                                                    <input type="checkbox" class="form-check-input" id="chatbotStatusSwitch">
-                                                    <label class="form-check-label" for="chatbotStatusSwitch" id="statusLabel">Loading...</label>
-                                                </div>
+                                                <label for="chatbotStatus" class="form-label">Chatbot Status</label>
+                                                <select class="form-select" id="chatbotStatus" name="is_active">
+                                                    <option value="1" selected>Active</option>
+                                                    <option value="0">Inactive</option>
+                                                </select>
+                                                <small class="text-muted">Set whether the chatbot is active and available to clients</small>
                                             </div>
                                             <div class="col-12 mt-4">
                                                 <button type="submit" class="btn btn-primary" id="saveConfigBtn">
@@ -89,7 +89,7 @@
                                         </button>
                                     </div>
 
-                                    <div class="alert alert-info mb-3">
+                                    <div class="alert alert-warning mb-3">
                                         <i class="ti ti-info-circle me-1"></i>
                                         Intents are patterns that trigger specific responses. Add keywords that users might type to get the appropriate response.
                                     </div>
@@ -249,9 +249,152 @@
         </div>
     </div>
 
+    {{-- View Intent Modal --}}
+    <div class="modal fade" id="viewIntentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-semibold" id="viewIntentModalTitle">
+                        <i class="ti ti-message-circle me-2"></i>Intent Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row align-items-center mb-4">
+                        <div class="col-12 col-lg-8">
+                            <div class="d-flex align-items-center flex-column flex-md-row">
+                                <div class="flex-shrink-0 mb-3 mb-md-0">
+                                    <div class="bg-light-primary rounded-circle p-3" style="width: 80px; height: 80px;">
+                                        <i class="ti ti-message-circle fs-1 text-primary"></i>
+                                    </div>
+                                </div>
+                            
+                                <div class="flex-grow-1 ms-md-4 text-center text-md-start">
+                                    <h2 class="mb-1 h3 h3-md" id="viewIntentName">Loading...</h2>
+                                    <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-2 flex-wrap">
+                                        <span class="badge badge-soft-success p-1" id="viewIntentStatus">Active</span>
+                                        <span class="badge badge-soft-info ms-2" id="viewIntentPriority">Priority: 0</span>
+                                    </div>
+                                
+                                    <p class="text-muted mb-0">
+                                        <i class="ti ti-tag me-1"></i> <span id="viewIntentResponseType">Text</span> | 
+                                        <i class="ti ti-message me-1"></i> <span id="viewIntentMatchCount">0 matches</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col">
+                            {{-- Trigger Keywords --}}
+                            <div class="row g-2 mb-4">
+                                <h5 class="card-title text-primary">
+                                    <i class="ti ti-keyboard me-2"></i>Trigger Keywords
+                                </h5>
+                                <div class="col-12">
+                                    <div class="d-flex flex-wrap gap-2" id="viewIntentKeywords">
+                                        <!-- Keywords will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Response Text --}}
+                            <div class="row g-2 mb-4">
+                                <h5 class="card-title text-primary">
+                                    <i class="ti ti-message-reply me-2"></i>Response Text
+                                </h5>
+                                <div class="col-12">
+                                    <div class="bg-light p-3 rounded" id="viewIntentResponseText">
+                                        Loading...
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Quick Replies --}}
+                            <div class="row g-2 mb-4" id="viewQuickRepliesSection">
+                                <h5 class="card-title text-primary">
+                                    <i class="ti ti-bolt me-2"></i>Quick Replies
+                                </h5>
+                                <div class="col-12" id="viewQuickRepliesContainer">
+                                    <!-- Quick replies will be loaded here -->
+                                </div>
+                            </div>
+
+                            {{-- Metadata --}}
+                            <div class="row g-2">
+                                <h5 class="card-title text-primary">
+                                    <i class="ti ti-info-circle me-2"></i>Metadata
+                                </h5>
+                                <div class="col-12 col-md-6">
+                                    <div class="d-flex align-items-start">
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-light-primary rounded-circle p-2">
+                                                <i class="ti ti-calendar fs-20 text-primary"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <label class="text-muted small mb-1">Created At</label>
+                                            <p class="mb-0 fw-medium" id="viewIntentCreatedAt">Loading...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="d-flex align-items-start">
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-light-primary rounded-circle p-2">
+                                                <i class="ti ti-clock fs-20 text-primary"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <label class="text-muted small mb-1">Last Updated</label>
+                                            <p class="mb-0 fw-medium" id="viewIntentUpdatedAt">Loading...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="d-flex align-items-start">
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-light-primary rounded-circle p-2">
+                                                <i class="ti ti-chart-bar fs-20 text-primary"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <label class="text-muted small mb-1">Match Count</label>
+                                            <p class="mb-0 fw-medium" id="viewIntentMatchCountDetail">0 times</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="d-flex align-items-start">
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-light-primary rounded-circle p-2">
+                                                <i class="ti ti-hash fs-20 text-primary"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <label class="text-muted small mb-1">Intent ID</label>
+                                            <p class="mb-0 fw-medium" id="viewIntentId">Loading...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="editFromViewBtn">
+                        <i class="ti ti-edit me-1"></i> Edit Intent
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- View Conversation Modal --}}
     <div class="modal fade" id="viewConversationModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Conversation Details</h5>
@@ -302,16 +445,14 @@
                                 $('#fallback_message').val(response.config.fallback_message || '');
                                 $('#bot_avatar').val(response.config.bot_avatar || '');
                                 
-                                // Update status switch
-                                $('#chatbotStatusSwitch').prop('checked', response.config.is_active);
-                                $('#statusLabel').text(response.config.is_active ? 'Active' : 'Inactive');
+                                // Update status dropdown
+                                $('#chatbotStatus').val(response.config.is_active ? '1' : '0');
                             } else {
                                 // Set defaults
                                 $('#bot_name').val('Support Assistant');
                                 $('#welcome_message').val('Hello! How can I assist you today?');
                                 $('#fallback_message').val('I apologize, but I don\'t understand. Please contact our support team for assistance.');
-                                $('#chatbotStatusSwitch').prop('checked', true);
-                                $('#statusLabel').text('Active');
+                                $('#chatbotStatus').val('1'); // Default to Active
                             }
                         } else {
                             Swal.fire('Error', response.message || 'Failed to load configuration', 'error');
@@ -333,7 +474,7 @@
                     welcome_message: $('#welcome_message').val(),
                     fallback_message: $('#fallback_message').val(),
                     bot_avatar: $('#bot_avatar').val(),
-                    is_active: $('#chatbotStatusSwitch').is(':checked')
+                    is_active: $('#chatbotStatus').val() === '1'
                 };
                 
                 $('#saveConfigBtn').prop('disabled', true).html('<i class="ti ti-loader spinner me-1"></i> Saving...');
@@ -483,12 +624,12 @@
                     
                     const quickReplyCount = intent.quick_replies ? intent.quick_replies.length : 0;
                     const quickReplyBadge = quickReplyCount > 0 
-                        ? `<span class="badge bg-info">${quickReplyCount} replies</span>` 
-                        : '<span class="badge bg-secondary">None</span>';
+                        ? `<span class="badge badge-soft-info">${quickReplyCount} replies</span>` 
+                        : '<span class="badge badge-soft-secondary">None</span>';
                     
-                    const statusBadge = intent.is_active 
-                        ? '<span class="badge bg-success">Active</span>' 
-                        : '<span class="badge bg-secondary">Inactive</span>';
+                    const statusBadge = intent.is_active
+                        ? '<span class="badge badge-soft-success">Active</span>' 
+                        : '<span class="badge badge-soft-secondary">Inactive</span>';
                     
                     const responsePreview = intent.response_text.length > 50 
                         ? intent.response_text.substring(0, 50) + '...' 
@@ -501,17 +642,17 @@
                                 <span class="small">${escapeHtml(keywords)}${moreText}</span>
                             </td>
                             <td><span class="small">${escapeHtml(responsePreview)}</span></td>
-                            <td><span class="badge bg-info">${intent.priority || 0}</span></td>
+                            <td><span class="badge badge-soft-info">${intent.priority || 0}</span></td>
                             <td>${statusBadge}</td>
                             <td>${quickReplyBadge}</td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-outline-primary edit-intent" data-id="${intent.id}" title="Edit">
+                            <td>
+                                <button type="button" class="btn view-intent" data-id="${intent.id}" title="View Details">
+                                    <i class="ti ti-eye"></i>
+                                </button>
+                                <button type="button" class="btn edit-intent" data-id="${intent.id}" title="Edit">
                                     <i class="ti ti-edit"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-success toggle-intent" data-id="${intent.id}" data-active="${intent.is_active}" title="${intent.is_active ? 'Deactivate' : 'Activate'}">
-                                    <i class="ti ti-${intent.is_active ? 'eye-off' : 'eye'}"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger delete-intent" data-id="${intent.id}" title="Delete">
+                                <button type="button" class="btn delete-intent" data-id="${intent.id}" title="Delete">
                                     <i class="ti ti-trash"></i>
                                 </button>
                             </td>
@@ -652,7 +793,7 @@
                 const intentId = $(this).data('id');
                 
                 $.ajax({
-                    url: `/owner/chatbot/intents/${intentId}`,
+                    url: `/owner/chatbot/intents/${intentId}`, // This now uses the getIntent method
                     type: 'GET',
                     success: function(response) {
                         if (response.success) {
@@ -957,6 +1098,101 @@
                 });
             });
 
+            // View intent details
+            $(document).on('click', '.view-intent', function() {
+                const intentId = $(this).data('id');
+                
+                $.ajax({
+                    url: `/owner/chatbot/intents/${intentId}`,
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            populateViewIntentModal(response.intent);
+                            $('#viewIntentModal').modal('show');
+                        } else {
+                            Swal.fire('Error', response.message || 'Failed to load intent details', 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'Failed to load intent details', 'error');
+                    }
+                });
+            });
+
+            function populateViewIntentModal(intent) {
+                // Basic info
+                $('#viewIntentName').text(intent.intent_name);
+                $('#viewIntentStatus').text(intent.is_active ? 'Active' : 'Inactive')
+                    .removeClass('badge-soft-success badge-soft-secondary')
+                    .addClass(intent.is_active ? 'badge-soft-success' : 'badge-soft-secondary');
+                $('#viewIntentPriority').text(`Priority: ${intent.priority || 0}`);
+                $('#viewIntentResponseType').text(intent.response_type === 'quick_reply' ? 'Text + Quick Replies' : 
+                                                (intent.response_type === 'image' ? 'Image' : 'Text Only'));
+                $('#viewIntentMatchCount').text(`${intent.match_count || 0} matches`);
+                $('#viewIntentId').text(`#${intent.id}`);
+                
+                // Keywords
+                let keywordsHtml = '';
+                if (intent.trigger_keywords && intent.trigger_keywords.length > 0) {
+                    intent.trigger_keywords.forEach(keyword => {
+                        keywordsHtml += `<span class="badge badge-soft-primary p-2">${escapeHtml(keyword)}</span>`;
+                    });
+                } else {
+                    keywordsHtml = '<span class="text-muted">No keywords defined</span>';
+                }
+                $('#viewIntentKeywords').html(keywordsHtml);
+                
+                // Response text
+                $('#viewIntentResponseText').html(intent.response_text ? escapeHtml(intent.response_text).replace(/\n/g, '<br>') : 'No response text');
+                
+                // Quick replies
+                if (intent.quick_replies && intent.quick_replies.length > 0) {
+                    let repliesHtml = '';
+                    intent.quick_replies.forEach(reply => {
+                        const actionLabel = reply.action_type === 'trigger_intent' ? 'Trigger Intent' :
+                                        (reply.action_type === 'open_url' ? 'Open URL' : 'No Action');
+                        repliesHtml += `
+                            <div class="card mb-2">
+                                <div class="card-body p-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><i class="ti ti-bolt text-primary me-2"></i>${escapeHtml(reply.reply_text)}</span>
+                                        <span class="badge badge-soft-info">${actionLabel}</span>
+                                    </div>
+                                    ${reply.action_value ? `<small class="text-muted d-block mt-1"><i class="ti ti-link me-1"></i>${escapeHtml(reply.action_value)}</small>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $('#viewQuickRepliesContainer').html(repliesHtml);
+                    $('#viewQuickRepliesSection').show();
+                } else {
+                    $('#viewQuickRepliesSection').hide();
+                }
+                
+                // Dates
+                if (intent.created_at) {
+                    $('#viewIntentCreatedAt').text(new Date(intent.created_at).toLocaleString());
+                }
+                if (intent.updated_at) {
+                    $('#viewIntentUpdatedAt').text(new Date(intent.updated_at).toLocaleString());
+                }
+                $('#viewIntentMatchCountDetail').text(`${intent.match_count || 0} times`);
+                
+                // Store intent ID for edit button
+                $('#editFromViewBtn').data('intent-id', intent.id);
+            }
+
+            // Edit from view button
+            $('#editFromViewBtn').on('click', function() {
+                const intentId = $(this).data('intent-id');
+                $('#viewIntentModal').modal('hide');
+                
+                // Trigger edit for this intent
+                setTimeout(() => {
+                    $(`.edit-intent[data-id="${intentId}"]`).click();
+                }, 500);
+            });
+
             // ==================== CONVERSATION HISTORY ====================
             
             let currentPage = 1;
@@ -1023,8 +1259,8 @@
                         : 'Guest';
                     
                     const statusBadge = conv.status === 'active' 
-                        ? '<span class="badge bg-success">Active</span>' 
-                        : '<span class="badge bg-secondary">Ended</span>';
+                        ? '<span class="badge badge-soft-success">Active</span>' 
+                        : '<span class="badge badge-soft-danger">Ended</span>';
                     
                     const started = conv.started_at ? new Date(conv.started_at).toLocaleString() : 'N/A';
                     const ended = conv.ended_at ? new Date(conv.ended_at).toLocaleString() : '—';
@@ -1035,10 +1271,10 @@
                             <td>${escapeHtml(user)}</td>
                             <td>${started}</td>
                             <td>${ended}</td>
-                            <td><span class="badge bg-info">${conv.message_count || 0}</span></td>
+                            <td class="text-center">${conv.message_count || 0}</td>
                             <td>${statusBadge}</td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-outline-primary view-conversation" data-id="${conv.id}" title="View Details">
+                                <button type="button" class="btn view-conversation" data-id="${conv.id}" title="View Details">
                                     <i class="ti ti-eye"></i>
                                 </button>
                             </td>
