@@ -83,8 +83,8 @@ class AssignedBookingController extends Controller
     }
 
     /**
-     * Update assignment status (confirm/in_progress/complete/cancel)
-     */
+ * Update assignment status (confirm/on_site/in_progress/complete/cancel)
+ */
     public function updateAssignmentStatus(UpdateAssignmentStatusRequest $request, $assignmentId)
     {
         try {
@@ -93,6 +93,18 @@ class AssignedBookingController extends Controller
             $assignment = BookingAssignedPhotographerModel::where('id', $assignmentId)
                 ->where('photographer_id', $userId)
                 ->firstOrFail();
+            
+            // ========== NEW: Check cancellation restrictions ==========
+            if ($request->status === 'cancelled') {
+                // Check if cancellation is allowed at this stage
+                if (!$assignment->canCancel()) {
+                    $reason = $assignment->getCancellationRestrictionReason();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cancellation not allowed: ' . $reason
+                    ], 403);
+                }
+            }
             
             // Prevent updating if already cancelled
             if ($assignment->status === 'cancelled') {
@@ -133,7 +145,7 @@ class AssignedBookingController extends Controller
                     break;
                     
                 case 'in_progress':
-                    // ========== UPDATED: Check if client has confirmed on-site presence ==========
+                    // Check if client has confirmed on-site presence
                     if (!$assignment->on_site_at) {
                         return response()->json([
                             'success' => false,
@@ -141,7 +153,7 @@ class AssignedBookingController extends Controller
                         ]);
                     }
                     
-                    // Check if client has confirmed - this is now required before starting
+                    // Check if client has confirmed
                     if (!$assignment->client_confirmed_at) {
                         return response()->json([
                             'success' => false,

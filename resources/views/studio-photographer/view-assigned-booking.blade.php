@@ -272,7 +272,6 @@
                     return;
                 }
                 
-                // ========== ADD DEBUG LOGGING ==========
                 console.log('Assignment Data:', {
                     id: assignment.id,
                     status: assignment.status,
@@ -304,7 +303,13 @@
                     });
                 }
                 
-                // ========== FIXED: Status action buttons with corrected conditions ==========
+                // ========== NEW: Helper function to check if cancel is allowed ==========
+                function canCancel(status) {
+                    // Cancellation only allowed in 'assigned' or 'confirmed' states
+                    return ['assigned', 'confirmed'].includes(status);
+                }
+                
+                // ========== UPDATED: Status action buttons with cancellation restrictions ==========
                 let statusActions = '';
 
                 if (assignment.status === 'assigned') {
@@ -318,49 +323,48 @@
                         </button>
                     `;
                 } 
-                // ========== FIX: Check for BOTH 'confirmed' AND 'on_site' status ==========
                 else if (assignment.status === 'confirmed' || assignment.status === 'on_site') {
                     const hasOnSite = assignment.on_site_at !== null && assignment.on_site_at !== undefined;
                     const hasClientConfirmed = assignment.client_confirmed_at !== null && assignment.client_confirmed_at !== undefined;
+                    const cancelAllowed = canCancel(assignment.status);
                     
                     console.log('Status check:', { 
                         current_status: assignment.status,
                         hasOnSite, 
-                        hasClientConfirmed 
+                        hasClientConfirmed,
+                        cancelAllowed
                     });
                     
                     if (!hasOnSite) {
-                        // Not marked on-site yet
+                        // Not marked on-site yet - cancel still allowed (status is 'confirmed')
                         statusActions = `
-                            <button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
-                                <i data-lucide="x" class="me-1"></i> Cancel Assignment
-                            </button>
+                            ${cancelAllowed ? 
+                                `<button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
+                                    <i data-lucide="x" class="me-1"></i> Cancel Assignment
+                                </button>` : ''
+                            }
                             <button class="btn btn-warning" id="onSiteAssignmentBtn">
                                 <i data-lucide="map-pin" class="me-1"></i> Mark as On-Site
                             </button>
                         `;
                     } else if (hasOnSite && !hasClientConfirmed) {
-                        // Marked on-site but waiting for client confirmation
+                        // Marked on-site but waiting for client confirmation - CANCEL NOT ALLOWED
                         statusActions = `
                             <div class="alert alert-warning mb-3">
                                 <i data-lucide="clock" class="me-2"></i>
                                 You have marked as on-site. Waiting for client to confirm your presence.
+                                <br><small class="text-danger"><i class="ti ti-alert-triangle me-1"></i>Cancellation is not allowed at this stage.</small>
                             </div>
-                            <button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
-                                <i data-lucide="x" class="me-1"></i> Cancel Assignment
-                            </button>
+                            <!-- Cancel button intentionally omitted -->
                         `;
                     } else if (hasOnSite && hasClientConfirmed) {
-                        // Client confirmed - show "Start Work" button
-                        console.log('✅ Client confirmed - showing Start Work button');
+                        // Client confirmed - CANCEL NOT ALLOWED (on_site status)
                         statusActions = `
-                            <div class="alert alert-success text-start mb-3">
+                            <div class="alert alert-success mb-3">
                                 <i data-lucide="check-circle" class="me-2"></i>
                                 Client has confirmed your on-site presence. You may now begin working.
                             </div>
-                            <button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
-                                <i data-lucide="x" class="me-1"></i> Cancel Assignment
-                            </button>
+                            <!-- Cancel button intentionally omitted -->
                             <button class="btn btn-primary" id="startAssignmentBtn">
                                 <i data-lucide="play" class="me-1"></i> Mark as In Progress
                             </button>
@@ -368,11 +372,14 @@
                     }
                 }
                 else if (assignment.status === 'in_progress') {
-                    // Normal in_progress state
+                    // In progress - CANCEL NOT ALLOWED
                     statusActions = `
-                        <button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
-                            <i data-lucide="x" class="me-1"></i> Cancel Assignment
-                        </button>
+                        <div class="alert alert-info text-start mb-3">
+                            <i data-lucide="info" class="me-2"></i>
+                            You are currently working on this booking.
+                            <br><small class="text-danger"><i class="ti ti-alert-triangle me-1"></i>Cancellation is not allowed once work has started.</small>
+                        </div>
+                        <!-- Cancel button intentionally omitted -->
                         <button class="btn btn-success" id="completeAssignmentBtn">
                             <i data-lucide="check-circle" class="me-1"></i> Mark as Completed
                         </button>
@@ -815,7 +822,34 @@
                 
                 // Cancel Assignment
                 $(document).off('click', '#cancelAssignmentBtn').on('click', '#cancelAssignmentBtn', function() {
-                    showStatusUpdateModal('cancelled');
+                    // Double-check if cancellation is allowed before showing modal
+                    $.ajax({
+                        url: '{{ route("assignment.details", ":id") }}'.replace(':id', currentAssignmentId),
+                        type: 'GET',
+                        success: function(response) {
+                            if (response.success) {
+                                const assignment = response.assignment;
+                                const canCancel = ['assigned', 'confirmed'].includes(assignment.status);
+                                
+                                if (!canCancel) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Cancellation Not Allowed',
+                                        text: 'You cannot cancel this booking because it has already reached or passed the on-site stage.',
+                                        confirmButtonColor: '#3475db'
+                                    });
+                                    return;
+                                }
+                                
+                                // If cancellation is allowed, proceed with the modal
+                                showStatusUpdateModal('cancelled');
+                            }
+                        },
+                        error: function() {
+                            // Fallback - try to show modal anyway
+                            showStatusUpdateModal('cancelled');
+                        }
+                    });
                 });
             }
             
