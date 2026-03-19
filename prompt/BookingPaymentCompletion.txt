@@ -1,0 +1,6 @@
+1st Objective: BookingPaymentCompletion
+
+    1.  Here in the booking, the studio photographer button for "Mark as Complete" is disabled if the
+        clients payment is not already complete. It is disabled or not clickable if the payment is not paid.
+
+    2. Use the btn-primary class for button color of the Mark as Complete.

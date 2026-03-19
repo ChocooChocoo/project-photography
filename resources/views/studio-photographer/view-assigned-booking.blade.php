@@ -87,6 +87,8 @@
                                                 <span class="fw-semibold">
                                                     PHP {{ $assignment->booking ? number_format($assignment->booking->total_amount, 2) : '0.00' }}
                                                 </span>
+                                                <br>
+                                                <small class="text-muted">{{ ucfirst(str_replace('_', ' ', $assignment->booking->payment_status ?? 'pending')) }}</small>
                                             </td>
                                             <td>
                                                 @if($assignment->assigner)
@@ -266,6 +268,15 @@
                 const booking = data.booking;
                 const studio = data.studio;
                 const assigner = data.assigner;
+                // ========== NEW: Get payment info ==========
+                const paymentInfo = data.payment_info || {
+                    is_fully_paid: false,
+                    total_amount: 0,
+                    total_paid: 0,
+                    remaining_balance: 0,
+                    payment_status: 'pending'
+                };
+                // ========== End of payment info ==========
                 
                 if (!booking) {
                     showError('Booking information not found');
@@ -278,7 +289,8 @@
                     on_site_at: assignment.on_site_at,
                     client_confirmed_at: assignment.client_confirmed_at,
                     has_on_site: !!assignment.on_site_at,
-                    has_client_confirmed: !!assignment.client_confirmed_at
+                    has_client_confirmed: !!assignment.client_confirmed_at,
+                    is_fully_paid: paymentInfo.is_fully_paid
                 });
                 
                 const client = booking.client;
@@ -303,13 +315,13 @@
                     });
                 }
                 
-                // ========== NEW: Helper function to check if cancel is allowed ==========
+                // Helper function to check if cancel is allowed
                 function canCancel(status) {
                     // Cancellation only allowed in 'assigned' or 'confirmed' states
                     return ['assigned', 'confirmed'].includes(status);
                 }
                 
-                // ========== UPDATED: Status action buttons with cancellation restrictions ==========
+                // ========== UPDATED: Status action buttons with payment-based enable/disable ==========
                 let statusActions = '';
 
                 if (assignment.status === 'assigned') {
@@ -358,7 +370,7 @@
                             <!-- Cancel button intentionally omitted -->
                         `;
                     } else if (hasOnSite && hasClientConfirmed) {
-                        // Client confirmed - CANCEL NOT ALLOWED (on_site status)
+                        // Client confirmed - CANCEL NOT ALLOWED
                         statusActions = `
                             <div class="alert alert-success mb-3">
                                 <i data-lucide="check-circle" class="me-2"></i>
@@ -372,17 +384,52 @@
                     }
                 }
                 else if (assignment.status === 'in_progress') {
-                    // In progress - CANCEL NOT ALLOWED
+                    // ========== MODIFIED: Complete button with payment condition ==========
+                    const isFullyPaid = paymentInfo.is_fully_paid;
+                    const remainingBalance = paymentInfo.remaining_balance;
+                    
+                    let paymentWarningHtml = '';
+                    let completeButtonHtml = '';
+                    
+                    if (!isFullyPaid) {
+                        paymentWarningHtml = `
+                            <div class="alert alert-danger mb-3">
+                                <i data-lucide="alert-circle" class="me-2"></i>
+                                <strong>Payment Required</strong>
+                                <p class="mb-0 mt-1">This booking is not fully paid. Remaining balance: <strong>PHP ${remainingBalance.toFixed(2)}</strong></p>
+                                <p class="mb-0 small text-muted">You cannot mark this assignment as completed until the client has paid the full amount.</p>
+                            </div>
+                        `;
+                        
+                        // Disabled complete button
+                        completeButtonHtml = `
+                            <button class="btn btn-warning" disabled style="opacity: 0.6; cursor: not-allowed;" title="Payment must be complete before marking as completed">
+                                <i data-lucide="check-circle" class="me-1"></i> Mark as Completed (Payment Incomplete)
+                            </button>
+                        `;
+                    } else {
+                        // Enabled complete button with btn-primary class
+                        completeButtonHtml = `
+                            <button class="btn btn-primary" id="completeAssignmentBtn">
+                                <i data-lucide="check-circle" class="me-1"></i> Mark as Completed
+                            </button>
+                        `;
+                    }
+                    
                     statusActions = `
-                        <div class="alert alert-info text-start mb-3">
-                            <i data-lucide="info" class="me-2"></i>
-                            You are currently working on this booking.
-                            <br><small class="text-danger"><i class="ti ti-alert-triangle me-1"></i>Cancellation is not allowed once work has started.</small>
+                        <div class="text-start mb-3">
+                            <div class="alert alert-info mb-3">
+                                <i data-lucide="info" class="me-2"></i>
+                                You are currently working on this booking.
+                                <br><small class="text-danger"><i class="ti ti-alert-triangle me-1"></i>Cancellation is not allowed once work has started.</small>
+                            </div>
+                            
+                            ${paymentWarningHtml}
+                            
+                            <div class="d-flex justify-content-end">
+                                ${completeButtonHtml}
+                            </div>
                         </div>
-                        <!-- Cancel button intentionally omitted -->
-                        <button class="btn btn-success" id="completeAssignmentBtn">
-                            <i data-lucide="check-circle" class="me-1"></i> Mark as Completed
-                        </button>
                     `;
                 } 
                 else if (assignment.status === 'completed') {
@@ -401,7 +448,7 @@
                     `;
                 }
                 
-                // Also update the onSiteStatusHtml to show correct status
+                // On-site status HTML
                 let onSiteStatusHtml = '';
                 if (assignment.on_site_at) {
                     const onSiteDate = new Date(assignment.on_site_at);
@@ -441,6 +488,36 @@
                         </div>
                     `;
                 }
+                
+                // ========== NEW: Add payment status summary to the modal ==========
+                let paymentStatusSummary = '';
+                if (paymentInfo) {
+                    const paymentStatusClass = paymentInfo.is_fully_paid ? 'badge-soft-success' : 'badge-soft-warning';
+                    const paymentStatusText = paymentInfo.is_fully_paid ? 'FULLY PAID' : paymentInfo.payment_status.replace('_', ' ').toUpperCase();
+                    
+                    paymentStatusSummary = `
+                        <div class="col-12 mt-3">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-light-primary rounded-circle p-2">
+                                        <i data-lucide="credit-card" class="fs-20 text-primary"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <label class="text-muted small mb-1">Payment Status</label>
+                                    <p class="mb-0 fw-medium">
+                                        <span class="badge ${paymentStatusClass} me-2">${paymentStatusText}</span>
+                                        ${!paymentInfo.is_fully_paid ? 
+                                            `<small class="text-danger d-block mt-1">Remaining: PHP ${paymentInfo.remaining_balance.toFixed(2)}</small>` : 
+                                            `<small class="text-success d-block mt-1">Fully paid - Ready for completion</small>`
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                // ========== End of payment status summary ==========
                 
                 const modalContent = `
                     <div class="row g-4">
@@ -673,6 +750,8 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        
+                                        ${paymentStatusSummary}
                                     </div>
                                 </div>
                             </div>
@@ -742,7 +821,7 @@
                 loadIcons();
                 assignmentModal.show();
                 
-                // ========== UPDATED: Bind status update buttons with new on_site button ==========
+                // Bind status update buttons
                 bindStatusUpdateButtons();
             }
             
@@ -766,7 +845,7 @@
                     });
                 });
                 
-                // ========== NEW: On-Site Assignment ==========
+                // On-Site Assignment
                 $(document).off('click', '#onSiteAssignmentBtn').on('click', '#onSiteAssignmentBtn', function() {
                     Swal.fire({
                         title: 'Mark as On-Site',
@@ -784,7 +863,7 @@
                     });
                 });
                 
-                // Start Assignment (In Progress) - UPDATED
+                // Start Assignment (In Progress)
                 $(document).off('click', '#startAssignmentBtn').on('click', '#startAssignmentBtn', function() {
                     Swal.fire({
                         title: 'Start Working',
@@ -974,31 +1053,34 @@
                         $('#confirmStatusUpdate').prop('disabled', true).html('<span class="loading-spinner"></span> Updating...');
                     },
                     success: function(response) {
-                            if (response.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Confirmed!',
-                                    text: response.message, // This will show: "Photographer on-site presence confirmed successfully. The photographer can now begin working."
-                                    showConfirmButton: false,
-                                    timer: 2000,
-                                    timerProgressBar: true
-                                }).then(() => {
-                                    loadPendingConfirmations(); // Reload the list
-                                });
-                            } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: response.message,
-                                confirmButtonColor: '#3475db'
-                            });
-                        }
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        }).then(() => {
+                            // Hide modals and refresh data
+                            if (statusUpdateModal) {
+                                statusUpdateModal.hide();
+                            }
+                            if (assignmentModal) {
+                                assignmentModal.hide();
+                            }
+                            loadAssignmentDetails(currentAssignmentId);
+                        });
                     },
                     error: function(xhr) {
+                        let message = 'Failed to update assignment status. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Failed to update assignment status. Please try again.',
+                            text: message,
                             confirmButtonColor: '#3475db'
                         });
                     },

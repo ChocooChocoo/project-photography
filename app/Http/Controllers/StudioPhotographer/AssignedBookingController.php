@@ -66,12 +66,27 @@ class AssignedBookingController extends Controller
             // Get the booking
             $booking = $assignment->booking;
             
+            // ========== NEW: Calculate payment status for photographer view ==========
+            $totalPaid = $booking->payments->where('status', 'succeeded')->sum('amount');
+            $isFullyPaid = $totalPaid >= (float) $booking->total_amount;
+            $remainingBalance = (float) $booking->total_amount - $totalPaid;
+            // ========== End of payment calculation ==========
+            
             return response()->json([
                 'success' => true,
                 'assignment' => $assignment,
                 'booking' => $booking,
                 'studio' => $assignment->studio,
-                'assigner' => $assignment->assigner
+                'assigner' => $assignment->assigner,
+                // ========== NEW: Add payment status flags ==========
+                'payment_info' => [
+                    'total_amount' => (float) $booking->total_amount,
+                    'total_paid' => $totalPaid,
+                    'remaining_balance' => $remainingBalance,
+                    'is_fully_paid' => $isFullyPaid,
+                    'payment_status' => $booking->payment_status
+                ]
+                // ========== End of payment info ==========
             ]);
             
         } catch (\Exception $e) {
@@ -83,8 +98,8 @@ class AssignedBookingController extends Controller
     }
 
     /**
- * Update assignment status (confirm/on_site/in_progress/complete/cancel)
- */
+    * Update assignment status (confirm/on_site/in_progress/complete/cancel)
+    */
     public function updateAssignmentStatus(UpdateAssignmentStatusRequest $request, $assignmentId)
     {
         try {
@@ -94,7 +109,21 @@ class AssignedBookingController extends Controller
                 ->where('photographer_id', $userId)
                 ->firstOrFail();
             
-            // ========== NEW: Check cancellation restrictions ==========
+            // ========== NEW: Check payment status before allowing completion ==========
+            if ($request->status === 'completed') {
+                $booking = BookingModel::find($assignment->booking_id);
+                $totalPaid = $booking->payments()->where('status', 'succeeded')->sum('amount');
+                
+                if ($totalPaid < $booking->total_amount) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot mark as completed because the booking is not fully paid. Remaining balance: PHP ' . number_format($booking->total_amount - $totalPaid, 2)
+                    ], 403);
+                }
+            }
+            // ========== End of payment check ==========
+            
+            // ========== Check cancellation restrictions ==========
             if ($request->status === 'cancelled') {
                 // Check if cancellation is allowed at this stage
                 if (!$assignment->canCancel()) {
@@ -188,16 +217,7 @@ class AssignedBookingController extends Controller
                         ]);
                     }
                     
-                    // Check if booking is fully paid
-                    $booking = BookingModel::find($assignment->booking_id);
-                    $totalPaid = $booking->payments()->where('status', 'succeeded')->sum('amount');
-                    
-                    if ($totalPaid < $booking->total_amount) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Cannot mark as completed because the booking is not fully paid. Remaining balance: PHP ' . number_format($booking->total_amount - $totalPaid, 2)
-                        ]);
-                    }
+                    // ========== REMOVED: Duplicate payment check (moved to top) ==========
                     
                     $updateData['completed_at'] = now();
                     
@@ -242,7 +262,7 @@ class AssignedBookingController extends Controller
         }
     }
 
-    // ========== NEW: Helper method to create client confirmation notification ==========
+    // ========== Helper method to create client confirmation notification ==========
     private function createClientConfirmationNotification($assignment)
     {
         try {
