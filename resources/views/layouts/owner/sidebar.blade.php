@@ -338,6 +338,28 @@
                     </ul>
                 </div>
             </li>
+
+            {{-- Inquiries --}}
+            @php
+                $inquiriesRoutes = Route::is('owner.inquiries.index');
+            @endphp
+            
+            <li class="side-nav-item {{ $inquiriesRoutes ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarInquiries" aria-expanded="{{ $inquiriesRoutes ? 'true' : 'false' }}" aria-controls="sidebarInquiries" class="side-nav-link {{ $inquiriesRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-message-2-question"></i></span>
+                    <span class="menu-text" data-lang="inquiries">Inquiries</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse {{ $inquiriesRoutes ? 'show' : '' }}" id="sidebarInquiries">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="{{ route('owner.inquiries.index') }}" class="side-nav-link {{ $inquiriesRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="view-inquiries">View Inquiries</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
         </ul>
     </div>
 </div>

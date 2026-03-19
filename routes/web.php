@@ -219,6 +219,9 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'update'])->name('owner.payroll-settings.update');
         Route::put('/payroll-settings/{id}/status',                [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'updateStatus'])->name('owner.payroll-settings.status');
         Route::delete('/payroll-settings/{id}',                    [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'destroy'])->name('owner.payroll-settings.destroy');
+
+        // Inquiries                            
+        Route::get('/view/inquiries',                              [\App\Http\Controllers\StudioOwner\InquiryController::class, 'index'])->name('owner.inquiries.index');
     });
 
     // Studio HR Routes ====================================================================================================================================================

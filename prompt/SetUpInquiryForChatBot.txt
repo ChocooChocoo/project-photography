@@ -1,0 +1,21 @@
+Objective #1:
+
+    1). I wanted to implement a chatbot for my Inquiry system.
+
+    2). For the chatbot, I wanted to use the Botman chatbot since it's the easiest library to choose for chatbot.
+
+    3). Create a table for chatbot that the user can set and create an content for chatbot. The table creation must use the
+        artisan migration. Create a table needed for the requirements.
+
+    4). Create a model for newly created tables using the artisan migration and the other file e.g Controller, Model, Request
+        and etc must use artisan command.
+
+    5). The process is where the studio owner will setup the chatbot contents that the customer or client can ask questions or
+        inquiries and the chatbot will answer their questions.
+
+    6). The chatbot scope only is based on the owner setup only.
+
+    7). The conversation between client/customer and chatbot will also stored in the database tables.
+
+    8). Give the summary of the propose changes and modification before providing all the needed code.
+        Wait for the "Go!" command and execute.
