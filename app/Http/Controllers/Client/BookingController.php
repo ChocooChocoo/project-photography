@@ -18,10 +18,13 @@ use App\Models\BookingPackageModel;
 use App\Models\SystemRevenueModel;
 use App\Models\ClientBudgetModel;
 use App\Services\StripeService;
+use App\Traits\Notifiable;
 use Carbon\Carbon;
 
 class BookingController extends Controller
 {
+    use Notifiable;
+
     protected $stripeService;
 
     public function __construct(StripeService $stripeService)
@@ -567,6 +570,106 @@ class BookingController extends Controller
                 'payment_method' => 'pending',
                 'status' => 'pending',
             ]);
+
+            // Get the provider's user ID based on booking type
+            $providerUserId = null;
+            $providerName = '';
+            $providerType = '';
+
+            if ($request->type === 'studio') {
+                $studio = StudiosModel::find($request->provider_id);
+                if ($studio) {
+                    $providerUserId = $studio->user_id; // The studio owner's user ID
+                    $providerName = $studio->studio_name;
+                    $providerType = 'studio';
+                }
+            } elseif ($request->type === 'freelancer') {
+                $freelancer = ProfileModel::where('user_id', $request->provider_id)->first();
+                if ($freelancer) {
+                    $providerUserId = $freelancer->user_id; // The freelancer's user ID
+                    $providerName = $freelancer->brand_name ?: $freelancer->user->full_name;
+                    $providerType = 'freelancer';
+                }
+            }
+
+            // Create notification if we have a valid provider user ID
+            if ($providerUserId) {
+                // Format event date for display
+                $formattedDate = \Carbon\Carbon::parse($request->event_date)->format('F d, Y');
+                $formattedTime = date('h:i A', strtotime($request->start_time)) . ' - ' . date('h:i A', strtotime($request->end_time));
+                
+                // Get package name
+                $packageName = $package->package_name;
+                
+                // Get client name
+                $clientName = $request->full_name;
+                
+                // Determine the route based on provider type
+                $routeName = $request->type === 'studio' 
+                    ? 'owner.booking.index' 
+                    : 'freelancer.booking.index';
+                
+                // Create notification data array with booking details
+                $notificationData = [
+                    'booking_id' => $booking->id,
+                    'booking_reference' => $booking->booking_reference,
+                    'client_name' => $clientName,
+                    'client_id' => Auth::id(),
+                    'event_date' => $request->event_date,
+                    'event_time' => $request->start_time . ' - ' . $request->end_time,
+                    'package_name' => $packageName,
+                    'package_price' => $package->package_price,
+                    'down_payment' => $downPayment,
+                    'remaining_balance' => $remainingBalance,
+                    'total_amount' => $totalAmount,
+                    'payment_type' => $paymentType,
+                    'deposit_policy' => $depositPolicy,
+                    'location_type' => $request->location_type,
+                    'category_id' => $request->category_id,
+                    'provider_type' => $providerType,
+                    'provider_name' => $providerName,
+                    'route' => route($routeName, [], false)
+                ];
+                
+                // Add location details if available
+                if ($request->location_type === 'on-location') {
+                    if ($request->has('locations') && is_array($request->locations) && count($request->locations) > 0) {
+                        $notificationData['locations'] = $request->locations;
+                        $notificationData['location_count'] = count($request->locations);
+                        $notificationData['has_multiple_locations'] = true;
+                    } else {
+                        $notificationData['city'] = $request->city;
+                        $notificationData['barangay'] = $request->barangay;
+                        $notificationData['street'] = $request->street;
+                        $notificationData['venue_name'] = $request->venue_name;
+                        $notificationData['has_multiple_locations'] = false;
+                    }
+                }
+                
+                // Add special requests if any
+                if ($request->special_requests) {
+                    $notificationData['has_special_requests'] = true;
+                    $notificationData['special_requests'] = $request->special_requests;
+                }
+                
+                // Create the notification with appropriate icon and color
+                $this->createNotification(
+                    $providerUserId,                                            // recipient: provider's user ID
+                    'new_booking',                                              // notification type
+                    '📸 New Booking Received!',                                 // title with emoji for attention
+                    "A new booking has been made by {$clientName} for {$packageName} on {$formattedDate}.", // message
+                    $notificationData,                                           // data payload
+                    'calendar-check',                                            // icon (using Lucide icon name)
+                    'primary'                                                    // color
+                );
+                
+                \Log::info('New booking notification created', [
+                    'provider_user_id' => $providerUserId,
+                    'provider_type' => $providerType,
+                    'booking_id' => $booking->id,
+                    'booking_reference' => $booking->booking_reference
+                ]);
+            }
 
             return response()->json([
                 'success' => true,

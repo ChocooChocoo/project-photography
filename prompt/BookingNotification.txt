@@ -1,0 +1,11 @@
+1st Objective: BookingNotification
+
+    1). Here in the booking process, I wanted to add an real-time notification if there's a new booking of the clients
+    2). In the database table for notication which is the tbl_notifications, it shows the details of the booking, and the studio-owner will received an notification that
+        there's a booking on their services.
+
+2nd Objective: AssignedBookingNotification
+
+    1). Here in the assigning of the photographer for that booking, i wanted to implement the same notification functionality.
+    2). The owner will assigned a photographer, then it will notif to the studio-photographer so the photographer are aware that
+        there's an booking assginment.

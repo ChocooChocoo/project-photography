@@ -11,10 +11,14 @@ use App\Models\StudioOwner\BookingAssignedPhotographerModel;
 use App\Models\UserModel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Traits\Notifiable;
 use App\Http\Requests\StudioOwner\UpdateBookingStatusRequest;
 
 class BookingController extends Controller
 {
+
+    use Notifiable;
+
     public function index()
     {
         $userId = Auth::id();
@@ -318,8 +322,8 @@ class BookingController extends Controller
     }
 
     /**
-    * Assign photographers to booking
-    */
+     * Assign photographers to booking
+     */
     public function assignPhotographers(Request $request, $bookingId)
     {
         try {
@@ -345,7 +349,7 @@ class BookingController extends Controller
             $booking = BookingModel::where('id', $bookingId)
                 ->whereIn('provider_id', $studioIds)
                 ->where('booking_type', 'studio')
-                ->with(['packages'])
+                ->with(['packages', 'client:id,first_name,last_name'])
                 ->firstOrFail();
             
             // Get the specific studio for this booking
@@ -394,6 +398,8 @@ class BookingController extends Controller
             DB::beginTransaction();
             
             $assignedCount = 0;
+            $createdAssignments = []; // Track created assignments for notifications
+            
             foreach ($request->photographer_ids as $photographerId) {
                 // Check if already assigned
                 $exists = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
@@ -401,7 +407,7 @@ class BookingController extends Controller
                     ->exists();
                 
                 if (!$exists) {
-                    BookingAssignedPhotographerModel::create([
+                    $assignment = BookingAssignedPhotographerModel::create([
                         'booking_id' => $bookingId,
                         'studio_id' => $studio->id,
                         'photographer_id' => $photographerId,
@@ -411,14 +417,166 @@ class BookingController extends Controller
                         'assigned_at' => now()
                     ]);
                     $assignedCount++;
+                    $createdAssignments[] = $assignment; // Store for notifications
                 }
             }
             
             DB::commit();
             
-            // Check if assignment is now complete (all photographers assigned)
+            // Calculate new totals AFTER successful assignment
             $newTotal = $currentAssignedCount + $assignedCount;
             $isComplete = ($newTotal == $requiredPhotographers);
+            
+            // ========== START: ADD NOTIFICATION FOR ASSIGNED PHOTOGRAPHERS AND OWNER ==========
+            if ($assignedCount > 0 && !empty($createdAssignments)) {
+                // Get the owner's name for the notification message
+                $owner = Auth::user();
+                $ownerName = $owner->first_name . ' ' . $owner->last_name;
+                
+                // Get client name
+                $client = $booking->client;
+                $clientName = $client ? $client->first_name . ' ' . $client->last_name : 'A client';
+                
+                // Format event details
+                $formattedDate = \Carbon\Carbon::parse($booking->event_date)->format('F d, Y');
+                $formattedTime = date('h:i A', strtotime($booking->start_time)) . ' - ' . date('h:i A', strtotime($booking->end_time));
+                
+                // Get package name
+                $packageName = 'N/A';
+                if ($booking->packages && $booking->packages->count() > 0) {
+                    $packageName = $booking->packages->first()->package_name;
+                }
+                
+                // Determine if this is part of a batch assignment
+                $isBatchAssignment = $assignedCount > 1;
+                $batchText = $isBatchAssignment ? " (as part of a team of {$assignedCount})" : "";
+                
+                // ========== NOTIFICATION 1: Send to each newly assigned photographer ==========
+                $photographerNames = []; // Track names for owner notification
+                
+                foreach ($createdAssignments as $index => $assignment) {
+                    // Get photographer details for the notification
+                    $photographer = UserModel::find($assignment->photographer_id);
+                    $photographerName = $photographer ? $photographer->first_name . ' ' . $photographer->last_name : 'A photographer';
+                    $photographerNames[] = $photographerName;
+                    
+                    // Prepare notification data for photographer
+                    $photographerNotificationData = [
+                        'assignment_id' => $assignment->id,
+                        'booking_id' => $booking->id,
+                        'booking_reference' => $booking->booking_reference,
+                        'studio_id' => $studio->id,
+                        'studio_name' => $studio->studio_name,
+                        'client_name' => $clientName,
+                        'event_date' => $booking->event_date,
+                        'event_time' => $booking->start_time . ' - ' . $booking->end_time,
+                        'formatted_date' => $formattedDate,
+                        'formatted_time' => $formattedTime,
+                        'package_name' => $packageName,
+                        'total_amount' => $booking->total_amount,
+                        'down_payment' => $booking->down_payment,
+                        'location_type' => $booking->location_type,
+                        'category_id' => $booking->category_id,
+                        'assigned_by' => $owner->id,
+                        'assigned_by_name' => $ownerName,
+                        'assignment_notes' => $request->assignment_notes,
+                        'route' => route('assigned.bookings', [], false),
+                        'is_batch_assignment' => $isBatchAssignment,
+                        'batch_size' => $assignedCount,
+                        'notification_type' => 'photographer_notification'
+                    ];
+                    
+                    // Add location details if available
+                    if ($booking->location_type === 'on-location') {
+                        if ($booking->multiple_locations) {
+                            $photographerNotificationData['has_multiple_locations'] = true;
+                            $photographerNotificationData['location_count'] = count($booking->multiple_locations);
+                        } else {
+                            $photographerNotificationData['city'] = $booking->city;
+                            $photographerNotificationData['barangay'] = $booking->barangay;
+                            $photographerNotificationData['venue_name'] = $booking->venue_name;
+                        }
+                    }
+                    
+                    // Create notification for photographer
+                    $this->createNotification(
+                        $assignment->photographer_id,                           // recipient: photographer ID
+                        'new_booking_assignment',                               // notification type
+                        'New Booking Assignment!',                              // title
+                        "You have been assigned to a booking for {$packageName} on {$formattedDate}{$batchText}.", // message
+                        $photographerNotificationData,                          // data payload
+                        'user-plus',                                            // icon (using Lucide icon name)
+                        'info'                                                   // color
+                    );
+                    
+                    \Log::info('Booking assignment notification sent to photographer', [
+                        'photographer_id' => $assignment->photographer_id,
+                        'photographer_name' => $photographerName,
+                        'assignment_id' => $assignment->id,
+                        'booking_id' => $booking->id,
+                        'is_batch' => $isBatchAssignment
+                    ]);
+                }
+                
+                // ========== NOTIFICATION 2: Send to owner confirming successful assignment ==========
+                
+                // Prepare notification data for owner
+                $ownerNotificationData = [
+                    'booking_id' => $booking->id,
+                    'booking_reference' => $booking->booking_reference,
+                    'studio_id' => $studio->id,
+                    'studio_name' => $studio->studio_name,
+                    'client_name' => $clientName,
+                    'event_date' => $booking->event_date,
+                    'formatted_date' => $formattedDate,
+                    'event_time' => $booking->start_time . ' - ' . $booking->end_time,
+                    'package_name' => $packageName,
+                    'assigned_photographers' => $photographerNames,
+                    'assigned_photographer_ids' => $request->photographer_ids,
+                    'assigned_count' => $assignedCount,
+                    'assignment_notes' => $request->assignment_notes,
+                    'route' => route('owner.booking.details', ['id' => $booking->id], false),
+                    'is_batch_assignment' => $isBatchAssignment,
+                    'notification_type' => 'owner_notification',
+                    'current_assigned_count' => $newTotal,
+                    'required_photographers' => $requiredPhotographers,
+                    'is_complete' => $isComplete
+                ];
+                
+                // Determine the message based on assignment status
+                $ownerMessage = '';
+                if ($isComplete) {
+                    $ownerMessage = "All {$requiredPhotographers} required photographers have been successfully assigned to booking {$booking->booking_reference}.";
+                } else {
+                    $remainingNeeded = $requiredPhotographers - $newTotal;
+                    $ownerMessage = "{$assignedCount} photographer(s) have been assigned to booking {$booking->booking_reference}. " .
+                                "You still need to assign {$remainingNeeded} more photographer(s) to complete the requirement.";
+                }
+                
+                // Create notification for owner
+                $this->createNotification(
+                    $owner->id,                                                // recipient: owner ID
+                    'photographer_assigned',                                   // notification type
+                    'Photographer Assignment Confirmed',                        // title
+                    $ownerMessage,                                             // dynamic message
+                    $ownerNotificationData,                                    // data payload
+                    'check-circle',                                            // icon (using Lucide icon name)
+                    'success'                                                  // color
+                );
+                
+                \Log::info('Assignment confirmation notification sent to owner', [
+                    'owner_id' => $owner->id,
+                    'booking_id' => $booking->id,
+                    'assigned_count' => $assignedCount,
+                    'is_complete' => $isComplete
+                ]);
+                
+                // Log progress update if adding to existing assignments
+                if ($currentAssignedCount > 0 && $assignedCount > 0) {
+                    \Log::info('Progress update: Added ' . $assignedCount . ' photographers to existing ' . $currentAssignedCount);
+                }
+            }
+            // ========== END: ADD NOTIFICATIONS ==========
             
             return response()->json([
                 'success' => true,
