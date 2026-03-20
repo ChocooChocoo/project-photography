@@ -221,6 +221,46 @@
                 </div>
             </li>
 
+            {{-- Manage Roles and Permission --}}
+            @php
+                $manageRolesRoutes = Route::is('owner.role.index');
+                $createRoleRoute = Route::is('owner.role.create');
+                $managePermissionsRoutes = Route::is('owner.permission.index');
+                $createPermissionRoute = Route::is('owner.permission.create');
+            @endphp
+
+            <li class="side-nav-item {{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarManageRoles" aria-expanded="{{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'true' : 'false' }}" aria-controls="sidebarManageRoles" class="side-nav-link {{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-shield-check"></i></span>
+                    <span class="menu-text" data-lang="manage-roles">Roles & Permissions</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse {{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'show' : '' }}" id="sidebarManageRoles">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="{{ route('owner.role.index') }}" class="side-nav-link {{ $manageRolesRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="manage-roles">View Roles</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('owner.permission.index') }}" class="side-nav-link {{ $managePermissionsRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="manage-permissions">View Permissions</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('owner.role.create') }}" class="side-nav-link">
+                                <span class="menu-text" data-lang="create-role">Create Role</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('owner.permission.create') }}" class="side-nav-link">
+                                <span class="menu-text" data-lang="create-permission">Create Permission</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
             {{-- Manage Payroll --}}
             @php
                 $managePayrollRoutes = Route::is('owner.payroll-settings.index');

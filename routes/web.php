@@ -208,6 +208,14 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/employee/{id}',                             [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'destroy'])->name('owner.employee.destroy');
         Route::get('/employee/{studioId}/services/{categoryId}',    [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getServicesByCategory'])->name('owner.employee.services-by-category');
 
+        // Manage Roles
+        Route::get('/view/roles',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'index'])->name('owner.role.index');
+        Route::get('/create/roles',                                 [\App\Http\Controllers\StudioOwner\RoleController::class, 'create'])->name('owner.role.create');
+
+        // Manage Permissions
+        Route::get('/view/permissions',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'index'])->name('owner.permission.index');
+        Route::get('/create/permissions',                           [\App\Http\Controllers\StudioOwner\PermissionController::class, 'create'])->name('owner.permission.create');
+
         // Manage Payroll  
         Route::get('/payroll-settings',                            [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'index'])->name('owner.payroll-settings.index');
         Route::get('/payroll-settings/create',                     [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'create'])->name('owner.payroll-settings.create');
