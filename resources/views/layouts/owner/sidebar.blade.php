@@ -247,16 +247,6 @@
                                 <span class="menu-text" data-lang="manage-permissions">View Permissions</span>
                             </a>
                         </li>
-                        <li class="side-nav-item">
-                            <a href="{{ route('owner.role.create') }}" class="side-nav-link">
-                                <span class="menu-text" data-lang="create-role">Create Role</span>
-                            </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a href="{{ route('owner.permission.create') }}" class="side-nav-link">
-                                <span class="menu-text" data-lang="create-permission">Create Permission</span>
-                            </a>
-                        </li>
                     </ul>
                 </div>
             </li>

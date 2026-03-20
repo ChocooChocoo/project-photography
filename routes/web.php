@@ -210,11 +210,9 @@ Route::middleware(['auth'])->group(function () {
 
         // Manage Roles
         Route::get('/view/roles',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'index'])->name('owner.role.index');
-        Route::get('/create/roles',                                 [\App\Http\Controllers\StudioOwner\RoleController::class, 'create'])->name('owner.role.create');
 
         // Manage Permissions
         Route::get('/view/permissions',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'index'])->name('owner.permission.index');
-        Route::get('/create/permissions',                           [\App\Http\Controllers\StudioOwner\PermissionController::class, 'create'])->name('owner.permission.create');
 
         // Manage Payroll  
         Route::get('/payroll-settings',                            [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'index'])->name('owner.payroll-settings.index');

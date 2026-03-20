@@ -157,3 +157,64 @@ Later, if you want “Editor + limited user management,” you can simply create
 If you want, I can **draw a diagram showing this full scenario visually**—users, roles, and permissions connected—so it’s crystal clear how everything flows.
 
 Do you want me to do that?
+
+
+
+Objective #1: Role and Permissions Creations
+
+  1). Create a table using artisan migration for both "tbl_roles" and "tbl_permissions"
+
+  2). Create a models for newly created tables  using artisan migration as well (already created just update the code).
+
+  3). In the creation of the roles, this is where my RBAC starts. The fields must have these columns:
+
+      | Column        |
+      | ------------- |
+      | `id`          |
+      | `name`        |
+      | `description` |
+      | `status`      |
+      | `created_at`  |
+      | `updated_at`  |
+
+  4). In the creation of Roles in the field must be select dropdown with these roles. Also in the "tbl_users" it stores
+      the (role) and (user_type) based on the selected role
+
+      Human Resouce Manager     has a role = studio-hr         has a user_type = manager
+      Human Resouce Staff       has a role = studio-hr         has a user_type = staff
+      Finance Manager           has a role = studio-finance    has a user_type = manager
+      Finance Staff             has a role = studio-finance    has a user_type = staff
+
+  5). Now in the permission tables, this is where the permissions of every roles has. The table must have these columns:
+
+      | Column          |
+      | --------------- |
+      | `id`            |
+      | `name`          |
+      | `description`   |
+      | `status`        |
+      | `created_at`    |
+      | `updated_at`    |
+  
+  6). Now for the linking references, create a table name "tbl_role_permissions" using migration and must have columns of:
+
+      | Column                       |
+      |------------------------------|
+      | id | role_id | permission_id |
+
+Objective #2: Employee Creation along with their Role/Permissions
+
+  1). Here in the current employee creation, I noticed that my RBAC process is wrong and I can call it EBAC lol. Now
+      since we already works with roles and permission, I wanted to remove the CRUD permission and replace it with Role-Based,
+      from the word it self RBAC.
+
+  2). In the employee creation, Studio Position Section, it has  Employee's Role and Role Type. Now this is where the change will
+      happen. In the Employees Role, it would reflected to the created roles.
+
+  3). In the creation of Roles in the field must be select dropdown with these roles. Also in the "tbl_users" it stores
+      the (role) and (user_type) based on the selected role
+
+    Human Resouce Manager     has a role = studio-hr         has a user_type = manager
+    Human Resouce Staff       has a role = studio-hr         has a user_type = staff
+    Finance Manager           has a role = studio-finance    has a user_type = manager
+    Finance Staff             has a role = studio-finance    has a user_type = staff

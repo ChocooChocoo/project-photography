@@ -11,9 +11,4 @@ class PermissionController extends Controller
     {
         return view('owner.view-permissions');
     }
-
-    public function create()
-    {
-        return view('owner.create-permissions');
-    }
 }

@@ -11,9 +11,4 @@ class RoleController extends Controller
     {
         return view('owner.view-roles');
     }
-
-    public function create()
-    {
-        return view('owner.create-roles');
-    }
 }
