@@ -1,165 +1,3 @@
-Absolutely! Let’s make **clean, ready-to-use table structures** for `tbl_roles` and `tbl_permissions` in a standard RBAC setup. I’ll include the fields we discussed earlier.
-
----
-
-## **1️⃣ Table: `tbl_roles`**
-
-| Column        | Type       | Notes                                               |
-| ------------- | ---------- | --------------------------------------------------- |
-| `role_id`     | INT / UUID | Primary key, unique ID                              |
-| `name`        | VARCHAR    | Role name (Admin, Editor, Viewer), should be unique |
-| `description` | VARCHAR    | Optional, explains what the role does               |
-| `status`      | ENUM       | Optional: Active / Inactive                         |
-| `created_at`  | DATETIME   | When the role was created                           |
-| `updated_at`  | DATETIME   | When last updated                                   |
-
-**Example Data**
-
-| role_id | name   | description               | status | created_at       | updated_at       |
-| ------- | ------ | ------------------------- | ------ | ---------------- | ---------------- |
-| 1       | Admin  | Full access to the system | Active | 2026-03-20 10:00 | 2026-03-20 10:00 |
-| 2       | Editor | Can create and edit posts | Active | 2026-03-20 10:05 | 2026-03-20 10:05 |
-| 3       | Viewer | Can view content only     | Active | 2026-03-20 10:10 | 2026-03-20 10:10 |
-
----
-
-## **2️⃣ Table: `tbl_permissions`**
-
-| Column          | Type       | Notes                                         |
-| --------------- | ---------- | --------------------------------------------- |
-| `permission_id` | INT / UUID | Primary key, unique ID                        |
-| `name`          | VARCHAR    | Action name, e.g., `create_user`, `edit_post` |
-| `description`   | VARCHAR    | Optional explanation of the action            |
-| `status`        | ENUM       | Optional: Active / Inactive                   |
-| `created_at`    | DATETIME   | When the permission was created               |
-| `updated_at`    | DATETIME   | When last updated                             |
-
-**Example Data**
-
-| permission_id | name           | description                   | status | created_at       | updated_at       |
-| ------------- | -------------- | ----------------------------- | ------ | ---------------- | ---------------- |
-| 1             | create_user    | Allows creating new users     | Active | 2026-03-20 10:00 | 2026-03-20 10:00 |
-| 2             | edit_user      | Allows editing existing users | Active | 2026-03-20 10:05 | 2026-03-20 10:05 |
-| 3             | delete_user    | Allows deleting users         | Active | 2026-03-20 10:10 | 2026-03-20 10:10 |
-| 4             | view_dashboard | Allows viewing dashboard      | Active | 2026-03-20 10:15 | 2026-03-20 10:15 |
-
----
-
-### 🔗 Linking Tables (for reference)
-
-**`tbl_user_roles`**
-
-| user_id | role_id |
-| ------- | ------- |
-
-**`tbl_role_permissions`**
-
-| role_id | permission_id |
-| ------- | ------------- |
-
----
-
-==================================================================================================================================
-
-Sure! Let’s go through a **realistic scenario** using the tables we just designed. I’ll show **users, roles, permissions, and how it all works in practice**.
-
----
-
-## **Scenario: Web Application RBAC**
-
-### Step 1️⃣ Define Roles
-
-| role_id | name   | description               |
-| ------- | ------ | ------------------------- |
-| 1       | Admin  | Full access to system     |
-| 2       | Editor | Can create and edit posts |
-| 3       | Viewer | Can view content only     |
-
----
-
-### Step 2️⃣ Define Permissions
-
-| permission_id | name           | description          |
-| ------------- | -------------- | -------------------- |
-| 1             | create_user    | Can create new users |
-| 2             | edit_user      | Can edit users       |
-| 3             | delete_user    | Can delete users     |
-| 4             | create_post    | Can create posts     |
-| 5             | edit_post      | Can edit posts       |
-| 6             | delete_post    | Can delete posts     |
-| 7             | view_dashboard | Can view dashboard   |
-
----
-
-### Step 3️⃣ Link Roles to Permissions (`tbl_role_permissions`)
-
-| role_id | permission_id |                         |
-| ------- | ------------- | ----------------------- |
-| 1       | 1             | Admin → create_user     |
-| 1       | 2             | Admin → edit_user       |
-| 1       | 3             | Admin → delete_user     |
-| 1       | 4             | Admin → create_post     |
-| 1       | 5             | Admin → edit_post       |
-| 1       | 6             | Admin → delete_post     |
-| 1       | 7             | Admin → view_dashboard  |
-| 2       | 4             | Editor → create_post    |
-| 2       | 5             | Editor → edit_post      |
-| 3       | 7             | Viewer → view_dashboard |
-
----
-
-### Step 4️⃣ Assign Roles to Users (`tbl_user_roles`)
-
-| user_id | role_id |                |
-| ------- | ------- | -------------- |
-| 101     | 1       | John → Admin   |
-| 102     | 2       | Maria → Editor |
-| 103     | 3       | Steve → Viewer |
-
----
-
-### Step 5️⃣ How the RBAC Works in Action
-
-#### Example 1: John tries to delete a user
-
-* John’s roles → Admin
-* Admin’s permissions → includes `delete_user`
-  ✅ Allowed
-
-#### Example 2: Maria tries to delete a user
-
-* Maria’s roles → Editor
-* Editor’s permissions → `create_post`, `edit_post`
-  ❌ Not allowed
-
-#### Example 3: Steve tries to view the dashboard
-
-* Steve’s roles → Viewer
-* Viewer’s permissions → `view_dashboard`
-  ✅ Allowed
-
----
-
-### Step 6️⃣ Why This Works
-
-1. Users **never get permissions directly**.
-2. Roles **bundle permissions**.
-3. Users **inherit permissions automatically** from roles.
-4. Adding a new permission or role doesn’t break existing assignments.
-
----
-
-💡 **Optional Enhancement:**
-Later, if you want “Editor + limited user management,” you can simply create a new role (`EditorPlus`) and assign both post-related permissions **and some user permissions**, without touching individual users.
-
----
-
-If you want, I can **draw a diagram showing this full scenario visually**—users, roles, and permissions connected—so it’s crystal clear how everything flows.
-
-Do you want me to do that?
-
-
-
 Objective #1: Role and Permissions Creations
 
   1). Create a table using artisan migration for both "tbl_roles" and "tbl_permissions"
@@ -202,6 +40,15 @@ Objective #1: Role and Permissions Creations
       |------------------------------|
       | id | role_id | permission_id |
 
+  7). For the user and roles refrences, create a table name "tbl_user_roles" using migration and must have columns of:
+
+      | Column       |
+      |--------------|
+      | id | role_id |
+
+  8). Before you execute and provide the changes, give the summary of the process first and wait for the Go command might as well
+      before we proceed to the Objective #2 after we finished the Objective #1.
+
 Objective #2: Employee Creation along with their Role/Permissions
 
   1). Here in the current employee creation, I noticed that my RBAC process is wrong and I can call it EBAC lol. Now
@@ -218,3 +65,12 @@ Objective #2: Employee Creation along with their Role/Permissions
     Human Resouce Staff       has a role = studio-hr         has a user_type = staff
     Finance Manager           has a role = studio-finance    has a user_type = manager
     Finance Staff             has a role = studio-finance    has a user_type = staff
+
+
+Objective #4: Fix the errors and missing important things
+
+    1). I noticed that in the creation, the adding of the photographer field disappeared.
+        Do not remove the adding of the photographer
+    
+    2). In the view, it still only shows the photograpger roles and the other created employees is not showing. For Example
+        I register an employee as studio hr and it stores in database but it didnt shows or display in the table.

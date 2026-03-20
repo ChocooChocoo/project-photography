@@ -118,82 +118,82 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // Manage Studio                            
-        Route::get('/view/studio',                              [\App\Http\Controllers\StudioOwner\StudioController::class, 'index'])->name('owner.studio.index');
-        Route::get('/edit/studio/{id}',                         [\App\Http\Controllers\StudioOwner\StudioController::class, 'edit'])->name('owner.studio.edit');
-        Route::put('/studio/{id}',                              [\App\Http\Controllers\StudioOwner\StudioController::class, 'update'])->name('owner.studio.update');
-        Route::get('/studio/barangays/{municipality}',          [\App\Http\Controllers\StudioOwner\StudioController::class, 'getBarangays'])->name('owner.studio.get-barangays');
-        Route::delete('/studio/{id}',                           [\App\Http\Controllers\StudioOwner\StudioController::class, 'destroy'])->name('owner.studio.destroy');
+        Route::get('/view/studio',                                  [\App\Http\Controllers\StudioOwner\StudioController::class, 'index'])->name('owner.studio.index');
+        Route::get('/edit/studio/{id}',                             [\App\Http\Controllers\StudioOwner\StudioController::class, 'edit'])->name('owner.studio.edit');
+        Route::put('/studio/{id}',                                  [\App\Http\Controllers\StudioOwner\StudioController::class, 'update'])->name('owner.studio.update');
+        Route::get('/studio/barangays/{municipality}',              [\App\Http\Controllers\StudioOwner\StudioController::class, 'getBarangays'])->name('owner.studio.get-barangays');
+        Route::delete('/studio/{id}',                               [\App\Http\Controllers\StudioOwner\StudioController::class, 'destroy'])->name('owner.studio.destroy');
 
         // Manage Bookings                          
-        Route::get('/view/bookings',                            [\App\Http\Controllers\StudioOwner\BookingController::class, 'index'])->name('owner.booking.index');
-        Route::get('/booking/history',                          [\App\Http\Controllers\StudioOwner\BookingController::class, 'history'])->name('owner.booking.history');
-        Route::get('/bookings/{id}/details',                    [\App\Http\Controllers\StudioOwner\BookingController::class, 'getBookingDetails'])->name('owner.booking.details');
-        Route::get('/bookings/{id}/available-photographers',    [\App\Http\Controllers\StudioOwner\BookingController::class, 'getAvailablePhotographers'])->name('owner.booking.available.photographers');
-        Route::post('/bookings/{id}/assign-photographers',      [\App\Http\Controllers\StudioOwner\BookingController::class, 'assignPhotographers'])->name('owner.booking.assign.photographers');
-        Route::delete('/assignments/{id}',                      [\App\Http\Controllers\StudioOwner\BookingController::class, 'removePhotographerAssignment'])->name('owner.booking.remove.assignment');
-        Route::put('/assignments/{id}/status',                  [\App\Http\Controllers\StudioOwner\BookingController::class, 'updateAssignmentStatus'])->name('owner.booking.update.assignment.status');
-        Route::put('/bookings/{id}/status',                     [\App\Http\Controllers\StudioOwner\BookingController::class, 'updateStatus'])->name('owner.booking.update.status');
-        Route::put('/bookings/{id}/complete',                   [\App\Http\Controllers\StudioOwner\BookingController::class, 'completeBooking'])->name('owner.booking.complete');
+        Route::get('/view/bookings',                                [\App\Http\Controllers\StudioOwner\BookingController::class, 'index'])->name('owner.booking.index');
+        Route::get('/booking/history',                              [\App\Http\Controllers\StudioOwner\BookingController::class, 'history'])->name('owner.booking.history');
+        Route::get('/bookings/{id}/details',                        [\App\Http\Controllers\StudioOwner\BookingController::class, 'getBookingDetails'])->name('owner.booking.details');
+        Route::get('/bookings/{id}/available-photographers',        [\App\Http\Controllers\StudioOwner\BookingController::class, 'getAvailablePhotographers'])->name('owner.booking.available.photographers');
+        Route::post('/bookings/{id}/assign-photographers',          [\App\Http\Controllers\StudioOwner\BookingController::class, 'assignPhotographers'])->name('owner.booking.assign.photographers');
+        Route::delete('/assignments/{id}',                          [\App\Http\Controllers\StudioOwner\BookingController::class, 'removePhotographerAssignment'])->name('owner.booking.remove.assignment');
+        Route::put('/assignments/{id}/status',                      [\App\Http\Controllers\StudioOwner\BookingController::class, 'updateAssignmentStatus'])->name('owner.booking.update.assignment.status');
+        Route::put('/bookings/{id}/status',                         [\App\Http\Controllers\StudioOwner\BookingController::class, 'updateStatus'])->name('owner.booking.update.status');
+        Route::put('/bookings/{id}/complete',                       [\App\Http\Controllers\StudioOwner\BookingController::class, 'completeBooking'])->name('owner.booking.complete');
 
         // Manage Online Gallery
-        Route::get('/view/online-gallery',                      [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'index'])->name('owner.online-gallery.index');
-        Route::get('/online-gallery/completed-bookings',        [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getCompletedBookings'])->name('owner.online-gallery.completed-bookings');
-        Route::get('/online-gallery/{bookingId}/details',       [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getGalleryDetails'])->name('owner.online-gallery.details');
-        Route::post('/online-gallery/{bookingId}/upload',       [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'uploadImages'])->name('owner.online-gallery.upload');
-        Route::delete('/online-gallery/{galleryId}/image',      [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteImage'])->name('owner.online-gallery.delete-image');
-        Route::delete('/online-gallery/{galleryId}',            [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteGallery'])->name('owner.online-gallery.delete');
-        Route::put('/online-gallery/{galleryId}',               [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'updateGallery'])->name('owner.online-gallery.update');
+        Route::get('/view/online-gallery',                          [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'index'])->name('owner.online-gallery.index');
+        Route::get('/online-gallery/completed-bookings',            [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getCompletedBookings'])->name('owner.online-gallery.completed-bookings');
+        Route::get('/online-gallery/{bookingId}/details',           [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getGalleryDetails'])->name('owner.online-gallery.details');
+        Route::post('/online-gallery/{bookingId}/upload',           [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'uploadImages'])->name('owner.online-gallery.upload');
+        Route::delete('/online-gallery/{galleryId}/image',          [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteImage'])->name('owner.online-gallery.delete-image');
+        Route::delete('/online-gallery/{galleryId}',                [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteGallery'])->name('owner.online-gallery.delete');
+        Route::put('/online-gallery/{galleryId}',                   [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'updateGallery'])->name('owner.online-gallery.update');
         
         // Manage Studio Schedule                       
-        Route::get('/view/schedules',                           [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'index'])->name('owner.studio-schedule.index');
-        Route::get('/setup/studio-schedules',                   [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'setupStudioSchedule'])->name('owner.setup-studio-schedules');
-        Route::post('/store/studio-schedules',                  [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'store'])->name('owner.studio-schedule.store');
-        Route::delete('/delete/studio-schedules/{id}',          [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'destroy'])->name('owner.studio-schedule.destroy');
+        Route::get('/view/schedules',                               [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'index'])->name('owner.studio-schedule.index');
+        Route::get('/setup/studio-schedules',                       [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'setupStudioSchedule'])->name('owner.setup-studio-schedules');
+        Route::post('/store/studio-schedules',                      [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'store'])->name('owner.studio-schedule.store');
+        Route::delete('/delete/studio-schedules/{id}',              [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'destroy'])->name('owner.studio-schedule.destroy');
 
         // Studio Members                           
-        Route::get('/view/members',                             [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'index'])->name('owner.members.index');
-        Route::get('/invite/members',                           [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'invite'])->name('owner.members.invite');
-        Route::get('/apply/members',                            [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'apply'])->name('owner.members.apply');
-        Route::post('/members/invite',                          [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'store'])->name('owner.members.invite.store');
-        Route::post('/members/{id}/cancel',                     [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'cancel'])->name('owner.members.cancel');
-        Route::get('/members/freelancer/{id}/details',          [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'getFreelancerDetails'])->name('owner.members.freelancer.details');
+        Route::get('/view/members',                                 [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'index'])->name('owner.members.index');
+        Route::get('/invite/members',                               [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'invite'])->name('owner.members.invite');
+        Route::get('/apply/members',                                [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'apply'])->name('owner.members.apply');
+        Route::post('/members/invite',                              [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'store'])->name('owner.members.invite.store');
+        Route::post('/members/{id}/cancel',                         [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'cancel'])->name('owner.members.cancel');
+        Route::get('/members/freelancer/{id}/details',              [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'getFreelancerDetails'])->name('owner.members.freelancer.details');
 
         // Studio Photographers 
-        Route::get('/view/studio-photographers',                [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'index'])->name('owner.studio-photographers.index');
-        Route::get('/create/studio-photographers',              [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'create'])->name('owner.studio-photographers.create');
-        Route::post('/studio-photographers',                    [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'store'])->name('owner.studio-photographers.store');
-        Route::get('/studio-photographers/{id}',                [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'show'])->name('owner.studio-photographers.show');
-        Route::get('/studio/{id}/services',                     [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'getStudioServices'])->name('owner.studio.services');
+        Route::get('/view/studio-photographers',                    [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'index'])->name('owner.studio-photographers.index');
+        Route::get('/create/studio-photographers',                  [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'create'])->name('owner.studio-photographers.create');
+        Route::post('/studio-photographers',                        [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'store'])->name('owner.studio-photographers.store');
+        Route::get('/studio-photographers/{id}',                    [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'show'])->name('owner.studio-photographers.show');
+        Route::get('/studio/{id}/services',                         [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'getStudioServices'])->name('owner.studio.services');
 
         // Manage Category Services                         
-        Route::get('/view/services',                            [\App\Http\Controllers\StudioOwner\ServicesController::class, 'index'])->name('owner.services.index');
-        Route::get('/create/services',                          [\App\Http\Controllers\StudioOwner\ServicesController::class, 'create'])->name('owner.services.create');
-        Route::post('/services',                                [\App\Http\Controllers\StudioOwner\ServicesController::class, 'store'])->name('owner.services.store');
-        Route::get('/services/{id}',                            [\App\Http\Controllers\StudioOwner\ServicesController::class, 'show'])->name('owner.services.show');
-        Route::get('/services/{id}/edit',                       [\App\Http\Controllers\StudioOwner\ServicesController::class, 'edit'])->name('owner.services.edit');
-        Route::put('/services/{id}',                            [\App\Http\Controllers\StudioOwner\ServicesController::class, 'update'])->name('owner.services.update');
-        Route::delete('/services/{id}',                         [\App\Http\Controllers\StudioOwner\ServicesController::class, 'destroy'])->name('owner.services.destroy');
-        Route::get('/services/data/get',                        [\App\Http\Controllers\StudioOwner\ServicesController::class, 'getServices'])->name('owner.services.data');
+        Route::get('/view/services',                                [\App\Http\Controllers\StudioOwner\ServicesController::class, 'index'])->name('owner.services.index');
+        Route::get('/create/services',                              [\App\Http\Controllers\StudioOwner\ServicesController::class, 'create'])->name('owner.services.create');
+        Route::post('/services',                                    [\App\Http\Controllers\StudioOwner\ServicesController::class, 'store'])->name('owner.services.store');
+        Route::get('/services/{id}',                                [\App\Http\Controllers\StudioOwner\ServicesController::class, 'show'])->name('owner.services.show');
+        Route::get('/services/{id}/edit',                           [\App\Http\Controllers\StudioOwner\ServicesController::class, 'edit'])->name('owner.services.edit');
+        Route::put('/services/{id}',                                [\App\Http\Controllers\StudioOwner\ServicesController::class, 'update'])->name('owner.services.update');
+        Route::delete('/services/{id}',                             [\App\Http\Controllers\StudioOwner\ServicesController::class, 'destroy'])->name('owner.services.destroy');
+        Route::get('/services/data/get',                            [\App\Http\Controllers\StudioOwner\ServicesController::class, 'getServices'])->name('owner.services.data');
 
         // Manage Packages  
-        Route::get('/view/packages',                            [\App\Http\Controllers\StudioOwner\PackagesController::class, 'index'])->name('owner.packages.index');
-        Route::get('/create/packages',                          [\App\Http\Controllers\StudioOwner\PackagesController::class, 'create'])->name('owner.packages.create');
-        Route::post('/packages',                                [\App\Http\Controllers\StudioOwner\PackagesController::class, 'store'])->name('owner.packages.store');
-        Route::get('/packages/lists',                           [\App\Http\Controllers\StudioOwner\PackagesController::class, 'list'])->name('owner.packages.list');
-        Route::get('/packages/{package}',                       [\App\Http\Controllers\StudioOwner\PackagesController::class, 'show'])->name('owner.packages.show');
+        Route::get('/view/packages',                                [\App\Http\Controllers\StudioOwner\PackagesController::class, 'index'])->name('owner.packages.index');
+        Route::get('/create/packages',                              [\App\Http\Controllers\StudioOwner\PackagesController::class, 'create'])->name('owner.packages.create');
+        Route::post('/packages',                                    [\App\Http\Controllers\StudioOwner\PackagesController::class, 'store'])->name('owner.packages.store');
+        Route::get('/packages/lists',                               [\App\Http\Controllers\StudioOwner\PackagesController::class, 'list'])->name('owner.packages.list');
+        Route::get('/packages/{package}',                           [\App\Http\Controllers\StudioOwner\PackagesController::class, 'show'])->name('owner.packages.show');
 
         // Manage Subscription  
-        Route::get('/view/subscription',                        [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'index'])->name('owner.subscription.index');
-        Route::get('/view/status',                              [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'status'])->name('owner.subscription.status');
-        Route::get('/subscription/{id}',                        [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'show'])->name('owner.subscription.show');
-        Route::post('/subscription/subscribe',                  [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'subscribe'])->name('owner.subscription.subscribe');
-        Route::get('/subscription/history/data',                [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'history'])->name('owner.subscription.history');
-        Route::get('/subscription/status/data',                 [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'getStatusData'])->name('owner.subscription.status.data');
-        Route::post('/subscription/{id}/cancel',                [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'cancel'])->name('owner.subscription.cancel');
-        Route::get('/subscription/{id}/details',                [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'getSubscriptionDetails'])->name('owner.subscription.details');
-        Route::get('/subscription/verify/{reference}',          [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'verifyPayment'])->name('owner.subscription.verify');
-        Route::get('/subscription/success/{reference}',         [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentSuccess'])->name('owner.subscription.success');
-        Route::get('/subscription/failed/{reference}',          [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentFailed'])->name('owner.subscription.failed');
+        Route::get('/view/subscription',                            [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'index'])->name('owner.subscription.index');
+        Route::get('/view/status',                                  [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'status'])->name('owner.subscription.status');
+        Route::get('/subscription/{id}',                            [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'show'])->name('owner.subscription.show');
+        Route::post('/subscription/subscribe',                      [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'subscribe'])->name('owner.subscription.subscribe');
+        Route::get('/subscription/history/data',                    [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'history'])->name('owner.subscription.history');
+        Route::get('/subscription/status/data',                     [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'getStatusData'])->name('owner.subscription.status.data');
+        Route::post('/subscription/{id}/cancel',                    [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'cancel'])->name('owner.subscription.cancel');
+        Route::get('/subscription/{id}/details',                    [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'getSubscriptionDetails'])->name('owner.subscription.details');
+        Route::get('/subscription/verify/{reference}',              [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'verifyPayment'])->name('owner.subscription.verify');
+        Route::get('/subscription/success/{reference}',             [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentSuccess'])->name('owner.subscription.success');
+        Route::get('/subscription/failed/{reference}',              [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentFailed'])->name('owner.subscription.failed');
 
         // Manage Employee  
         Route::get('/view/employee',                                [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'index'])->name('owner.employee.index');
@@ -210,21 +210,35 @@ Route::middleware(['auth'])->group(function () {
 
         // Manage Roles
         Route::get('/view/roles',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'index'])->name('owner.role.index');
+        Route::get('/roles/data',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'getRoles'])->name('owner.role.data');
+        Route::post('/roles',                                       [\App\Http\Controllers\StudioOwner\RoleController::class, 'store'])->name('owner.role.store');
+        Route::get('/roles/{id}',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'show'])->name('owner.role.show');
+        Route::put('/roles/{id}',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'update'])->name('owner.role.update');
+        Route::put('/roles/{id}/permissions',                       [\App\Http\Controllers\StudioOwner\RoleController::class, 'updatePermissions'])->name('owner.role.update-permissions');
+        Route::delete('/roles/{id}',                                [\App\Http\Controllers\StudioOwner\RoleController::class, 'destroy'])->name('owner.role.destroy');
+        Route::post('/roles/{id}/toggle-status',                    [\App\Http\Controllers\StudioOwner\RoleController::class, 'toggleStatus'])->name('owner.role.toggle-status');
 
         // Manage Permissions
         Route::get('/view/permissions',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'index'])->name('owner.permission.index');
+        Route::get('/permissions/data',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'getPermissions'])->name('owner.permission.data');
+        Route::get('/permissions/all',                              [\App\Http\Controllers\StudioOwner\PermissionController::class, 'getAllPermissions'])->name('owner.permission.all');
+        Route::post('/permissions',                                 [\App\Http\Controllers\StudioOwner\PermissionController::class, 'store'])->name('owner.permission.store');
+        Route::get('/permissions/{id}',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'show'])->name('owner.permission.show');
+        Route::put('/permissions/{id}',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'update'])->name('owner.permission.update');
+        Route::delete('/permissions/{id}',                          [\App\Http\Controllers\StudioOwner\PermissionController::class, 'destroy'])->name('owner.permission.destroy');
+        Route::post('/permissions/{id}/toggle-status',              [\App\Http\Controllers\StudioOwner\PermissionController::class, 'toggleStatus'])->name('owner.permission.toggle-status');
 
         // Manage Payroll  
-        Route::get('/payroll-settings',                            [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'index'])->name('owner.payroll-settings.index');
-        Route::get('/payroll-settings/create',                     [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'create'])->name('owner.payroll-settings.create');
-        Route::post('/payroll-settings',                           [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'store'])->name('owner.payroll-settings.store');
-        Route::get('/payroll-settings/employees',                  [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'getEmployees'])->name('owner.payroll-settings.employees');
-        Route::get('/payroll-settings/data',                       [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'getPayrollSettings'])->name('owner.payroll-settings.data');
-        Route::get('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'show'])->name('owner.payroll-settings.show');
-        Route::get('/payroll-settings/{id}/edit',                  [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'edit'])->name('owner.payroll-settings.edit');
-        Route::put('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'update'])->name('owner.payroll-settings.update');
-        Route::put('/payroll-settings/{id}/status',                [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'updateStatus'])->name('owner.payroll-settings.status');
-        Route::delete('/payroll-settings/{id}',                    [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'destroy'])->name('owner.payroll-settings.destroy');
+        Route::get('/payroll-settings',                             [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'index'])->name('owner.payroll-settings.index');
+        Route::get('/payroll-settings/create',                      [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'create'])->name('owner.payroll-settings.create');
+        Route::post('/payroll-settings',                            [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'store'])->name('owner.payroll-settings.store');
+        Route::get('/payroll-settings/employees',                   [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'getEmployees'])->name('owner.payroll-settings.employees');
+        Route::get('/payroll-settings/data',                        [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'getPayrollSettings'])->name('owner.payroll-settings.data');
+        Route::get('/payroll-settings/{id}',                        [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'show'])->name('owner.payroll-settings.show');
+        Route::get('/payroll-settings/{id}/edit',                   [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'edit'])->name('owner.payroll-settings.edit');
+        Route::put('/payroll-settings/{id}',                        [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'update'])->name('owner.payroll-settings.update');
+        Route::put('/payroll-settings/{id}/status',                 [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'updateStatus'])->name('owner.payroll-settings.status');
+        Route::delete('/payroll-settings/{id}',                     [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'destroy'])->name('owner.payroll-settings.destroy');
 
         // Manage Chatbot
         Route::prefix('chatbot')->name('chatbot.')->group(function () {

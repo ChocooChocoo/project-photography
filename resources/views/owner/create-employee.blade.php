@@ -96,25 +96,28 @@
                                     <div class="form-group mb-3">
                                         <h4 class="card-title text-primary mb-3">Studio Position</h4>
                                         <div class="row g-3">
-                                            <div class="col-md-6">
+                                            <div class="col-md-12">
                                                 <label class="form-label">Employee's Role <span class="text-danger">*</span></label>
-                                                <select class="form-select" name="role" id="roleSelect" required>
+                                                <select class="form-select" name="role_id" id="roleSelect" required>
                                                     <option value="">Select Role</option>
-                                                    <option value="studio-hr">Human Resource</option>
-                                                    <option value="studio-finance">Finance</option>
-                                                    <option value="studio-photographer">Photographer</option>
+                                                    @php
+                                                        $roles = \App\Models\StudioOwner\RoleModel::where('status', 'active')
+                                                            ->whereIn('name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer'])
+                                                            ->orderBy('name')
+                                                            ->get();
+                                                    @endphp
+                                                    @foreach($roles as $role)
+                                                        <option value="{{ $role->id }}" data-role-name="{{ $role->name }}" data-role-display="{{ $role->display_name }}">
+                                                            {{ $role->display_name }}
+                                                        </option>
+                                                    @endforeach
                                                 </select>
+                                                <div class="form-text">
+                                                    <i class="ti ti-info-circle me-1"></i>
+                                                    Select the role for this employee. Permissions will be automatically assigned based on this role.
+                                                </div>
                                                 <div class="invalid-feedback">
                                                     Please select a role.
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label">Role Type <span class="text-danger">*</span></label>
-                                                <select class="form-select" name="role_type" id="roleTypeSelect" required>
-                                                    <option value="">Select Role Type</option>
-                                                </select>
-                                                <div class="invalid-feedback" id="roleTypeFeedback">
-                                                    Please select a role type.
                                                 </div>
                                             </div>
                                         </div>
@@ -172,84 +175,27 @@
                                         </div>
                                     </div>
 
-                                    {{-- ROLE-BASED ACCESS CONTROL (RBAC) --}}
-                                    <div class="form-group">
-                                        <h4 class="card-title text-primary mb-3">Role-Based Access Control (RBAC)</h4>
-                                        <div class="card border">
-                                            <div class="card-body">
-                                                <p class="text-muted mb-4">
-                                                    <i class="ti ti-shield-lock me-1"></i>
-                                                    Configure granular permissions for this role. Each toggle controls specific CRUD operations.
-                                                </p>
-                                                
-                                                <div class="row g-4">
-                                                    <!-- Create Permission -->
-                                                    <div class="col-md-3">
-                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-                                                            <div>
-                                                                <i class="ti ti-plus-circle text-success me-2"></i>
-                                                                <span class="fw-medium">Create</span>
-                                                            </div>
-                                                            <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacCreate" name="can_create" value="1">
-                                                                <label class="form-check-label" for="rbacCreate"></label>
-                                                            </div>
-                                                        </div>
-                                                        <small class="text-muted d-block mt-2 ps-1">
-                                                            Create: Allows user to add new records, upload files, and create new entries in the system
-                                                        </small>
-                                                    </div>
-                                                    
-                                                    <!-- Read Permission -->
-                                                    <div class="col-md-3">
-                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-                                                            <div>
-                                                                <i class="ti ti-eye-fill text-info me-2"></i>
-                                                                <span class="fw-medium">Read</span>
-                                                            </div>
-                                                            <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacRead" name="can_read" value="1">
-                                                                <label class="form-check-label" for="rbacRead"></label>
-                                                            </div>
-                                                        </div>
-                                                        <small class="text-muted d-block mt-2 ps-1">
-                                                            Read: Enables viewing, searching, and accessing existing records and information
-                                                        </small>
-                                                    </div>
-                                                    
-                                                    <!-- Update Permission -->
-                                                    <div class="col-md-3">
-                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-                                                            <div>
-                                                                <i class="ti ti-pencil-square text-warning me-2"></i>
-                                                                <span class="fw-medium">Update</span>
-                                                            </div>
-                                                            <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacUpdate" name="can_update" value="1">
-                                                                <label class="form-check-label" for="rbacUpdate"></label>
-                                                            </div>
-                                                        </div>
-                                                        <small class="text-muted d-block mt-2 ps-1">
-                                                            Update: Allows modification, editing, and updating of existing records and information
-                                                        </small>
-                                                    </div>
-                                                    
-                                                    <!-- Delete Permission -->
-                                                    <div class="col-md-3">
-                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
-                                                            <div>
-                                                                <i class="ti ti-trash-fill text-danger me-2"></i>
-                                                                <span class="fw-medium">Delete</span>
-                                                            </div>
-                                                            <div class="form-check form-switch">
-                                                                <input class="form-check-input" type="checkbox" role="switch" id="rbacDelete" name="can_delete" value="1">
-                                                                <label class="form-check-label" for="rbacDelete"></label>
-                                                            </div>
-                                                        </div>
-                                                        <small class="text-muted d-block mt-2 ps-1">
-                                                            Delete: Grants ability to remove, archive, or permanently delete records from the system
-                                                        </small>
-                                                    </div>
+                                    {{-- ROLE INFORMATION --}}
+                                    <div class="form-group mb-3">
+                                        <div class="alert alert-info alert-dismissible fade show py-2" role="alert">
+                                            <div class="d-flex align-items-center">
+                                                <i class="ti ti-shield-lock me-2 fs-5"></i>
+                                                <div>
+                                                    <strong class="me-1">Role-Based Access:</strong>
+                                                    Permissions are automatically assigned based on the selected role.
+                                                    <span id="roleInfoText">Select a role to see its permissions.</span>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn-close p-2" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                        
+                                        <div id="permissionPreview" style="display: none;" class="mt-2">
+                                            <div class="card border">
+                                                <div class="card-header bg-light py-2">
+                                                    <small class="text-muted"><i class="ti ti-key me-1"></i>Permissions for selected role:</small>
+                                                </div>
+                                                <div class="card-body py-2" id="permissionList">
+                                                    <!-- Permissions will be loaded here via AJAX -->
                                                 </div>
                                             </div>
                                         </div>
@@ -338,43 +284,124 @@
         $(document).ready(function() {
             // ==================== ROLE SELECTION HANDLER ====================
             $('#roleSelect').on('change', function() {
-                const role = $(this).val();
-                const $roleTypeSelect = $('#roleTypeSelect');
+                const selectedOption = $(this).find('option:selected');
+                const roleId = $(this).val();
+                const roleName = selectedOption.data('role-name');
+                const roleDisplay = selectedOption.data('role-display');
                 const $photographerFields = $('#photographerFields');
-                const $roleTypeFeedback = $('#roleTypeFeedback');
+                const $permissionPreview = $('#permissionPreview');
+                const $roleInfoText = $('#roleInfoText');
                 
-                // Clear role type options
-                $roleTypeSelect.find('option:not(:first)').remove();
-                
-                if (role === 'studio-photographer') {
-                    // Show photographer fields
-                    $photographerFields.show();
+                if (roleId && roleName) {
+                    // Update role info text
+                    $roleInfoText.html(`Selected role: <strong>${roleDisplay}</strong>`);
                     
-                    // Set role type to Photographer (disabled)
-                    $roleTypeSelect.append('<option value="Photographer" selected>Photographer</option>');
-                    $roleTypeSelect.prop('disabled', true);
-                    $roleTypeFeedback.text('Role type is fixed for photographers.');
+                    // Load permissions for this role
+                    loadRolePermissions(roleId, roleDisplay);
                     
-                    // Load categories for specialization
-                    loadCategories();
+                    // Show/hide photographer fields based on role
+                    if (roleName === 'studio-photographer') {
+                        $photographerFields.show();
+                        // Load categories for specialization
+                        loadCategories();
+                    } else {
+                        $photographerFields.hide();
+                        // Clear photographer fields
+                        $('#positionSelect').val('');
+                        $('#specializationSelect').find('option:not(:first)').remove();
+                        $('#specializationSelect').prop('disabled', true);
+                        $('input[name="years_experience"]').val('');
+                    }
                     
+                    $permissionPreview.show();
                 } else {
-                    // Hide photographer fields
+                    $roleInfoText.html('Select a role to see its permissions.');
+                    $permissionPreview.hide();
                     $photographerFields.hide();
-                    
-                    // Enable role type and add options
-                    $roleTypeSelect.prop('disabled', false);
-                    $roleTypeSelect.append('<option value="Manager">Manager</option>');
-                    $roleTypeSelect.append('<option value="Staff">Staff</option>');
-                    $roleTypeFeedback.text('Please select a role type.');
-                    
-                    // Clear photographer fields
-                    $('#positionSelect').val('');
-                    $('#specializationSelect').find('option:not(:first)').remove();
-                    $('#specializationSelect').prop('disabled', true);
-                    $('input[name="years_experience"]').val('');
                 }
             });
+
+            // ==================== LOAD ROLE PERMISSIONS ====================
+            function loadRolePermissions(roleId, roleDisplay) {
+                const $permissionList = $('#permissionList');
+                $permissionList.html('<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading permissions...</div>');
+                
+                $.ajax({
+                    url: `/owner/roles/${roleId}`,
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.success && response.data) {
+                            const permissions = response.data.permissions || [];
+                            
+                            if (permissions.length > 0) {
+                                let html = '<div class="row g-2">';
+                                
+                                // Group permissions by category
+                                const grouped = groupPermissionsForDisplay(permissions);
+                                
+                                for (const [category, perms] of Object.entries(grouped)) {
+                                    html += `<div class="col-12"><small class="text-muted fw-semibold">${category}:</small></div>`;
+                                    html += `<div class="col-12 mb-2">`;
+                                    perms.forEach(perm => {
+                                        html += `<span class="badge bg-light text-dark me-1 mb-1 p-2">${perm.name}</span>`;
+                                    });
+                                    html += `</div>`;
+                                }
+                                
+                                html += '</div>';
+                                $permissionList.html(html);
+                            } else {
+                                $permissionList.html('<p class="text-muted mb-0 small">No specific permissions assigned. Default access only.</p>');
+                            }
+                        } else {
+                            $permissionList.html('<p class="text-danger mb-0 small">Failed to load permissions.</p>');
+                        }
+                    },
+                    error: function() {
+                        $permissionList.html('<p class="text-danger mb-0 small">Failed to load permissions.</p>');
+                    }
+                });
+            }
+
+            function groupPermissionsForDisplay(permissions) {
+                const groups = {
+                    'Employee Management': [],
+                    'Attendance': [],
+                    'Payroll': [],
+                    'Schedule': [],
+                    'Reports': [],
+                    'System': []
+                };
+                
+                permissions.forEach(perm => {
+                    const name = perm.name;
+                    if (name.includes('employee')) {
+                        groups['Employee Management'].push(perm);
+                    } else if (name.includes('attendance')) {
+                        groups['Attendance'].push(perm);
+                    } else if (name.includes('payroll')) {
+                        groups['Payroll'].push(perm);
+                    } else if (name.includes('schedule')) {
+                        groups['Schedule'].push(perm);
+                    } else if (name.includes('report') || name.includes('export')) {
+                        groups['Reports'].push(perm);
+                    } else if (name.includes('permission') || name.includes('role')) {
+                        groups['System'].push(perm);
+                    } else {
+                        groups['System'].push(perm);
+                    }
+                });
+                
+                // Remove empty groups
+                const nonEmptyGroups = {};
+                for (const [group, perms] of Object.entries(groups)) {
+                    if (perms.length > 0) {
+                        nonEmptyGroups[group] = perms;
+                    }
+                }
+                
+                return nonEmptyGroups;
+            }
 
             // ==================== LOAD CATEGORIES FOR PHOTOGRAPHER ====================
             function loadCategories() {
@@ -447,12 +474,6 @@
                 
                 // Prepare form data
                 const formData = new FormData(this);
-                
-                // Ensure checkboxes send values when checked
-                if (!$('#rbacCreate').is(':checked')) formData.delete('can_create');
-                if (!$('#rbacRead').is(':checked')) formData.delete('can_read');
-                if (!$('#rbacUpdate').is(':checked')) formData.delete('can_update');
-                if (!$('#rbacDelete').is(':checked')) formData.delete('can_delete');
                 
                 // Show loading
                 $submitBtn.prop('disabled', true);

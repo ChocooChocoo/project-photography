@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
 use App\Models\StudioOwner\StudioPhotographersModel;
-use App\Models\StudioOwner\RbacModel;
 use App\Models\StudioOwner\EmployeeScheduleModel;
 use App\Models\Admin\CategoriesModel;
 use App\Models\StudioOwner\ServicesModel;
+use App\Models\StudioOwner\RoleModel;
 use App\Mail\EmployeeRegistrationMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -37,23 +37,22 @@ class EmployeeController extends Controller
         // Get studio IDs for filtering
         $studioIds = StudiosModel::where('user_id', $ownerId)->pluck('id');
         
-        // Build query for employees
-        $query = UserModel::with(['rbac' => function($q) use ($studioIds) {
-                $q->whereIn('studio_id', $studioIds);
-            }, 'rbac.studio', 'employeeSchedule' => function($q) use ($studioIds) {
+        // Build query for employees - using new RBAC system (tbl_user_roles)
+        $query = UserModel::with(['roles', 'employeeSchedule' => function($q) use ($studioIds) {
                 $q->whereIn('studio_id', $studioIds);
             }])
             ->whereIn('role', ['studio-hr', 'studio-finance', 'studio-photographer'])
             ->whereExists(function ($q) use ($studioIds) {
                 $q->select(DB::raw(1))
-                ->from('tbl_rbac')
-                ->whereColumn('tbl_rbac.user_id', 'tbl_users.id')
-                ->whereIn('tbl_rbac.studio_id', $studioIds);
+                  ->from('tbl_user_roles')
+                  ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
+                  ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             });
         
         // Apply filters from request
         if ($request->filled('studio_id')) {
-            $query->whereHas('rbac', function ($q) use ($request) {
+            $query->whereHas('employeeSchedule', function ($q) use ($request) {
                 $q->where('studio_id', $request->studio_id);
             });
         }
@@ -70,20 +69,19 @@ class EmployeeController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                ->orWhere('last_name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('mobile_number', 'like', "%{$search}%");
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('mobile_number', 'like', "%{$search}%");
             });
         }
         
         // Get paginated results
         $employees = $query->orderBy('created_at', 'desc')
             ->paginate(10)
-            ->withQueryString(); // Preserve query parameters for pagination
+            ->withQueryString();
         
         // Transform employees for view
         foreach ($employees as $employee) {
-            $rbac = $employee->rbac->first();
             $schedule = $employee->employeeSchedule->first();
             
             // Get photographer details if applicable
@@ -91,9 +89,8 @@ class EmployeeController extends Controller
                 $employee->photographer_details = StudioPhotographersModel::where('photographer_id', $employee->id)->first();
             }
             
-            $employee->rbac_data = $rbac;
             $employee->schedule_data = $schedule;
-            $employee->studio_data = $rbac ? $rbac->studio : null;
+            $employee->studio_data = $schedule ? $schedule->studio : null;
         }
         
         $employeesJson = json_encode($employees->map(function ($emp) {
@@ -105,6 +102,7 @@ class EmployeeController extends Controller
                 'email'         => $emp->email,
                 'mobile_number' => $emp->mobile_number,
                 'role'          => $emp->role,
+                'user_type'     => $emp->user_type,
                 'status'        => $emp->status,
             ];
         })->values());
@@ -138,28 +136,48 @@ class EmployeeController extends Controller
             $ownerId = auth()->id();
             $uuid = Str::uuid();
             
+            // Get the selected role
+            $selectedRole = RoleModel::findOrFail($request->role_id);
+            
+            // Determine the role and user_type based on selected role
+            $roleName = $selectedRole->name;
+            
+            // Extract the base role and user_type from the role name
+            $roleParts = explode('-', $roleName);
+            
+            // Handle different role types
+            if (count($roleParts) === 3) {
+                // studio-hr-manager, studio-hr-staff, studio-finance-manager, studio-finance-staff
+                $baseRole = $roleParts[0] . '-' . $roleParts[1]; // studio-hr or studio-finance
+                $userType = $roleParts[2]; // manager or staff
+            } else {
+                // studio-photographer (2 parts)
+                $baseRole = $roleName; // studio-photographer
+                $userType = 'Photographer';
+            }
+            
             // Generate password: role + uuid
-            $password = $request->role . $uuid;
-            $temporaryPassword = $password; // Store for email
+            $password = $baseRole . $uuid;
+            $temporaryPassword = $password;
             
             // Prepare user data
             $userData = [
                 'uuid' => $uuid,
-                'role' => $request->role,
+                'role' => $baseRole,
                 'first_name' => $request->first_name,
                 'middle_name' => $request->middle_name,
                 'last_name' => $request->last_name,
-                'user_type' => $this->getUserTypeFromRole($request),
+                'user_type' => ucfirst($userType),
                 'email' => $request->email,
                 'mobile_number' => $request->mobile_number,
                 'password' => Hash::make($password),
                 'status' => $request->status,
-                'email_verified' => 1, // Auto-verify employees created by owner
+                'email_verified' => 1,
                 'verification_token' => null,
                 'token_expiry' => null,
             ];
 
-            // Add profile photo for ALL employees if uploaded
+            // Add profile photo if uploaded
             if ($request->hasFile('profile_photo')) {
                 $userData['profile_photo'] = $this->handleProfilePhoto($request);
             }
@@ -171,23 +189,12 @@ class EmployeeController extends Controller
             $studio = StudiosModel::find($request->studio_id);
             
             // If photographer, create studio photographer record
-            $photographerRecord = null;
-            if ($request->role === 'studio-photographer') {
-                $photographerRecord = $this->createPhotographerRecord($request, $ownerId, $user->id, $studio);
+            if ($selectedRole->name === 'studio-photographer') {
+                $this->createPhotographerRecord($request, $ownerId, $user->id, $studio);
             }
             
-            // Create RBAC record
-            $rbac = RbacModel::create([
-                'user_id' => $user->id,
-                'studio_id' => $request->studio_id,
-                'role' => $request->role,
-                'role_type' => $request->role_type ?? null,
-                'can_create' => $request->boolean('can_create', false),
-                'can_read' => $request->boolean('can_read', false),
-                'can_update' => $request->boolean('can_update', false),
-                'can_delete' => $request->boolean('can_delete', false),
-                'module_permissions' => null, // Can be extended later
-            ]);
+            // Assign role to user (new RBAC system)
+            $user->assignRole($selectedRole);
             
             // Create employee schedule
             $schedule = EmployeeScheduleModel::create([
@@ -205,17 +212,19 @@ class EmployeeController extends Controller
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'email' => $request->email,
-                'role' => $request->role,
-                'role_display' => $this->getRoleDisplay($request->role),
-                'role_type' => $request->role_type ?? null,
+                'role' => $baseRole,
+                'role_display' => $selectedRole->display_name,
+                'role_type' => $userType,
                 'studio_name' => $studio->studio_name,
                 'status' => $request->status,
                 'schedule' => $schedule->formatted_operating_days . ' ' . $schedule->formatted_hours,
             ];
             
             // Add photographer-specific data
-            if ($request->role === 'studio-photographer') {
+            if ($selectedRole->name === 'studio-photographer') {
                 $employeeData['position'] = $request->position;
+                $employeeData['specialization'] = $request->specialization;
+                $employeeData['years_experience'] = $request->years_experience;
             }
             
             // Send registration email
@@ -228,7 +237,8 @@ class EmployeeController extends Controller
                 'message' => 'Employee registered successfully! Login credentials have been emailed to ' . $request->email,
                 'data' => [
                     'user_id' => $user->id,
-                    'role' => $request->role,
+                    'role' => $baseRole,
+                    'role_type' => $userType,
                 ]
             ]);
             
@@ -248,7 +258,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Get employees list with RBAC and schedule for DataTable.
+     * Get employees list for DataTable.
      */
     public function getEmployees(Request $request)
     {
@@ -257,22 +267,21 @@ class EmployeeController extends Controller
         // Get studios owned by this owner
         $studioIds = StudiosModel::where('user_id', $ownerId)->pluck('id');
         
-        $query = UserModel::with(['rbac' => function($q) use ($studioIds) {
-                $q->whereIn('studio_id', $studioIds);
-            }, 'rbac.studio', 'employeeSchedule' => function($q) use ($studioIds) {
+        $query = UserModel::with(['roles', 'employeeSchedule' => function($q) use ($studioIds) {
                 $q->whereIn('studio_id', $studioIds);
             }])
             ->whereIn('role', ['studio-hr', 'studio-finance', 'studio-photographer'])
             ->whereExists(function ($q) use ($studioIds) {
                 $q->select(DB::raw(1))
-                  ->from('tbl_rbac')
-                  ->whereColumn('tbl_rbac.user_id', 'tbl_users.id')
-                  ->whereIn('tbl_rbac.studio_id', $studioIds);
+                  ->from('tbl_user_roles')
+                  ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
+                  ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             });
         
         // Filter by studio
         if ($request->filled('studio_id')) {
-            $query->whereHas('rbac', function ($q) use ($request) {
+            $query->whereHas('employeeSchedule', function ($q) use ($request) {
                 $q->where('studio_id', $request->studio_id);
             });
         }
@@ -303,15 +312,18 @@ class EmployeeController extends Controller
         
         // Transform data for response
         $employees->getCollection()->transform(function ($employee) {
-            $rbac = $employee->rbac->first();
             $schedule = $employee->employeeSchedule->first();
-            $studio = $rbac ? $rbac->studio : null;
+            $studio = $schedule ? $schedule->studio : null;
             
             // Get photographer details if applicable
             $photographerDetails = null;
             if ($employee->role === 'studio-photographer') {
                 $photographerDetails = StudioPhotographersModel::where('photographer_id', $employee->id)->first();
             }
+            
+            // Get role display name
+            $userRole = $employee->roles->first();
+            $roleDisplay = $userRole ? $userRole->display_name : $this->getRoleDisplay($employee->role);
             
             return [
                 'id' => $employee->id,
@@ -323,19 +335,13 @@ class EmployeeController extends Controller
                 'mobile_number' => $employee->mobile_number,
                 'profile_photo' => $employee->profile_photo_url,
                 'role' => $employee->role,
-                'role_display' => $this->getRoleDisplay($employee->role),
-                'role_type' => $rbac ? $rbac->role_type : null,
+                'role_display' => $roleDisplay,
+                'user_type' => $employee->user_type,
                 'status' => $employee->status,
                 'studio' => $studio ? [
                     'id' => $studio->id,
                     'name' => $studio->studio_name,
                     'logo' => $studio->studio_logo ? asset('storage/' . $studio->studio_logo) : null,
-                ] : null,
-                'rbac' => $rbac ? [
-                    'can_create' => (bool) $rbac->can_create,
-                    'can_read' => (bool) $rbac->can_read,
-                    'can_update' => (bool) $rbac->can_update,
-                    'can_delete' => (bool) $rbac->can_delete,
                 ] : null,
                 'schedule' => $schedule ? [
                     'days' => $schedule->formatted_operating_days,
@@ -369,24 +375,22 @@ class EmployeeController extends Controller
         // Get studios owned by this owner
         $studioIds = StudiosModel::where('user_id', $ownerId)->pluck('id');
         
-        $employee = UserModel::with(['rbac' => function($q) use ($studioIds) {
-                $q->whereIn('studio_id', $studioIds);
-            }, 'rbac.studio', 'employeeSchedule' => function($q) use ($studioIds) {
+        $employee = UserModel::with(['roles', 'employeeSchedule' => function($q) use ($studioIds) {
                 $q->whereIn('studio_id', $studioIds);
             }])
             ->whereIn('role', ['studio-hr', 'studio-finance', 'studio-photographer'])
             ->where('id', $id)
             ->whereExists(function ($q) use ($studioIds) {
                 $q->select(DB::raw(1))
-                ->from('tbl_rbac')
-                ->whereColumn('tbl_rbac.user_id', 'tbl_users.id')
-                ->whereIn('tbl_rbac.studio_id', $studioIds);
+                  ->from('tbl_user_roles')
+                  ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
+                  ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             })
             ->firstOrFail();
         
-        $rbac = $employee->rbac->first();
         $schedule = $employee->employeeSchedule->first();
-        $studio = $rbac ? $rbac->studio : null;
+        $studio = $schedule ? $schedule->studio : null;
         
         // Get photographer details if applicable
         $photographerDetails = null;
@@ -410,6 +414,10 @@ class EmployeeController extends Controller
             ];
         }
         
+        // Get role display name
+        $userRole = $employee->roles->first();
+        $roleDisplay = $userRole ? $userRole->display_name : $this->getRoleDisplay($employee->role);
+        
         $response = [
             'id' => $employee->id,
             'uuid' => $employee->uuid,
@@ -421,21 +429,14 @@ class EmployeeController extends Controller
             'mobile_number' => $employee->mobile_number,
             'profile_photo' => $employee->profile_photo ? asset('storage/profile-photos/' . $employee->profile_photo) : null,
             'role' => $employee->role,
-            'role_display' => $this->getRoleDisplay($employee->role),
+            'role_display' => $roleDisplay,
+            'user_type' => ucfirst($employee->user_type ?? ''),
             'status' => $employee->status,
             'created_at' => $employee->created_at ? $employee->created_at->format('M d, Y h:i A') : 'N/A',
             'studio' => $studio ? [
                 'id' => $studio->id,
                 'name' => $studio->studio_name,
                 'logo' => $studio->studio_logo ? asset('storage/' . $studio->studio_logo) : null,
-            ] : null,
-            'rbac' => $rbac ? [
-                'id' => $rbac->id,
-                'role_type' => $rbac->role_type,
-                'can_create' => (bool) $rbac->can_create,
-                'can_read' => (bool) $rbac->can_read,
-                'can_update' => (bool) $rbac->can_update,
-                'can_delete' => (bool) $rbac->can_delete,
             ] : null,
             'schedule' => $scheduleData,
         ];
@@ -476,7 +477,6 @@ class EmployeeController extends Controller
             return 'Not set';
         }
         
-        // Decode if it's JSON string
         $days = $operatingDays;
         if (is_string($operatingDays)) {
             $days = json_decode($operatingDays, true) ?: [];
@@ -551,9 +551,10 @@ class EmployeeController extends Controller
             ->where('id', $id)
             ->whereExists(function ($q) use ($studioIds) {
                 $q->select(DB::raw(1))
-                  ->from('tbl_rbac')
-                  ->whereColumn('tbl_rbac.user_id', 'tbl_users.id')
-                  ->whereIn('tbl_rbac.studio_id', $studioIds);
+                  ->from('tbl_user_roles')
+                  ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
+                  ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             })
             ->firstOrFail();
         
@@ -565,88 +566,6 @@ class EmployeeController extends Controller
             'success' => true,
             'message' => 'Employee status updated successfully.'
         ]);
-    }
-
-    /**
-     * Update employee RBAC permissions.
-     */
-    public function updatePermissions(Request $request, $id)
-    {
-        // Custom validation that accepts various formats
-        $rules = [
-            'can_create' => 'sometimes|in:0,1,true,false,on,off,yes,no',
-            'can_read' => 'sometimes|in:0,1,true,false,on,off,yes,no',
-            'can_update' => 'sometimes|in:0,1,true,false,on,off,yes,no',
-            'can_delete' => 'sometimes|in:0,1,true,false,on,off,yes,no',
-        ];
-        
-        $validator = Validator::make($request->all(), $rules);
-        
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        
-        $ownerId = auth()->id();
-        
-        // Get studios owned by this owner
-        $studioIds = StudiosModel::where('user_id', $ownerId)->pluck('id');
-        
-        $rbac = RbacModel::where('user_id', $id)
-            ->whereIn('studio_id', $studioIds)
-            ->firstOrFail();
-        
-        // Convert various input formats to boolean
-        $updateData = [];
-        
-        $permissions = ['can_create', 'can_read', 'can_update', 'can_delete'];
-        
-        foreach ($permissions as $permission) {
-            if ($request->has($permission)) {
-                $value = $request->input($permission);
-                $updateData[$permission] = $this->convertToBoolean($value);
-            }
-        }
-        
-        $rbac->update($updateData);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Employee permissions updated successfully.',
-            'data' => [
-                'can_create' => (bool) $rbac->can_create,
-                'can_read' => (bool) $rbac->can_read,
-                'can_update' => (bool) $rbac->can_update,
-                'can_delete' => (bool) $rbac->can_delete,
-            ]
-        ]);
-    }
-
-    /**
-     * Convert various input formats to boolean.
-     *
-     * @param mixed $value
-     * @return bool
-     */
-    private function convertToBoolean($value): bool
-    {
-        if (is_bool($value)) {
-            return $value;
-        }
-        
-        if (is_numeric($value)) {
-            return (int) $value === 1;
-        }
-        
-        if (is_string($value)) {
-            $value = strtolower(trim($value));
-            return in_array($value, ['1', 'true', 'on', 'yes'], true);
-        }
-        
-        return false;
     }
 
     /**
@@ -683,7 +602,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Delete employee (soft delete or hard delete?).
+     * Delete employee.
      */
     public function destroy($id)
     {
@@ -699,13 +618,25 @@ class EmployeeController extends Controller
                 ->where('id', $id)
                 ->whereExists(function ($q) use ($studioIds) {
                     $q->select(DB::raw(1))
-                      ->from('tbl_rbac')
-                      ->whereColumn('tbl_rbac.user_id', 'tbl_users.id')
-                      ->whereIn('tbl_rbac.studio_id', $studioIds);
+                      ->from('tbl_user_roles')
+                      ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
+                      ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                      ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
                 })
                 ->firstOrFail();
             
-            // Related records will be deleted via cascade
+            // Delete user roles association first
+            DB::table('tbl_user_roles')->where('user_id', $employee->id)->delete();
+            
+            // Delete employee schedule
+            EmployeeScheduleModel::where('user_id', $employee->id)->delete();
+            
+            // Delete photographer record if exists
+            if ($employee->role === 'studio-photographer') {
+                StudioPhotographersModel::where('photographer_id', $employee->id)->delete();
+            }
+            
+            // Delete user
             $employee->delete();
             
             DB::commit();
@@ -756,7 +687,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Get services for a specific category (if needed).
+     * Get services for a specific category.
      */
     public function getServicesByCategory(Request $request, $studioId, $categoryId)
     {
@@ -824,24 +755,6 @@ class EmployeeController extends Controller
             'years_of_experience' => $request->years_experience,
             'status' => $request->status,
         ]);
-    }
-
-    /**
-     * Helper: Get user type from role.
-     */
-    private function getUserTypeFromRole($request)
-    {
-        if ($request->role === 'studio-photographer') {
-            return 'Photographer'; // Capital P to match ENUM
-        }
-        
-        if ($request->role === 'studio-hr' || $request->role === 'studio-finance') {
-            // For HR and Finance, map to 'Staff' (which matches ENUM after migration)
-            // Or if not updating ENUM, map to 'Customer' as fallback
-            return 'Staff'; // This requires the ENUM update above
-        }
-        
-        return 'Customer'; // Default fallback
     }
 
     /**

@@ -40,14 +40,8 @@ class EmployeeRequest extends FormRequest
                 Rule::unique('tbl_users', 'email')
             ],
             'mobile_number' => 'required|string|max:20',
-            'role' => 'required|in:studio-hr,studio-finance,studio-photographer',
+            'role_id' => 'required|exists:tbl_roles,id', // Changed from 'role' to 'role_id'
             'status' => 'required|in:active,inactive',
-            
-            // RBAC permissions
-            'can_create' => 'sometimes|boolean',
-            'can_read' => 'sometimes|boolean',
-            'can_update' => 'sometimes|boolean',
-            'can_delete' => 'sometimes|boolean',
             
             // Schedule fields
             'operating_days' => 'required|array|min:1',
@@ -56,14 +50,9 @@ class EmployeeRequest extends FormRequest
             'end_time' => 'required|date_format:H:i|after:start_time',
         ];
 
-        // Role-specific validation
-        if ($this->role === 'studio-hr' || $this->role === 'studio-finance') {
-            $rules['role_type'] = 'required|in:Manager,Staff';
-        }
-
-        $rules['profile_photo'] = 'nullable|image|mimes:jpg,jpeg,png|max:2048';
-
-        if ($this->role === 'studio-photographer') {
+        // Photographer-specific validation (unchanged)
+        $role = \App\Models\StudioOwner\RoleModel::find($this->role_id);
+        if ($role && $role->name === 'studio-photographer') {
             $rules['position'] = 'required|string|max:100';
             $rules['specialization'] = 'required|exists:tbl_categories,id';
             $rules['years_experience'] = 'required|integer|min:0|max:50';
@@ -87,10 +76,8 @@ class EmployeeRequest extends FormRequest
             'email.required' => 'Email address is required.',
             'email.unique' => 'This email is already registered.',
             'mobile_number.required' => 'Contact number is required.',
-            'role.required' => 'Please select a role.',
-            'role.in' => 'Invalid role selected.',
-            'role_type.required' => 'Please select a role type.',
-            'role_type.in' => 'Invalid role type selected.',
+            'role_id.required' => 'Please select a role.',
+            'role_id.exists' => 'The selected role is invalid.',
             'position.required' => 'Position is required for photographers.',
             'specialization.required' => 'Specialization is required for photographers.',
             'specialization.exists' => 'The selected specialization is invalid.',
@@ -112,18 +99,6 @@ class EmployeeRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        // Set default values for RBAC permissions if not provided
-        if (!$this->has('can_create')) {
-            $this->merge(['can_create' => false]);
-        }
-        if (!$this->has('can_read')) {
-            $this->merge(['can_read' => false]);
-        }
-        if (!$this->has('can_update')) {
-            $this->merge(['can_update' => false]);
-        }
-        if (!$this->has('can_delete')) {
-            $this->merge(['can_delete' => false]);
-        }
+        // No longer need to set default CRUD permissions
     }
 }

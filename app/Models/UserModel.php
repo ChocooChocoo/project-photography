@@ -332,5 +332,78 @@ class UserModel extends Authenticatable
     {
         return $this->hasMany(\App\Models\StudioOwner\EmployeeScheduleModel::class, 'user_id');
     }
+    
+    /**
+     * Get the roles assigned to this user.
+     */
+    public function roles()
+    {
+        return $this->belongsToMany(\App\Models\StudioOwner\RoleModel::class, 'tbl_user_roles', 'user_id', 'role_id')
+            ->withTimestamps();
+    }
 
+    /**
+     * Check if user has a specific role.
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    /**
+     * Check if user has any of the given roles.
+     */
+    public function hasAnyRole(array $roleNames): bool
+    {
+        return $this->roles()->whereIn('name', $roleNames)->exists();
+    }
+
+    /**
+     * Assign a role to the user.
+     */
+    public function assignRole($role)
+    {
+        if (is_string($role)) {
+            $role = \App\Models\StudioOwner\RoleModel::where('name', $role)->first();
+        }
+        
+        if ($role && !$this->hasRole($role->name)) {
+            $this->roles()->attach($role->id);
+        }
+        
+        return $this;
+    }
+
+    /**
+     * Sync roles for the user.
+     */
+    public function syncRoles(array $roleNames)
+    {
+        $roleIds = \App\Models\StudioOwner\RoleModel::whereIn('name', $roleNames)->pluck('id')->toArray();
+        $this->roles()->sync($roleIds);
+        
+        return $this;
+    }
+
+    /**
+     * Get all permissions for this user through their roles.
+     */
+    public function getAllPermissions(): \Illuminate\Support\Collection
+    {
+        $permissions = collect();
+        
+        foreach ($this->roles as $role) {
+            $permissions = $permissions->merge($role->permissions);
+        }
+        
+        return $permissions->unique('id');
+    }
+
+    /**
+     * Check if user has a specific permission.
+     */
+    public function hasPermission(string $permissionName): bool
+    {
+        return $this->getAllPermissions()->contains('name', $permissionName);
+    }
 }

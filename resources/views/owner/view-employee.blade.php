@@ -29,9 +29,6 @@
                                     <i class="ti ti-filter me-1"></i>Filter By:
                                 </span>
 
-                                {{-- FIX: Removed name attributes and onchange form submits.
-                                     All filtering is now handled client-side by applyFilters(). --}}
-
                                 {{-- Studio Filter --}}
                                 <div class="app-filter">
                                     <select class="me-0 form-select form-control" id="studioFilter">
@@ -73,7 +70,6 @@
                                         <th data-table-sort="email">Email Address</th>
                                         <th data-table-sort="contact">Contact Number</th>
                                         <th data-table-sort="role">Role</th>
-                                        <th>Access</th>
                                         <th data-table-sort="status">Status</th>
                                         <th class="text-center" style="width: 1%;">Actions</th>
                                     </tr>
@@ -93,19 +89,28 @@
                                                 'studio-photographer' => 'Photographer'
                                             ][$employee->role] ?? $employee->role;
                                             
-                                            $roleTypeDisplay = $employee->rbac_data && $employee->rbac_data->role_type 
-                                                ? " - {$employee->rbac_data->role_type}" 
-                                                : '';
-                                                
-                                            $permissionColors = [
-                                                'create' => 'success',
-                                                'read' => 'info',
-                                                'update' => 'warning',
-                                                'delete' => 'danger'
-                                            ];
+                                            // Build the full role name correctly for all employee types
+                                            $fullRoleName = '';
+                                            
+                                            if ($employee->role === 'studio-photographer') {
+                                                $fullRoleName = 'Photographer';
+                                                // Add position if available
+                                                if ($employee->photographer_details && $employee->photographer_details->position) {
+                                                    $fullRoleName .= ' - ' . $employee->photographer_details->position;
+                                                }
+                                            } elseif ($employee->role === 'studio-hr') {
+                                                // For HR employees, user_type should be 'Manager' or 'Staff'
+                                                $roleType = ucfirst($employee->user_type ?? 'Staff');
+                                                $fullRoleName = 'Human Resource ' . $roleType;
+                                            } elseif ($employee->role === 'studio-finance') {
+                                                // For Finance employees, user_type should be 'Manager' or 'Staff'
+                                                $roleType = ucfirst($employee->user_type ?? 'Staff');
+                                                $fullRoleName = 'Finance ' . $roleType;
+                                            } else {
+                                                $fullRoleName = $roleDisplay;
+                                            }
                                         @endphp
 
-                                        {{-- FIX: Added data-employee-id so applyFilters() can target and show/hide rows --}}
                                         <tr data-employee-id="{{ $employee->id }}">
                                             <td>
                                                 <div class="d-flex">
@@ -138,56 +143,13 @@
                                             <td>{{ $employee->email }}</td>
                                             <td>{{ $employee->mobile_number }}</td>
                                             <td>
-                                                {{ $roleDisplay }}{{ $roleTypeDisplay }}
-                                                @if($employee->photographer_details)
-                                                    <br><small class="text-muted">{{ $employee->photographer_details->position }}</small>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-4 align-items-center">
-                                                    {{-- Create Permission --}}
-                                                    <div class="d-flex flex-column align-items-center">
-                                                        <span class="fs-xxs text-muted mb-1">CREATE</span>
-                                                        <div class="form-check form-check-success form-switch">
-                                                            <input class="form-check-input permission-switch" type="checkbox" role="switch" 
-                                                                data-permission="create" data-employee-id="{{ $employee->id }}" 
-                                                                {{ $employee->rbac_data->can_create ?? false ? 'checked' : '' }} 
-                                                                style="width: 2.5em; height: 1.3em;">
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {{-- Read Permission --}}
-                                                    <div class="d-flex flex-column align-items-center">
-                                                        <span class="fs-xxs text-muted mb-1">READ</span>
-                                                        <div class="form-check form-check-info form-switch">
-                                                            <input class="form-check-input permission-switch" type="checkbox" role="switch" 
-                                                                data-permission="read" data-employee-id="{{ $employee->id }}" 
-                                                                {{ $employee->rbac_data->can_read ?? false ? 'checked' : '' }} 
-                                                                style="width: 2.5em; height: 1.3em;">
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {{-- Update Permission --}}
-                                                    <div class="d-flex flex-column align-items-center">
-                                                        <span class="fs-xxs text-muted mb-1">UPDATE</span>
-                                                        <div class="form-check form-check-warning form-switch">
-                                                            <input class="form-check-input permission-switch" type="checkbox" role="switch" 
-                                                                data-permission="update" data-employee-id="{{ $employee->id }}" 
-                                                                {{ $employee->rbac_data->can_update ?? false ? 'checked' : '' }} 
-                                                                style="width: 2.5em; height: 1.3em;">
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {{-- Delete Permission --}}
-                                                    <div class="d-flex flex-column align-items-center">
-                                                        <span class="fs-xxs text-muted mb-1">DELETE</span>
-                                                        <div class="form-check form-check-danger form-switch">
-                                                            <input class="form-check-input permission-switch" type="checkbox" role="switch" 
-                                                                data-permission="delete" data-employee-id="{{ $employee->id }}" 
-                                                                {{ $employee->rbac_data->can_delete ?? false ? 'checked' : '' }} 
-                                                                style="width: 2.5em; height: 1.3em;">
-                                                        </div>
-                                                    </div>
+                                                <div class="d-flex flex-column">
+                                                    <span class="badge badge-soft-primary mb-1">
+                                                        {{ $fullRoleName }}
+                                                    </span>
+                                                    @if($employee->role === 'studio-photographer' && $employee->photographer_details)
+                                                        <small class="text-muted">{{ $employee->photographer_details->position }}</small>
+                                                    @endif
                                                 </div>
                                             </td>
                                             <td>
@@ -208,18 +170,16 @@
                                             </td>
                                         </tr>
                                     @empty
-                                        {{-- Shown when the database returns zero employees (no filters applied yet) --}}
                                         <tr id="dbEmptyRow">
-                                            <td colspan="8" class="text-center py-4">
+                                            <td colspan="7" class="text-center py-4">
                                                 <i class="ti ti-users fs-1 text-muted"></i>
                                                 <p class="mt-2">No employees found.</p>
                                             </td>
                                         </tr>
                                     @endforelse
 
-                                    {{-- FIX: Shown by JS when active filters return zero matching rows. Hidden by default. --}}
                                     <tr id="noResultsRow" style="display: none;">
-                                        <td colspan="8" class="text-center py-4">
+                                        <td colspan="7" class="text-center py-4">
                                             <i class="ti ti-filter-off fs-1 text-muted"></i>
                                             <p class="mt-2">No employees match the selected filters.</p>
                                         </td>
@@ -278,45 +238,37 @@
 
             // ==================== CLIENT-SIDE FILTERING ====================
 
-            /**
-             * Reads the current values of all three filter dropdowns and the search input,
-             * then shows/hides table rows that match ALL active filters simultaneously.
-             *
-             * Runs entirely in the browser — no server requests, no page reloads.
-             */
             function applyFilters() {
-                const selectedStudio = $('#studioFilter').val();    // studio id as string, or ''
-                const selectedRole   = $('#roleFilter').val();      // role slug, or ''
-                const selectedStatus = $('#statusFilter').val();    // status string, or ''
+                const selectedStudio = $('#studioFilter').val();
+                const selectedRole   = $('#roleFilter').val();
+                const selectedStatus = $('#statusFilter').val();
                 const searchTerm     = $('#searchInput').val().toLowerCase().trim();
 
-                // Filter the master employee list against all active criteria
                 const filtered = allEmployees.filter(function(emp) {
-                    // FIX: Compare studio_id as strings — option values are always strings in the DOM
                     const matchesStudio = !selectedStudio || String(emp.studio_id) === String(selectedStudio);
-
-                    // Role must match exactly
-                    const matchesRole = !selectedRole || emp.role === selectedRole;
-
-                    // Status must match exactly
+                    
+                    // Role filter now checks both role and user_type for proper matching
+                    let matchesRole = !selectedRole;
+                    if (selectedRole === 'studio-hr') {
+                        matchesRole = emp.role === 'studio-hr';
+                    } else if (selectedRole === 'studio-finance') {
+                        matchesRole = emp.role === 'studio-finance';
+                    } else if (selectedRole === 'studio-photographer') {
+                        matchesRole = emp.role === 'studio-photographer';
+                    }
+                    
                     const matchesStatus = !selectedStatus || emp.status === selectedStatus;
-
-                    // Search checks full name, email, and mobile number
                     const matchesSearch = !searchTerm ||
                         emp.full_name.toLowerCase().includes(searchTerm) ||
                         emp.email.toLowerCase().includes(searchTerm) ||
                         (emp.mobile_number && emp.mobile_number.toLowerCase().includes(searchTerm));
 
-                    // All conditions must pass for the row to be visible
                     return matchesStudio && matchesRole && matchesStatus && matchesSearch;
                 });
 
-                // Build a Set of matching IDs for O(1) lookup when iterating rows
                 const matchedIds = new Set(filtered.map(function(emp) { return emp.id; }));
-
                 let visibleCount = 0;
 
-                // Show or hide each data row based on whether its ID is in the matched set
                 $('#employeesTableBody tr[data-employee-id]').each(function() {
                     const rowId = parseInt($(this).data('employee-id'));
                     if (matchedIds.has(rowId)) {
@@ -327,7 +279,6 @@
                     }
                 });
 
-                // Toggle the "no results" row — only visible when filters return zero matches
                 $('#noResultsRow').toggle(visibleCount === 0);
             }
 
@@ -459,213 +410,6 @@
                                 `;
                             }
                             
-                            // Build permissions section
-                            let permissionsSection = '';
-                            if (emp.rbac) {
-                                permissionsSection = `
-                                    <div class="row g-2 mb-3">
-                                        <h5 class="card-title text-primary">Access Permissions</h5>
-                                        <div class="col-12 col-md-3">
-                                            <div class="d-flex align-items-start">
-                                                <div class="flex-shrink-0">
-                                                    <div class="bg-light-${emp.rbac.can_create ? 'success' : 'danger'} rounded-circle p-2">
-                                                        <i class="ti ti-plus-circle fs-20 text-${emp.rbac.can_create ? 'success' : 'danger'}"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-grow-1 ms-3">
-                                                    <label class="text-muted small mb-1">Create</label>
-                                                    <p class="mb-0 fw-medium"><span class="badge ${emp.rbac.can_create ? 'badge-soft-success' : 'badge-soft-danger'}">${emp.rbac.can_create ? 'ALLOWED' : 'DENIED'}</span></p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-md-3">
-                                            <div class="d-flex align-items-start">
-                                                <div class="flex-shrink-0">
-                                                    <div class="bg-light-${emp.rbac.can_read ? 'success' : 'danger'} rounded-circle p-2">
-                                                        <i class="ti ti-eye fs-20 text-${emp.rbac.can_read ? 'success' : 'danger'}"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-grow-1 ms-3">
-                                                    <label class="text-muted small mb-1">Read</label>
-                                                    <p class="mb-0 fw-medium"><span class="badge ${emp.rbac.can_read ? 'badge-soft-success' : 'badge-soft-danger'}">${emp.rbac.can_read ? 'ALLOWED' : 'DENIED'}</span></p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-md-3">
-                                            <div class="d-flex align-items-start">
-                                                <div class="flex-shrink-0">
-                                                    <div class="bg-light-${emp.rbac.can_update ? 'success' : 'danger'} rounded-circle p-2">
-                                                        <i class="ti ti-pencil fs-20 text-${emp.rbac.can_update ? 'success' : 'danger'}"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-grow-1 ms-3">
-                                                    <label class="text-muted small mb-1">Update</label>
-                                                    <p class="mb-0 fw-medium"><span class="badge ${emp.rbac.can_update ? 'badge-soft-success' : 'badge-soft-danger'}">${emp.rbac.can_update ? 'ALLOWED' : 'DENIED'}</span></p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-md-3">
-                                            <div class="d-flex align-items-start">
-                                                <div class="flex-shrink-0">
-                                                    <div class="bg-light-${emp.rbac.can_delete ? 'success' : 'danger'} rounded-circle p-2">
-                                                        <i class="ti ti-trash fs-20 text-${emp.rbac.can_delete ? 'success' : 'danger'}"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-grow-1 ms-3">
-                                                    <label class="text-muted small mb-1">Delete</label>
-                                                    <p class="mb-0 fw-medium"><span class="badge ${emp.rbac.can_delete ? 'badge-soft-success' : 'badge-soft-danger'}">${emp.rbac.can_delete ? 'ALLOWED' : 'DENIED'}</span></p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                            }
-                            
-                            const content = `
-                                <div class="row align-items-center mb-4">
-                                    <div class="col-12 col-lg-8">
-                                        <div class="d-flex align-items-center flex-column flex-md-row">
-                                            <div class="flex-shrink-0 mb-3 mb-md-0">
-                                                <img src="${emp.profile_photo ? emp.profile_photo : '{{ asset('assets/images/users/user-3.jpg') }}'}" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;" onerror="this.src='{{ asset('assets/images/users/user-3.jpg') }}'" alt="${emp.full_name}">
-                                            </div>
-                                        
-                                            <div class="flex-grow-1 ms-md-4 text-center text-md-start">
-                                                <h2 class="mb-1 h3">${emp.full_name}</h2>
-                                                <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-2 flex-wrap">
-                                                    <span class="badge ${statusBadgeClass} p-1 me-2">${emp.status.toUpperCase()}</span>
-                                                    <span class="badge badge-soft-primary p-1">${roleDisplay} ${emp.rbac?.role_type ? `- ${emp.rbac.role_type}` : ''}</span>
-                                                </div>
-                                            
-                                                <p class="text-muted mb-0">
-                                                    <i class="ti ti-building me-1"></i> ${emp.studio?.name || 'N/A'} | 
-                                                    <i class="ti ti-id me-1"></i> UUID: ${emp.uuid.substring(0, 8)}...
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <div class="row g-2 mb-3">
-                                            <h5 class="card-title text-primary">Personal Information</h5>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-primary rounded-circle p-2">
-                                                            <i class="ti ti-mail fs-20 text-primary"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Email Address</label>
-                                                        <p class="mb-0 fw-medium">${emp.email}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-primary rounded-circle p-2">
-                                                            <i class="ti ti-phone fs-20 text-primary"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Contact Number</label>
-                                                        <p class="mb-0 fw-medium">${emp.mobile_number}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-primary rounded-circle p-2">
-                                                            <i class="ti ti-user fs-20 text-primary"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Full Name</label>
-                                                        <p class="mb-0 fw-medium">${emp.first_name} ${emp.middle_name ? emp.middle_name + ' ' : ''}${emp.last_name}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-primary rounded-circle p-2">
-                                                            <i class="ti ti-hash fs-20 text-primary"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">UUID</label>
-                                                        <p class="mb-0 fw-medium"><code>${emp.uuid}</code></p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="row g-2 mb-3">
-                                            <h5 class="card-title text-primary">Employment Details</h5>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-primary rounded-circle p-2">
-                                                            <i class="ti ti-building-community fs-20 text-primary"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Studio</label>
-                                                        <p class="mb-0 fw-medium">${emp.studio?.name || 'N/A'}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-primary rounded-circle p-2">
-                                                            <i class="ti ti-briefcase fs-20 text-primary"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Role</label>
-                                                        <p class="mb-0 fw-medium">${roleDisplay} ${emp.rbac?.role_type ? `(${emp.rbac.role_type})` : ''}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-primary rounded-circle p-2">
-                                                            <i class="ti ti-calendar-plus fs-20 text-primary"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Date Created</label>
-                                                        <p class="mb-0 fw-medium">${emp.created_at || 'N/A'}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-primary rounded-circle p-2">
-                                                            <i class="ti ti-status-change fs-20 text-primary"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Status</label>
-                                                        <p class="mb-0 fw-medium"><span class="badge ${statusBadgeClass}">${emp.status.toUpperCase()}</span></p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        ${photographerSection}
-                                        ${scheduleSection}
-                                        ${permissionsSection}
-                                    </div>
-                                </div>
-                            `;
-                            
                             $('#modalContent').html(content).show();
                         } else {
                             $('#modalContent').html(`
@@ -684,73 +428,6 @@
                                 <p class="mt-2 text-danger">An error occurred while loading employee details.</p>
                             </div>
                         `).show();
-                    }
-                });
-            });
-
-            // ==================== PERMISSION SWITCH TOGGLE ====================
-            $(document).on('change', '.permission-switch', function() {
-                const employeeId = $(this).data('employee-id');
-                const permission = $(this).data('permission');
-                const isChecked = $(this).is(':checked');
-                
-                const data = {
-                    _token: $('meta[name="csrf-token"]').attr('content'),
-                    _method: 'PUT'
-                };
-                
-                data[`can_${permission}`] = isChecked ? '1' : '0';
-                
-                const $switch = $(this);
-                $switch.prop('disabled', true);
-                const $parent = $switch.closest('.d-flex');
-                $parent.css('opacity', '0.6');
-                
-                $.ajax({
-                    url: `/owner/employee/${employeeId}/permissions`,
-                    method: 'POST',
-                    data: data,
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: `${permission.charAt(0).toUpperCase() + permission.slice(1)} permission updated successfully.`,
-                                showConfirmButton: false,
-                                timer: 1500,
-                                timerProgressBar: true
-                            });
-                        } else {
-                            $switch.prop('checked', !isChecked);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: response.message || 'Failed to update permission.',
-                                showConfirmButton: true,
-                                confirmButtonColor: '#3475db'
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        $switch.prop('checked', !isChecked);
-                        
-                        let errorMessage = 'Failed to update permission.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        }
-                        
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: errorMessage,
-                            showConfirmButton: true,
-                            confirmButtonColor: '#3475db'
-                        });
-                    },
-                    complete: function() {
-                        $switch.prop('disabled', false);
-                        $parent.css('opacity', '1');
                     }
                 });
             });
