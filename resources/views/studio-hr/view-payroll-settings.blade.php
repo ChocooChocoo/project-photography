@@ -130,10 +130,12 @@
                                             <td><strong>₱{{ number_format($payroll->base_monthly_net, 2) }}</strong></td>
                                             <td>{{ $payroll->payment_schedule_display }}</td>
                                             <td>
-                                                <span class="badge {{ $statusBadgeClass }} fs-8 px-2 w-100 toggle-status" 
-                                                      data-id="{{ $payroll->id }}" 
-                                                      data-current="{{ $payroll->is_active ? 'active' : 'inactive' }}"
-                                                      style="cursor: pointer;">
+                                                <span class="badge {{ $statusBadgeClass }} fs-8 px-2 w-100 {{ $canUpdate ? 'toggle-status' : '' }}"
+                                                      @if($canUpdate)
+                                                          data-id="{{ $payroll->id }}"
+                                                          data-current="{{ $payroll->is_active ? 'active' : 'inactive' }}"
+                                                          style="cursor: pointer;"
+                                                      @endif>
                                                     {{ $statusText }}
                                                 </span>
                                             </td>
@@ -142,12 +144,16 @@
                                                     <a href="javascript:void(0)" class="btn btn-sm view-payroll" data-id="{{ $payroll->id }}" title="View Details">
                                                         <i class="ti ti-eye fs-lg"></i>
                                                     </a>
-                                                    <a href="{{ route('studio-hr.payroll-settings.edit', $payroll->id) }}" class="btn btn-sm" title="Edit">
-                                                        <i class="ti ti-edit fs-lg"></i>
-                                                    </a>
-                                                    <button type="button" class="btn btn-sm delete-payroll" data-id="{{ $payroll->id }}" data-name="{{ $payroll->employee->full_name ?? 'this employee' }}" title="Delete">
-                                                        <i class="ti ti-trash fs-lg"></i>
-                                                    </button>
+                                                    @if($canUpdate)
+                                                        <a href="{{ route('studio-hr.payroll-settings.edit', $payroll->id) }}" class="btn btn-sm" title="Edit">
+                                                            <i class="ti ti-edit fs-lg"></i>
+                                                        </a>
+                                                    @endif
+                                                    @if($canDelete)
+                                                        <button type="button" class="btn btn-sm delete-payroll" data-id="{{ $payroll->id }}" data-name="{{ $payroll->employee->full_name ?? 'this employee' }}" title="Delete">
+                                                            <i class="ti ti-trash fs-lg"></i>
+                                                        </button>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>
@@ -156,9 +162,11 @@
                                             <td colspan="10" class="text-center py-4">
                                                 <i class="ti ti-currency-peso fs-1 text-muted"></i>
                                                 <p class="mt-2">No payroll settings found.</p>
-                                                <a href="{{ route('studio-hr.payroll-settings.create') }}" class="btn btn-primary btn-sm mt-2">
-                                                    <i class="ti ti-plus me-1"></i> Setup First Payroll
-                                                </a>
+                                                @if($canCreate)
+                                                    <a href="{{ route('studio-hr.payroll-settings.create') }}" class="btn btn-primary btn-sm mt-2">
+                                                        <i class="ti ti-plus me-1"></i> Setup First Payroll
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforelse

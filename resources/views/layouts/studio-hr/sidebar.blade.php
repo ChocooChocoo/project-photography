@@ -70,29 +70,37 @@
             @php
                 $managePayrollRoutes = Route::is('studio-hr.payroll-settings.index');
                 $createPayrollRoute = Route::is('studio-hr.payroll-settings.create');
+                $canViewPayroll = auth()->user()->hasPermission('view_payroll') || auth()->user()->hasPermission('manage_payroll');
+                $canCreatePayroll = auth()->user()->hasPermission('create_payroll') || auth()->user()->hasPermission('manage_payroll');
             @endphp
 
-            <li class="side-nav-item {{ $managePayrollRoutes || $createPayrollRoute ? 'active' : '' }}">
-                <a data-bs-toggle="collapse" href="#sidebarManagePayroll" aria-expanded="{{ $managePayrollRoutes || $createPayrollRoute ? 'true' : 'false' }}" aria-controls="sidebarManagePayroll" class="side-nav-link {{ $managePayrollRoutes || $createPayrollRoute ? 'active' : '' }}">
-                    <span class="menu-icon"><i class="ti ti-cash-banknote-edit"></i></span>
-                    <span class="menu-text" data-lang="manage-payroll">Payroll</span>
-                    <span class="menu-arrow"></span>
-                </a>
-                <div class="collapse {{ $managePayrollRoutes || $createPayrollRoute ? 'show' : '' }}" id="sidebarManagePayroll">
-                    <ul class="sub-menu">
-                        <li class="side-nav-item">
-                            <a href="{{ route('studio-hr.payroll-settings.index') }}" class="side-nav-link {{ $managePayrollRoutes ? 'active' : '' }}">
-                                <span class="menu-text" data-lang="manage-payroll">View Payroll</span>
-                            </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a href="{{ route('studio-hr.payroll-settings.create') }}" class="side-nav-link {{ $createPayrollRoute ? 'active' : '' }}">
-                                <span class="menu-text" data-lang="create-payroll">Create Payroll</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
+            @if($canViewPayroll || $canCreatePayroll)
+                <li class="side-nav-item {{ $managePayrollRoutes || $createPayrollRoute ? 'active' : '' }}">
+                    <a data-bs-toggle="collapse" href="#sidebarManagePayroll" aria-expanded="{{ $managePayrollRoutes || $createPayrollRoute ? 'true' : 'false' }}" aria-controls="sidebarManagePayroll" class="side-nav-link {{ $managePayrollRoutes || $createPayrollRoute ? 'active' : '' }}">
+                        <span class="menu-icon"><i class="ti ti-cash-banknote-edit"></i></span>
+                        <span class="menu-text" data-lang="manage-payroll">Payroll</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse {{ $managePayrollRoutes || $createPayrollRoute ? 'show' : '' }}" id="sidebarManagePayroll">
+                        <ul class="sub-menu">
+                            @if($canViewPayroll)
+                                <li class="side-nav-item">
+                                    <a href="{{ route('studio-hr.payroll-settings.index') }}" class="side-nav-link {{ $managePayrollRoutes ? 'active' : '' }}">
+                                        <span class="menu-text" data-lang="manage-payroll">View Payroll</span>
+                                    </a>
+                                </li>
+                            @endif
+                            @if($canCreatePayroll)
+                                <li class="side-nav-item">
+                                    <a href="{{ route('studio-hr.payroll-settings.create') }}" class="side-nav-link {{ $createPayrollRoute ? 'active' : '' }}">
+                                        <span class="menu-text" data-lang="create-payroll">Create Payroll</span>
+                                    </a>
+                                </li>
+                            @endif
+                        </ul>
+                    </div>
+                </li>
+            @endif
 
             {{-- Manage Attendance --}}
             @php

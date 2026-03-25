@@ -242,20 +242,20 @@ Route::middleware(['auth'])->group(function () {
 
         // Manage Chatbot
         Route::prefix('chatbot')->name('chatbot.')->group(function () {
-            Route::get('/config', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'index'])->name('config');
-            Route::get('/config/data', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getConfig'])->name('config.get');
-            Route::post('/config/save', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'saveConfig'])->name('config.save');
-            Route::post('/config/toggle', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'toggleStatus'])->name('config.toggle');
+            Route::get('/config',                                   [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'index'])->name('config');
+            Route::get('/config/data',                              [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getConfig'])->name('config.get');
+            Route::post('/config/save',                             [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'saveConfig'])->name('config.save');
+            Route::post('/config/toggle',                           [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'toggleStatus'])->name('config.toggle');
             
-            Route::get('/intents', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getIntents'])->name('intents.get');
-            Route::post('/intents', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'storeIntent'])->name('intents.store');
-            Route::get('/intents/{id}', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getIntent'])->name('intents.show');
-            Route::put('/intents/{id}', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'updateIntent'])->name('intents.update');
-            Route::delete('/intents/{id}', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'deleteIntent'])->name('intents.delete');
-            Route::post('/intents/{id}/toggle', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'toggleIntentStatus'])->name('intents.toggle');
+            Route::get('/intents',                                  [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getIntents'])->name('intents.get');
+            Route::post('/intents',                                 [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'storeIntent'])->name('intents.store');
+            Route::get('/intents/{id}',                             [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getIntent'])->name('intents.show');
+            Route::put('/intents/{id}',                             [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'updateIntent'])->name('intents.update');
+            Route::delete('/intents/{id}',                          [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'deleteIntent'])->name('intents.delete');
+            Route::post('/intents/{id}/toggle',                     [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'toggleIntentStatus'])->name('intents.toggle');
             
-            Route::get('/conversations', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getConversations'])->name('conversations');
-            Route::get('/conversations/{id}', [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getConversationDetails'])->name('conversations.details');
+            Route::get('/conversations',                            [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getConversations'])->name('conversations');
+            Route::get('/conversations/{id}',                       [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getConversationDetails'])->name('conversations.details');
         });
 
         // Inquiries                            
