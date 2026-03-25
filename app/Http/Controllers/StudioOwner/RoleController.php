@@ -50,6 +50,7 @@ class RoleController extends Controller
                 'display_name' => $role->display_name,
                 'description' => $role->description,
                 'status' => $role->status,
+                'is_system' => $role->is_system,
                 'permissions_count' => $role->permissions()->count(),
                 'users_count' => $role->users()->count(),
                 'created_at' => $role->created_at ? $role->created_at->format('M d, Y h:i A') : 'N/A',
@@ -71,6 +72,7 @@ class RoleController extends Controller
             'name' => 'required|string|max:100|unique:tbl_roles,name',
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
+            'is_system' => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
@@ -80,6 +82,7 @@ class RoleController extends Controller
                 'name' => $request->name,
                 'description' => $request->description,
                 'status' => $request->status,
+                'is_system' => $request->boolean('is_system'),
             ]);
 
             DB::commit();
@@ -107,7 +110,7 @@ class RoleController extends Controller
      */
     public function show($id)
     {
-        $role = RoleModel::with(['permissions' => function($query) {
+        $role = RoleModel::with(['permissions' => function ($query) {
             $query->orderBy('name');
         }])->findOrFail($id);
 
@@ -119,10 +122,12 @@ class RoleController extends Controller
                 'display_name' => $role->display_name,
                 'description' => $role->description,
                 'status' => $role->status,
-                'permissions' => $role->permissions->map(function($permission) {
+                'is_system' => $role->is_system,
+                'permissions' => $role->permissions->map(function ($permission) {
                     return [
                         'id' => $permission->id,
                         'name' => $permission->name,
+                        'permission_string' => $permission->permission_string,
                         'description' => $permission->description,
                     ];
                 }),
@@ -141,6 +146,7 @@ class RoleController extends Controller
             'name' => 'required|string|max:100|unique:tbl_roles,name,' . $id,
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
+            'is_system' => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
@@ -151,6 +157,7 @@ class RoleController extends Controller
                 'name' => $request->name,
                 'description' => $request->description,
                 'status' => $request->status,
+                'is_system' => $request->boolean('is_system'),
             ]);
 
             DB::commit();
@@ -220,6 +227,13 @@ class RoleController extends Controller
 
         try {
             $role = RoleModel::findOrFail($id);
+
+            if ($role->isSystemProtected()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'System-protected roles cannot be deleted.'
+                ], 422);
+            }
             
             // Check if role has users assigned
             if ($role->users()->count() > 0) {

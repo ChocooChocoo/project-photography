@@ -25,6 +25,7 @@ class RoleModel extends Model
         'name',
         'description',
         'status',
+        'is_system',
     ];
 
     /**
@@ -34,6 +35,7 @@ class RoleModel extends Model
      */
     protected $casts = [
         'status' => 'string',
+        'is_system' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -73,11 +75,26 @@ class RoleModel extends Model
     }
 
     /**
+     * Check if role is system-protected.
+     */
+    public function isSystemProtected(): bool
+    {
+        return $this->is_system === true;
+    }
+
+    /**
      * Check if role has a specific permission.
      */
     public function hasPermission(string $permissionName): bool
     {
-        return $this->permissions()->where('name', $permissionName)->exists();
+        $permissionIdentifiers = PermissionModel::buildPermissionIdentifiers($permissionName);
+
+        return $this->permissions()
+            ->where(function ($query) use ($permissionIdentifiers) {
+                $query->whereIn('name', $permissionIdentifiers)
+                    ->orWhereIn('permission_string', $permissionIdentifiers);
+            })
+            ->exists();
     }
 
     /**

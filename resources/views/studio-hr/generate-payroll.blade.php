@@ -1,35 +1,6 @@
 @extends('layouts.studio-hr.app')
 @section('title', 'Generate Payroll')
 
-{{-- STYLES --}}
-@section('styles')
-    <style>
-        .summary-card {
-            border: 1px dashed rgba(52, 117, 219, 0.35);
-            background: linear-gradient(135deg, rgba(52, 117, 219, 0.08), rgba(52, 117, 219, 0.02));
-        }
-
-        .employee-table-wrap {
-            min-height: 260px;
-        }
-
-        .table tbody tr.is-selected {
-            background-color: rgba(52, 117, 219, 0.06);
-        }
-
-        .invoice-summary-card {
-            border: 1px solid rgba(52, 117, 219, 0.14);
-            border-radius: 0.75rem;
-            overflow: hidden;
-        }
-
-        .invoice-summary-table th,
-        .invoice-summary-table td {
-            vertical-align: middle;
-        }
-    </style>
-@endsection
-
 {{-- CONTENTS --}}
 @section('content')
     <div class="content-page">
@@ -120,36 +91,108 @@
                                             </div>
                                         </div>
 
-                                        <div class="row mb-4">
-                                            <div class="col-md-3 mb-3">
-                                                <div class="card summary-card shadow-none h-100">
+                                        <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1 g-3 align-items-center mb-4">
+                                            <div class="col">
+                                                <div class="card h-100">
                                                     <div class="card-body">
-                                                        <p class="text-muted mb-1">Eligible Employees</p>
-                                                        <h3 class="mb-0" id="eligibleEmployeeCount">0</h3>
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                                <span class="avatar-title bg-info-subtle text-info rounded fs-24">
+                                                                    <i class="ti ti-users"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <h4 class="mb-0" id="eligibleEmployeeCount">0</h4>
+                                                                <p class="mb-0 text-muted">Eligible Employees</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-4">
+                                                            <div class="d-flex justify-content-between mb-1">
+                                                                <span class="text-muted fs-xs fw-semibold">LOADED</span>
+                                                                <span class="text-muted" id="eligibleEmployeeProgressText">0%</span>
+                                                            </div>
+                                                            <div class="progress" style="height: 6px;">
+                                                                <div class="progress-bar bg-info" id="eligibleEmployeeProgressBar" style="width: 0%;"></div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3 mb-3">
-                                                <div class="card summary-card shadow-none h-100">
+                                            <div class="col">
+                                                <div class="card h-100">
                                                     <div class="card-body">
-                                                        <p class="text-muted mb-1">Selected Employees</p>
-                                                        <h3 class="mb-0" id="selectedEmployeeCount">0</h3>
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                                <span class="avatar-title bg-success-subtle text-success rounded fs-24">
+                                                                    <i class="ti ti-checklist"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <h4 class="mb-0" id="selectedEmployeeCount">0</h4>
+                                                                <p class="mb-0 text-muted">Selected Employees</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-4">
+                                                            <div class="d-flex justify-content-between mb-1">
+                                                                <span class="text-muted fs-xs fw-semibold">SELECTION</span>
+                                                                <span class="text-muted" id="selectedEmployeeProgressText">0%</span>
+                                                            </div>
+                                                            <div class="progress" style="height: 6px;">
+                                                                <div class="progress-bar bg-success" id="selectedEmployeeProgressBar" style="width: 0%;"></div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3 mb-3">
-                                                <div class="card summary-card shadow-none h-100">
+                                            <div class="col">
+                                                <div class="card h-100">
                                                     <div class="card-body">
-                                                        <p class="text-muted mb-1">Selected Attendance</p>
-                                                        <h3 class="mb-0" id="selectedAttendanceTotal">0.00</h3>
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                                <span class="avatar-title bg-warning-subtle text-warning rounded fs-24">
+                                                                    <i class="ti ti-clock-hour-4"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <h4 class="mb-0" id="selectedAttendanceTotal">0.00</h4>
+                                                                <p class="mb-0 text-muted">Selected Attendance</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-4">
+                                                            <div class="d-flex justify-content-between mb-1">
+                                                                <span class="text-muted fs-xs fw-semibold">ATTENDANCE</span>
+                                                                <span class="text-muted" id="selectedAttendanceProgressText">0%</span>
+                                                            </div>
+                                                            <div class="progress" style="height: 6px;">
+                                                                <div class="progress-bar bg-warning" id="selectedAttendanceProgressBar" style="width: 0%;"></div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3 mb-3">
-                                                <div class="card summary-card shadow-none h-100">
+                                            <div class="col">
+                                                <div class="card h-100">
                                                     <div class="card-body">
-                                                        <p class="text-muted mb-1">Selected Booking</p>
-                                                        <h3 class="mb-0" id="selectedBookingTotal">0.00</h3>
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                                <span class="avatar-title bg-danger-subtle text-danger rounded fs-24">
+                                                                    <i class="ti ti-cash-banknote"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <h4 class="mb-0" id="selectedBookingTotal">0.00</h4>
+                                                                <p class="mb-0 text-muted">Selected Booking</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-4">
+                                                            <div class="d-flex justify-content-between mb-1">
+                                                                <span class="text-muted fs-xs fw-semibold">BOOKINGS</span>
+                                                                <span class="text-muted" id="selectedBookingProgressText">0%</span>
+                                                            </div>
+                                                            <div class="progress" style="height: 6px;">
+                                                                <div class="progress-bar bg-danger" id="selectedBookingProgressBar" style="width: 0%;"></div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -170,7 +213,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="employee-table-wrap position-relative">
+                                        <div class="position-relative">
                                             <div id="employeeLoadingState" class="text-center py-5 d-none">
                                                 <div class="spinner-border text-primary" role="status">
                                                     <span class="visually-hidden">Loading...</span>
@@ -203,7 +246,7 @@
                                         </div>
 
                                         <div class="mt-4 d-flex justify-content-end">
-                                            <button type="submit" class="btn btn-success" id="generatePayrollBtn">
+                                            <button type="submit" class="btn btn-primary" id="generatePayrollBtn">
                                                 <span id="generatePayrollBtnText">Generate Payroll</span>
                                                 <span class="spinner-border spinner-border-sm ms-2 d-none" id="generatePayrollSpinner" role="status" aria-hidden="true"></span>
                                             </button>
@@ -340,9 +383,9 @@
                                 <div class="row g-2 mb-3">
                                     <h5 class="card-title text-primary">Deductions and Notes</h5>
                                     <div class="col-12">
-                                        <div class="invoice-summary-card">
+                                        <div class="card border shadow-none mb-0">
                                             <div class="table-responsive">
-                                                <table class="table table-bordered table-nowrap align-middle mb-0 invoice-summary-table">
+                                                <table class="table table-bordered table-nowrap align-middle mb-0">
                                                     <thead class="bg-light bg-opacity-50">
                                                         <tr class="text-uppercase fs-xxs">
                                                             <th style="width: 80px;">#</th>
@@ -453,19 +496,47 @@
                 return Number(employee.booking_preview?.booking_amount || 0);
             }
 
+            function calculateProgress(value, total) {
+                if (total <= 0) {
+                    return 0;
+                }
+
+                return Math.min(100, Math.round((value / total) * 100));
+            }
+
             function updateSummaryCards() {
                 let attendanceTotal = 0;
                 let bookingTotal = 0;
+                let totalAttendanceAmount = 0;
+                let totalBookingAmount = 0;
 
                 selectedEmployees.forEach(function (employee) {
                     attendanceTotal += getAttendancePreviewAmount(employee);
                     bookingTotal += getBookingPreviewAmount(employee);
                 });
 
+                loadedEmployees.forEach(function (employee) {
+                    totalAttendanceAmount += getAttendancePreviewAmount(employee);
+                    totalBookingAmount += getBookingPreviewAmount(employee);
+                });
+
+                const eligibleEmployeeProgress = loadedEmployees.length > 0 ? 100 : 0;
+                const selectedEmployeeProgress = calculateProgress(selectedEmployees.length, loadedEmployees.length);
+                const selectedAttendanceProgress = calculateProgress(attendanceTotal, totalAttendanceAmount);
+                const selectedBookingProgress = calculateProgress(bookingTotal, totalBookingAmount);
+
                 $('#eligibleEmployeeCount').text(loadedEmployees.length);
                 $('#selectedEmployeeCount').text(selectedEmployees.length);
                 $('#selectedAttendanceTotal').text(formatCurrency(attendanceTotal));
                 $('#selectedBookingTotal').text(formatCurrency(bookingTotal));
+                $('#eligibleEmployeeProgressText').text(eligibleEmployeeProgress + '%');
+                $('#selectedEmployeeProgressText').text(selectedEmployeeProgress + '%');
+                $('#selectedAttendanceProgressText').text(selectedAttendanceProgress + '%');
+                $('#selectedBookingProgressText').text(selectedBookingProgress + '%');
+                $('#eligibleEmployeeProgressBar').css('width', eligibleEmployeeProgress + '%');
+                $('#selectedEmployeeProgressBar').css('width', selectedEmployeeProgress + '%');
+                $('#selectedAttendanceProgressBar').css('width', selectedAttendanceProgress + '%');
+                $('#selectedBookingProgressBar').css('width', selectedBookingProgress + '%');
             }
 
             function updateSelectedEmployees() {
@@ -480,7 +551,7 @@
 
                 $('#employeeTableBody tr').each(function () {
                     const isChecked = $(this).find('.employee-checkbox').is(':checked');
-                    $(this).toggleClass('is-selected', isChecked);
+                    $(this).toggleClass('table-active', isChecked);
                 });
 
                 updateSummaryCards();

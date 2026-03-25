@@ -62,13 +62,14 @@
                                                         <th data-table-sort="permissions">Permissions</th>
                                                         <th data-table-sort="users">Users</th>
                                                         <th data-table-sort="status">Status</th>
+                                                        <th data-table-sort="is_system">System Role</th>
                                                         <th data-table-sort="created_at">Created Date</th>
                                                         <th class="text-center" style="width: 1%;">Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="rolesTableBody">
                                                     <tr id="loadingRow">
-                                                        <td colspan="7" class="text-center py-4">
+                                                        <td colspan="8" class="text-center py-4">
                                                             <div class="spinner-border text-primary" role="status">
                                                                 <span class="visually-hidden">Loading...</span>
                                                             </div>
@@ -76,7 +77,7 @@
                                                         </td>
                                                     </tr>
                                                     <tr id="noResultsRow" style="display: none;">
-                                                        <td colspan="7" class="text-center py-4">
+                                                        <td colspan="8" class="text-center py-4">
                                                             <i class="ti ti-filter-off fs-1 text-muted"></i>
                                                             <p class="mt-2">No roles found.</p>
                                                         </td>
@@ -120,6 +121,13 @@
                                                 <div class="invalid-feedback">
                                                     Please select a status.
                                                 </div>
+                                            </div>
+                                            <div class="col-md-12 mb-3">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" role="switch" name="is_system" id="createRoleIsSystem" value="1">
+                                                    <label class="form-check-label" for="createRoleIsSystem">System-Protected Role</label>
+                                                </div>
+                                                <div class="form-text">Enable this if the role should be protected from deletion.</div>
                                             </div>
                                         </div>
 
@@ -180,6 +188,13 @@
                                     <div class="invalid-feedback">
                                         Please select a status.
                                     </div>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="is_system" id="editRoleIsSystem" value="1">
+                                        <label class="form-check-label" for="editRoleIsSystem">System-Protected Role</label>
+                                    </div>
+                                    <div class="form-text">Enable this if the role should be protected from deletion.</div>
                                 </div>
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label">Permissions</label>
@@ -254,6 +269,11 @@
                 roles.forEach(role => {
                     const statusBadgeClass = role.status === 'active' ? 'badge-soft-success' : 'badge-soft-danger';
                     const statusText = role.status.toUpperCase();
+                    const systemBadgeClass = role.is_system ? 'badge-soft-warning' : 'badge-soft-secondary';
+                    const systemBadgeText = role.is_system ? 'YES' : 'NO';
+                    const deleteButtonHtml = role.is_system
+                        ? `<button type="button" class="btn btn-sm" title="System-protected roles cannot be deleted" disabled><i class="ti ti-lock fs-lg"></i></button>`
+                        : `<button type="button" class="btn btn-sm delete-role" data-id="${role.id}" data-name="${role.display_name || role.name}" title="Delete"><i class="ti ti-trash fs-lg"></i></button>`;
                     
                     const row = `
                         <tr data-role-id="${role.id}">
@@ -265,15 +285,14 @@
                             <td><span class="badge badge-soft-info">${role.permissions_count} permissions</span></td>
                             <td><span class="badge badge-soft-secondary">${role.users_count} users</span></td>
                             <td><span class="badge ${statusBadgeClass}">${statusText}</span></td>
+                            <td><span class="badge ${systemBadgeClass}">${systemBadgeText}</span></td>
                             <td>${role.created_at}</td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-1">
                                     <button type="button" class="btn btn-sm edit-role" data-id="${role.id}" title="Edit Role">
                                         <i class="ti ti-edit fs-lg"></i>
                                     </button>
-                                    <button type="button" class="btn btn-sm delete-role" data-id="${role.id}" data-name="${role.display_name || role.name}" title="Delete">
-                                        <i class="ti ti-trash fs-lg"></i>
-                                    </button>
+                                    ${deleteButtonHtml}
                                 </div>
                             </td>
                         </tr>
@@ -421,6 +440,7 @@
                             $('#editRoleName').val(role.name);
                             $('#editRoleDescription').val(role.description || '');
                             $('#editRoleStatus').val(role.status);
+                            $('#editRoleIsSystem').prop('checked', Boolean(role.is_system));
                             
                             loadPermissionsForRole(role.id, role.permissions || []);
                             $('#editModalContent').show();
@@ -459,7 +479,7 @@
                                             <div class="form-check">
                                                 <input class="form-check-input permission-checkbox" type="checkbox" name="permissions[]" value="${permission.id}" id="perm_${permission.id}" ${isChecked ? 'checked' : ''}>
                                                 <label class="form-check-label" for="perm_${permission.id}">
-                                                    ${permission.name}
+                                                    ${permission.permission_string || permission.name}
                                                     <small class="text-muted d-block">${permission.description || ''}</small>
                                                 </label>
                                             </div>
@@ -475,46 +495,31 @@
             }
             
             function groupPermissions(permissions) {
-                const groups = {
-                    'Employee Management': [],
-                    'Attendance Management': [],
-                    'Payroll Management': [],
-                    'Schedule Management': [],
-                    'Reports': [],
-                    'Other': []
-                };
-                
-                permissions.forEach(perm => {
-                    if (perm.name.includes('employee') || perm.name.includes('employee')) {
-                        groups['Employee Management'].push(perm);
-                    } else if (perm.name.includes('attendance')) {
-                        groups['Attendance Management'].push(perm);
-                    } else if (perm.name.includes('payroll')) {
-                        groups['Payroll Management'].push(perm);
-                    } else if (perm.name.includes('schedule')) {
-                        groups['Schedule Management'].push(perm);
-                    } else if (perm.name.includes('report') || perm.name.includes('export')) {
-                        groups['Reports'].push(perm);
-                    } else {
-                        groups['Other'].push(perm);
+                const groupedPermissions = {};
+
+                permissions.forEach(permission => {
+                    const resource = permission.resource || 'other';
+                    const groupName = resource
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, char => char.toUpperCase());
+
+                    if (!groupedPermissions[groupName]) {
+                        groupedPermissions[groupName] = [];
                     }
+
+                    groupedPermissions[groupName].push(permission);
                 });
-                
-                const nonEmptyGroups = {};
-                for (const [group, perms] of Object.entries(groups)) {
-                    if (perms.length > 0) {
-                        nonEmptyGroups[group] = perms;
-                    }
-                }
-                
-                return nonEmptyGroups;
+
+                return groupedPermissions;
             }
+
             
             $('#saveRoleBtn').on('click', function() {
                 const roleId = $('#editRoleId').val();
                 const roleName = $('#editRoleName').val();
                 const roleDescription = $('#editRoleDescription').val();
                 const roleStatus = $('#editRoleStatus').val();
+                const roleIsSystem = $('#editRoleIsSystem').is(':checked') ? 1 : 0;
                 
                 if (!roleName) {
                     Swal.fire({ icon: 'error', title: 'Error!', text: 'Role name is required.' });
@@ -541,6 +546,7 @@
                         name: roleName,
                         description: roleDescription,
                         status: roleStatus,
+                        is_system: roleIsSystem,
                         _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {

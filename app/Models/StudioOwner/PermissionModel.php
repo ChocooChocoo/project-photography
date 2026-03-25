@@ -23,6 +23,9 @@ class PermissionModel extends Model
      */
     protected $fillable = [
         'name',
+        'resource',
+        'action',
+        'permission_string',
         'description',
         'status',
     ];
@@ -37,6 +40,33 @@ class PermissionModel extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Build possible legacy and protocol permission identifiers.
+     *
+     * @param string $permissionIdentifier
+     * @return array<int, string>
+     */
+    public static function buildPermissionIdentifiers(string $permissionIdentifier): array
+    {
+        $trimmedPermissionIdentifier = trim(strtolower($permissionIdentifier));
+
+        if ($trimmedPermissionIdentifier === '') {
+            return [];
+        }
+
+        $identifiers = [$trimmedPermissionIdentifier];
+
+        if (str_contains($trimmedPermissionIdentifier, ':')) {
+            [$resource, $action] = array_pad(explode(':', $trimmedPermissionIdentifier, 2), 2, '');
+            $identifiers[] = $action . '_' . $resource;
+        } elseif (str_contains($trimmedPermissionIdentifier, '_')) {
+            [$action, $resource] = array_pad(explode('_', $trimmedPermissionIdentifier, 2), 2, '');
+            $identifiers[] = $resource . ':' . $action;
+        }
+
+        return array_values(array_unique(array_filter($identifiers)));
+    }
 
     /**
      * Get the roles that have this permission.

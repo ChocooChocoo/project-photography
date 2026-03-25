@@ -404,6 +404,11 @@ class UserModel extends Authenticatable
      */
     public function hasPermission(string $permissionName): bool
     {
-        return $this->getAllPermissions()->contains('name', $permissionName);
+        $permissionIdentifiers = \App\Models\StudioOwner\PermissionModel::buildPermissionIdentifiers($permissionName);
+
+        return $this->getAllPermissions()->contains(function ($permission) use ($permissionIdentifiers) {
+            return in_array($permission->name, $permissionIdentifiers, true)
+                || in_array($permission->permission_string, $permissionIdentifiers, true);
+        });
     }
 }

@@ -35,6 +35,9 @@ class PermissionController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('resource', 'like', "%{$search}%")
+                  ->orWhere('action', 'like', "%{$search}%")
+                  ->orWhere('permission_string', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%");
             });
         }
@@ -47,6 +50,9 @@ class PermissionController extends Controller
             return [
                 'id' => $permission->id,
                 'name' => $permission->name,
+                'resource' => $permission->resource,
+                'action' => $permission->action,
+                'permission_string' => $permission->permission_string,
                 'description' => $permission->description,
                 'status' => $permission->status,
                 'roles_count' => $permission->roles()->count(),
@@ -66,8 +72,8 @@ class PermissionController extends Controller
     public function getAllPermissions()
     {
         $permissions = PermissionModel::where('status', 'active')
-            ->orderBy('name')
-            ->get(['id', 'name', 'description']);
+            ->orderBy('permission_string')
+            ->get(['id', 'name', 'resource', 'action', 'permission_string', 'description']);
 
         return response()->json([
             'success' => true,
@@ -81,16 +87,29 @@ class PermissionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:100|unique:tbl_permissions,name',
+            'resource' => 'required|string|max:100',
+            'action' => 'required|string|max:50',
+            'permission_string' => 'required|string|max:150|unique:tbl_permissions,permission_string',
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
+        ], [
+            'resource.required' => 'The resource field is required.',
+            'action.required' => 'The action field is required.',
+            'permission_string.required' => 'The permission string is required.',
+            'permission_string.unique' => 'The generated permission string already exists.',
+            'status.required' => 'Please select a status.',
         ]);
 
         DB::beginTransaction();
 
         try {
+            $permissionData = $this->preparePermissionData($request);
+
             $permission = PermissionModel::create([
-                'name' => $request->name,
+                'name' => $permissionData['name'],
+                'resource' => $permissionData['resource'],
+                'action' => $permissionData['action'],
+                'permission_string' => $permissionData['permission_string'],
                 'description' => $request->description,
                 'status' => $request->status,
             ]);
@@ -99,6 +118,7 @@ class PermissionController extends Controller
 
             return response()->json([
                 'success' => true,
+                'status' => 'success',
                 'message' => 'Permission created successfully.',
                 'data' => $permission
             ]);
@@ -110,6 +130,7 @@ class PermissionController extends Controller
 
             return response()->json([
                 'success' => false,
+                'status' => 'error',
                 'message' => 'Failed to create permission: ' . $e->getMessage()
             ], 500);
         }
@@ -120,7 +141,7 @@ class PermissionController extends Controller
      */
     public function show($id)
     {
-        $permission = PermissionModel::with(['roles' => function($query) {
+        $permission = PermissionModel::with(['roles' => function ($query) {
             $query->orderBy('name');
         }])->findOrFail($id);
 
@@ -129,9 +150,12 @@ class PermissionController extends Controller
             'data' => [
                 'id' => $permission->id,
                 'name' => $permission->name,
+                'resource' => $permission->resource,
+                'action' => $permission->action,
+                'permission_string' => $permission->permission_string,
                 'description' => $permission->description,
                 'status' => $permission->status,
-                'roles' => $permission->roles->map(function($role) {
+                'roles' => $permission->roles->map(function ($role) {
                     return [
                         'id' => $role->id,
                         'name' => $role->name,
@@ -150,17 +174,29 @@ class PermissionController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|string|max:100|unique:tbl_permissions,name,' . $id,
+            'resource' => 'required|string|max:100',
+            'action' => 'required|string|max:50',
+            'permission_string' => 'required|string|max:150|unique:tbl_permissions,permission_string,' . $id,
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
+        ], [
+            'resource.required' => 'The resource field is required.',
+            'action.required' => 'The action field is required.',
+            'permission_string.required' => 'The permission string is required.',
+            'permission_string.unique' => 'The generated permission string already exists.',
+            'status.required' => 'Please select a status.',
         ]);
 
         DB::beginTransaction();
 
         try {
+            $permissionData = $this->preparePermissionData($request);
             $permission = PermissionModel::findOrFail($id);
             $permission->update([
-                'name' => $request->name,
+                'name' => $permissionData['name'],
+                'resource' => $permissionData['resource'],
+                'action' => $permissionData['action'],
+                'permission_string' => $permissionData['permission_string'],
                 'description' => $request->description,
                 'status' => $request->status,
             ]);
@@ -169,6 +205,7 @@ class PermissionController extends Controller
 
             return response()->json([
                 'success' => true,
+                'status' => 'success',
                 'message' => 'Permission updated successfully.',
                 'data' => $permission
             ]);
@@ -180,6 +217,7 @@ class PermissionController extends Controller
 
             return response()->json([
                 'success' => false,
+                'status' => 'error',
                 'message' => 'Failed to update permission: ' . $e->getMessage()
             ], 500);
         }
@@ -199,6 +237,7 @@ class PermissionController extends Controller
             if ($permission->roles()->count() > 0) {
                 return response()->json([
                     'success' => false,
+                    'status' => 'error',
                     'message' => 'Cannot delete permission that is assigned to roles.'
                 ], 422);
             }
@@ -209,6 +248,7 @@ class PermissionController extends Controller
 
             return response()->json([
                 'success' => true,
+                'status' => 'success',
                 'message' => 'Permission deleted successfully.'
             ]);
 
@@ -219,6 +259,7 @@ class PermissionController extends Controller
 
             return response()->json([
                 'success' => false,
+                'status' => 'error',
                 'message' => 'Failed to delete permission: ' . $e->getMessage()
             ], 500);
         }
@@ -240,6 +281,7 @@ class PermissionController extends Controller
 
             return response()->json([
                 'success' => true,
+                'status' => 'success',
                 'message' => 'Permission status updated successfully.',
                 'data' => ['status' => $newStatus]
             ]);
@@ -251,8 +293,42 @@ class PermissionController extends Controller
 
             return response()->json([
                 'success' => false,
+                'status' => 'error',
                 'message' => 'Failed to update permission status: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Prepare normalized permission data for storage.
+     *
+     * @param Request $request
+     * @return array<string, string>
+     */
+    private function preparePermissionData(Request $request): array
+    {
+        $resource = $this->normalizePermissionSegment($request->input('resource'));
+        $action = $this->normalizePermissionSegment($request->input('action'));
+
+        return [
+            'name' => $action . '_' . $resource,
+            'resource' => $resource,
+            'action' => $action,
+            'permission_string' => $resource . ':' . $action,
+        ];
+    }
+
+    /**
+     * Normalize a permission resource or action segment.
+     *
+     * @param string|null $value
+     * @return string
+     */
+    private function normalizePermissionSegment(?string $value): string
+    {
+        $normalizedValue = strtolower(trim((string) $value));
+        $normalizedValue = preg_replace('/[^a-z0-9]+/', '_', $normalizedValue) ?? '';
+
+        return trim($normalizedValue, '_');
     }
 }
