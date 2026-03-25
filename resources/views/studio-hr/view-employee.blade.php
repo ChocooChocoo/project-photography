@@ -141,58 +141,13 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <div class="d-flex justify-content-center gap-4 align-items-center">
-                                                    {{-- Create Permission --}}
-                                                    <div class="d-flex flex-column align-items-center">
-                                                        <span class="fs-xxs text-muted mb-1">CREATE</span>
-                                                        <div class="form-check form-check-success form-switch">
-                                                            <input class="form-check-input permission-switch"
-                                                                type="checkbox" role="switch" data-permission="create"
-                                                                data-employee-id="{{ $employee->id }}"
-                                                                {{ $employee->rbac_data->can_create ?? false ? 'checked' : '' }}
-                                                                {{ !$canUpdate ? 'disabled' : '' }}
-                                                                style="width: 2.5em; height: 1.3em;">
-                                                        </div>
-                                                    </div>
-
-                                                    {{-- Read Permission --}}
-                                                    <div class="d-flex flex-column align-items-center">
-                                                        <span class="fs-xxs text-muted mb-1">READ</span>
-                                                        <div class="form-check form-check-info form-switch">
-                                                            <input class="form-check-input permission-switch"
-                                                                type="checkbox" role="switch" data-permission="read"
-                                                                data-employee-id="{{ $employee->id }}"
-                                                                {{ $employee->rbac_data->can_read ?? false ? 'checked' : '' }}
-                                                                {{ !$canUpdate ? 'disabled' : '' }}
-                                                                style="width: 2.5em; height: 1.3em;">
-                                                        </div>
-                                                    </div>
-
-                                                    {{-- Update Permission --}}
-                                                    <div class="d-flex flex-column align-items-center">
-                                                        <span class="fs-xxs text-muted mb-1">UPDATE</span>
-                                                        <div class="form-check form-check-warning form-switch">
-                                                            <input class="form-check-input permission-switch"
-                                                                type="checkbox" role="switch" data-permission="update"
-                                                                data-employee-id="{{ $employee->id }}"
-                                                                {{ $employee->rbac_data->can_update ?? false ? 'checked' : '' }}
-                                                                {{ !$canUpdate ? 'disabled' : '' }}
-                                                                style="width: 2.5em; height: 1.3em;">
-                                                        </div>
-                                                    </div>
-
-                                                    {{-- Delete Permission --}}
-                                                    <div class="d-flex flex-column align-items-center">
-                                                        <span class="fs-xxs text-muted mb-1">DELETE</span>
-                                                        <div class="form-check form-check-danger form-switch">
-                                                            <input class="form-check-input permission-switch"
-                                                                type="checkbox" role="switch" data-permission="delete"
-                                                                data-employee-id="{{ $employee->id }}"
-                                                                {{ $employee->rbac_data->can_delete ?? false ? 'checked' : '' }}
-                                                                {{ !$canUpdate ? 'disabled' : '' }}
-                                                                style="width: 2.5em; height: 1.3em;">
-                                                        </div>
-                                                    </div>
+                                                <div class="d-flex flex-column">
+                                                    <span class="badge badge-soft-primary mb-1">
+                                                        {{ $employee->role_display ?? $roleDisplay . $roleTypeDisplay }}
+                                                    </span>
+                                                    @if($employee->photographer_details)
+                                                        <small class="text-muted">{{ $employee->photographer_details->position }}</small>
+                                                    @endif
                                                 </div>
                                             </td>
                                             <td>
