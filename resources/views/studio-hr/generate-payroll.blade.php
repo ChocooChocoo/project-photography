@@ -16,6 +16,17 @@
         .table tbody tr.is-selected {
             background-color: rgba(52, 117, 219, 0.06);
         }
+
+        .invoice-summary-card {
+            border: 1px solid rgba(52, 117, 219, 0.14);
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .invoice-summary-table th,
+        .invoice-summary-table td {
+            vertical-align: middle;
+        }
     </style>
 @endsection
 
@@ -328,10 +339,70 @@
 
                                 <div class="row g-2 mb-3">
                                     <h5 class="card-title text-primary">Deductions and Notes</h5>
-                                    <div class="col-12 col-md-6"><div class="d-flex align-items-start"><div class="flex-shrink-0"><div class="bg-light-primary rounded-circle p-2"><i class="ti ti-minus fs-20 text-primary"></i></div></div><div class="flex-grow-1 ms-3"><label class="text-muted small mb-1">Deduction Breakdown</label><p class="mb-0 fw-medium" id="modalDeductionBreakdown">N/A</p></div></div></div>
-                                    <div class="col-12 col-md-6"><div class="d-flex align-items-start"><div class="flex-shrink-0"><div class="bg-light-primary rounded-circle p-2"><i class="ti ti-note fs-20 text-primary"></i></div></div><div class="flex-grow-1 ms-3"><label class="text-muted small mb-1">Notes</label><p class="mb-0 fw-medium" id="modalPayrollNotes">N/A</p></div></div></div>
-                                    <div class="col-12 col-md-6"><div class="d-flex align-items-start"><div class="flex-shrink-0"><div class="bg-light-primary rounded-circle p-2"><i class="ti ti-report-money fs-20 text-primary"></i></div></div><div class="flex-grow-1 ms-3"><label class="text-muted small mb-1">Attendance Amount</label><p class="mb-0 fw-medium" id="modalAttendanceAmount">N/A</p></div></div></div>
-                                    <div class="col-12 col-md-6"><div class="d-flex align-items-start"><div class="flex-shrink-0"><div class="bg-light-primary rounded-circle p-2"><i class="ti ti-coin fs-20 text-primary"></i></div></div><div class="flex-grow-1 ms-3"><label class="text-muted small mb-1">Booking Amount</label><p class="mb-0 fw-medium" id="modalBookingAmount">N/A</p></div></div></div>
+                                    <div class="col-12">
+                                        <div class="invoice-summary-card">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-nowrap align-middle mb-0 invoice-summary-table">
+                                                    <thead class="bg-light bg-opacity-50">
+                                                        <tr class="text-uppercase fs-xxs">
+                                                            <th style="width: 80px;">#</th>
+                                                            <th>Item Details</th>
+                                                            <th class="text-center" style="width: 120px;">Qty</th>
+                                                            <th class="text-end" style="width: 170px;">Unit Price</th>
+                                                            <th class="text-end" style="width: 170px;">Total</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="modalInvoiceLineItems">
+                                                        <tr>
+                                                            <td class="text-center">01</td>
+                                                            <td>Loading...</td>
+                                                            <td class="text-center">1</td>
+                                                            <td class="text-end">PHP 0.00</td>
+                                                            <td class="text-end">PHP 0.00</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <div class="row justify-content-end p-3">
+                                                <div class="col-12 col-lg-5">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-borderless mb-0">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td class="text-muted">Attendance Amount</td>
+                                                                    <td class="text-end fw-medium" id="modalAttendanceAmount">PHP 0.00</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="text-muted">Booking Amount</td>
+                                                                    <td class="text-end fw-medium" id="modalBookingAmount">PHP 0.00</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="text-muted">Gross Amount</td>
+                                                                    <td class="text-end fw-medium" id="modalGrossAmount">PHP 0.00</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="text-muted">Total Deductions</td>
+                                                                    <td class="text-end fw-medium text-danger" id="modalTotalDeductionsSummary">- PHP 0.00</td>
+                                                                </tr>
+                                                                <tr class="border-top">
+                                                                    <td class="fw-semibold">Net Amount</td>
+                                                                    <td class="text-end fw-bold fs-5" id="modalNetAmount">PHP 0.00</td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="invoice-note-box p-3">
+                                            <p class="text-muted small text-uppercase fw-semibold mb-2">Payroll Note</p>
+                                            <p class="mb-0 fw-medium" id="modalPayrollNotes">No remarks provided.</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -501,19 +572,65 @@
             }
 
             function renderDeductionBreakdown(deductionBreakdown) {
-                const entries = Object.entries(deductionBreakdown || {});
+                return Object.entries(deductionBreakdown || {});
+            }
 
-                if (entries.length === 0) {
-                    return 'No deductions recorded.';
-                }
+            function formatInvoiceLabel(key) {
+                return key.replaceAll('_', ' ').replace(/\b\w/g, function (char) {
+                    return char.toUpperCase();
+                });
+            }
 
-                return entries.map(function ([key, value]) {
-                    const label = key.replaceAll('_', ' ').replace(/\b\w/g, function (char) {
-                        return char.toUpperCase();
+            function renderInvoiceLineItems(data) {
+                const lineItems = [
+                    {
+                        label: 'Attendance Compensation',
+                        description: 'Computed from attendance records within the payroll period.',
+                        quantity: Number(data.attendance_days_present || 0),
+                        unitPrice: Number(data.attendance_amount || 0),
+                        total: Number(data.attendance_amount || 0)
+                    },
+                    {
+                        label: 'Booking Compensation',
+                        description: 'Computed from completed booking records within the payroll period.',
+                        quantity: Number(data.booking_count || 0),
+                        unitPrice: Number(data.booking_amount || 0),
+                        total: Number(data.booking_amount || 0)
+                    }
+                ];
+
+                renderDeductionBreakdown(data.deduction_breakdown).forEach(function ([key, value]) {
+                    const numericValue = Number(value || 0);
+
+                    if (numericValue <= 0) {
+                        return;
+                    }
+
+                    lineItems.push({
+                        label: formatInvoiceLabel(key),
+                        description: 'Payroll deduction applied during computation.',
+                        quantity: 1,
+                        unitPrice: numericValue,
+                        total: numericValue
                     });
+                });
 
-                    return label + ': PHP ' + value;
-                }).join('<br>');
+                return lineItems.map(function (item, index) {
+                    return `
+                        <tr>
+                            <td class="text-center">${String(index + 1).padStart(2, '0')}</td>
+                            <td>
+                                <div class="fw-semibold">${item.label}</div>
+                                <div class="text-muted small">${item.description}</div>
+                            </td>
+                            <td class="text-center">${item.quantity}</td>
+                            <td class="text-end">PHP ${formatCurrency(item.unitPrice)}</td>
+                            <td class="text-end ${index > 1 ? 'text-danger' : ''}">
+                                ${index > 1 ? '- ' : ''}PHP ${formatCurrency(item.total)}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
             }
 
             function populateGeneratedPayrollModal(data) {
@@ -533,9 +650,10 @@
                     ' minute(s)<br>Undertime: ' + data.attendance_minutes_undertime + ' minute(s)'
                 );
                 $('#modalBookingCount').text(data.booking_count + ' booking(s)');
+                $('#modalInvoiceLineItems').html(renderInvoiceLineItems(data));
                 $('#modalGrossAmount').text('PHP ' + data.gross_amount);
                 $('#modalNetAmount').text('PHP ' + data.net_amount);
-                $('#modalDeductionBreakdown').html(renderDeductionBreakdown(data.deduction_breakdown));
+                $('#modalTotalDeductionsSummary').text('- PHP ' + data.total_deductions);
                 $('#modalPayrollNotes').text(data.notes);
                 $('#modalAttendanceAmount').text('PHP ' + data.attendance_amount);
                 $('#modalBookingAmount').text('PHP ' + data.booking_amount);

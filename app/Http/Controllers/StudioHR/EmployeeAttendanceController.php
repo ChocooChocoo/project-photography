@@ -520,17 +520,19 @@ class EmployeeAttendanceController extends Controller
             $query = EmployeeAttendanceModel::with(['employee'])
                 ->where('studio_id', $studio->id);
             
-            // Apply filters
-            if ($request->has('date_from') && $request->date_from) {
-                $query->whereDate('attendance_date', '>=', $request->date_from);
-            }
-            
-            if ($request->has('date_to') && $request->date_to) {
-                $query->whereDate('attendance_date', '<=', $request->date_to);
-            }
+            $this->applyAttendanceDateFilter($query, $request);
             
             if ($request->has('employee_id') && $request->employee_id) {
                 $query->where('user_id', $request->employee_id);
+            }
+
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->whereHas('employee', function ($employeeQuery) use ($search) {
+                    $employeeQuery->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
             }
             
             if ($request->has('status') && $request->status) {
@@ -538,16 +540,34 @@ class EmployeeAttendanceController extends Controller
                     $query->late();
                 } elseif ($request->status === 'UNDERTIME') {
                     $query->undertime();
+                } elseif ($request->status === 'ON_TIME') {
+                    $query->onTime();
                 }
             }
             
             $attendance = $query->orderBy('attendance_date', 'desc')
                 ->orderBy('check_in_time', 'desc')
-                ->paginate($request->input('per_page', 15));
+                ->get()
+                ->map(function ($record) {
+                    return [
+                        'id' => $record->id,
+                        'employee_name' => $record->employee->full_name ?? 'Unknown',
+                        'attendance_date' => $record->attendance_date?->format('M d, Y') ?? 'N/A',
+                        'formatted_check_in' => $record->formatted_check_in,
+                        'formatted_check_out' => $record->formatted_check_out,
+                        'check_in_status' => $record->check_in_status,
+                        'check_out_status' => $record->check_out_status,
+                        'late_display' => $record->late_display,
+                        'undertime_display' => $record->undertime_display,
+                        'duration' => $record->duration,
+                    ];
+                })
+                ->values();
             
             return response()->json([
                 'success' => true,
-                'attendance' => $attendance
+                'attendance' => $attendance,
+                'total' => $attendance->count(),
             ]);
             
         } catch (\Exception $e) {
@@ -803,5 +823,49 @@ class EmployeeAttendanceController extends Controller
     {
         $path = $image->store('employee-attendance/' . now()->format('Y/m/d'), 'public');
         return $path;
+    }
+
+    /**
+     * Apply date filtering for studio attendance history.
+     */
+    private function applyAttendanceDateFilter($query, Request $request): void
+    {
+        $filterDate = $request->input('filter_date', 'today');
+        $today = Carbon::today('Asia/Manila');
+
+        if ($filterDate === 'yesterday') {
+            $query->whereDate('attendance_date', $today->copy()->subDay()->toDateString());
+            return;
+        }
+
+        if ($filterDate === 'this-week') {
+            $query->whereBetween('attendance_date', [
+                $today->copy()->startOfWeek()->toDateString(),
+                $today->copy()->endOfWeek()->toDateString(),
+            ]);
+            return;
+        }
+
+        if ($filterDate === 'this-month') {
+            $query->whereBetween('attendance_date', [
+                $today->copy()->startOfMonth()->toDateString(),
+                $today->copy()->endOfMonth()->toDateString(),
+            ]);
+            return;
+        }
+
+        if ($filterDate === 'custom') {
+            if ($request->filled('date_from')) {
+                $query->whereDate('attendance_date', '>=', $request->date_from);
+            }
+
+            if ($request->filled('date_to')) {
+                $query->whereDate('attendance_date', '<=', $request->date_to);
+            }
+
+            return;
+        }
+
+        $query->whereDate('attendance_date', $today->toDateString());
     }
 }

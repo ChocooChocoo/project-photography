@@ -392,7 +392,7 @@
                                                         <i class="ti ti-filter me-1"></i>Filter By:
                                                     </span>
                                                     <div class="app-filter">
-                                                        <select class="me-0 form-select form-control" id="filterDate">
+                                                        <select class="me-0 form-select form-control" id="employeeAttendanceDateFilter">
                                                             <option value="today">Today</option>
                                                             <option value="yesterday">Yesterday</option>
                                                             <option value="this-week">This Week</option>
@@ -401,12 +401,18 @@
                                                         </select>
                                                     </div>
                                                     <div class="app-filter">
-                                                        <select class="me-0 form-select form-control" id="filterStatus">
+                                                        <select class="me-0 form-select form-control" id="employeeAttendanceStatusFilter">
                                                             <option value="">All Status</option>
                                                             <option value="ON_TIME">On Time</option>
                                                             <option value="LATE">Late</option>
                                                             <option value="UNDERTIME">Undertime</option>
                                                         </select>
+                                                    </div>
+                                                    <div class="app-filter d-none" id="employeeAttendanceCustomRange">
+                                                        <div class="d-flex gap-2">
+                                                            <input type="date" class="form-control" id="employeeAttendanceDateFrom">
+                                                            <input type="date" class="form-control" id="employeeAttendanceDateTo">
+                                                        </div>
                                                     </div>
                                                     <div>
                                                         <button class="btn btn-soft-primary" id="refreshAttendanceBtn">
@@ -517,10 +523,23 @@
             });
         }
 
-        function loadTodaysAttendance() {
+        function loadEmployeeAttendance() {
+            const filterDate = $('#employeeAttendanceDateFilter').val();
+            const status = $('#employeeAttendanceStatusFilter').val();
+            const search = $('#attendanceSearchInput').val();
+            const dateFrom = $('#employeeAttendanceDateFrom').val();
+            const dateTo = $('#employeeAttendanceDateTo').val();
+
             $.ajax({
-                url: '/studio-hr/attendance/today',
+                url: '/studio-hr/attendance/history',
                 type: 'GET',
+                data: {
+                    filter_date: filterDate,
+                    status: status,
+                    search: search,
+                    date_from: dateFrom,
+                    date_to: dateTo
+                },
                 success: function(response) {
                     if (response.success) {
                         renderAttendanceTable(response.attendance);
@@ -547,7 +566,7 @@
                     <tr>
                         <td colspan="8" class="text-center py-4">
                             <i class="ti ti-clock-off fs-1 d-block mb-2 text-muted"></i>
-                            <span class="text-muted">No attendance records for today</span>
+                            <span class="text-muted">No attendance records found for the selected filters</span>
                         </td>
                     </tr>
                 `);
@@ -1033,7 +1052,7 @@
                         
                         // Reload data
                         loadEmployeeSchedule();
-                        loadTodaysAttendance();
+                        loadEmployeeAttendance();
                         
                         // Reload the page to show updated personal attendance
                         setTimeout(function() {
@@ -1069,14 +1088,14 @@
         $(document).ready(function() {
             // Initial load
             loadEmployeeSchedule();
-            loadTodaysAttendance();
+            loadEmployeeAttendance();
             loadAttendanceStats(); // Add this line
             checkScheduleMatch();
             
             // Load stats when Employees Attendance tab is clicked
             $('a[href="#employees-attendance"]').on('shown.bs.tab', function() {
                 loadAttendanceStats();
-                loadTodaysAttendance(); // Refresh table data when tab is shown
+                loadEmployeeAttendance(); // Refresh table data when tab is shown
             });
             
             // Check-in button click
@@ -1135,8 +1154,24 @@
             
             // Refresh button click
             $('#refreshAttendanceBtn').on('click', function() {
-                loadTodaysAttendance();
+                loadEmployeeAttendance();
                 loadAttendanceStats(); // Also refresh stats
+            });
+
+            $('#attendanceSearchInput, #employeeAttendanceStatusFilter').on('keyup change', function() {
+                loadEmployeeAttendance();
+            });
+
+            $('#employeeAttendanceDateFilter').on('change', function() {
+                const isCustom = $(this).val() === 'custom';
+                $('#employeeAttendanceCustomRange').toggleClass('d-none', !isCustom);
+                loadEmployeeAttendance();
+            });
+
+            $('#employeeAttendanceDateFrom, #employeeAttendanceDateTo').on('change', function() {
+                if ($('#employeeAttendanceDateFilter').val() === 'custom') {
+                    loadEmployeeAttendance();
+                }
             });
         });
 
