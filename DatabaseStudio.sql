@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `migrations` (
   `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=119 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=120 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Data exporting was unselected.
 
@@ -343,7 +343,7 @@ CREATE TABLE IF NOT EXISTS `tbl_employee_attendance` (
   CONSTRAINT `tbl_employee_attendance_schedule_id_foreign` FOREIGN KEY (`schedule_id`) REFERENCES `tbl_studio_employee_schedule` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tbl_employee_attendance_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_employee_attendance_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Data exporting was unselected.
 
@@ -408,7 +408,7 @@ CREATE TABLE IF NOT EXISTS `tbl_employee_payroll` (
   CONSTRAINT `tbl_employee_payroll_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_employee_payroll_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_employee_payroll_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Data exporting was unselected.
 
@@ -594,6 +594,51 @@ CREATE TABLE IF NOT EXISTS `tbl_freelancer_services` (
 
 -- Data exporting was unselected.
 
+-- Dumping structure for table platinum.tbl_generated_payrolls
+CREATE TABLE IF NOT EXISTS `tbl_generated_payrolls` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `payroll_reference` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` bigint unsigned NOT NULL,
+  `studio_id` bigint unsigned NOT NULL,
+  `payroll_setting_id` bigint unsigned NOT NULL,
+  `generated_by` bigint unsigned NOT NULL,
+  `employee_type` enum('regular_employee','studio_photographer') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payroll_basis` enum('attendance_only','booking_and_attendance') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `employee_role` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `period_start` date NOT NULL,
+  `period_end` date NOT NULL,
+  `attendance_days_present` int unsigned NOT NULL DEFAULT '0',
+  `attendance_days_absent` int unsigned NOT NULL DEFAULT '0',
+  `attendance_minutes_late` int unsigned NOT NULL DEFAULT '0',
+  `attendance_minutes_undertime` int unsigned NOT NULL DEFAULT '0',
+  `booking_count` int unsigned NOT NULL DEFAULT '0',
+  `attendance_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `booking_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `gross_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `total_deductions` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `net_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `deduction_breakdown` json DEFAULT NULL,
+  `computation_summary` json DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `generated_at` timestamp NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `generated_payroll_period_unique` (`user_id`,`studio_id`,`period_start`,`period_end`),
+  UNIQUE KEY `tbl_generated_payrolls_payroll_reference_unique` (`payroll_reference`),
+  KEY `tbl_generated_payrolls_user_id_index` (`user_id`),
+  KEY `tbl_generated_payrolls_studio_id_index` (`studio_id`),
+  KEY `tbl_generated_payrolls_payroll_setting_id_index` (`payroll_setting_id`),
+  KEY `tbl_generated_payrolls_generated_by_index` (`generated_by`),
+  KEY `tbl_generated_payrolls_studio_id_period_start_period_end_index` (`studio_id`,`period_start`,`period_end`),
+  CONSTRAINT `tbl_generated_payrolls_generated_by_foreign` FOREIGN KEY (`generated_by`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_generated_payrolls_payroll_setting_id_foreign` FOREIGN KEY (`payroll_setting_id`) REFERENCES `tbl_employee_payroll` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_generated_payrolls_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_generated_payrolls_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Data exporting was unselected.
+
 -- Dumping structure for table platinum.tbl_locations
 CREATE TABLE IF NOT EXISTS `tbl_locations` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -753,7 +798,7 @@ CREATE TABLE IF NOT EXISTS `tbl_role_permissions` (
   KEY `tbl_role_permissions_permission_id_foreign` (`permission_id`),
   CONSTRAINT `tbl_role_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `tbl_permissions` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_role_permissions_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `tbl_roles` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Data exporting was unselected.
 

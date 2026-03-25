@@ -102,6 +102,18 @@
                 </li>
             @endif
 
+            {{-- Generate Payroll --}}
+            @php
+                $generatePayrollRoutes = Route::is('studio-hr.generate-payroll.index');
+            @endphp
+
+            <li class="side-nav-item {{ $generatePayrollRoutes ? 'active' : '' }}">
+                <a href="{{ route('studio-hr.generate-payroll.index') }}" class="side-nav-link {{ $generatePayrollRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-cash-register"></i></span>
+                    <span class="menu-text" data-lang="generate-payroll">Generate Payroll</span>
+                </a>
+            </li>
+
             {{-- Manage Attendance --}}
             @php
                 $manageAttendanceRoutes = Route::is('studio-hr.attendance.index');

@@ -297,6 +297,12 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/payroll-settings/{id}',                    [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'destroy'])->name('studio-hr.payroll-settings.destroy');
         Route::post('/payroll-settings/bulk-store',                [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'bulkStore'])->name('studio-hr.payroll-settings.bulk-store');
 
+        // Generate Payroll
+        Route::get('/generate-payroll',                            [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'index'])->name('studio-hr.generate-payroll.index');
+        Route::get('/generate-payroll/employees',                  [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'getEmployees'])->name('studio-hr.generate-payroll.employees');
+        Route::post('/generate-payroll',                           [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'store'])->name('studio-hr.generate-payroll.store');
+        Route::get('/generate-payroll/{id}',                       [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'show'])->name('studio-hr.generate-payroll.show');
+
         // Attendance
         Route::get('/view/attendance',                              [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'index'])->name('studio-hr.attendance.index');
         Route::get('/attendance/current-time',                      [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getCurrentTime'])->name('studio-hr.attendance.current-time');
