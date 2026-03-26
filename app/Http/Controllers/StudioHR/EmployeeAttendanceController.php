@@ -702,29 +702,24 @@ class EmployeeAttendanceController extends Controller
      */
     private function getUserStudio($user)
     {
-        // First, try to find via studio_photographers (for photographers)
+        // First, try to find via studio photographers assignments.
         $studio = StudiosModel::whereHas('studioPhotographers', function ($query) use ($user) {
             $query->where('photographer_id', $user->id);
         })->first();
-        
+
         if ($studio) {
             return $studio;
         }
-        
-        // Second, try to find via RBAC table (for HR, Finance, Staff)
-        $rbac = \App\Models\StudioOwner\RbacModel::where('user_id', $user->id)->first();
-        
-        if ($rbac) {
-            return StudiosModel::find($rbac->studio_id);
-        }
-        
-        // Third, try to find via employee schedule
-        $schedule = \App\Models\StudioOwner\EmployeeScheduleModel::where('user_id', $user->id)->first();
-        
+
+        // For HR and finance, the active employee schedule is the source of truth.
+        $schedule = EmployeeScheduleModel::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->first();
+
         if ($schedule) {
             return StudiosModel::find($schedule->studio_id);
         }
-        
+
         return null;
     }
 

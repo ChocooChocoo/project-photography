@@ -374,10 +374,51 @@
 
                                 <div class="row g-2 mb-3">
                                     <h5 class="card-title text-primary">Computation Details</h5>
-                                    <div class="col-12 col-md-6"><div class="d-flex align-items-start"><div class="flex-shrink-0"><div class="bg-light-primary rounded-circle p-2"><i class="ti ti-calendar-stats fs-20 text-primary"></i></div></div><div class="flex-grow-1 ms-3"><label class="text-muted small mb-1">Attendance Summary</label><p class="mb-0 fw-medium" id="modalAttendanceSummary">N/A</p></div></div></div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="bg-light-primary rounded-circle p-2">
+                                                    <i class="ti ti-calendar-stats fs-20 text-primary"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <label class="text-muted small mb-2 d-block">Attendance Summary</label>
+                                                <div class="card border shadow-none mb-0">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered align-middle mb-0">
+                                                            <thead class="bg-light bg-opacity-50">
+                                                                <tr class="text-uppercase fs-xxs">
+                                                                    <th>Metric</th>
+                                                                    <th>Value</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="modalAttendanceSummary">
+                                                                <tr>
+                                                                    <td class="text-muted">Present</td>
+                                                                    <td class="text-start fw-medium">0 day(s)</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="text-muted">Absent</td>
+                                                                    <td class="text-start fw-medium">0 day(s)</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="text-muted">Late</td>
+                                                                    <td class="text-start fw-medium">0 minute(s)</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="text-muted">Undertime</td>
+                                                                    <td class="text-start fw-medium">0 minute(s)</td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="col-12 col-md-6"><div class="d-flex align-items-start"><div class="flex-shrink-0"><div class="bg-light-primary rounded-circle p-2"><i class="ti ti-camera fs-20 text-primary"></i></div></div><div class="flex-grow-1 ms-3"><label class="text-muted small mb-1">Booking Count</label><p class="mb-0 fw-medium" id="modalBookingCount">N/A</p></div></div></div>
-                                    <div class="col-12 col-md-6"><div class="d-flex align-items-start"><div class="flex-shrink-0"><div class="bg-light-primary rounded-circle p-2"><i class="ti ti-cash fs-20 text-primary"></i></div></div><div class="flex-grow-1 ms-3"><label class="text-muted small mb-1">Gross Amount</label><p class="mb-0 fw-medium" id="modalGrossAmount">N/A</p></div></div></div>
-                                    <div class="col-12 col-md-6"><div class="d-flex align-items-start"><div class="flex-shrink-0"><div class="bg-light-primary rounded-circle p-2"><i class="ti ti-cash-banknote fs-20 text-primary"></i></div></div><div class="flex-grow-1 ms-3"><label class="text-muted small mb-1">Net Amount</label><p class="mb-0 fw-medium" id="modalNetAmount">N/A</p></div></div></div>
+                                    <div class="col-12 col-md-6"><div class="d-flex align-items-start"><div class="flex-shrink-0"><div class="bg-light-primary rounded-circle p-2"><i class="ti ti-cash fs-20 text-primary"></i></div></div><div class="flex-grow-1 ms-3"><label class="text-muted small mb-1">Gross Amount</label><p class="mb-0 fw-medium" id="modalSummaryGrossAmount">N/A</p></div></div></div>
+                                    <div class="col-12 col-md-6"><div class="d-flex align-items-start"><div class="flex-shrink-0"><div class="bg-light-primary rounded-circle p-2"><i class="ti ti-cash-banknote fs-20 text-primary"></i></div></div><div class="flex-grow-1 ms-3"><label class="text-muted small mb-1">Net Amount</label><p class="mb-0 fw-medium" id="modalSummaryNetAmount">N/A</p></div></div></div>
                                 </div>
 
                                 <div class="row g-2 mb-3">
@@ -388,20 +429,18 @@
                                                 <table class="table table-bordered table-nowrap align-middle mb-0">
                                                     <thead class="bg-light bg-opacity-50">
                                                         <tr class="text-uppercase fs-xxs">
-                                                            <th style="width: 80px;">#</th>
                                                             <th>Item Details</th>
-                                                            <th class="text-center" style="width: 120px;">Qty</th>
-                                                            <th class="text-end" style="width: 170px;">Unit Price</th>
-                                                            <th class="text-end" style="width: 170px;">Total</th>
+                                                            <th class="text-start" style="width: 120px;">Qty</th>
+                                                            <th class="text-start" style="width: 170px;">Unit Price</th>
+                                                            <th class="text-start" style="width: 170px;">Total</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody id="modalInvoiceLineItems">
                                                         <tr>
-                                                            <td class="text-center">01</td>
                                                             <td>Loading...</td>
-                                                            <td class="text-center">1</td>
-                                                            <td class="text-end">PHP 0.00</td>
-                                                            <td class="text-end">PHP 0.00</td>
+                                                            <td class="text-start">1</td>
+                                                            <td class="text-start">PHP 0.00</td>
+                                                            <td class="text-start">PHP 0.00</td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -422,7 +461,7 @@
                                                                 </tr>
                                                                 <tr>
                                                                     <td class="text-muted">Gross Amount</td>
-                                                                    <td class="text-end fw-medium" id="modalGrossAmount">PHP 0.00</td>
+                                                                    <td class="text-end fw-medium" id="modalFooterGrossAmount">PHP 0.00</td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td class="text-muted">Total Deductions</td>
@@ -430,7 +469,7 @@
                                                                 </tr>
                                                                 <tr class="border-top">
                                                                     <td class="fw-semibold">Net Amount</td>
-                                                                    <td class="text-end fw-bold fs-5" id="modalNetAmount">PHP 0.00</td>
+                                                                    <td class="text-end fw-bold fs-5" id="modalFooterNetAmount">PHP 0.00</td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -469,6 +508,21 @@
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                 });
+            }
+
+            function parseNumericAmount(value) {
+                if (typeof value === 'number') {
+                    return Number.isFinite(value) ? value : 0;
+                }
+
+                if (typeof value === 'string') {
+                    const normalized = value.replace(/,/g, '').trim();
+                    const parsed = Number(normalized);
+                    return Number.isFinite(parsed) ? parsed : 0;
+                }
+
+                const parsed = Number(value || 0);
+                return Number.isFinite(parsed) ? parsed : 0;
             }
 
             function getAttendancePreviewAmount(employee) {
@@ -603,6 +657,7 @@
                                 <div><strong>Absent:</strong> ${attendance.days_absent ?? 0} day(s)</div>
                                 <div><strong>Late:</strong> ${attendance.late_minutes ?? 0} minute(s)</div>
                                 <div><strong>Undertime:</strong> ${attendance.undertime_minutes ?? 0} minute(s)</div>
+                                <div><strong>Preview:</strong> PHP ${formatCurrency(attendance.attendance_amount ?? getAttendancePreviewAmount(employee))}</div>
                             </td>
                             <td>
                                 <div><strong>Bookings:</strong> ${booking.booking_count ?? 0}</div>
@@ -658,20 +713,20 @@
                         label: 'Attendance Compensation',
                         description: 'Computed from attendance records within the payroll period.',
                         quantity: Number(data.attendance_days_present || 0),
-                        unitPrice: Number(data.attendance_amount || 0),
-                        total: Number(data.attendance_amount || 0)
+                        unitPrice: parseNumericAmount(data.attendance_amount),
+                        total: parseNumericAmount(data.attendance_amount)
                     },
                     {
                         label: 'Booking Compensation',
                         description: 'Computed from completed booking records within the payroll period.',
                         quantity: Number(data.booking_count || 0),
-                        unitPrice: Number(data.booking_amount || 0),
-                        total: Number(data.booking_amount || 0)
+                        unitPrice: parseNumericAmount(data.booking_amount),
+                        total: parseNumericAmount(data.booking_amount)
                     }
                 ];
 
                 renderDeductionBreakdown(data.deduction_breakdown).forEach(function ([key, value]) {
-                    const numericValue = Number(value || 0);
+                    const numericValue = parseNumericAmount(value);
 
                     if (numericValue <= 0) {
                         return;
@@ -689,14 +744,13 @@
                 return lineItems.map(function (item, index) {
                     return `
                         <tr>
-                            <td class="text-center">${String(index + 1).padStart(2, '0')}</td>
                             <td>
                                 <div class="fw-semibold">${item.label}</div>
                                 <div class="text-muted small">${item.description}</div>
                             </td>
-                            <td class="text-center">${item.quantity}</td>
-                            <td class="text-end">PHP ${formatCurrency(item.unitPrice)}</td>
-                            <td class="text-end ${index > 1 ? 'text-danger' : ''}">
+                            <td class="text-start">${item.quantity}</td>
+                            <td class="text-start">PHP ${formatCurrency(item.unitPrice)}</td>
+                            <td class="text-start ${index > 1 ? 'text-danger' : ''}">
                                 ${index > 1 ? '- ' : ''}PHP ${formatCurrency(item.total)}
                             </td>
                         </tr>
@@ -714,16 +768,30 @@
                 $('#modalStudioName').text(data.studio_name);
                 $('#modalPayrollPeriod').text(data.period_start + ' - ' + data.period_end);
                 $('#modalGeneratedBy').text(data.generated_by + ' | ' + data.generated_at);
-                $('#modalAttendanceSummary').html(
-                    'Present: ' + data.attendance_days_present +
-                    ' day(s)<br>Absent: ' + data.attendance_days_absent +
-                    ' day(s)<br>Late: ' + data.attendance_minutes_late +
-                    ' minute(s)<br>Undertime: ' + data.attendance_minutes_undertime + ' minute(s)'
-                );
+                $('#modalAttendanceSummary').html(`
+                    <tr>
+                        <td class="text-muted">Present</td>
+                        <td class="text-start fw-medium">${data.attendance_days_present} day(s)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Absent</td>
+                        <td class="text-start fw-medium">${data.attendance_days_absent} day(s)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Late</td>
+                        <td class="text-start fw-medium">${data.attendance_minutes_late} minute(s)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Undertime</td>
+                        <td class="text-start fw-medium">${data.attendance_minutes_undertime} minute(s)</td>
+                    </tr>
+                `);
                 $('#modalBookingCount').text(data.booking_count + ' booking(s)');
                 $('#modalInvoiceLineItems').html(renderInvoiceLineItems(data));
-                $('#modalGrossAmount').text('PHP ' + data.gross_amount);
-                $('#modalNetAmount').text('PHP ' + data.net_amount);
+                $('#modalSummaryGrossAmount').text('PHP ' + data.gross_amount);
+                $('#modalSummaryNetAmount').text('PHP ' + data.net_amount);
+                $('#modalFooterGrossAmount').text('PHP ' + data.gross_amount);
+                $('#modalFooterNetAmount').text('PHP ' + data.net_amount);
                 $('#modalTotalDeductionsSummary').text('- PHP ' + data.total_deductions);
                 $('#modalPayrollNotes').text(data.notes);
                 $('#modalAttendanceAmount').text('PHP ' + data.attendance_amount);

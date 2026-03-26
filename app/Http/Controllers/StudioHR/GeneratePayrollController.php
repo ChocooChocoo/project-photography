@@ -152,6 +152,7 @@ class GeneratePayrollController extends Controller
                             'late_minutes' => $attendanceSummary['attendance_minutes_late'],
                             'undertime_minutes' => $attendanceSummary['attendance_minutes_undertime'],
                             'worked_hours' => $attendanceSummary['worked_hours'],
+                            'attendance_amount' => round((float) $attendanceSummary['attendance_amount'], 2),
                         ],
                         'booking_preview' => [
                             'booking_count' => $bookingSummary['booking_count'],
