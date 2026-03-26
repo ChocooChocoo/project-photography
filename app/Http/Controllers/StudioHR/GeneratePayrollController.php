@@ -48,7 +48,7 @@ class GeneratePayrollController extends Controller
         }
 
         $canGenerate = $this->hasPayrollPermission($hrUser, 'create');
-        $generatedPayrolls = GeneratedPayrollModel::with(['employee', 'studio', 'generator'])
+        $generatedPayrolls = GeneratedPayrollModel::with(['employee', 'studio', 'generator', 'reviewer'])
             ->whereIn('studio_id', $assignedStudioIds)
             ->orderByDesc('generated_at')
             ->orderByDesc('id')
@@ -327,7 +327,7 @@ class GeneratePayrollController extends Controller
             }
 
             $assignedStudioIds = $this->getAssignedStudioIds($hrUser->id);
-            $generatedPayroll = GeneratedPayrollModel::with(['employee', 'studio', 'generator', 'payrollSetting'])
+            $generatedPayroll = GeneratedPayrollModel::with(['employee', 'studio', 'generator', 'payrollSetting', 'reviewer'])
                 ->whereIn('studio_id', $assignedStudioIds)
                 ->findOrFail($id);
 
@@ -370,6 +370,11 @@ class GeneratePayrollController extends Controller
                     'notes' => $generatedPayroll->notes ?: 'No remarks provided.',
                     'generated_at' => $generatedPayroll->generated_at?->format('F d, Y h:i A'),
                     'generated_by' => $generatedPayroll->generator->full_name ?? 'N/A',
+                    'status' => $generatedPayroll->status,
+                    'status_display' => ucfirst($generatedPayroll->status),
+                    'reviewed_at' => $generatedPayroll->reviewed_at?->format('F d, Y h:i A') ?? 'Not reviewed yet.',
+                    'reviewed_by' => $generatedPayroll->reviewer->full_name ?? 'Not reviewed yet.',
+                    'rejection_reason' => $generatedPayroll->rejection_reason ?: 'No rejection reason provided.',
                 ],
             ]);
         } catch (\Exception $exception) {

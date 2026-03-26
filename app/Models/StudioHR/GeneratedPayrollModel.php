@@ -58,6 +58,10 @@ class GeneratedPayrollModel extends Model
         'deduction_breakdown',
         'computation_summary',
         'notes',
+        'status',
+        'reviewed_by',
+        'reviewed_at',
+        'rejection_reason',
         'generated_at',
     ];
 
@@ -76,6 +80,8 @@ class GeneratedPayrollModel extends Model
         'net_amount' => 'decimal:2',
         'deduction_breakdown' => 'array',
         'computation_summary' => 'array',
+        'status' => 'string',
+        'reviewed_at' => 'datetime',
         'generated_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -111,5 +117,13 @@ class GeneratedPayrollModel extends Model
     public function generator()
     {
         return $this->belongsTo(UserModel::class, 'generated_by');
+    }
+
+    /**
+     * Get the finance user who reviewed this generated payroll.
+     */
+    public function reviewer()
+    {
+        return $this->belongsTo(UserModel::class, 'reviewed_by');
     }
 }

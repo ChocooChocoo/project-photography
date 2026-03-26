@@ -38,6 +38,24 @@
                     <span class="menu-text" data-lang="dashboard">Dashboard</span>
                 </a>
             </li>
+
+            {{-- Payroll Approvals --}}
+            @php
+                $isPayrollApprovalActive = Route::is('studio-finance.payroll-approvals.*');
+                $canViewPayrollApprovals = auth()->user()->hasPermission('view_payroll')
+                    || auth()->user()->hasPermission('approve_payroll')
+                    || auth()->user()->hasPermission('reject_payroll')
+                    || auth()->user()->hasPermission('manage_payroll');
+            @endphp
+
+            @if($canViewPayrollApprovals)
+                <li class="side-nav-item {{ $isPayrollApprovalActive ? 'active' : '' }}">
+                    <a href="{{ route('studio-finance.payroll-approvals.index') }}" class="side-nav-link {{ $isPayrollApprovalActive ? 'active' : '' }}">
+                        <span class="menu-icon"><i class="ti ti-receipt-2"></i></span>
+                        <span class="menu-text" data-lang="payroll-approvals">Payroll Approvals</span>
+                    </a>
+                </li>
+            @endif
         </ul>
     </div>
 </div>

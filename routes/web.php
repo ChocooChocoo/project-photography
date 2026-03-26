@@ -329,6 +329,11 @@ Route::middleware(['auth'])->group(function () {
 
         // Dashboard
         Route::get('/dashboard',                                    [\App\Http\Controllers\Finance\DashboardController::class, 'index'])->name('studio-finance.dashboard');
+
+        // Payroll Approvals
+        Route::get('/payroll-approvals',                            [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'index'])->name('studio-finance.payroll-approvals.index');
+        Route::get('/payroll-approvals/{id}',                       [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'show'])->name('studio-finance.payroll-approvals.show');
+        Route::post('/payroll-approvals/{id}/{action}',             [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'update'])->name('studio-finance.payroll-approvals.update');
     });
 
     // Freelancer Routes ===================================================================================================================================================
