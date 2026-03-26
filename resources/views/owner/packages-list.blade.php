@@ -100,39 +100,60 @@
                                             <div class="text-start mb-3">
                                                 <small class="text-muted fw-semibold d-block mb-2">INCLUSIONS:</small>
                                                 <ul class="list-unstyled fs-sm mb-0">
-                                                    @if($package->package_inclusions && 
-                                                        (is_array($package->package_inclusions) || is_string($package->package_inclusions)))
-                                                        
-                                                        @php
-                                                            // Handle different data types
-                                                            $inclusions = [];
-                                                            if (is_array($package->package_inclusions)) {
-                                                                $inclusions = $package->package_inclusions;
-                                                            } elseif (is_string($package->package_inclusions)) {
-                                                                // Try to decode JSON
-                                                                $decoded = json_decode($package->package_inclusions, true);
-                                                                if (is_array($decoded)) {
-                                                                    $inclusions = $decoded;
-                                                                } else {
-                                                                    // Split by commas if it's a comma-separated string
-                                                                    $inclusions = array_map('trim', explode(',', $package->package_inclusions));
-                                                                }
+                                                    @php
+                                                        $inclusions = [];
+                                                        $coverageAreas = [];
+
+                                                        if (is_array($package->package_inclusions)) {
+                                                            $inclusions = $package->package_inclusions;
+                                                        } elseif (is_string($package->package_inclusions) && $package->package_inclusions !== '') {
+                                                            $decodedInclusions = json_decode($package->package_inclusions, true);
+                                                            $inclusions = is_array($decodedInclusions)
+                                                                ? $decodedInclusions
+                                                                : array_map('trim', explode(',', $package->package_inclusions));
+                                                        }
+
+                                                        $inclusions = array_values(array_filter(array_map(function ($item) {
+                                                            if (is_scalar($item) || $item === null) {
+                                                                $value = trim((string) $item);
+                                                                return $value !== '' ? $value : null;
                                                             }
-                                                            
-                                                            // Take first 3 inclusions
-                                                            $displayInclusions = array_slice($inclusions, 0, 3);
-                                                            $hasMore = count($inclusions) > 3;
-                                                        @endphp
+
+                                                            return null;
+                                                        }, $inclusions)));
+
+                                                        if (is_array($package->coverage_scope)) {
+                                                            $coverageAreas = $package->coverage_scope;
+                                                        } elseif (is_string($package->coverage_scope) && $package->coverage_scope !== '') {
+                                                            $decodedCoverage = json_decode($package->coverage_scope, true);
+                                                            $coverageAreas = is_array($decodedCoverage)
+                                                                ? $decodedCoverage
+                                                                : [$package->coverage_scope];
+                                                        }
+
+                                                        $coverageAreas = array_values(array_filter(array_map(function ($item) {
+                                                            if (is_scalar($item) || $item === null) {
+                                                                $value = trim((string) $item);
+                                                                return $value !== '' ? $value : null;
+                                                            }
+
+                                                            return null;
+                                                        }, $coverageAreas)));
+
+                                                        $displayInclusions = array_slice($inclusions, 0, 3);
+                                                        $hasMore = count($inclusions) > 3;
+                                                        $coverageText = implode(', ', $coverageAreas);
+                                                    @endphp
+
+                                                    @if(!empty($inclusions))
                                                         
                                                         @foreach($displayInclusions as $inclusion)
-                                                            @if(!empty($inclusion))
-                                                            <li class="mb-2">
-                                                                <i class="ti ti-check text-success me-2"></i> 
-                                                                <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ $inclusion }}">
-                                                                    {{ $inclusion }}
-                                                                </span>
-                                                            </li>
-                                                            @endif
+                                                        <li class="mb-2">
+                                                            <i class="ti ti-check text-success me-2"></i> 
+                                                            <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ $inclusion }}">
+                                                                {{ $inclusion }}
+                                                            </span>
+                                                        </li>
                                                         @endforeach
                                                         
                                                         @if($hasMore)
@@ -148,11 +169,11 @@
                                                         </li>
                                                     @endif
                                                     
-                                                    @if($package->coverage_scope)
+                                                    @if(!empty($coverageAreas))
                                                     <li class="mb-2">
                                                         <i class="ti ti-map-pin text-primary me-2"></i> 
-                                                        <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ $package->coverage_scope }}">
-                                                            {{ $package->coverage_scope }}
+                                                        <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ $coverageText }}">
+                                                            {{ $coverageText }}
                                                         </span>
                                                     </li>
                                                     @endif
@@ -382,16 +403,8 @@
                 return `
                 <div class="row align-items-center mb-4">
                     <div class="col-12 col-lg-8">
-                        <div class="d-flex align-items-center flex-column flex-md-row">
-                            <div class="flex-shrink-0 mb-3 mb-md-0">
-                                <img src="${package.studio && package.studio.logo_url ? package.studio.logo_url : '{{ asset("assets/images/sellers/7.png") }}'}" 
-                                    class="rounded-circle" 
-                                    style="width: 80px; height: 80px; object-fit: cover;" 
-                                    alt="Studio Logo"
-                                    onerror="this.src='{{ asset("assets/images/sellers/7.png") }}'">
-                            </div>
-                            
-                            <div class="flex-grow-1 ms-md-4 text-center text-md-start">
+                        <div class="text-center text-md-start">
+                            <div>
                                 <h2 class="mb-1 h3 h3-md">${package.package_name || 'Unnamed Package'}</h2>
                                 <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-2 flex-wrap">
                                     ${statusBadge}

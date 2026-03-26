@@ -409,6 +409,75 @@
                                     </div>
                                 `;
                             }
+
+                            const content = `
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <div class="d-flex align-items-center gap-3 mb-3">
+                                            <div class="flex-shrink-0">
+                                                ${emp.profile_photo
+                                                    ? `<img src="${emp.profile_photo}" alt="${emp.full_name}" class="rounded-circle border" width="72" height="72" style="object-fit: cover;">`
+                                                    : `<div class="rounded-circle border d-flex align-items-center justify-content-center bg-light text-primary fw-semibold" style="width: 72px; height: 72px;">${(emp.first_name || 'E').charAt(0)}${(emp.last_name || '').charAt(0)}</div>`
+                                                }
+                                            </div>
+                                            <div>
+                                                <h4 class="mb-1">${emp.full_name || 'N/A'}</h4>
+                                                <div class="d-flex flex-wrap gap-2">
+                                                    <span class="badge badge-soft-primary">${emp.role_display || roleDisplay}</span>
+                                                    <span class="badge ${statusBadgeClass}">${(emp.status || 'unknown').toUpperCase()}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="row g-2 mb-3">
+                                            <h5 class="card-title text-primary">Basic Information</h5>
+                                            <div class="col-12 col-md-6">
+                                                <label class="text-muted small mb-1">Email Address</label>
+                                                <p class="mb-0 fw-medium">${emp.email || 'N/A'}</p>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <label class="text-muted small mb-1">Contact Number</label>
+                                                <p class="mb-0 fw-medium">${emp.mobile_number || 'N/A'}</p>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <label class="text-muted small mb-1">Role</label>
+                                                <p class="mb-0 fw-medium">${emp.role_display || roleDisplay}</p>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <label class="text-muted small mb-1">User Type</label>
+                                                <p class="mb-0 fw-medium">${emp.user_type || 'N/A'}</p>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <label class="text-muted small mb-1">UUID</label>
+                                                <p class="mb-0 fw-medium">${emp.uuid || 'N/A'}</p>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <label class="text-muted small mb-1">Created At</label>
+                                                <p class="mb-0 fw-medium">${emp.created_at || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="row g-2 mb-3">
+                                            <h5 class="card-title text-primary">Studio Assignment</h5>
+                                            <div class="col-12 col-md-6">
+                                                <label class="text-muted small mb-1">Studio Name</label>
+                                                <p class="mb-0 fw-medium">${emp.studio && emp.studio.name ? emp.studio.name : 'Not assigned'}</p>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <label class="text-muted small mb-1">Studio ID</label>
+                                                <p class="mb-0 fw-medium">${emp.studio && emp.studio.id ? emp.studio.id : 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    ${photographerSection}
+                                    ${scheduleSection}
+                                </div>
+                            `;
                             
                             $('#modalContent').html(content).show();
                         } else {
