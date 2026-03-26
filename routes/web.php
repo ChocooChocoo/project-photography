@@ -382,6 +382,14 @@ Route::middleware(['auth'])->group(function () {
         // Dashboard
         Route::get('/dashboard',                        [\App\Http\Controllers\StudioPhotographer\DashboardController::class, 'index'])->name('studio-photographer.dashboard');
 
+        // Attendance
+        Route::get('/view/attendance',                  [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'index'])->name('studio-photographer.attendance.index');
+        Route::get('/attendance/current-time',          [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'getCurrentTime'])->name('studio-photographer.attendance.current-time');
+        Route::get('/attendance/schedule',              [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'getPhotographerSchedule'])->name('studio-photographer.attendance.schedule');
+        Route::post('/attendance/check-in',             [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'checkIn'])->name('studio-photographer.attendance.check-in');
+        Route::post('/attendance/check-out',            [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'checkOut'])->name('studio-photographer.attendance.check-out');
+        Route::get('/attendance/{id}/details',          [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'getAttendanceDetails'])->name('studio-photographer.attendance.details');
+
         // Assigned Studio
         Route::get('/view/studio',                      [\App\Http\Controllers\StudioPhotographer\AssignedStudioController::class, 'index'])->name('studio-photographer.studio.index');
         Route::get('/studio/{id}/details',              [\App\Http\Controllers\StudioPhotographer\AssignedStudioController::class, 'getStudioDetails'])->name('studio-photographer.studio.details');

@@ -39,6 +39,18 @@
                 </a>
             </li>
 
+            {{-- Attendance --}}
+            @php
+                $attendanceRoutes = Route::is('studio-photographer.attendance.index');
+            @endphp
+
+            <li class="side-nav-item {{ $attendanceRoutes ? 'active' : '' }}">
+                <a href="{{ route('studio-photographer.attendance.index') }}" class="side-nav-link {{ $attendanceRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-calendar-time"></i></span>
+                    <span class="menu-text" data-lang="attendance">Attendance</span>
+                </a>
+            </li>
+
             {{-- Assigned Studio --}}
             @php
                 $assignedStudioRoutes   = Route::is('studio-photographer.studio.index');
