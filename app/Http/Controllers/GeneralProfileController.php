@@ -65,6 +65,18 @@ class GeneralProfileController extends Controller
     }
 
     /**
+     * Display studio finance profile page.
+     *
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function studioFinance()
+    {
+        $user = auth()->user();
+
+        return view('studio-finance.view-user-profile', compact('user'));
+    }
+
+    /**
      * Get user data for AJAX request
      */
     public function getUserData()
@@ -181,6 +193,8 @@ class GeneralProfileController extends Controller
             'freelancer' => 'Freelancer',
             'client' => 'Client',
             'studio-photographer' => 'Studio Photographer',
+            'studio-hr' => 'Human Resource',
+            'studio-finance' => 'Finance',
         ];
         
         return $roles[$role] ?? ucfirst($role);

@@ -242,6 +242,7 @@ class AuthController extends Controller
             'freelancer' => 'freelancer.dashboard',
             'client' => 'client.dashboard',
             'studio-hr' => 'studio-hr.dashboard',
+            'studio-finance' => 'studio-finance.dashboard',
             'studio-photographer' => 'studio-photographer.dashboard'
         ];
         

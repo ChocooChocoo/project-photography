@@ -7,6 +7,7 @@ use App\Http\Middleware\OwnerMiddleware;
 use App\Http\Middleware\FreelancerMiddleware;
 use App\Http\Middleware\StudioPhotographerMiddleware;
 use App\Http\Middleware\StudioHRMiddleware;
+use App\Http\Middleware\StudioFinanceMiddleware;
 
 // Auth Routes =========================================================================================================================================================
 Route::prefix('auth')->group(function () {
@@ -315,6 +316,21 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/attendance/{id}/details',                      [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceDetails'])->name('studio-hr.attendance.details');
     });
 
+    // Studio Finance Routes ===============================================================================================================================================
+    Route::prefix('studio-finance')->middleware([StudioFinanceMiddleware::class])->group(function () {
+
+        // Redirect to Dashboard
+        Route::get('/',                                             function () {
+            return redirect()->route('studio-finance.dashboard');
+        })->name('studio-finance.index');
+
+        // Profile
+        Route::get('/profile',                                      [\App\Http\Controllers\GeneralProfileController::class, 'studioFinance'])->name('studio-finance.profile');
+
+        // Dashboard
+        Route::get('/dashboard',                                    [\App\Http\Controllers\Finance\DashboardController::class, 'index'])->name('studio-finance.dashboard');
+    });
+
     // Freelancer Routes ===================================================================================================================================================
     Route::prefix('freelancer')->middleware([FreelancerMiddleware::class])->group(function () {
 
@@ -498,7 +514,9 @@ Route::middleware(['auth'])->group(function () {
                 'owner' => 'owner.dashboard',
                 'freelancer' => 'freelancer.dashboard',
                 'client' => 'client.dashboard',
-                'studio-photographer' => 'studio-photographer.dashboard'
+                'studio-photographer' => 'studio-photographer.dashboard',
+                'studio-hr' => 'studio-hr.dashboard',
+                'studio-finance' => 'studio-finance.dashboard',
             ];
             
             return redirect()->route($routes[$user->role] ?? 'login');
@@ -519,7 +537,9 @@ Route::fallback(function () {
             'owner' => 'owner.dashboard',
             'freelancer' => 'freelancer.dashboard',
             'client' => 'client.dashboard',
-            'studio-photographer' => 'studio-photographer.dashboard'
+            'studio-photographer' => 'studio-photographer.dashboard',
+            'studio-hr' => 'studio-hr.dashboard',
+            'studio-finance' => 'studio-finance.dashboard',
         ];
         
         return redirect()->route($routes[$user->role] ?? 'login');

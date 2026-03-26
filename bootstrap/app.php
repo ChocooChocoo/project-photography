@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'freelancer'            => \App\Http\Middleware\FreelancerMiddleware::class,
             'studio.photographer'   => \App\Http\Middleware\StudioPhotographerMiddleware::class,
             'studio.hr'             => \App\Http\Middleware\StudioHRMiddleware::class,
+            'studio.finance'        => \App\Http\Middleware\StudioFinanceMiddleware::class,
             'check.studio.limit'    => \App\Http\Middleware\CheckStudioRegistrationLimit::class,
         ]);
     })
