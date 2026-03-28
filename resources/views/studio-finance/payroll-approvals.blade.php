@@ -77,21 +77,14 @@
                                                     <small class="text-muted">{{ $generatedPayroll->generator->full_name ?? 'N/A' }}</small>
                                                 </td>
                                                 <td class="text-center">
-                                                    <div class="d-flex gap-2 justify-content-center flex-wrap">
-                                                        <button type="button" class="btn btn-primary btn-sm view-payroll-approval-btn" data-id="{{ $generatedPayroll->id }}">
-                                                            View
-                                                        </button>
-                                                        @if($canApprovePayroll)
-                                                            <button type="button" class="btn btn-success btn-sm approve-payroll-btn" data-id="{{ $generatedPayroll->id }}" data-status="{{ $generatedPayroll->status }}">
-                                                                Approve
-                                                            </button>
-                                                        @endif
-                                                        @if($canRejectPayroll)
-                                                            <button type="button" class="btn btn-danger btn-sm reject-payroll-btn" data-id="{{ $generatedPayroll->id }}" data-reference="{{ $generatedPayroll->payroll_reference }}" data-status="{{ $generatedPayroll->status }}">
-                                                                Reject
-                                                            </button>
-                                                        @endif
-                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm view-payroll-approval-btn"
+                                                        data-id="{{ $generatedPayroll->id }}"
+                                                        title="View payroll approval details"
+                                                    >
+                                                        <i class="ti ti-edit"></i>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         @empty
@@ -231,12 +224,11 @@
                     </div>
                     <div class="d-flex gap-2">
                         @if($canRejectPayroll)
-                            <button type="button" class="btn btn-danger" id="approvalModalRejectBtn" data-id="">Reject</button>
+                            <button type="button" class="btn btn-soft-danger" id="approvalModalRejectBtn" data-id="">Reject</button>
                         @endif
                         @if($canApprovePayroll)
-                            <button type="button" class="btn btn-success" id="approvalModalApproveBtn" data-id="">Approve</button>
+                            <button type="button" class="btn btn-primary" id="approvalModalApproveBtn" data-id="">Approve</button>
                         @endif
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -667,14 +659,6 @@
             // ==================== EVENT HANDLERS ====================
             $('#payrollApprovalTableBody').on('click', '.view-payroll-approval-btn', function () {
                 openPayrollApprovalModal($(this).data('id'));
-            });
-
-            $('#payrollApprovalTableBody').on('click', '.approve-payroll-btn', function () {
-                confirmApprovePayroll($(this).data('id'), $(this).data('status'));
-            });
-
-            $('#payrollApprovalTableBody').on('click', '.reject-payroll-btn', function () {
-                openRejectPayrollModal($(this).data('id'), $(this).data('reference'), $(this).data('status'));
             });
 
             $('#approvalModalApproveBtn').on('click', function () {

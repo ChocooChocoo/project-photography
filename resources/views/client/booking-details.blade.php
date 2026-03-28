@@ -271,10 +271,29 @@
                                                                                 @endforeach
                                                                             @endif
                                                                             
-                                                                            @if($package->coverage_scope)
+                                                                            @php
+                                                                                $coverageScope = $package->coverage_scope;
+
+                                                                                if (is_string($coverageScope)) {
+                                                                                    $decodedCoverageScope = json_decode($coverageScope, true);
+
+                                                                                    if (json_last_error() === JSON_ERROR_NONE && is_array($decodedCoverageScope)) {
+                                                                                        $coverageScope = $decodedCoverageScope;
+                                                                                    }
+                                                                                }
+
+                                                                                if (is_array($coverageScope)) {
+                                                                                    $coverageScope = collect($coverageScope)
+                                                                                        ->filter(fn ($scope) => filled($scope))
+                                                                                        ->map(fn ($scope) => trim((string) $scope, "\"' "))
+                                                                                        ->implode(', ');
+                                                                                }
+                                                                            @endphp
+
+                                                                            @if(filled($coverageScope))
                                                                                 <li class="mb-1">
                                                                                     <i class="ti ti-map-pin text-primary me-2"></i> 
-                                                                                    Coverage: {{ $package->coverage_scope }}
+                                                                                    Coverage: {{ $coverageScope }}
                                                                                 </li>
                                                                             @endif
                                                                         </ul>
