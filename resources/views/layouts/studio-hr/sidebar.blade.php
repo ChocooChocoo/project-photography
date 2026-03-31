@@ -39,6 +39,38 @@
                 </a>
             </li>
 
+            {{-- Request --}}
+            @php
+                $requestRoutes = Route::is('studio-hr.leave-requests.*') || Route::is('studio-hr.employees-leave-requests.*');
+            @endphp
+
+            <li class="side-nav-item {{ $requestRoutes ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarHrRequest" aria-expanded="{{ $requestRoutes ? 'true' : 'false' }}" aria-controls="sidebarHrRequest" class="side-nav-link {{ $requestRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-file-text"></i></span>
+                    <span class="menu-text" data-lang="request">Request</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse {{ $requestRoutes ? 'show' : '' }}" id="sidebarHrRequest">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-hr.leave-requests.create') }}" class="side-nav-link {{ Route::is('studio-hr.leave-requests.create') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="request-leave">Request Leave</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-hr.leave-requests.index') }}" class="side-nav-link {{ Route::is('studio-hr.leave-requests.index') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="view-requested-leave">View Requested Leave</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-hr.employees-leave-requests.index') }}" class="side-nav-link {{ Route::is('studio-hr.employees-leave-requests.index') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="employees-leave-requests">Employees Leave Requests</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
             {{-- Manage Employee --}}
             @php
                 $manageEmployeeRoutes = Route::is('studio-hr.employee.index');

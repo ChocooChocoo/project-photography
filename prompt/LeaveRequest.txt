@@ -1,0 +1,169 @@
+Main Objective: Finance, Studio Photographer and Human Resource Leave Request Process.
+
+Objective #1: Finance Leave Request.
+
+    1). Here in this 3 modules/roles, I wanted to add a module for leave request, where the employees can request
+        their leave form.
+
+    2). First is in the finance side, add a new modules for requesting a leave form. In the sidebar of the finance, add
+        a list for Request:
+
+        Request
+          └── Request Leave
+          └── View Requested Leave
+
+    3). In the blade view on the "Request Leave" this is where the finance where the request leave form is
+
+    4). In the "View Requested Leave" blade, this is where the finance can see their own requested leave, can edit also
+        such as cancel, delete or anything actions.
+
+    5). Create a table using artisan migration for "tbl_leave_requests" with the important columns, make sure that the
+        primary key is "id" and has a proper constraint
+
+        Kindly check the file (DB-SCHEMA.SQL) for whole database schema as reference.
+
+    6). The submitted request should be not done because it has an approval on the HR side.
+
+Objective #2: HR Leave Request
+
+    1). Now here in the HR side, this is the role that can manage the leave request.
+
+    2). The sidebar of the HR should be:
+
+        Request
+          └── Request Leave             (Request Form)
+          └── View Requested Leave      (View Own Request)
+          └── Employees Leave Requests  (View all employees requested leave on that studio)
+
+    3). The HR can approve and reject the leave request form. If approval, it shows the confirmation first then if rejected,
+        it shows the modal for reason why they need to reject the request leave.
+
+Objective #3: Studio Photographer Leave Request
+
+    1). It mostly like the Finance process of requesting leave, like how the finance request a leave, it's the same
+        for Studio Photographer.
+
+    2). The sidebar of the Studio Photographer should be:
+
+        Request
+          └── Request Leave             (Request Form)
+          └── View Requested Leave      (View Own Request)
+
+Instructions that are converted to JSON for better readabilty:
+
+    {
+        "project_overview": {
+            "main_objective": "Finance, Studio Photographer and Human Resource Leave Request Process.",
+            "modules_involved": ["Finance", "Human Resource (HR)", "Studio Photographer"]
+        },
+        "objective_1_finance_leave_request": {
+            "description": "Implement leave request functionality for the Finance role.",
+            "instructions": [
+            {
+                "step": 1,
+                "action": "Add a new module for leave request where employees can request their leave form."
+            },
+            {
+                "step": 2,
+                "action": "Modify the Finance sidebar to include a 'Request' section with the following structure:",
+                "sidebar_structure": {
+                "Request": {
+                    "children": [
+                    "Request Leave",
+                    "View Requested Leave"
+                    ]
+                }
+                }
+            },
+            {
+                "step": 3,
+                "action": "Create a blade view for 'Request Leave' containing the leave request form for the Finance role."
+            },
+            {
+                "step": 4,
+                "action": "Create a blade view for 'View Requested Leave' where the Finance user can see their own requested leaves and perform actions such as cancel, delete, or other edits."
+            },
+            {
+                "step": 5,
+                "action": "Create a database table using artisan migration named 'tbl_leave_requests'.",
+                "table_specifications": {
+                "table_name": "tbl_leave_requests",
+                "primary_key": "id",
+                "constraints": "Must have proper constraints. Reference the file 'DB-SCHEMA.SQL' for the whole database schema."
+                }
+            },
+            {
+                "step": 6,
+                "action": "Note on request submission: The submitted request should not be considered final as it requires approval on the HR side."
+            }
+            ]
+        },
+        "objective_2_hr_leave_request": {
+            "description": "Implement leave request management functionality for the HR role.",
+            "instructions": [
+            {
+                "step": 1,
+                "action": "The HR role is responsible for managing leave requests."
+            },
+            {
+                "step": 2,
+                "action": "Modify the HR sidebar to include the following structure:",
+                "sidebar_structure": {
+                "Request": {
+                    "children": [
+                    "Request Leave",
+                    "View Requested Leave",
+                    "Employees Leave Requests"
+                    ]
+                }
+                },
+                "child_descriptions": {
+                "Request Leave": "Request Form",
+                "View Requested Leave": "View Own Request",
+                "Employees Leave Requests": "View all employees requested leave on that studio"
+                }
+            },
+            {
+                "step": 3,
+                "action": "Implement functionality for HR to approve or reject leave requests.",
+                "approval_rejection_logic": {
+                "approval": "Must show a confirmation first before approval.",
+                "rejection": "Must show a modal prompting for a reason why the leave request is being rejected."
+                }
+            }
+            ]
+        },
+        "objective_3_studio_photographer_leave_request": {
+            "description": "Implement leave request functionality for the Studio Photographer role, similar to the Finance process.",
+            "instructions": [
+            {
+                "step": 1,
+                "action": "The process for Studio Photographer is mostly the same as the Finance process for requesting leave."
+            },
+            {
+                "step": 2,
+                "action": "Modify the Studio Photographer sidebar to include the following structure:",
+                "sidebar_structure": {
+                "Request": {
+                    "children": [
+                    "Request Leave",
+                    "View Requested Leave"
+                    ]
+                }
+                },
+                "child_descriptions": {
+                "Request Leave": "Request Form",
+                "View Requested Leave": "View Own Request"
+                }
+            }
+            ]
+        },
+        "important_note": {
+            "summary_requirement": "Provide a summary of the initial plan for this objective, including what files need to be modified, created, or deleted (risky). Await the 'Go' command before proceeding with implementation."
+        }
+    }
+
+Important Note:
+
+    1). Give the summary first of the process, what is the intial plan for this objective, what files
+        need to be modified, created, or deleted (risky) and wait for my "Go" command. 

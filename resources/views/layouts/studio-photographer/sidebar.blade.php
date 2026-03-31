@@ -39,6 +39,33 @@
                 </a>
             </li>
 
+            {{-- Request --}}
+            @php
+                $requestRoutes = Route::is('studio-photographer.leave-requests.*');
+            @endphp
+
+            <li class="side-nav-item {{ $requestRoutes ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarPhotographerRequest" aria-expanded="{{ $requestRoutes ? 'true' : 'false' }}" aria-controls="sidebarPhotographerRequest" class="side-nav-link {{ $requestRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-file-text"></i></span>
+                    <span class="menu-text" data-lang="request">Request</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse {{ $requestRoutes ? 'show' : '' }}" id="sidebarPhotographerRequest">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-photographer.leave-requests.create') }}" class="side-nav-link {{ Route::is('studio-photographer.leave-requests.create') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="request-leave">Request Leave</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-photographer.leave-requests.index') }}" class="side-nav-link {{ Route::is('studio-photographer.leave-requests.index') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="view-requested-leave">View Requested Leave</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
             {{-- Attendance --}}
             @php
                 $attendanceRoutes = Route::is('studio-photographer.attendance.index');

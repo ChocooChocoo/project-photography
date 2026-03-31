@@ -169,4 +169,12 @@ class StudiosModel extends Model
     {
         return $this->hasMany(\App\Models\StudioRatingModel::class, 'studio_id');
     }
+
+    /**
+     * Get the leave requests filed under the studio.
+     */
+    public function leaveRequests()
+    {
+        return $this->hasMany(\App\Models\LeaveRequestModel::class, 'studio_id');
+    }
 }

@@ -209,6 +209,11 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/employee/{id}',                             [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'destroy'])->name('owner.employee.destroy');
         Route::get('/employee/{studioId}/services/{categoryId}',    [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getServicesByCategory'])->name('owner.employee.services-by-category');
 
+        // HR Leave Requests
+        Route::get('/hr-leave-requests',                            [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'index'])->name('owner.hr-leave-requests.index');
+        Route::get('/hr-leave-requests/{id}',                       [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'show'])->name('owner.hr-leave-requests.show');
+        Route::post('/hr-leave-requests/{id}/{action}',             [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'process'])->name('owner.hr-leave-requests.process');
+
         // Manage Roles
         Route::get('/view/roles',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'index'])->name('owner.role.index');
         Route::get('/roles/data',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'getRoles'])->name('owner.role.data');
@@ -272,6 +277,18 @@ Route::middleware(['auth'])->group(function () {
         // Dashboard
         Route::get('/dashboard',                                    [\App\Http\Controllers\StudioHR\DashboardController::class, 'index'])->name('studio-hr.dashboard');
 
+        // Leave Requests
+        Route::get('/leave-requests/create',                        [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'create'])->name('studio-hr.leave-requests.create');
+        Route::get('/leave-requests',                               [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'index'])->name('studio-hr.leave-requests.index');
+        Route::post('/leave-requests',                              [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'store'])->name('studio-hr.leave-requests.store');
+        Route::get('/leave-requests/{id}',                          [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'show'])->name('studio-hr.leave-requests.show');
+        Route::put('/leave-requests/{id}',                          [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'update'])->name('studio-hr.leave-requests.update');
+        Route::post('/leave-requests/{id}/cancel',                  [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'cancel'])->name('studio-hr.leave-requests.cancel');
+        Route::delete('/leave-requests/{id}',                       [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'destroy'])->name('studio-hr.leave-requests.destroy');
+        Route::get('/employees-leave-requests',                     [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'employeesIndex'])->name('studio-hr.employees-leave-requests.index');
+        Route::get('/employees-leave-requests/{id}',                [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'employeeShow'])->name('studio-hr.employees-leave-requests.show');
+        Route::post('/employees-leave-requests/{id}/{action}',      [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'process'])->name('studio-hr.employees-leave-requests.process');
+
         // Manage Employee
         Route::get('/view/employee',                                [\App\Http\Controllers\StudioHR\EmployeeController::class, 'index'])->name('studio-hr.employee.index');
         Route::get('/create/employee',                              [\App\Http\Controllers\StudioHR\EmployeeController::class, 'create'])->name('studio-hr.employee.create');
@@ -329,6 +346,15 @@ Route::middleware(['auth'])->group(function () {
 
         // Dashboard
         Route::get('/dashboard',                                    [\App\Http\Controllers\Finance\DashboardController::class, 'index'])->name('studio-finance.dashboard');
+
+        // Leave Requests
+        Route::get('/leave-requests/create',                        [\App\Http\Controllers\Finance\LeaveRequestController::class, 'create'])->name('studio-finance.leave-requests.create');
+        Route::get('/leave-requests',                               [\App\Http\Controllers\Finance\LeaveRequestController::class, 'index'])->name('studio-finance.leave-requests.index');
+        Route::post('/leave-requests',                              [\App\Http\Controllers\Finance\LeaveRequestController::class, 'store'])->name('studio-finance.leave-requests.store');
+        Route::get('/leave-requests/{id}',                          [\App\Http\Controllers\Finance\LeaveRequestController::class, 'show'])->name('studio-finance.leave-requests.show');
+        Route::put('/leave-requests/{id}',                          [\App\Http\Controllers\Finance\LeaveRequestController::class, 'update'])->name('studio-finance.leave-requests.update');
+        Route::post('/leave-requests/{id}/cancel',                  [\App\Http\Controllers\Finance\LeaveRequestController::class, 'cancel'])->name('studio-finance.leave-requests.cancel');
+        Route::delete('/leave-requests/{id}',                       [\App\Http\Controllers\Finance\LeaveRequestController::class, 'destroy'])->name('studio-finance.leave-requests.destroy');
 
         // Payroll Approvals
         Route::get('/payroll-approvals',                            [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'index'])->name('studio-finance.payroll-approvals.index');
@@ -402,6 +428,15 @@ Route::middleware(['auth'])->group(function () {
 
         // Dashboard
         Route::get('/dashboard',                        [\App\Http\Controllers\StudioPhotographer\DashboardController::class, 'index'])->name('studio-photographer.dashboard');
+
+        // Leave Requests
+        Route::get('/leave-requests/create',            [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'create'])->name('studio-photographer.leave-requests.create');
+        Route::get('/leave-requests',                   [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'index'])->name('studio-photographer.leave-requests.index');
+        Route::post('/leave-requests',                  [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'store'])->name('studio-photographer.leave-requests.store');
+        Route::get('/leave-requests/{id}',              [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'show'])->name('studio-photographer.leave-requests.show');
+        Route::put('/leave-requests/{id}',              [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'update'])->name('studio-photographer.leave-requests.update');
+        Route::post('/leave-requests/{id}/cancel',      [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'cancel'])->name('studio-photographer.leave-requests.cancel');
+        Route::delete('/leave-requests/{id}',           [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'destroy'])->name('studio-photographer.leave-requests.destroy');
 
         // Attendance
         Route::get('/view/attendance',                  [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'index'])->name('studio-photographer.attendance.index');

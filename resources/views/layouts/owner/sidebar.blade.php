@@ -221,6 +221,28 @@
                 </div>
             </li>
 
+            {{-- Leave Requests --}}
+            @php
+                $hrLeaveRequestRoutes = Route::is('owner.hr-leave-requests.*');
+            @endphp
+
+            <li class="side-nav-item {{ $hrLeaveRequestRoutes ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarLeaveRequests" aria-expanded="{{ $hrLeaveRequestRoutes ? 'true' : 'false' }}" aria-controls="sidebarLeaveRequests" class="side-nav-link {{ $hrLeaveRequestRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-calendar-time"></i></span>
+                    <span class="menu-text" data-lang="leave-requests">Request</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse {{ $hrLeaveRequestRoutes ? 'show' : '' }}" id="sidebarLeaveRequests">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="{{ route('owner.hr-leave-requests.index') }}" class="side-nav-link {{ $hrLeaveRequestRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="hr-leave-requests">HR Leave Requests</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
             {{-- Manage Roles and Permission --}}
             @php
                 $manageRolesRoutes = Route::is('owner.role.index');

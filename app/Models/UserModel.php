@@ -295,6 +295,14 @@ class UserModel extends Authenticatable
     }
 
     /**
+     * Check if user is studio-photographer.
+     */
+    public function isStudioPhotographer(): bool
+    {
+        return $this->role === 'studio-photographer';
+    }
+
+    /**
      * Check if user is studio-staff (for HR/Finance staff)
      */
     public function isStudioStaff(): bool
@@ -331,6 +339,30 @@ class UserModel extends Authenticatable
     public function employeeSchedule()
     {
         return $this->hasMany(\App\Models\StudioOwner\EmployeeScheduleModel::class, 'user_id');
+    }
+
+    /**
+     * Get the leave requests created by the user.
+     */
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequestModel::class, 'user_id');
+    }
+
+    /**
+     * Get the leave requests approved by the user.
+     */
+    public function approvedLeaveRequests()
+    {
+        return $this->hasMany(LeaveRequestModel::class, 'approved_by');
+    }
+
+    /**
+     * Get the leave requests rejected by the user.
+     */
+    public function rejectedLeaveRequests()
+    {
+        return $this->hasMany(LeaveRequestModel::class, 'rejected_by');
     }
     
     /**

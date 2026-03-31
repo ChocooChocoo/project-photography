@@ -12,114 +12,7 @@ CREATE TABLE IF NOT EXISTS `migrations` (
   `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=122 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
-	(2, '2026_01_23_025132_add_user_type_to_tbl_users_table', 1),
-	(4, '2026_01_24_172015_create_tbl_studios_table', 2),
-	(5, '2026_01_24_172022_create_tbl_location_table', 2),
-	(8, '2026_01_22_093354_create_tbl_users_table', 3),
-	(9, '2026_01_23_085704_create_tbl_categories_table', 3),
-	(10, '2026_01_24_175854_create_tbl_studios_table', 4),
-	(11, '2026_01_24_175920_create_tbl_location_table', 4),
-	(12, '2026_01_24_180340_create_tbl_studio_categories_table', 5),
-	(13, '2026_01_24_182149_add_service_coverage_area_to_tbl_studios_table', 6),
-	(14, '2026_01_25_140023_drop_tbl_studio_categories_table', 7),
-	(15, '2026_01_25_140045_add_category_id_to_tbl_studios_table', 7),
-	(16, '2026_01_25_154427_create_tbl_services_table', 8),
-	(17, '2026_01_25_161945_create_tbl_services_table', 9),
-	(18, '2026_01_26_034254_create_packages_table', 10),
-	(19, '2026_01_26_055451_create_tbl_packages_table', 11),
-	(20, '2026_01_26_131528_remove_service_description_and_status_from_tbl_services_table', 12),
-	(21, '2026_01_26_132323_change_service_name_to_json_in_tbl_services', 13),
-	(22, '2026_01_27_085739_create_tbl_locations_table', 14),
-	(23, '2026_01_28_041639_create_tbl_studio_schedules_table', 15),
-	(24, '2026_01_28_151726_create_pvt_studio_categories_table', 16),
-	(25, '2026_01_28_151746_remove_service_coverage_area_from_tbl_studios', 16),
-	(26, '2026_01_28_151803_add_contact_info_to_tbl_studios', 16),
-	(27, '2026_01_29_152148_create_freelancer_schedules_table', 17),
-	(28, '2026_01_29_152148_create_freelancers_table', 17),
-	(30, '2026_01_29_152148_create_pvt_freelancer_categories_table', 18),
-	(31, '2026_01_31_161024_create_tbl_freelancer_services_table_fixed', 18),
-	(32, '2026_01_31_162439_add_category_id_to_tbl_freelancer_services', 19),
-	(33, '2026_02_01_071852_create_freelancer_packages_table', 20),
-	(34, '2026_02_01_083143_add_unique_constraint_to_tbl_freelancer_services', 21),
-	(35, '2026_01_31_161024_create_tbl_freelancer_services_table', 22),
-	(36, '2026_02_02_004222_add_location_id_to_tbl_users_table', 23),
-	(37, '2026_02_03_090801_create_tbl_studio_members_table', 24),
-	(38, '2026_02_04_145521_create_tbl_studio_photographers_table', 25),
-	(39, '2026_02_04_145527_create_pvt_studio_photographers_table', 25),
-	(40, '2026_02_04_155822_simple_fix_specialization_column', 26),
-	(41, '2026_02_04_160047_add_foreign_key_to_specialization', 27),
-	(42, '2026_02_04_160453_create_tbl_studio_photographers_table_v2', 28),
-	(43, '2026_02_05_023818_change_specialization_fk_to_services_in_studio_photographers', 29),
-	(44, '2026_02_06_090123_drop_pvt_studio_photographers_table', 30),
-	(45, '2026_02_08_093206_create_tbl_bookings_table', 31),
-	(46, '2026_02_08_093213_create_tbl_payments_table', 31),
-	(47, '2026_02_08_101236_create_bookings_and_payments_tables', 32),
-	(48, '2026_02_08_102822_create_tbl_bookings_table', 33),
-	(49, '2026_02_08_102828_create_tbl_payments_table', 33),
-	(50, '2026_02_08_102833_create_tbl_booking_packages_table', 33),
-	(51, '2026_02_08_150413_add_payment_type_to_bookings_table', 34),
-	(52, '2026_02_09_132930_create_studio_photographer_assignments_table', 35),
-	(53, '2026_02_09_134711_create_tbl_booking_photographers_table', 36),
-	(54, '2026_02_09_151150_create_booking_assigned_photographers_table', 37),
-	(57, '2026_02_11_035017_create_tbl_system_revenue_table', 38),
-	(58, '2026_02_12_060445_add_online_gallery_and_photographer_count_to_tbl_packages_table', 39),
-	(61, '2026_02_14_073655_create_tbl_studio_ratings_table', 40),
-	(62, '2026_02_14_074433_create_tbl_studio_ratings_table', 41),
-	(63, '2026_02_14_081201_create_tbl_studio_ratings_table', 42),
-	(64, '2026_02_14_085714_create_tbl_freelancer_ratings_table', 43),
-	(65, '2026_02_16_072329_create_tbl_online_gallery_table', 44),
-	(66, '2026_02_16_091620_create_tbl_studio_online_gallery_table', 45),
-	(67, '2026_02_16_093634_create_tbl_freelancer_online_gallery_table', 46),
-	(68, '2026_02_16_135556_add_online_gallery_to_freelancer_packages_table', 47),
-	(69, '2026_02_19_084643_create_tbl_subscription_plans', 48),
-	(70, '2026_02_19_084644_create_tbl_studio_plans', 48),
-	(71, '2026_02_19_084700_create_tbl_freelancer_plans', 48),
-	(72, '2026_02_19_094538_add_additional_fields_to_tbl_subscription_plans', 49),
-	(73, '2026_02_21_091800_add_started_at_to_tbl_booking_assigned_photographers', 50),
-	(74, '2026_02_21_093953_add_started_at_to_tbl_booking_assigned_photographers_table', 51),
-	(75, '2026_02_22_145351_create_tbl_notifications_table', 52),
-	(77, '2026_02_24_093052_create_tbl_studio_plans_table', 53),
-	(78, '2026_02_24_095336_add_stripe_session_id_to_tbl_studio_plans', 54),
-	(79, '2026_02_24_130338_add_studio_plan_payment_fields_to_tbl_studio_plans', 55),
-	(80, '2026_02_25_002803_add_subscription_fields_to_system_revenue_table', 56),
-	(81, '2026_02_25_035512_add_downpayment_percentage_to_tbl_studios_table', 57),
-	(82, '2026_02_26_030955_add_package_location_to_tbl_packages_table', 58),
-	(85, '2026_02_26_134817_add_allow_time_customization_to_tbl_packages_table', 59),
-	(86, '2026_02_26_135623_make_duration_nullable_in_tbl_packages_table', 60),
-	(87, '2026_02_27_072011_add_deposit_configuration_to_freelancers_table', 61),
-	(88, '2026_02_27_081236_add_allow_time_customization_to_freelancer_packages_table', 62),
-	(89, '2026_02_27_082531_modify_duration_nullable_in_freelancer_packages', 63),
-	(90, '2026_03_01_132318_add_cover_photo_to_tbl_users_table', 64),
-	(91, '2026_03_02_022114_modify_package_location_to_allow_multiple_in_tbl_packages', 65),
-	(92, '2026_03_02_095858_add_multiple_locations_to_tbl_packages_table', 66),
-	(93, '2026_03_02_135545_add_multiple_locations_to_tbl_freelancer_packages_table', 67),
-	(98, '2026_03_03_090434_add_multiple_locations_to_tbl_bookings_table', 68),
-	(99, '2026_03_03_090606_add_multiple_locations_to_tbl_bookings_table', 69),
-	(100, '2026_03_04_060017_create_tbl_rbac_table', 70),
-	(101, '2026_03_04_060048_create_tbl_studio_employee_schedule_table', 70),
-	(102, '2026_03_04_061555_update_users_role_enum_for_employees', 71),
-	(103, '2026_03_04_062314_update_users_user_type_enum', 72),
-	(104, '2026_03_05_063346_create_tbl_employee_payroll_table', 73),
-	(105, '2026_03_10_090654_remove_unused_payroll_columns_from_tbl_employee_payroll', 74),
-	(106, '2026_03_11_051427_create_tbl_client_budget_table', 75),
-	(107, '2026_03_16_072122_create_tbl_employee_attendance_table', 76),
-	(108, '2026_03_18_203430_add_on_site_fields_to_booking_assigned_photographers_table', 77),
-	(109, '2026_03_18_205308_add_on_site_to_booking_assigned_photographers_status', 78),
-	(110, '2026_03_19_150022_create_chatbot_configs_table', 79),
-	(111, '2026_03_19_150023_create_chatbot_conversations_table', 79),
-	(112, '2026_03_19_150023_create_chatbot_intents_table', 79),
-	(113, '2026_03_19_150023_create_chatbot_messages_table', 79),
-	(114, '2026_03_19_150024_create_chatbot_quick_replies_table', 79),
-	(115, '2026_03_20_174218_create_tbl_roles_table', 80),
-	(116, '2026_03_20_174219_create_tbl_permissions_table', 80),
-	(117, '2026_03_20_174219_create_tbl_role_permissions_table', 80),
-	(118, '2026_03_20_174229_create_tbl_user_roles_table', 80),
-	(119, '2026_03_25_162147_create_tbl_generated_payrolls_table', 81),
-	(120, '2026_03_25_232238_add_is_system_to_tbl_roles_table', 82),
-	(121, '2026_03_25_233321_update_tbl_permissions_for_resource_action_protocol', 83);
+) ENGINE=InnoDB AUTO_INCREMENT=124 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `pvt_freelancer_categories` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -133,11 +26,6 @@ CREATE TABLE IF NOT EXISTS `pvt_freelancer_categories` (
   CONSTRAINT `pvt_freelancer_categories_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `tbl_categories` (`id`) ON DELETE CASCADE,
   CONSTRAINT `pvt_freelancer_categories_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `pvt_freelancer_categories` (`id`, `user_id`, `category_id`, `created_at`, `updated_at`) VALUES
-	(1, 98, 2, '2026-02-26 23:26:55', '2026-02-26 23:26:55'),
-	(2, 98, 5, '2026-02-26 23:26:55', '2026-02-26 23:26:55'),
-	(3, 98, 10, '2026-02-26 23:26:55', '2026-02-26 23:26:55');
 
 CREATE TABLE IF NOT EXISTS `pvt_studio_categories` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -154,11 +42,6 @@ CREATE TABLE IF NOT EXISTS `pvt_studio_categories` (
   CONSTRAINT `pvt_studio_categories_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `pvt_studio_categories_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `pvt_studio_categories` (`id`, `user_id`, `studio_id`, `category_id`, `created_at`, `updated_at`) VALUES
-	(12, 96, 1, 3, '2026-03-08 05:08:45', '2026-03-08 05:08:45'),
-	(13, 96, 1, 4, '2026-03-08 05:08:45', '2026-03-08 05:08:45'),
-	(14, 96, 1, 10, '2026-03-08 05:08:45', '2026-03-08 05:08:45');
 
 CREATE TABLE IF NOT EXISTS `tbl_bookings` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -197,7 +80,6 @@ CREATE TABLE IF NOT EXISTS `tbl_bookings` (
   CONSTRAINT `tbl_bookings_client_id_foreign` FOREIGN KEY (`client_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE IF NOT EXISTS `tbl_booking_assigned_photographers` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `booking_id` bigint unsigned NOT NULL,
@@ -228,7 +110,6 @@ CREATE TABLE IF NOT EXISTS `tbl_booking_assigned_photographers` (
   CONSTRAINT `tbl_booking_assigned_photographers_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='on_site_at: When photographer marked on-site, client_confirmed_at: When client verified presence';
 
-
 CREATE TABLE IF NOT EXISTS `tbl_booking_packages` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `booking_id` bigint unsigned NOT NULL,
@@ -247,7 +128,6 @@ CREATE TABLE IF NOT EXISTS `tbl_booking_packages` (
   CONSTRAINT `tbl_booking_packages_booking_id_foreign` FOREIGN KEY (`booking_id`) REFERENCES `tbl_bookings` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE IF NOT EXISTS `tbl_categories` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `category_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -258,18 +138,6 @@ CREATE TABLE IF NOT EXISTS `tbl_categories` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `tbl_categories_category_name_unique` (`category_name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_categories` (`id`, `category_name`, `description`, `status`, `created_at`, `updated_at`) VALUES
-	(1, 'Wedding Photography', 'Records moments and emotions from a couple’s wedding day.', 'active', '2026-01-24 09:51:50', '2026-01-24 09:51:50'),
-	(2, 'Event Photography', 'Documents occasions like weddings, concerts, and corporate gatherings.', 'active', '2026-01-24 09:52:10', '2026-01-24 09:52:10'),
-	(3, 'Family Portrait', 'Family and group portrait sessions', 'active', '2026-01-26 04:13:33', '2026-01-26 04:13:33'),
-	(4, 'Product Photography', 'Photos for online selling and ads', 'active', '2026-01-26 04:13:55', '2026-01-26 04:13:55'),
-	(5, 'Street Photography', 'Captures candid moments of everyday life in public places.', 'active', '2026-01-26 04:14:40', '2026-01-26 04:14:40'),
-	(6, 'Fashion Photography', 'Displays clothing, accessories, and style, often for magazines or advertising.', 'active', '2026-01-26 04:14:51', '2026-01-26 04:14:51'),
-	(7, 'Documentary Photography', 'Tells real-life stories through images, often with social or historical focus.', 'active', '2026-01-26 04:15:03', '2026-01-26 04:15:03'),
-	(8, 'Food Photography', 'Makes dishes and drinks look appealing for menus, ads, or social media.', 'active', '2026-01-26 04:15:59', '2026-01-26 04:15:59'),
-	(9, 'Real Estate Photography', 'Highlights properties and interiors for listings and marketing.', 'active', '2026-01-26 04:16:08', '2026-01-26 04:16:08'),
-	(10, 'Pet Photography', 'Focuses on animals in domestic or stylized environments.', 'active', '2026-01-26 04:16:20', '2026-01-26 04:16:20');
 
 CREATE TABLE IF NOT EXISTS `tbl_chatbot_configs` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -287,8 +155,7 @@ CREATE TABLE IF NOT EXISTS `tbl_chatbot_configs` (
   KEY `tbl_chatbot_configs_owner_id_index` (`owner_id`),
   KEY `tbl_chatbot_configs_is_active_index` (`is_active`),
   CONSTRAINT `tbl_chatbot_configs_owner_id_foreign` FOREIGN KEY (`owner_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `tbl_chatbot_conversations` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -314,8 +181,7 @@ CREATE TABLE IF NOT EXISTS `tbl_chatbot_conversations` (
   CONSTRAINT `tbl_chatbot_conversations_config_id_foreign` FOREIGN KEY (`config_id`) REFERENCES `tbl_chatbot_configs` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tbl_chatbot_conversations_owner_id_foreign` FOREIGN KEY (`owner_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_chatbot_conversations_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `tbl_chatbot_intents` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -335,8 +201,7 @@ CREATE TABLE IF NOT EXISTS `tbl_chatbot_intents` (
   KEY `tbl_chatbot_intents_is_active_index` (`is_active`),
   KEY `tbl_chatbot_intents_priority_index` (`priority`),
   CONSTRAINT `tbl_chatbot_intents_config_id_foreign` FOREIGN KEY (`config_id`) REFERENCES `tbl_chatbot_configs` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `tbl_chatbot_messages` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -355,8 +220,7 @@ CREATE TABLE IF NOT EXISTS `tbl_chatbot_messages` (
   KEY `tbl_chatbot_messages_intent_id_foreign` (`intent_id`),
   CONSTRAINT `tbl_chatbot_messages_conversation_id_foreign` FOREIGN KEY (`conversation_id`) REFERENCES `tbl_chatbot_conversations` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_chatbot_messages_intent_id_foreign` FOREIGN KEY (`intent_id`) REFERENCES `tbl_chatbot_intents` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `tbl_chatbot_quick_replies` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -374,7 +238,6 @@ CREATE TABLE IF NOT EXISTS `tbl_chatbot_quick_replies` (
   KEY `tbl_chatbot_quick_replies_position_index` (`position`),
   CONSTRAINT `tbl_chatbot_quick_replies_intent_id_foreign` FOREIGN KEY (`intent_id`) REFERENCES `tbl_chatbot_intents` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
 CREATE TABLE IF NOT EXISTS `tbl_client_budget` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -399,7 +262,6 @@ CREATE TABLE IF NOT EXISTS `tbl_client_budget` (
   CONSTRAINT `tbl_client_budget_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `tbl_categories` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tbl_client_budget_client_id_foreign` FOREIGN KEY (`client_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
 CREATE TABLE IF NOT EXISTS `tbl_employee_attendance` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -435,234 +297,6 @@ CREATE TABLE IF NOT EXISTS `tbl_employee_attendance` (
   CONSTRAINT `tbl_employee_attendance_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_employee_attendance_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=430 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_employee_attendance` (`id`, `user_id`, `studio_id`, `schedule_id`, `attendance_date`, `scheduled_start_time`, `scheduled_end_time`, `check_in_time`, `check_out_time`, `check_in_image`, `check_out_image`, `check_in_status`, `check_out_status`, `late_minutes`, `undertime_minutes`, `check_in_ip`, `check_out_ip`, `check_in_user_agent`, `check_out_user_agent`, `notes`, `created_at`, `updated_at`) VALUES
-	(203, 143, 1, 30, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:49:00', '2026-03-02 18:47:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(204, 143, 1, 30, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:48:00', '2026-03-04 17:19:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 41, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(205, 143, 1, 30, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 08:25:00', '2026-03-06 18:13:00', NULL, NULL, 'LATE', 'ON_TIME', 25, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(206, 143, 1, 30, '2026-03-07', '08:00:00', '18:00:00', '2026-03-07 07:46:00', '2026-03-07 18:14:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(207, 143, 1, 30, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:44:00', '2026-03-11 18:16:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(208, 143, 1, 30, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 07:43:00', '2026-03-13 18:17:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(209, 143, 1, 30, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 08:30:00', '2026-03-14 17:13:00', NULL, NULL, 'LATE', 'UNDERTIME', 30, 47, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(210, 143, 1, 30, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:51:00', '2026-03-16 18:19:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(211, 143, 1, 30, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 07:50:00', '2026-03-18 18:20:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(212, 143, 1, 30, '2026-03-20', '08:00:00', '18:00:00', '2026-03-20 07:49:00', '2026-03-20 18:21:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(213, 143, 1, 30, '2026-03-21', '08:00:00', '18:00:00', '2026-03-21 07:48:00', '2026-03-21 18:22:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(214, 143, 1, 30, '2026-03-23', '08:00:00', '18:00:00', '2026-03-23 08:35:00', '2026-03-23 18:23:00', NULL, NULL, 'LATE', 'ON_TIME', 35, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(215, 143, 1, 30, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:46:00', '2026-03-25 17:07:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 53, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(216, 143, 1, 30, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 07:45:00', '2026-03-27 18:25:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(217, 143, 1, 30, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 07:44:00', '2026-03-28 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(218, 143, 1, 30, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:43:00', '2026-03-30 18:27:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.63', '192.168.1.63', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(219, 144, 1, 31, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:48:00', '2026-03-02 17:19:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 41, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(220, 144, 1, 31, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 08:25:00', '2026-03-04 18:13:00', NULL, NULL, 'LATE', 'ON_TIME', 25, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(221, 144, 1, 31, '2026-03-07', '08:00:00', '18:00:00', '2026-03-07 07:45:00', '2026-03-07 18:15:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(222, 144, 1, 31, '2026-03-09', '08:00:00', '18:00:00', '2026-03-09 07:44:00', '2026-03-09 18:16:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(223, 144, 1, 31, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:43:00', '2026-03-11 18:17:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(224, 144, 1, 31, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 08:30:00', '2026-03-13 17:13:00', NULL, NULL, 'LATE', 'UNDERTIME', 30, 47, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(225, 144, 1, 31, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 07:51:00', '2026-03-14 18:19:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(226, 144, 1, 31, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:50:00', '2026-03-16 18:20:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(227, 144, 1, 31, '2026-03-20', '08:00:00', '18:00:00', '2026-03-20 07:48:00', '2026-03-20 18:22:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(228, 144, 1, 31, '2026-03-21', '08:00:00', '18:00:00', '2026-03-21 08:35:00', '2026-03-21 18:23:00', NULL, NULL, 'LATE', 'ON_TIME', 35, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(229, 144, 1, 31, '2026-03-23', '08:00:00', '18:00:00', '2026-03-23 07:46:00', '2026-03-23 17:07:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 53, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(230, 144, 1, 31, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:45:00', '2026-03-25 18:25:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(231, 144, 1, 31, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 07:44:00', '2026-03-27 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(232, 144, 1, 31, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 07:43:00', '2026-03-28 18:27:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(233, 144, 1, 31, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 08:40:00', '2026-03-30 18:28:00', NULL, NULL, 'LATE', 'ON_TIME', 40, 0, '192.168.1.64', '192.168.1.64', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(234, 145, 1, 32, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 08:25:00', '2026-03-02 18:13:00', NULL, NULL, 'LATE', 'ON_TIME', 25, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(235, 145, 1, 32, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:46:00', '2026-03-04 18:14:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(236, 145, 1, 32, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 07:45:00', '2026-03-06 18:15:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(237, 145, 1, 32, '2026-03-09', '08:00:00', '18:00:00', '2026-03-09 07:43:00', '2026-03-09 18:17:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(238, 145, 1, 32, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 08:30:00', '2026-03-11 17:13:00', NULL, NULL, 'LATE', 'UNDERTIME', 30, 47, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(239, 145, 1, 32, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 07:51:00', '2026-03-13 18:19:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(240, 145, 1, 32, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 07:50:00', '2026-03-14 18:20:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(241, 145, 1, 32, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:49:00', '2026-03-16 18:21:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(242, 145, 1, 32, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 07:48:00', '2026-03-18 18:22:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(243, 145, 1, 32, '2026-03-21', '08:00:00', '18:00:00', '2026-03-21 07:46:00', '2026-03-21 17:07:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 53, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(244, 145, 1, 32, '2026-03-23', '08:00:00', '18:00:00', '2026-03-23 07:45:00', '2026-03-23 18:25:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(245, 145, 1, 32, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:44:00', '2026-03-25 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(246, 145, 1, 32, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 07:43:00', '2026-03-27 18:27:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(247, 145, 1, 32, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 08:40:00', '2026-03-28 18:28:00', NULL, NULL, 'LATE', 'ON_TIME', 40, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(248, 145, 1, 32, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:51:00', '2026-03-30 18:29:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.65', '192.168.1.65', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(249, 146, 1, 33, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:46:00', '2026-03-02 18:14:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(250, 146, 1, 33, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:45:00', '2026-03-04 18:15:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(251, 146, 1, 33, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 07:44:00', '2026-03-06 18:16:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(252, 146, 1, 33, '2026-03-07', '08:00:00', '18:00:00', '2026-03-07 07:43:00', '2026-03-07 18:17:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(253, 146, 1, 33, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:51:00', '2026-03-11 18:19:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(254, 146, 1, 33, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 07:50:00', '2026-03-13 18:20:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(255, 146, 1, 33, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 07:49:00', '2026-03-14 18:21:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(256, 146, 1, 33, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:48:00', '2026-03-16 18:22:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(257, 146, 1, 33, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 08:35:00', '2026-03-18 18:23:00', NULL, NULL, 'LATE', 'ON_TIME', 35, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(258, 146, 1, 33, '2026-03-20', '08:00:00', '18:00:00', '2026-03-20 07:46:00', '2026-03-20 17:07:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 53, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(259, 146, 1, 33, '2026-03-23', '08:00:00', '18:00:00', '2026-03-23 07:44:00', '2026-03-23 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(260, 146, 1, 33, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:43:00', '2026-03-25 18:27:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(261, 146, 1, 33, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 08:40:00', '2026-03-27 18:28:00', NULL, NULL, 'LATE', 'ON_TIME', 40, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:51', '2026-03-26 06:02:51'),
-	(262, 146, 1, 33, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 07:51:00', '2026-03-28 18:29:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(263, 146, 1, 33, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:50:00', '2026-03-30 17:01:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 59, '192.168.1.66', '192.168.1.66', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(264, 147, 1, 34, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:45:00', '2026-03-02 18:15:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(265, 147, 1, 34, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:44:00', '2026-03-04 18:16:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(266, 147, 1, 34, '2026-03-07', '08:00:00', '18:00:00', '2026-03-07 08:30:00', '2026-03-07 17:13:00', NULL, NULL, 'LATE', 'UNDERTIME', 30, 47, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(267, 147, 1, 34, '2026-03-09', '08:00:00', '18:00:00', '2026-03-09 07:51:00', '2026-03-09 18:19:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(268, 147, 1, 34, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:50:00', '2026-03-11 18:20:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(269, 147, 1, 34, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 07:49:00', '2026-03-13 18:21:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(270, 147, 1, 34, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 07:48:00', '2026-03-14 18:22:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(271, 147, 1, 34, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 08:35:00', '2026-03-16 18:23:00', NULL, NULL, 'LATE', 'ON_TIME', 35, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(272, 147, 1, 34, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 07:46:00', '2026-03-18 17:07:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 53, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(273, 147, 1, 34, '2026-03-20', '08:00:00', '18:00:00', '2026-03-20 07:45:00', '2026-03-20 18:25:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(274, 147, 1, 34, '2026-03-21', '08:00:00', '18:00:00', '2026-03-21 07:44:00', '2026-03-21 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(275, 147, 1, 34, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 08:40:00', '2026-03-25 18:28:00', NULL, NULL, 'LATE', 'ON_TIME', 40, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(276, 147, 1, 34, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 07:51:00', '2026-03-27 18:29:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(277, 147, 1, 34, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 07:50:00', '2026-03-28 17:01:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 59, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(278, 147, 1, 34, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:49:00', '2026-03-30 18:31:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.1.67', '192.168.1.67', 'Seeded attendance record for payroll testing', 'Seeded attendance record for payroll testing', 'Seeded March 2026 HR attendance record.', '2026-03-26 06:02:52', '2026-03-26 06:02:52'),
-	(280, 153, 1, NULL, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:54:00', '2026-03-02 18:49:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(281, 153, 1, NULL, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:53:00', '2026-03-04 18:50:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(282, 153, 1, NULL, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 07:52:00', '2026-03-06 18:20:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(283, 153, 1, NULL, '2026-03-07', '08:00:00', '18:00:00', '2026-03-07 08:16:00', '2026-03-07 17:45:00', NULL, NULL, 'LATE', 'UNDERTIME', 16, 15, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(284, 153, 1, NULL, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:49:00', '2026-03-11 18:23:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(285, 153, 1, NULL, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 07:48:00', '2026-03-13 18:24:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(286, 153, 1, NULL, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 08:20:00', '2026-03-14 18:25:00', NULL, NULL, 'LATE', 'ON_TIME', 20, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(287, 153, 1, NULL, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:46:00', '2026-03-16 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(288, 153, 1, NULL, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 07:54:00', '2026-03-18 17:39:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 21, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(289, 153, 1, NULL, '2026-03-21', '08:00:00', '18:00:00', '2026-03-21 08:24:00', '2026-03-21 18:29:00', NULL, NULL, 'LATE', 'ON_TIME', 24, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(290, 153, 1, NULL, '2026-03-23', '08:00:00', '18:00:00', '2026-03-23 07:51:00', '2026-03-23 18:30:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(291, 153, 1, NULL, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:50:00', '2026-03-25 18:31:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(292, 153, 1, NULL, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 07:49:00', '2026-03-27 18:32:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(293, 153, 1, NULL, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 08:28:00', '2026-03-28 17:33:00', NULL, NULL, 'LATE', 'UNDERTIME', 28, 27, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(294, 153, 1, NULL, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:47:00', '2026-03-30 18:34:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.73', '192.168.2.73', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(295, 154, 1, NULL, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:53:00', '2026-03-02 18:50:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(296, 154, 1, NULL, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:52:00', '2026-03-04 18:20:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(297, 154, 1, NULL, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 08:16:00', '2026-03-06 17:45:00', NULL, NULL, 'LATE', 'UNDERTIME', 16, 15, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(298, 154, 1, NULL, '2026-03-09', '08:00:00', '18:00:00', '2026-03-09 07:49:00', '2026-03-09 18:23:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(299, 154, 1, NULL, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:48:00', '2026-03-11 18:24:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(300, 154, 1, NULL, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 08:20:00', '2026-03-13 18:25:00', NULL, NULL, 'LATE', 'ON_TIME', 20, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(301, 154, 1, NULL, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 07:46:00', '2026-03-14 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(302, 154, 1, NULL, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:54:00', '2026-03-16 17:39:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 21, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(303, 154, 1, NULL, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 07:53:00', '2026-03-18 18:28:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(304, 154, 1, NULL, '2026-03-20', '08:00:00', '18:00:00', '2026-03-20 08:24:00', '2026-03-20 18:29:00', NULL, NULL, 'LATE', 'ON_TIME', 24, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(305, 154, 1, NULL, '2026-03-23', '08:00:00', '18:00:00', '2026-03-23 07:50:00', '2026-03-23 18:31:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(306, 154, 1, NULL, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:49:00', '2026-03-25 18:32:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(307, 154, 1, NULL, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 08:28:00', '2026-03-27 17:33:00', NULL, NULL, 'LATE', 'UNDERTIME', 28, 27, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(308, 154, 1, NULL, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 07:47:00', '2026-03-28 18:34:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(309, 154, 1, NULL, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:46:00', '2026-03-30 18:35:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.74', '192.168.2.74', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(310, 155, 1, NULL, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:52:00', '2026-03-02 18:20:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(311, 155, 1, NULL, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 08:16:00', '2026-03-04 17:45:00', NULL, NULL, 'LATE', 'UNDERTIME', 16, 15, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(312, 155, 1, NULL, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 07:50:00', '2026-03-06 18:22:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(313, 155, 1, NULL, '2026-03-07', '08:00:00', '18:00:00', '2026-03-07 07:49:00', '2026-03-07 18:23:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(314, 155, 1, NULL, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 08:20:00', '2026-03-11 18:25:00', NULL, NULL, 'LATE', 'ON_TIME', 20, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(315, 155, 1, NULL, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 07:46:00', '2026-03-13 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(316, 155, 1, NULL, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 07:54:00', '2026-03-14 17:39:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 21, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(317, 155, 1, NULL, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:53:00', '2026-03-16 18:28:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(318, 155, 1, NULL, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 08:24:00', '2026-03-18 18:29:00', NULL, NULL, 'LATE', 'ON_TIME', 24, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(319, 155, 1, NULL, '2026-03-20', '08:00:00', '18:00:00', '2026-03-20 07:51:00', '2026-03-20 18:30:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(320, 155, 1, NULL, '2026-03-21', '08:00:00', '18:00:00', '2026-03-21 07:50:00', '2026-03-21 18:31:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(321, 155, 1, NULL, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 08:28:00', '2026-03-25 17:33:00', NULL, NULL, 'LATE', 'UNDERTIME', 28, 27, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(322, 155, 1, NULL, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 07:47:00', '2026-03-27 18:34:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(323, 155, 1, NULL, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 07:46:00', '2026-03-28 18:35:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(324, 155, 1, NULL, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:54:00', '2026-03-30 18:36:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.75', '192.168.2.75', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(325, 156, 1, NULL, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 08:16:00', '2026-03-02 17:45:00', NULL, NULL, 'LATE', 'UNDERTIME', 16, 15, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(326, 156, 1, NULL, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:50:00', '2026-03-04 18:22:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(327, 156, 1, NULL, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 07:49:00', '2026-03-06 18:23:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(328, 156, 1, NULL, '2026-03-09', '08:00:00', '18:00:00', '2026-03-09 08:20:00', '2026-03-09 18:25:00', NULL, NULL, 'LATE', 'ON_TIME', 20, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(329, 156, 1, NULL, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:46:00', '2026-03-11 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(330, 156, 1, NULL, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 07:54:00', '2026-03-13 17:39:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 21, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(331, 156, 1, NULL, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 07:53:00', '2026-03-14 18:28:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(332, 156, 1, NULL, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 08:24:00', '2026-03-16 18:29:00', NULL, NULL, 'LATE', 'ON_TIME', 24, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(333, 156, 1, NULL, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 07:51:00', '2026-03-18 18:30:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(334, 156, 1, NULL, '2026-03-21', '08:00:00', '18:00:00', '2026-03-21 07:49:00', '2026-03-21 18:32:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(335, 156, 1, NULL, '2026-03-23', '08:00:00', '18:00:00', '2026-03-23 08:28:00', '2026-03-23 17:33:00', NULL, NULL, 'LATE', 'UNDERTIME', 28, 27, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(336, 156, 1, NULL, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:47:00', '2026-03-25 18:34:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(337, 156, 1, NULL, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 07:46:00', '2026-03-27 18:35:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(338, 156, 1, NULL, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 07:54:00', '2026-03-28 18:36:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(339, 156, 1, NULL, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 08:13:00', '2026-03-30 18:37:00', NULL, NULL, 'LATE', 'ON_TIME', 13, 0, '192.168.2.76', '192.168.2.76', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(340, 157, 1, NULL, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:50:00', '2026-03-02 18:22:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(341, 157, 1, NULL, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:49:00', '2026-03-04 18:23:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(342, 157, 1, NULL, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 07:48:00', '2026-03-06 18:24:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:50', '2026-03-26 07:43:50'),
-	(343, 157, 1, NULL, '2026-03-07', '08:00:00', '18:00:00', '2026-03-07 08:20:00', '2026-03-07 18:25:00', NULL, NULL, 'LATE', 'ON_TIME', 20, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(344, 157, 1, NULL, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:54:00', '2026-03-11 17:39:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 21, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(345, 157, 1, NULL, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 07:53:00', '2026-03-13 18:28:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(346, 157, 1, NULL, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 08:24:00', '2026-03-14 18:29:00', NULL, NULL, 'LATE', 'ON_TIME', 24, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(347, 157, 1, NULL, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:51:00', '2026-03-16 18:30:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(348, 157, 1, NULL, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 07:50:00', '2026-03-18 18:31:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(349, 157, 1, NULL, '2026-03-20', '08:00:00', '18:00:00', '2026-03-20 07:49:00', '2026-03-20 18:32:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(350, 157, 1, NULL, '2026-03-23', '08:00:00', '18:00:00', '2026-03-23 07:47:00', '2026-03-23 18:34:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(351, 157, 1, NULL, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:46:00', '2026-03-25 18:35:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(352, 157, 1, NULL, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 07:54:00', '2026-03-27 18:36:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(353, 157, 1, NULL, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 08:13:00', '2026-03-28 18:37:00', NULL, NULL, 'LATE', 'ON_TIME', 13, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(354, 157, 1, NULL, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:52:00', '2026-03-30 18:38:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.77', '192.168.2.77', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(355, 158, 1, NULL, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:49:00', '2026-03-02 18:23:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(356, 158, 1, NULL, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:48:00', '2026-03-04 18:24:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(357, 158, 1, NULL, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 08:20:00', '2026-03-06 18:25:00', NULL, NULL, 'LATE', 'ON_TIME', 20, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(358, 158, 1, NULL, '2026-03-09', '08:00:00', '18:00:00', '2026-03-09 07:54:00', '2026-03-09 17:39:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 21, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(359, 158, 1, NULL, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:53:00', '2026-03-11 18:28:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(360, 158, 1, NULL, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 08:24:00', '2026-03-13 18:29:00', NULL, NULL, 'LATE', 'ON_TIME', 24, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(361, 158, 1, NULL, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 07:51:00', '2026-03-14 18:30:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(362, 158, 1, NULL, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:50:00', '2026-03-16 18:31:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(363, 158, 1, NULL, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 07:49:00', '2026-03-18 18:32:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(364, 158, 1, NULL, '2026-03-20', '08:00:00', '18:00:00', '2026-03-20 08:28:00', '2026-03-20 17:33:00', NULL, NULL, 'LATE', 'UNDERTIME', 28, 27, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(365, 158, 1, NULL, '2026-03-21', '08:00:00', '18:00:00', '2026-03-21 07:47:00', '2026-03-21 18:34:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(366, 158, 1, NULL, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:54:00', '2026-03-25 18:36:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(367, 158, 1, NULL, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 08:13:00', '2026-03-27 18:37:00', NULL, NULL, 'LATE', 'ON_TIME', 13, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(368, 158, 1, NULL, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 07:52:00', '2026-03-28 18:38:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(369, 158, 1, NULL, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:51:00', '2026-03-30 17:27:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 33, '192.168.2.78', '192.168.2.78', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(370, 159, 1, NULL, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:48:00', '2026-03-02 18:24:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(371, 159, 1, NULL, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 08:20:00', '2026-03-04 18:25:00', NULL, NULL, 'LATE', 'ON_TIME', 20, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(372, 159, 1, NULL, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 07:46:00', '2026-03-06 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(373, 159, 1, NULL, '2026-03-07', '08:00:00', '18:00:00', '2026-03-07 07:54:00', '2026-03-07 17:39:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 21, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(374, 159, 1, NULL, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 08:24:00', '2026-03-11 18:29:00', NULL, NULL, 'LATE', 'ON_TIME', 24, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(375, 159, 1, NULL, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 07:51:00', '2026-03-13 18:30:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(376, 159, 1, NULL, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 07:50:00', '2026-03-14 18:31:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(377, 159, 1, NULL, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:49:00', '2026-03-16 18:32:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(378, 159, 1, NULL, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 08:28:00', '2026-03-18 17:33:00', NULL, NULL, 'LATE', 'UNDERTIME', 28, 27, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(379, 159, 1, NULL, '2026-03-21', '08:00:00', '18:00:00', '2026-03-21 07:46:00', '2026-03-21 18:35:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(380, 159, 1, NULL, '2026-03-23', '08:00:00', '18:00:00', '2026-03-23 07:54:00', '2026-03-23 18:36:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(381, 159, 1, NULL, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 08:13:00', '2026-03-25 18:37:00', NULL, NULL, 'LATE', 'ON_TIME', 13, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(382, 159, 1, NULL, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 07:52:00', '2026-03-27 18:38:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(383, 159, 1, NULL, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 07:51:00', '2026-03-28 17:27:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 33, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(384, 159, 1, NULL, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:50:00', '2026-03-30 18:40:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.79', '192.168.2.79', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(385, 160, 1, NULL, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 08:20:00', '2026-03-02 18:25:00', NULL, NULL, 'LATE', 'ON_TIME', 20, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(386, 160, 1, NULL, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:46:00', '2026-03-04 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(387, 160, 1, NULL, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 07:54:00', '2026-03-06 17:39:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 21, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(388, 160, 1, NULL, '2026-03-09', '08:00:00', '18:00:00', '2026-03-09 08:24:00', '2026-03-09 18:29:00', NULL, NULL, 'LATE', 'ON_TIME', 24, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(389, 160, 1, NULL, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:51:00', '2026-03-11 18:30:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(390, 160, 1, NULL, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 07:50:00', '2026-03-13 18:31:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(391, 160, 1, NULL, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 07:49:00', '2026-03-14 18:32:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(392, 160, 1, NULL, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 08:28:00', '2026-03-16 17:33:00', NULL, NULL, 'LATE', 'UNDERTIME', 28, 27, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(393, 160, 1, NULL, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 07:47:00', '2026-03-18 18:34:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(394, 160, 1, NULL, '2026-03-20', '08:00:00', '18:00:00', '2026-03-20 07:46:00', '2026-03-20 18:35:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(395, 160, 1, NULL, '2026-03-23', '08:00:00', '18:00:00', '2026-03-23 08:13:00', '2026-03-23 18:37:00', NULL, NULL, 'LATE', 'ON_TIME', 13, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(396, 160, 1, NULL, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:52:00', '2026-03-25 18:38:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(397, 160, 1, NULL, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 07:51:00', '2026-03-27 17:27:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 33, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(398, 160, 1, NULL, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 07:50:00', '2026-03-28 18:40:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(399, 160, 1, NULL, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 08:17:00', '2026-03-30 18:41:00', NULL, NULL, 'LATE', 'ON_TIME', 17, 0, '192.168.2.80', '192.168.2.80', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(400, 161, 1, NULL, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:46:00', '2026-03-02 18:26:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(401, 161, 1, NULL, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:54:00', '2026-03-04 17:39:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 21, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(402, 161, 1, NULL, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 07:53:00', '2026-03-06 18:28:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(403, 161, 1, NULL, '2026-03-07', '08:00:00', '18:00:00', '2026-03-07 08:24:00', '2026-03-07 18:29:00', NULL, NULL, 'LATE', 'ON_TIME', 24, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(404, 161, 1, NULL, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:50:00', '2026-03-11 18:31:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(405, 161, 1, NULL, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 07:49:00', '2026-03-13 18:32:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(406, 161, 1, NULL, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 08:28:00', '2026-03-14 17:33:00', NULL, NULL, 'LATE', 'UNDERTIME', 28, 27, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(407, 161, 1, NULL, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:47:00', '2026-03-16 18:34:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(408, 161, 1, NULL, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 07:46:00', '2026-03-18 18:35:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(409, 161, 1, NULL, '2026-03-20', '08:00:00', '18:00:00', '2026-03-20 07:54:00', '2026-03-20 18:36:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(410, 161, 1, NULL, '2026-03-21', '08:00:00', '18:00:00', '2026-03-21 08:13:00', '2026-03-21 18:37:00', NULL, NULL, 'LATE', 'ON_TIME', 13, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(411, 161, 1, NULL, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:51:00', '2026-03-25 17:27:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 33, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(412, 161, 1, NULL, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 07:50:00', '2026-03-27 18:40:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(413, 161, 1, NULL, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 08:17:00', '2026-03-28 18:41:00', NULL, NULL, 'LATE', 'ON_TIME', 17, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(414, 161, 1, NULL, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:48:00', '2026-03-30 18:42:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.81', '192.168.2.81', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(415, 162, 1, NULL, '2026-03-02', '08:00:00', '18:00:00', '2026-03-02 07:54:00', '2026-03-02 17:39:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 21, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(416, 162, 1, NULL, '2026-03-04', '08:00:00', '18:00:00', '2026-03-04 07:53:00', '2026-03-04 18:28:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(417, 162, 1, NULL, '2026-03-06', '08:00:00', '18:00:00', '2026-03-06 08:24:00', '2026-03-06 18:29:00', NULL, NULL, 'LATE', 'ON_TIME', 24, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(418, 162, 1, NULL, '2026-03-09', '08:00:00', '18:00:00', '2026-03-09 07:50:00', '2026-03-09 18:31:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(419, 162, 1, NULL, '2026-03-11', '08:00:00', '18:00:00', '2026-03-11 07:49:00', '2026-03-11 18:32:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(420, 162, 1, NULL, '2026-03-13', '08:00:00', '18:00:00', '2026-03-13 08:28:00', '2026-03-13 17:33:00', NULL, NULL, 'LATE', 'UNDERTIME', 28, 27, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(421, 162, 1, NULL, '2026-03-14', '08:00:00', '18:00:00', '2026-03-14 07:47:00', '2026-03-14 18:34:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(422, 162, 1, NULL, '2026-03-16', '08:00:00', '18:00:00', '2026-03-16 07:46:00', '2026-03-16 18:35:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(423, 162, 1, NULL, '2026-03-18', '08:00:00', '18:00:00', '2026-03-18 07:54:00', '2026-03-18 18:36:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(424, 162, 1, NULL, '2026-03-21', '08:00:00', '18:00:00', '2026-03-21 07:52:00', '2026-03-21 18:38:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(425, 162, 1, NULL, '2026-03-23', '08:00:00', '18:00:00', '2026-03-23 07:51:00', '2026-03-23 17:27:00', NULL, NULL, 'ON_TIME', 'UNDERTIME', 0, 33, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(426, 162, 1, NULL, '2026-03-25', '08:00:00', '18:00:00', '2026-03-25 07:50:00', '2026-03-25 18:40:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(427, 162, 1, NULL, '2026-03-27', '08:00:00', '18:00:00', '2026-03-27 08:17:00', '2026-03-27 18:41:00', NULL, NULL, 'LATE', 'ON_TIME', 17, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(428, 162, 1, NULL, '2026-03-28', '08:00:00', '18:00:00', '2026-03-28 07:48:00', '2026-03-28 18:42:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51'),
-	(429, 162, 1, NULL, '2026-03-30', '08:00:00', '18:00:00', '2026-03-30 07:47:00', '2026-03-30 18:43:00', NULL, NULL, 'ON_TIME', 'ON_TIME', 0, 0, '192.168.2.82', '192.168.2.82', 'Seeded photographer attendance record for March testing', 'Seeded photographer attendance record for March testing', 'Seeded March 2026 studio photographer attendance record.', '2026-03-26 07:43:51', '2026-03-26 07:43:51');
 
 CREATE TABLE IF NOT EXISTS `tbl_employee_payroll` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -726,28 +360,6 @@ CREATE TABLE IF NOT EXISTS `tbl_employee_payroll` (
   CONSTRAINT `tbl_employee_payroll_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `tbl_employee_payroll` (`id`, `user_id`, `studio_id`, `created_by`, `payroll_basis`, `daily_rate`, `monthly_salary`, `hourly_rate`, `per_booking_rate`, `booking_commission_percentage`, `sss_deduction`, `phic_deduction`, `hdmf_deduction`, `tax_withholding`, `sss_loan_deduction`, `hdmf_loan_deduction`, `other_deductions`, `is_taxable`, `tax_type`, `tax_percentage`, `tax_code`, `subject_to_vat`, `vat_percentage`, `vat_type`, `absence_deduction_per_day`, `undertime_deduction_per_hour`, `late_grace_period_minutes`, `late_deduction_per_minute`, `absent_deduction_method`, `absent_fixed_deduction`, `absent_percentage_deduction`, `paid_holidays`, `payment_schedule`, `payday_1`, `payday_2`, `payday_weekly`, `bank_name`, `bank_account_number`, `bank_account_name`, `payment_method`, `is_active`, `effective_date`, `expiry_date`, `notes`, `created_at`, `updated_at`, `deleted_at`) VALUES
-	(1, 143, 1, 96, 'attendance_only', 1909.09, 42000.00, 238.64, NULL, NULL, 1800.00, 650.00, 200.00, 2200.00, 0.00, 0.00, 350.00, 1, 'withholding', NULL, 'M1', 0, 12.00, 'exclusive', 1909.09, 238.64, 15, 3.98, 'deduct_daily_rate', NULL, NULL, 1, 'semi_monthly', 15, 30, NULL, 'BDO Unibank', '910000000143', 'Ariana Lopez', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance-based payroll for HR staff with standard statutory deductions.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(2, 144, 1, 96, 'attendance_only', 1181.82, 26000.00, 147.73, NULL, NULL, 1350.00, 450.00, 200.00, 900.00, 0.00, 0.00, 350.00, 1, 'withholding', NULL, 'S1', 0, 12.00, 'exclusive', 1181.82, 147.73, 15, 2.46, 'deduct_daily_rate', NULL, NULL, 1, 'semi_monthly', 15, 30, NULL, 'BDO Unibank', '370000000144', 'Bianca Reyes', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance-based payroll for HR staff with standard statutory deductions.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(3, 145, 1, 96, 'attendance_only', 1181.82, 26000.00, 147.73, NULL, NULL, 1350.00, 450.00, 200.00, 900.00, 0.00, 0.00, 350.00, 1, 'withholding', NULL, 'S1', 0, 12.00, 'exclusive', 1181.82, 147.73, 15, 2.46, 'deduct_daily_rate', NULL, NULL, 1, 'semi_monthly', 15, 30, NULL, 'BDO Unibank', '370000000145', 'Camille Torres', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance-based payroll for HR staff with standard statutory deductions.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(4, 146, 1, 96, 'attendance_only', 1181.82, 26000.00, 147.73, NULL, NULL, 1350.00, 450.00, 200.00, 900.00, 0.00, 0.00, 350.00, 1, 'withholding', NULL, 'S1', 0, 12.00, 'exclusive', 1181.82, 147.73, 15, 2.46, 'deduct_daily_rate', NULL, NULL, 1, 'semi_monthly', 15, 30, NULL, 'BDO Unibank', '370000000146', 'Danica Mendoza', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance-based payroll for HR staff with standard statutory deductions.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(5, 147, 1, 96, 'attendance_only', 1181.82, 26000.00, 147.73, NULL, NULL, 1350.00, 450.00, 200.00, 900.00, 0.00, 0.00, 350.00, 1, 'withholding', NULL, 'S1', 0, 12.00, 'exclusive', 1181.82, 147.73, 15, 2.46, 'deduct_daily_rate', NULL, NULL, 1, 'semi_monthly', 15, 30, NULL, 'BDO Unibank', '370000000147', 'Elise Garcia', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance-based payroll for HR staff with standard statutory deductions.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(6, 148, 1, 96, 'attendance_only', 2045.45, 45000.00, 255.68, NULL, NULL, 1800.00, 650.00, 200.00, 2200.00, 0.00, 0.00, 500.00, 1, 'withholding', NULL, 'M1', 0, 12.00, 'exclusive', 2045.45, 255.68, 15, 4.26, 'deduct_daily_rate', NULL, NULL, 1, 'semi_monthly', 15, 30, NULL, 'BPI', '910000000148', 'Felix Santos', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance-based payroll for finance staff with standard statutory deductions.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(7, 149, 1, 96, 'attendance_only', 1272.73, 28000.00, 159.09, NULL, NULL, 1350.00, 450.00, 200.00, 900.00, 0.00, 0.00, 500.00, 1, 'withholding', NULL, 'S1', 0, 12.00, 'exclusive', 1272.73, 159.09, 15, 2.65, 'deduct_daily_rate', NULL, NULL, 1, 'semi_monthly', 15, 30, NULL, 'BPI', '370000000149', 'Gavin Flores', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance-based payroll for finance staff with standard statutory deductions.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(8, 150, 1, 96, 'attendance_only', 1272.73, 28000.00, 159.09, NULL, NULL, 1350.00, 450.00, 200.00, 900.00, 0.00, 0.00, 500.00, 1, 'withholding', NULL, 'S1', 0, 12.00, 'exclusive', 1272.73, 159.09, 15, 2.65, 'deduct_daily_rate', NULL, NULL, 1, 'semi_monthly', 15, 30, NULL, 'BPI', '370000000150', 'Hannah Rivera', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance-based payroll for finance staff with standard statutory deductions.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(9, 151, 1, 96, 'attendance_only', 1272.73, 28000.00, 159.09, NULL, NULL, 1350.00, 450.00, 200.00, 900.00, 0.00, 0.00, 500.00, 1, 'withholding', NULL, 'S1', 0, 12.00, 'exclusive', 1272.73, 159.09, 15, 2.65, 'deduct_daily_rate', NULL, NULL, 1, 'semi_monthly', 15, 30, NULL, 'BPI', '370000000151', 'Ian Navarro', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance-based payroll for finance staff with standard statutory deductions.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(10, 152, 1, 96, 'attendance_only', 1272.73, 28000.00, 159.09, NULL, NULL, 1350.00, 450.00, 200.00, 900.00, 0.00, 0.00, 500.00, 1, 'withholding', NULL, 'S1', 0, 12.00, 'exclusive', 1272.73, 159.09, 15, 2.65, 'deduct_daily_rate', NULL, NULL, 1, 'semi_monthly', 15, 30, NULL, 'BPI', '370000000152', 'Jessa Aquino', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance-based payroll for finance staff with standard statutory deductions.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(11, 153, 1, 96, 'booking_and_attendance', 1690.00, NULL, 211.25, 3120.00, 7.00, 1100.00, 400.00, 200.00, 650.00, 0.00, 0.00, 250.00, 1, 'withholding', NULL, 'P1', 0, 12.00, 'exclusive', 1690.00, 211.25, 20, 3.52, 'deduct_daily_rate', NULL, NULL, 1, 'weekly', NULL, NULL, 'friday', 'UnionBank', '580000000153', 'Kyla Valdez', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance plus per-booking payroll setup for studio photographer, including booking commission.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(12, 154, 1, 96, 'booking_and_attendance', 1870.00, NULL, 233.75, 3560.00, 8.50, 1350.00, 500.00, 200.00, 950.00, 0.00, 0.00, 250.00, 1, 'withholding', NULL, 'P1', 0, 12.00, 'exclusive', 1870.00, 233.75, 20, 3.90, 'deduct_daily_rate', NULL, NULL, 1, 'weekly', NULL, NULL, 'friday', 'UnionBank', '580000000154', 'Liam Padilla', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance plus per-booking payroll setup for studio photographer, including booking commission.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(13, 155, 1, 96, 'booking_and_attendance', 1600.00, NULL, 200.00, 2900.00, 7.00, 1100.00, 400.00, 200.00, 650.00, 0.00, 0.00, 250.00, 1, 'withholding', NULL, 'P1', 0, 12.00, 'exclusive', 1600.00, 200.00, 20, 3.33, 'deduct_daily_rate', NULL, NULL, 1, 'weekly', NULL, NULL, 'friday', 'UnionBank', '580000000155', 'Mia Ramos', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance plus per-booking payroll setup for studio photographer, including booking commission.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(14, 156, 1, 96, 'booking_and_attendance', 1780.00, NULL, 222.50, 3340.00, 8.50, 1350.00, 500.00, 200.00, 950.00, 0.00, 0.00, 250.00, 1, 'withholding', NULL, 'P1', 0, 12.00, 'exclusive', 1780.00, 222.50, 20, 3.71, 'deduct_daily_rate', NULL, NULL, 1, 'weekly', NULL, NULL, 'friday', 'UnionBank', '580000000156', 'Noah Castro', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance plus per-booking payroll setup for studio photographer, including booking commission.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(15, 157, 1, 96, 'booking_and_attendance', 1510.00, NULL, 188.75, 2680.00, 7.00, 1100.00, 400.00, 200.00, 650.00, 0.00, 0.00, 250.00, 1, 'withholding', NULL, 'P1', 0, 12.00, 'exclusive', 1510.00, 188.75, 20, 3.15, 'deduct_daily_rate', NULL, NULL, 1, 'weekly', NULL, NULL, 'friday', 'UnionBank', '580000000157', 'Olivia Morales', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance plus per-booking payroll setup for studio photographer, including booking commission.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(16, 158, 1, 96, 'booking_and_attendance', 1960.00, NULL, 245.00, 3780.00, 8.50, 1350.00, 500.00, 200.00, 950.00, 0.00, 0.00, 250.00, 1, 'withholding', NULL, 'P1', 0, 12.00, 'exclusive', 1960.00, 245.00, 20, 4.08, 'deduct_daily_rate', NULL, NULL, 1, 'weekly', NULL, NULL, 'friday', 'UnionBank', '580000000158', 'Paolo Gutierrez', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance plus per-booking payroll setup for studio photographer, including booking commission.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(17, 159, 1, 96, 'booking_and_attendance', 1420.00, NULL, 177.50, 2460.00, 5.50, 1100.00, 400.00, 200.00, 650.00, 0.00, 0.00, 250.00, 1, 'withholding', NULL, 'P1', 0, 12.00, 'exclusive', 1420.00, 177.50, 20, 2.96, 'deduct_daily_rate', NULL, NULL, 1, 'weekly', NULL, NULL, 'friday', 'UnionBank', '580000000159', 'Queenie Delos Santos', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance plus per-booking payroll setup for studio photographer, including booking commission.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(18, 160, 1, 96, 'booking_and_attendance', 2050.00, NULL, 256.25, 4000.00, 8.50, 1350.00, 500.00, 200.00, 950.00, 0.00, 0.00, 250.00, 1, 'withholding', NULL, 'P1', 0, 12.00, 'exclusive', 2050.00, 256.25, 20, 4.27, 'deduct_daily_rate', NULL, NULL, 1, 'weekly', NULL, NULL, 'friday', 'UnionBank', '580000000160', 'Rafael Herrera', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance plus per-booking payroll setup for studio photographer, including booking commission.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(19, 161, 1, 96, 'booking_and_attendance', 1690.00, NULL, 211.25, 3120.00, 7.00, 1100.00, 400.00, 200.00, 650.00, 0.00, 0.00, 250.00, 1, 'withholding', NULL, 'P1', 0, 12.00, 'exclusive', 1690.00, 211.25, 20, 3.52, 'deduct_daily_rate', NULL, NULL, 1, 'weekly', NULL, NULL, 'friday', 'UnionBank', '580000000161', 'Sofia Domingo', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance plus per-booking payroll setup for studio photographer, including booking commission.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL),
-	(20, 162, 1, 96, 'booking_and_attendance', 1330.00, NULL, 166.25, 2240.00, 5.50, 1100.00, 400.00, 200.00, 650.00, 0.00, 0.00, 250.00, 1, 'withholding', NULL, 'P1', 0, 12.00, 'exclusive', 1330.00, 166.25, 20, 2.77, 'deduct_daily_rate', NULL, NULL, 1, 'weekly', NULL, NULL, 'friday', 'UnionBank', '580000000162', 'Theo Salazar', 'bank_transfer', 1, '2026-03-01', NULL, 'Attendance plus per-booking payroll setup for studio photographer, including booking commission.', '2026-03-26 05:50:47', '2026-03-26 05:50:47', NULL);
-
 CREATE TABLE IF NOT EXISTS `tbl_freelancers` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint unsigned NOT NULL,
@@ -779,9 +391,6 @@ CREATE TABLE IF NOT EXISTS `tbl_freelancers` (
   CONSTRAINT `tbl_freelancers_chk_1` CHECK (json_valid(`portfolio_works`))
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `tbl_freelancers` (`id`, `user_id`, `location_id`, `brand_name`, `tagline`, `bio`, `years_experience`, `brand_logo`, `street`, `barangay`, `service_area`, `starting_price`, `deposit_policy`, `deposit_type`, `deposit_amount`, `portfolio_works`, `facebook_url`, `instagram_url`, `website_url`, `valid_id`, `created_at`, `updated_at`) VALUES
-	(2, 98, 2, 'MacroGraphy', 'Capturing Authenticity, One Frame at a Time', 'I\'m Marco Villanueva, a passionate documentary and street photographer based in Manila. With over 8 years of experience, I specialize in capturing candid, authentic moments that tell compelling visual stories. My work has been featured in local and international publications, and I\'ve collaborated with NGOs, brands, and individuals who value honest, emotion-driven photography. I believe every moment has a story worth telling, and I\'m here to help you preserve yours through timeless imagery. Whether it\'s documenting your family\'s milestones, covering your events, or creating content for your brand, I bring a journalistic eye and artistic sensibility to every project.', 8, 'brand-logos/ukfI6mzPr1jZd5wXSIOBvtJHj0lHbUTxeCJHoMf3.png', 'Unit 12B, Urban Residences, 789 Roxas Boulevard', 'Tejero', 'Within my city only', 3500.00, 'not_required', 'fixed', 0.00, '"[\\"portfolio-works\\\\\\/TGMaEw723DQdWLQ9VPvpxSoIITN8D7lGgi7lelfN.png\\",\\"portfolio-works\\\\\\/aEzmtcMRcqHcbYXuzlsGEzLxAWYQztxFx3dGVpxT.png\\",\\"portfolio-works\\\\\\/HKE7UC9Egp8R92ACucSOvlu6BdTa51Teu03kVAHZ.png\\",\\"portfolio-works\\\\\\/p3FmAZhXAAssCXdMF71UgmXkbMjNsgS9qDsMMwGy.png\\",\\"portfolio-works\\\\\\/XjdAJWmce7Df1nQBjW21Tn8MpoK94FkTU09iWTGu.png\\",\\"portfolio-works\\\\\\/kXcPqTSpzKaPfYlHq9TdGOGr45MS2GzTOeH2NPkZ.png\\"]"', 'https://www.facebook.com/marcovphotography', 'https://www.instagram.com/marco.v.photo', 'https://www.marcovphotography.com/', 'valid-ids/DKbpiUIVbhwZdBvsfUMZ2gcMG89Jo2SbrgOnT1DD.jpg', '2026-02-26 23:26:55', '2026-02-26 23:26:55');
-
 CREATE TABLE IF NOT EXISTS `tbl_freelancer_online_gallery` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `booking_id` bigint unsigned NOT NULL,
@@ -806,7 +415,6 @@ CREATE TABLE IF NOT EXISTS `tbl_freelancer_online_gallery` (
   CONSTRAINT `tbl_freelancer_online_gallery_client_id_foreign` FOREIGN KEY (`client_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_freelancer_online_gallery_freelancer_id_foreign` FOREIGN KEY (`freelancer_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
 CREATE TABLE IF NOT EXISTS `tbl_freelancer_packages` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -835,11 +443,6 @@ CREATE TABLE IF NOT EXISTS `tbl_freelancer_packages` (
   CONSTRAINT `tbl_freelancer_packages_chk_1` CHECK (json_valid(`package_inclusions`))
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `tbl_freelancer_packages` (`id`, `user_id`, `category_id`, `package_name`, `package_description`, `package_inclusions`, `allow_time_customization`, `duration`, `maximum_edited_photos`, `coverage_scope`, `package_price`, `online_gallery`, `allow_multiple_locations`, `max_locations`, `status`, `created_at`, `updated_at`) VALUES
-	(1, 98, 2, 'Professional Solo Essentials', 'A quick and efficient session designed for high-quality portraits. Ideal for LinkedIn profiles, graduation photos, or creative social media content.', '["Studio or Outdoor Session","1 Photographer","Basic Color Grading","High-Resolution Digital Downloads"]', 0, 3, 15, 'Event Place', 3500.00, 1, 0, 1, 'active', '2026-02-27 18:28:24', '2026-02-27 18:28:24'),
-	(2, 98, 2, 'Intimate Celebration Package', 'Comprehensive coverage for your family’s most precious milestones. We focus on candid moments and the little details that make your event special.', '["Continuous Coverage","1 Lead Photographer","Professional Photo Enhancement","Print-Ready Digital Files","USB Flash Drive Delivery"]', 1, NULL, 100, 'Birthday Party / Baptism / Small Event', 8500.00, 1, 0, 1, 'active', '2026-02-27 18:29:20', '2026-02-27 18:29:20'),
-	(3, 98, 2, 'Premium Brand & Product Suite', 'Elevate your business with professional imagery. This package covers team headshots, interior shots of your space, and high-end product photography.', '["5 Hours On-site Coverage","Full Lighting Equipment Setup","Advanced Retouching & Compositing","Commercial Usage Rights","Fast 72-Hour Turnaround"]', 1, NULL, 50, 'Business Interior, Staff, and Product Catalog', 25000.00, 1, 1, 3, 'active', '2026-02-27 18:30:02', '2026-02-27 18:30:02');
-
 CREATE TABLE IF NOT EXISTS `tbl_freelancer_plans` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `freelancer_id` bigint unsigned NOT NULL COMMENT 'FK to tbl_users.id (freelancer)',
@@ -867,7 +470,6 @@ CREATE TABLE IF NOT EXISTS `tbl_freelancer_plans` (
   CONSTRAINT `tbl_freelancer_plans_plan_id_foreign` FOREIGN KEY (`plan_id`) REFERENCES `tbl_subscription_plans` (`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE IF NOT EXISTS `tbl_freelancer_ratings` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `booking_id` bigint unsigned NOT NULL,
@@ -888,7 +490,6 @@ CREATE TABLE IF NOT EXISTS `tbl_freelancer_ratings` (
   CONSTRAINT `tbl_freelancer_ratings_client_id_foreign` FOREIGN KEY (`client_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE IF NOT EXISTS `tbl_freelancer_schedules` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint unsigned NOT NULL,
@@ -905,10 +506,6 @@ CREATE TABLE IF NOT EXISTS `tbl_freelancer_schedules` (
   CONSTRAINT `tbl_freelancer_schedules_chk_1` CHECK (json_valid(`operating_days`))
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `tbl_freelancer_schedules` (`id`, `user_id`, `operating_days`, `start_time`, `end_time`, `booking_limit`, `advance_booking`, `created_at`, `updated_at`) VALUES
-	(1, 98, '"[\\"monday\\",\\"wednesday\\",\\"friday\\",\\"sunday\\"]"', '08:00:00', '17:00:00', 2, 5, '2026-02-26 21:54:28', '2026-02-26 21:54:28'),
-	(3, 98, '"[\\"monday\\",\\"wednesday\\",\\"friday\\",\\"sunday\\"]"', '08:00:00', '18:00:00', 2, 5, '2026-02-26 23:26:55', '2026-02-26 23:26:55');
-
 CREATE TABLE IF NOT EXISTS `tbl_freelancer_services` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint unsigned NOT NULL,
@@ -923,7 +520,6 @@ CREATE TABLE IF NOT EXISTS `tbl_freelancer_services` (
   CONSTRAINT `tbl_freelancer_services_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_freelancer_services_chk_1` CHECK (json_valid(`services_name`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
 CREATE TABLE IF NOT EXISTS `tbl_generated_payrolls` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -950,6 +546,10 @@ CREATE TABLE IF NOT EXISTS `tbl_generated_payrolls` (
   `deduction_breakdown` json DEFAULT NULL,
   `computation_summary` json DEFAULT NULL,
   `notes` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending','approved','rejected') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `reviewed_by` bigint unsigned DEFAULT NULL,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `rejection_reason` text COLLATE utf8mb4_unicode_ci,
   `generated_at` timestamp NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -961,23 +561,14 @@ CREATE TABLE IF NOT EXISTS `tbl_generated_payrolls` (
   KEY `tbl_generated_payrolls_payroll_setting_id_index` (`payroll_setting_id`),
   KEY `tbl_generated_payrolls_generated_by_index` (`generated_by`),
   KEY `tbl_generated_payrolls_studio_id_period_start_period_end_index` (`studio_id`,`period_start`,`period_end`),
+  KEY `tbl_generated_payrolls_status_index` (`status`),
+  KEY `tbl_generated_payrolls_reviewed_by_index` (`reviewed_by`),
   CONSTRAINT `tbl_generated_payrolls_generated_by_foreign` FOREIGN KEY (`generated_by`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_generated_payrolls_payroll_setting_id_foreign` FOREIGN KEY (`payroll_setting_id`) REFERENCES `tbl_employee_payroll` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_generated_payrolls_reviewed_by_foreign` FOREIGN KEY (`reviewed_by`) REFERENCES `tbl_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tbl_generated_payrolls_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_generated_payrolls_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_generated_payrolls` (`id`, `payroll_reference`, `user_id`, `studio_id`, `payroll_setting_id`, `generated_by`, `employee_type`, `payroll_basis`, `employee_role`, `period_start`, `period_end`, `attendance_days_present`, `attendance_days_absent`, `attendance_minutes_late`, `attendance_minutes_undertime`, `booking_count`, `attendance_amount`, `booking_amount`, `gross_amount`, `total_deductions`, `net_amount`, `deduction_breakdown`, `computation_summary`, `notes`, `generated_at`, `created_at`, `updated_at`) VALUES
-	(6, 'PAY-20260326-KXNXXH', 143, 1, 1, 143, 'regular_employee', 'attendance_only', 'studio-hr', '2026-03-01', '2026-03-31', 16, 1, 90, 141, 0, 30545.44, 0.00, 30545.44, 8028.09, 22517.35, '{"sss_deduction": 1800, "hdmf_deduction": 200, "late_deduction": 358.2, "phic_deduction": 650, "tax_withholding": 2200, "other_deductions": 350, "absence_deduction": 1909.09, "sss_loan_deduction": 0, "hdmf_loan_deduction": 0, "undertime_deduction": 560.8}', '{"booking": {"booking_count": 0, "booking_amount": 0, "completed_booking_total": 0}, "attendance": {"worked_hours": 163.9, "attendance_amount": 30545.44, "attendance_days_absent": 1, "attendance_days_present": 16, "attendance_minutes_late": 90, "attendance_minutes_undertime": 141}, "net_amount": 22517.35, "gross_amount": 30545.44}', NULL, '2026-03-26 06:19:49', '2026-03-26 06:19:49', '2026-03-26 06:19:49'),
-	(7, 'PAY-20260326-PFEQQI', 144, 1, 2, 143, 'regular_employee', 'attendance_only', 'studio-hr', '2026-03-01', '2026-03-31', 15, 2, 130, 141, 0, 17727.30, 0.00, 17727.30, 6280.61, 11446.69, '{"sss_deduction": 1350, "hdmf_deduction": 200, "late_deduction": 319.8, "phic_deduction": 450, "tax_withholding": 900, "other_deductions": 350, "absence_deduction": 2363.64, "sss_loan_deduction": 0, "hdmf_loan_deduction": 0, "undertime_deduction": 347.17}', '{"booking": {"booking_count": 0, "booking_amount": 0, "completed_booking_total": 0}, "attendance": {"worked_hours": 152.23, "attendance_amount": 17727.3, "attendance_days_absent": 2, "attendance_days_present": 15, "attendance_minutes_late": 130, "attendance_minutes_undertime": 141}, "net_amount": 11446.69, "gross_amount": 17727.3}', NULL, '2026-03-26 06:19:49', '2026-03-26 06:19:49', '2026-03-26 06:19:49'),
-	(8, 'PAY-20260326-N8PMYL', 145, 1, 3, 143, 'regular_employee', 'attendance_only', 'studio-hr', '2026-03-01', '2026-03-31', 15, 2, 95, 100, 0, 17727.30, 0.00, 17727.30, 6093.56, 11633.74, '{"sss_deduction": 1350, "hdmf_deduction": 200, "late_deduction": 233.7, "phic_deduction": 450, "tax_withholding": 900, "other_deductions": 350, "absence_deduction": 2363.64, "sss_loan_deduction": 0, "hdmf_loan_deduction": 0, "undertime_deduction": 246.22}', '{"booking": {"booking_count": 0, "booking_amount": 0, "completed_booking_total": 0}, "attendance": {"worked_hours": 154.01, "attendance_amount": 17727.3, "attendance_days_absent": 2, "attendance_days_present": 15, "attendance_minutes_late": 95, "attendance_minutes_undertime": 100}, "net_amount": 11633.74, "gross_amount": 17727.3}', NULL, '2026-03-26 06:19:49', '2026-03-26 06:19:49', '2026-03-26 06:19:49'),
-	(9, 'PAY-20260326-JQY8BI', 146, 1, 4, 143, 'regular_employee', 'attendance_only', 'studio-hr', '2026-03-01', '2026-03-31', 15, 2, 75, 112, 0, 17727.30, 0.00, 17727.30, 6073.90, 11653.40, '{"sss_deduction": 1350, "hdmf_deduction": 200, "late_deduction": 184.5, "phic_deduction": 450, "tax_withholding": 900, "other_deductions": 350, "absence_deduction": 2363.64, "sss_loan_deduction": 0, "hdmf_loan_deduction": 0, "undertime_deduction": 275.76}', '{"booking": {"booking_count": 0, "booking_amount": 0, "completed_booking_total": 0}, "attendance": {"worked_hours": 154.33, "attendance_amount": 17727.3, "attendance_days_absent": 2, "attendance_days_present": 15, "attendance_minutes_late": 75, "attendance_minutes_undertime": 112}, "net_amount": 11653.4, "gross_amount": 17727.3}', NULL, '2026-03-26 06:19:49', '2026-03-26 06:19:49', '2026-03-26 06:19:49'),
-	(10, 'PAY-20260326-2D6URF', 147, 1, 5, 143, 'regular_employee', 'attendance_only', 'studio-hr', '2026-03-01', '2026-03-31', 15, 2, 105, 159, 0, 17727.30, 0.00, 17727.30, 6263.42, 11463.88, '{"sss_deduction": 1350, "hdmf_deduction": 200, "late_deduction": 258.3, "phic_deduction": 450, "tax_withholding": 900, "other_deductions": 350, "absence_deduction": 2363.64, "sss_loan_deduction": 0, "hdmf_loan_deduction": 0, "undertime_deduction": 391.48}', '{"booking": {"booking_count": 0, "booking_amount": 0, "completed_booking_total": 0}, "attendance": {"worked_hours": 152.65, "attendance_amount": 17727.3, "attendance_days_absent": 2, "attendance_days_present": 15, "attendance_minutes_late": 105, "attendance_minutes_undertime": 159}, "net_amount": 11463.88, "gross_amount": 17727.3}', NULL, '2026-03-26 06:19:49', '2026-03-26 06:19:49', '2026-03-26 06:19:49'),
-	(11, 'PAY-20260326-GXITWA', 148, 1, 6, 143, 'regular_employee', 'attendance_only', 'studio-finance', '2026-03-01', '2026-03-31', 0, 17, 0, 0, 0, 0.00, 0.00, 0.00, 40122.65, 0.00, '{"sss_deduction": 1800, "hdmf_deduction": 200, "late_deduction": 0, "phic_deduction": 650, "tax_withholding": 2200, "other_deductions": 500, "absence_deduction": 34772.65, "sss_loan_deduction": 0, "hdmf_loan_deduction": 0, "undertime_deduction": 0}', '{"booking": {"booking_count": 0, "booking_amount": 0, "completed_booking_total": 0}, "attendance": {"worked_hours": 0, "attendance_amount": 0, "attendance_days_absent": 17, "attendance_days_present": 0, "attendance_minutes_late": 0, "attendance_minutes_undertime": 0}, "net_amount": 0, "gross_amount": 0}', NULL, '2026-03-26 06:19:49', '2026-03-26 06:19:49', '2026-03-26 06:19:49'),
-	(12, 'PAY-20260326-VYHKMN', 149, 1, 7, 143, 'regular_employee', 'attendance_only', 'studio-finance', '2026-03-01', '2026-03-31', 0, 17, 0, 0, 0, 0.00, 0.00, 0.00, 25036.41, 0.00, '{"sss_deduction": 1350, "hdmf_deduction": 200, "late_deduction": 0, "phic_deduction": 450, "tax_withholding": 900, "other_deductions": 500, "absence_deduction": 21636.41, "sss_loan_deduction": 0, "hdmf_loan_deduction": 0, "undertime_deduction": 0}', '{"booking": {"booking_count": 0, "booking_amount": 0, "completed_booking_total": 0}, "attendance": {"worked_hours": 0, "attendance_amount": 0, "attendance_days_absent": 17, "attendance_days_present": 0, "attendance_minutes_late": 0, "attendance_minutes_undertime": 0}, "net_amount": 0, "gross_amount": 0}', NULL, '2026-03-26 06:19:49', '2026-03-26 06:19:49', '2026-03-26 06:19:49'),
-	(13, 'PAY-20260326-DGKSYO', 150, 1, 8, 143, 'regular_employee', 'attendance_only', 'studio-finance', '2026-03-01', '2026-03-31', 0, 17, 0, 0, 0, 0.00, 0.00, 0.00, 25036.41, 0.00, '{"sss_deduction": 1350, "hdmf_deduction": 200, "late_deduction": 0, "phic_deduction": 450, "tax_withholding": 900, "other_deductions": 500, "absence_deduction": 21636.41, "sss_loan_deduction": 0, "hdmf_loan_deduction": 0, "undertime_deduction": 0}', '{"booking": {"booking_count": 0, "booking_amount": 0, "completed_booking_total": 0}, "attendance": {"worked_hours": 0, "attendance_amount": 0, "attendance_days_absent": 17, "attendance_days_present": 0, "attendance_minutes_late": 0, "attendance_minutes_undertime": 0}, "net_amount": 0, "gross_amount": 0}', NULL, '2026-03-26 06:19:49', '2026-03-26 06:19:49', '2026-03-26 06:19:49'),
-	(14, 'PAY-20260326-XZRRMJ', 151, 1, 9, 143, 'regular_employee', 'attendance_only', 'studio-finance', '2026-03-01', '2026-03-31', 0, 17, 0, 0, 0, 0.00, 0.00, 0.00, 25036.41, 0.00, '{"sss_deduction": 1350, "hdmf_deduction": 200, "late_deduction": 0, "phic_deduction": 450, "tax_withholding": 900, "other_deductions": 500, "absence_deduction": 21636.41, "sss_loan_deduction": 0, "hdmf_loan_deduction": 0, "undertime_deduction": 0}', '{"booking": {"booking_count": 0, "booking_amount": 0, "completed_booking_total": 0}, "attendance": {"worked_hours": 0, "attendance_amount": 0, "attendance_days_absent": 17, "attendance_days_present": 0, "attendance_minutes_late": 0, "attendance_minutes_undertime": 0}, "net_amount": 0, "gross_amount": 0}', NULL, '2026-03-26 06:19:49', '2026-03-26 06:19:49', '2026-03-26 06:19:49'),
-	(15, 'PAY-20260326-CIOF8U', 152, 1, 10, 143, 'regular_employee', 'attendance_only', 'studio-finance', '2026-03-01', '2026-03-31', 0, 17, 0, 0, 0, 0.00, 0.00, 0.00, 25036.41, 0.00, '{"sss_deduction": 1350, "hdmf_deduction": 200, "late_deduction": 0, "phic_deduction": 450, "tax_withholding": 900, "other_deductions": 500, "absence_deduction": 21636.41, "sss_loan_deduction": 0, "hdmf_loan_deduction": 0, "undertime_deduction": 0}', '{"booking": {"booking_count": 0, "booking_amount": 0, "completed_booking_total": 0}, "attendance": {"worked_hours": 0, "attendance_amount": 0, "attendance_days_absent": 17, "attendance_days_present": 0, "attendance_minutes_late": 0, "attendance_minutes_undertime": 0}, "net_amount": 0, "gross_amount": 0}', NULL, '2026-03-26 06:19:49', '2026-03-26 06:19:49', '2026-03-26 06:19:49');
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `tbl_locations` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -991,16 +582,6 @@ CREATE TABLE IF NOT EXISTS `tbl_locations` (
   PRIMARY KEY (`id`),
   CONSTRAINT `tbl_locations_chk_1` CHECK (json_valid(`barangay`))
 ) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_locations` (`id`, `province`, `municipality`, `barangay`, `zip_code`, `status`, `created_at`, `updated_at`) VALUES
-	(1, 'Cavite', 'Dasmariñas', '"[\\"Burol\\",\\"Burol I\\",\\"Burol II\\",\\"Burol III\\",\\"Fatima I\\",\\"Fatima II\\",\\"Fatima III\\",\\"Langkaan I\\",\\"Langkaan II\\",\\"Paliparan I\\",\\"Paliparan II\\",\\"Paliparan III\\",\\"Salitran I\\",\\"Salitran II\\",\\"Salitran III\\",\\"Salitran IV\\",\\"Zone I\\",\\"Zone I-B\\",\\"Zone II\\",\\"Zone III\\",\\"Zone IV\\"]"', '4115', 'active', '2026-01-27 01:04:27', '2026-01-27 01:04:27'),
-	(2, 'Cavite', 'General Trias', '"[\\"Alingaro\\",\\"Arnaldo (Barangay 7)\\",\\"Bacao I\\",\\"Bacao II\\",\\"Bagumbayan (Barangay 5)\\",\\"Biclatan\\",\\"Buenavista I\\",\\"Buenavista II\\",\\"Buenavista III\\",\\"Corregidor (Barangay 10)\\",\\"Dulong Bayan (Barangay 3)\\",\\"Gov. Ferrer (Barangay 1)\\",\\"Javalera\\",\\"Manggahan\\",\\"Navarro\\",\\"Ninety Sixth (Barangay 8)\\",\\"Panungyanan\\",\\"Pasong Camachile I\\",\\"Pasong Camachile II\\",\\"Pasong Kawayan I\\",\\"Pasong Kawayan II\\",\\"Pinagtipunan\\",\\"Prinza (Barangay 9)\\",\\"Sampalucan (Barangay 2)\\",\\"San Francisco\\",\\"San Gabriel (Barangay 4)\\",\\"San Juan I\\",\\"San Juan II\\",\\"Santa Clara\\",\\"Santiago\\",\\"Tapia\\",\\"Tejero\\",\\"Vibora (Barangay 6)\\"]"', '4107', 'active', '2026-01-27 01:42:45', '2026-01-27 01:42:45'),
-	(6, 'Cavite', 'Imus', '"[\\"Alapan I-A\\",\\"Alapan I-B\\",\\"Alapan I-C\\",\\"Alapan II-A\\",\\"Alapan II-B\\",\\"Anabu I-A\\",\\"Anabu I-B\\",\\"Anabu I-C\\",\\"Anabu I-D\\",\\"Anabu I-E\\",\\"Anabu I-F\\",\\"Anabu I-G\\",\\"Anabu II-A\\",\\"Anabu II-B\\",\\"Anabu II-C\\",\\"Anabu II-D\\",\\"Anabu II-E\\",\\"Anabu II-F\\",\\"Bagong Silang (Bahayang Pag-Asa)\\",\\"Bayan Luma I\\",\\"Bayan Luma II\\",\\"Bayan Luma III\\",\\"Bayan Luma IV\\",\\"Bayan Luma V\\",\\"Bayan Luma VI\\",\\"Bayan Luma VII\\",\\"Bayan Luma VIII\\",\\"Bayan Luma IX\\",\\"Bucandala I\\",\\"Bucandala II\\",\\"Bucandala III\\",\\"Bucandala IV\\",\\"Bucandala V\\",\\"Buhay na Tubig\\",\\"Carsadang Bago I\\",\\"Carsadang Bago II\\",\\"Magdalo\\",\\"Maharlika\\",\\"Malagasang I-A\\",\\"Malagasang I-B\\",\\"Malagasang I-C\\",\\"Malagasang I-D\\",\\"Malagasang I-E\\",\\"Malagasang I-F\\",\\"Malagasang I-G\\",\\"Malagasang II-A\\",\\"Malagasang II-B\\",\\"Malagasang II-C\\",\\"Malagasang II-D\\",\\"Malagasang II-E\\",\\"Malagasang II-F\\",\\"Malagasang II-G\\",\\"Mariano Espeleta I\\",\\"Mariano Espeleta II\\",\\"Mariano Espeleta III\\",\\"Medicion I-A\\",\\"Medicion I-B\\",\\"Medicion I-C\\",\\"Pag-Asa I\\",\\"Pag-Asa II\\",\\"Pag-Asa III\\",\\"Palico I\\",\\"Palico II\\",\\"Palico III\\",\\"Poblacion I-A\\",\\"Poblacion I-B\\",\\"Poblacion I-C\\",\\"Tanzang Luma I\\",\\"Tanzang Luma II\\",\\"Tanzang Luma III\\",\\"Toclong I-A\\",\\"Toclong I-B\\",\\"Toclong I-C\\"]"', '4103', 'active', '2026-01-28 06:05:50', '2026-01-28 06:05:50'),
-	(7, 'Cavite', 'Silang', '"[\\"Adlas\\",\\"Balite I\\",\\"Balite II\\",\\"Balubad\\",\\"Batas\\",\\"Biga I\\",\\"Biluso\\",\\"Buho\\",\\"Bucal\\",\\"Bulihan\\",\\"Cabangaan\\",\\"Carmen\\",\\"Hukay\\",\\"Iba\\",\\"Inchican\\",\\"Kalubkob\\",\\"Kaong\\",\\"Lalaan I\\",\\"Lalaan II\\",\\"Litlit\\",\\"Lucsuhin\\",\\"Lumil\\",\\"Maguyam\\",\\"Malabag\\",\\"Mataas Na Burol\\",\\"Munting Ilog\\",\\"Paligawan\\",\\"Pasong Langka\\",\\"Pook I\\",\\"Pulong Bunga\\",\\"Pulong Saging\\",\\"Puting Kahoy\\",\\"Sabutan\\"]"', '4118', 'active', '2026-01-28 06:11:32', '2026-01-28 06:11:32'),
-	(18, 'Cavite', 'Carmona', '"[\\"Barangay 1 (Poblacion) - San Pablo\\",\\"Barangay 2 (Poblacion) - San Jose\\",\\"Barangay 3 (Poblacion) - San Jose\\",\\"Barangay 4 (Poblacion) - J.M. Loyola\\",\\"Barangay 5 (Poblacion) - J.M. Loyola\\",\\"Barangay 6 (Poblacion) - Magallanes\\",\\"Barangay 7 (Poblacion) - Magallanes\\",\\"Barangay 8 (Poblacion) - Rosario\\",\\"Bancal\\",\\"Cabilang Baybay\\",\\"Lantic\\",\\"Mabuhay\\",\\"Maduya\\",\\"Milagrosa\\"]"', '4116', 'active', '2026-02-01 15:38:41', '2026-02-01 15:38:41'),
-	(19, 'Cavite', 'General Mariano Alvarez', '"[\\"Aldiano Olaes\\",\\"Barangay 1 Poblacion\\",\\"Barangay 2 Poblacion\\",\\"Barangay 3 Poblacion\\",\\"Barangay 4 Poblacion\\",\\"Barangay 5 Poblacion\\",\\"Benjamin Tirona\\",\\"Bernardo Pulido\\",\\"Epifanio Malia\\",\\"Fiorello Calimag\\",\\"Francisco de Castro\\",\\"Francisco Reyes\\",\\"Gavino Maderan\\",\\"Gregoria de Jesus\\",\\"Inocencio Salud\\",\\"Jacinto Lumbreras\\",\\"Kapitan Kua\\",\\"Koronel Jose P. Elises\\",\\"Macario Dacon\\",\\"Marcelino Memije\\",\\"Nicolasa Virata\\",\\"Pantaleon Granados\\",\\"Ramon Cruz\\",\\"San Gabriel\\",\\"San Jose\\",\\"Severino de Las Alas\\",\\"Tiniente Tiago\\"]"', '4117', 'active', '2026-02-01 15:41:13', '2026-02-01 15:41:13'),
-	(20, 'Cavite', 'Indang', '"[\\"Agus-us\\",\\"Alulod\\",\\"Banaba Cerca\\",\\"Banaba Lejos\\",\\"Bancod\\",\\"Barangay 1\\",\\"Barangay 2\\",\\"Barangay 3\\",\\"Barangay 4\\",\\"Buna Cerca\\",\\"Buna Lejos I\\",\\"Buna Lejos II\\",\\"Calumpang Cerca\\",\\"Calumpang Lejos I\\",\\"Carasuchi\\",\\"Daine I\\",\\"Daine II\\",\\"Guyam Malaki\\",\\"Guyam Munti\\",\\"Harasan\\",\\"Kayquit I\\",\\"Kayquit II\\",\\"Kayquit III\\",\\"Kaytambog\\",\\"Kaytapos\\",\\"Limbon\\",\\"Lumampong Balagbag\\",\\"Lumampong Halayhay\\",\\"Mahabangkahoy Cerca\\",\\"Mahabangkahoy Lejos\\",\\"Mataas na Lupa\\",\\"Pulo\\",\\"Tambo Balagbag\\",\\"Tambo Ilaya\\",\\"Tambo Kulit\\",\\"Tambo Malaki\\"]"', '4122', 'active', '2026-02-01 15:43:34', '2026-02-01 15:43:34'),
-	(21, 'Cavite', 'Kawit', '"[\\"Balsahan-Bisita\\",\\"Batong Dalig\\",\\"Binakayan-Aplaya\\",\\"Binakayan-Kanluran\\",\\"Congbalay-Legaspi\\",\\"Gahak\\",\\"Kaingen\\",\\"Magdalo\\",\\"Manggahan-Lawin\\",\\"Marulas\\",\\"Panamitan\\",\\"Poblacion\\",\\"Pulvorista\\",\\"Samala-Marquez\\",\\"San Sebastian\\",\\"Santa Isabel\\",\\"Tabon I\\",\\"Tabon II\\",\\"Tabon III\\",\\"Toclong\\",\\"Tramo-Bantayan\\",\\"Wakas I\\",\\"Wakas II\\"]"', '4104', 'active', '2026-02-01 15:46:00', '2026-02-01 15:46:00');
 
 CREATE TABLE IF NOT EXISTS `tbl_notifications` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1021,7 +602,6 @@ CREATE TABLE IF NOT EXISTS `tbl_notifications` (
   KEY `tbl_notifications_created_at_index` (`created_at`),
   CONSTRAINT `tbl_notifications_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
 CREATE TABLE IF NOT EXISTS `tbl_packages` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1053,26 +633,6 @@ CREATE TABLE IF NOT EXISTS `tbl_packages` (
   CONSTRAINT `tbl_packages_chk_2` CHECK (json_valid(`coverage_scope`))
 ) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `tbl_packages` (`id`, `studio_id`, `category_id`, `package_name`, `package_description`, `package_inclusions`, `duration`, `maximum_edited_photos`, `coverage_scope`, `package_location`, `allow_multiple_locations`, `max_locations`, `allow_time_customization`, `package_price`, `online_gallery`, `photographer_count`, `status`, `created_at`, `updated_at`) VALUES
-	(1, 1, 1, 'Intimate Wedding - Essential', 'Perfect for intimate weddings with up to 50 guests. Captures the heartfelt moments of your special day without overwhelming coverage.', '["6 hours of wedding day coverage","1 professional photographer","300+ edited high-resolution photos","Online gallery with download access","USB keepsake box with selected photos","Pre-wedding consultation"]', 6, 300, '[]', '["In-Studio"]', 0, 1, 0, 35000.00, 1, 1, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(2, 1, 1, 'Classic Wedding - Premium', 'Comprehensive coverage for traditional weddings with full-day documentation. Includes pre-nuptial shoot and all major wedding events.', '["10 hours of wedding day coverage","1 main photographer + 1 assistant photographer","Pre-nuptial photoshoot (4 hours, 1 location)","500+ edited high-resolution photos","Same-day edit (SDE) video highlights","Online gallery with download & print rights","Premium leather album (20 pages)","USB box with wooden case","2 pre-wedding consultations"]', 10, 500, '["Metro Manila","Cavite","Laguna","Rizal","Bulacan"]', '["On-Location"]', 1, 3, 0, 75000.00, 1, 2, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(3, 1, 1, 'Luxury Wedding - Elite', 'Ultimate luxury coverage for grand weddings. Two photographers capturing every angle, full-day coverage, pre-nuptial destination shoot, and premium album.', '["12+ hours of wedding day coverage (unlimited until after reception)","2 main photographers + 1 videographer","Pre-nuptial destination shoot (full day, up to 3 locations)","800+ edited high-resolution photos","5-7 minute cinematic wedding film","Full ceremony & speeches video (raw + edited)","Online gallery with print rights & mobile app","Premium coffee table album (40 pages)","Canvas print (24x36 inches)","All photos in custom wooden box with USB","Unlimited pre-wedding consultations","Wedding coordinator assistance on photo timeline"]', NULL, 800, '["Nationwide (Luzon, Visayas, Mindanao)","Travel fees included for Luzon"]', '["In-Studio", "On-Location"]', 1, 5, 1, 150000.00, 1, 3, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(4, 1, 2, 'Corporate Event - Basic Coverage', 'Perfect for seminars, conferences, and corporate gatherings. Professional documentation of speakers, attendees, and key moments.', '["4 hours of event coverage","1 professional photographer","200+ edited high-resolution photos","Candid shots of speakers and attendees","Stage\\/lectern coverage","Group photo documentation","Online gallery with download access","3-day turnaround time"]', 4, 200, '["Metro Manila","Cavite","Laguna"]', '["On-Location"]', 0, 1, 0, 18000.00, 1, 1, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(5, 1, 2, 'Birthday Celebration - Family Package', 'Capture the joy and laughter of your child\'s special day. From preparations to the party, we document every smile, every cake moment, and every fun activity.', '["5 hours of event coverage","1 main photographer","300+ edited high-resolution photos","Preparation shots (before party)","Cake cutting ceremony","Candid guest interactions","Family portraits","Online gallery with download access","USB drive with selected photos","10 printed 4x6 photos in keepsake box"]', 5, 300, '["Metro Manila","Cavite"]', '["On-Location"]', 0, 1, 0, 22000.00, 1, 1, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(6, 1, 2, 'Corporate Gala & Awards Night - Premium', 'Comprehensive coverage for formal corporate events, anniversary celebrations, and awards nights. Includes red carpet coverage, formal portraits, and full event documentation.', '["8 hours of event coverage","2 professional photographers","Red carpet arrival coverage","600+ edited high-resolution photos","Award ceremony documentation","Executive portraits","Sponsor booth coverage","Event highlights slideshow","Online gallery with print rights","Premium leather album (30 pages)","All photos on custom USB","5-day turnaround with priority editing"]', 8, 600, '["Metro Manila","Cavite","Laguna","Rizal","Bulacan","Pampanga"]', '["On-Location"]', 1, 3, 1, 55000.00, 1, 2, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(7, 1, 3, 'Family Mini Session', 'A quick and fun 30-minute session perfect for families with young children. Ideal for holiday cards, updated family photos, or simple portraits.', '["30-minute studio session","1 photographer","20 edited high-resolution photos","5 digital downloads with print release","Simple backdrop setup","Online gallery access","2-week turnaround"]', 1, 20, '[]', '["In-Studio"]', 0, 1, 0, 4500.00, 1, 1, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(8, 1, 3, 'Family Legacy Session', 'A comprehensive family portrait experience for extended families. Perfect for reunions, multi-generational gatherings, and milestone celebrations.', '["2-hour studio or outdoor session","1 lead photographer + 1 assistant","60+ edited high-resolution photos","Individual family group shots","Extended family group portraits","Candid lifestyle moments","Online gallery with download & print rights","Canvas print (16x20 inches)","Premium photo album (20 pages)","All photos on custom USB"]', 2, 60, '["Studio or on-location within Metro Manila"]', '["In-Studio", "On-Location"]', 1, 2, 1, 18500.00, 1, 2, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(9, 1, 3, 'Newborn & Maternity Bundle', 'Capture the beautiful journey from pregnancy to welcoming your little one. Includes both maternity and newborn sessions with a cohesive style.', '["Maternity session (1 hour)","Newborn session (2-3 hours)","1 photographer specializing in newborns","80+ edited high-resolution photos (combined)","Props, wraps, and accessories included","Parent and sibling shots","Online gallery with download access","Premium leather album (30 pages)","2 framed prints (8x10 inches)","USB with all images"]', 4, 80, '[]', '["In-Studio"]', 0, 1, 0, 22000.00, 1, 1, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(10, 1, 4, 'E-Commerce Starter Pack', 'Perfect for online sellers and small businesses. Clean, professional product photos optimized for e-commerce platforms.', '["Up to 20 products","5 shots per product (different angles)","White background standard","Basic color correction","High-resolution JPEG files","Watermark-free images","2-day turnaround","Simple styling assistance"]', 3, 100, '[]', '["In-Studio"]', 0, 1, 0, 8500.00, 1, 1, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(11, 1, 4, 'Lifestyle Product Suite', 'Showcase your products in real-life settings. Perfect for social media content, lookbooks, and marketing materials.', '["Up to 15 products","Lifestyle shots with models (2 models included)","Studio and outdoor setup options","Creative prop styling","10 detail shots per product","Advanced retouching included","Social media ready (square\\/portrait formats)","Commercial usage rights","Online gallery with download access"]', 5, 150, '["Metro Manila area"]', '["In-Studio", "On-Location"]', 1, 2, 1, 28000.00, 1, 1, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(12, 1, 4, 'Catalog & Lookbook Production', 'Full-scale product photography for catalogs, lookbooks, and advertising campaigns. Professional styling, models, and post-production included.', '["Full day shoot (8 hours)","Up to 50 products","2 professional photographers","Professional stylist included","2 models included","Studio rental included","Advanced retouching and color grading","200+ final images","Full commercial usage rights","Customized background options","Video content add-on available","5-day priority turnaround"]', 8, 200, '["Nationwide, travel fees apply outside Metro Manila"]', '["In-Studio", "On-Location"]', 1, 3, 1, 65000.00, 1, 2, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(13, 1, 10, 'Pawsome Portrait Session', 'A fun and relaxed session to capture your furry friend\'s unique personality. Perfect for dogs, cats, and small pets.', '["1-hour studio or outdoor session","1 photographer experienced with pets","25 edited high-resolution photos","Patience and treat-motivated approach","Simple backdrop options","Owner can join for couple of shots","Online gallery with download access","Digital photo release"]', 1, 25, '[]', '["In-Studio", "On-Location"]', 1, 2, 0, 5500.00, 1, 1, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(14, 1, 10, 'Pet & Family Bonding', 'Capture the special bond between your family and your beloved pet. Includes candid moments and posed portraits.', '["2-hour session at your home or park","1 photographer","50+ edited high-resolution photos","Candid and posed shots","Family portraits with pet","Solo pet portraits","Action shots (running, playing)","Online gallery with print rights","Canvas print (11x14 inches)","Custom pet-themed USB drive"]', 2, 50, '["Metro Manila","Cavite"]', '["On-Location"]', 1, 2, 1, 12500.00, 1, 1, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(15, 1, 10, 'Premium Pet Portfolio', 'The ultimate pet photography experience. Professional styling, multiple locations, and a custom album to cherish forever.', '["3-hour session","2 photographers","2 location options (studio + outdoor)","Pet stylist on-site (grooming touch-ups)","100+ edited high-resolution photos","Professional props and accessories","Action and slow-motion video clips","Custom leather album (20 pages)","Framed print (16x20 inches)","Online gallery with unlimited downloads","Mobile app access for easy sharing","Premium USB in keepsake box"]', 3, 100, '["Metro Manila, Cavite, Laguna"]', '["In-Studio", "On-Location"]', 1, 2, 1, 25000.00, 1, 2, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(16, 1, 6, 'Portfolio Builder', 'Perfect for aspiring models, designers, and fashion students. Build your portfolio with professional, editorial-quality images.', '["2-hour studio session","1 photographer","3 outfit changes","Professional styling advice","Basic makeup touch-up","40 edited high-resolution photos","Online gallery with download access","Portfolio-ready digital files"]', 2, 40, '[]', '["In-Studio"]', 0, 1, 0, 12000.00, 1, 1, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(17, 1, 6, 'Editorial Fashion Shoot', 'High-end fashion photography suitable for magazines, lookbooks, and advertising campaigns. Professional styling and makeup team included.', '["4-hour session","1 lead fashion photographer","Professional HMUA included","Professional stylist included","Up to 5 outfit changes","Studio rental with premium backdrops","100+ edited high-resolution photos","Advanced retouching and color grading","Online gallery with commercial rights","Behind-the-scenes video highlights","Print-ready files for publication"]', 4, 100, '[]', '["In-Studio", "On-Location"]', 1, 2, 1, 35000.00, 1, 1, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04'),
-	(18, 1, 6, 'Campaign Production', 'Full-scale fashion campaign production for brands and designers. Includes creative direction, multiple models, and video content.', '["Full day shoot (8-10 hours)","2 fashion photographers","Creative director included","Professional HMUA team (2 stylists)","Models (up to 3 included)","Custom set design and props","200+ edited high-resolution photos","30-second campaign video","Behind-the-scenes documentary","Full commercial usage rights","Digital press kit","Social media campaign assets","Campaign launch consultation"]', 10, 200, '["Metro Manila, travel fees for outside locations"]', '["In-Studio", "On-Location"]', 1, 3, 1, 120000.00, 1, 2, 'active', '2026-03-26 05:01:04', '2026-03-26 05:01:04');
-
 CREATE TABLE IF NOT EXISTS `tbl_payments` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `booking_id` bigint unsigned NOT NULL,
@@ -1092,7 +652,6 @@ CREATE TABLE IF NOT EXISTS `tbl_payments` (
   CONSTRAINT `tbl_payments_booking_id_foreign` FOREIGN KEY (`booking_id`) REFERENCES `tbl_bookings` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE IF NOT EXISTS `tbl_permissions` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -1106,28 +665,7 @@ CREATE TABLE IF NOT EXISTS `tbl_permissions` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `tbl_permissions_name_unique` (`name`),
   UNIQUE KEY `tbl_permissions_permission_string_unique` (`permission_string`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_permissions` (`id`, `name`, `resource`, `action`, `permission_string`, `description`, `status`, `created_at`, `updated_at`) VALUES
-	(1, 'view_employees', 'employees', 'view', 'employees:view', 'View employee records and employee lists.', 'active', '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(2, 'create_employee', 'employee', 'create', 'employee:create', 'Create and onboard new employees.', 'active', '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(3, 'edit_employee', 'employee', 'edit', 'employee:edit', 'Update employee details and employee status.', 'active', '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(4, 'delete_employee', 'employee', 'delete', 'employee:delete', 'Delete employee accounts and related assignments.', 'active', '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(5, 'manage_schedules', 'schedules', 'manage', 'schedules:manage', 'Manage employee work schedules.', 'active', '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(6, 'view_payroll', 'payroll', 'view', 'payroll:view', 'View payroll settings and payroll generation data.', 'active', '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(7, 'create_payroll', 'payroll', 'create', 'payroll:create', 'Create payroll settings and generate payroll records.', 'active', '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(8, 'edit_payroll', 'payroll', 'edit', 'payroll:edit', 'Edit existing payroll settings.', 'active', '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(9, 'update_payroll', 'payroll', 'update', 'payroll:update', 'Update payroll records and payroll configuration.', 'active', '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(10, 'delete_payroll', 'payroll', 'delete', 'payroll:delete', 'Delete payroll settings.', 'active', '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(11, 'manage_payroll', 'payroll', 'manage', 'payroll:manage', 'Full payroll management access across payroll actions.', 'active', '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(12, 'view_dashboard', 'dashboard', 'view', 'dashboard:view', 'View the studio photographer dashboard.', 'active', '2026-03-26 05:25:23', '2026-03-26 06:02:46'),
-	(13, 'view_studio', 'studio', 'view', 'studio:view', 'View assigned studio information and details.', 'active', '2026-03-26 05:25:23', '2026-03-26 06:02:46'),
-	(14, 'view_bookings', 'bookings', 'view', 'bookings:view', 'View assigned booking lists and booking details.', 'active', '2026-03-26 05:25:23', '2026-03-26 06:02:46'),
-	(15, 'update_status_assignment', 'assignment', 'update_status', 'assignment:update_status', 'Update the status of assigned bookings.', 'active', '2026-03-26 05:25:23', '2026-03-26 06:02:46'),
-	(16, 'view_online_gallery', 'online_gallery', 'view', 'online_gallery:view', 'View online galleries for eligible assigned bookings.', 'active', '2026-03-26 05:25:23', '2026-03-26 06:02:46'),
-	(17, 'create_online_gallery', 'online_gallery', 'create', 'online_gallery:create', 'Create or upload images to online galleries.', 'active', '2026-03-26 05:25:23', '2026-03-26 06:02:46'),
-	(18, 'update_online_gallery', 'online_gallery', 'update', 'online_gallery:update', 'Update online gallery information.', 'active', '2026-03-26 05:25:23', '2026-03-26 06:02:46'),
-	(19, 'delete_online_gallery', 'online_gallery', 'delete', 'online_gallery:delete', 'Delete online galleries or gallery images.', 'active', '2026-03-26 05:25:23', '2026-03-26 06:02:46');
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `tbl_roles` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1140,13 +678,6 @@ CREATE TABLE IF NOT EXISTS `tbl_roles` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `tbl_roles_name_unique` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_roles` (`id`, `name`, `description`, `status`, `is_system`, `created_at`, `updated_at`) VALUES
-	(1, 'studio-hr-manager', 'Oversees all human resources functions in the studio, including hiring, employee relations, policy implementation, and performance management. Ensures a positive work environment and compliance with labor laws.', 'active', 1, '2026-03-26 05:12:36', '2026-03-26 06:02:46'),
-	(2, 'studio-hr-staff', 'Supports HR operations by assisting with recruitment, onboarding, maintaining employee records, and handling basic employee concerns. Works under the HR Manager.', 'active', 1, '2026-03-26 05:12:47', '2026-03-26 06:02:46'),
-	(3, 'studio-finance-manager', 'Manages the studio\'s financial activities such as budgeting, financial planning, reporting, and expense control. Ensures the studio stays financially healthy and compliant with regulations.', 'active', 1, '2026-03-26 05:13:05', '2026-03-26 06:02:46'),
-	(4, 'studio-finance-staff', 'Handles day-to-day financial tasks like processing payments, recording transactions, preparing invoices, and assisting with financial reports under the Finance Manager.', 'active', 1, '2026-03-26 05:13:18', '2026-03-26 06:02:46'),
-	(5, 'studio-photographer', 'Captures photos for studio projects, including shoots, editing, and ensuring high-quality visual output that meets client or creative requirements.', 'active', 1, '2026-03-26 05:13:58', '2026-03-26 06:02:46');
 
 CREATE TABLE IF NOT EXISTS `tbl_role_permissions` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1161,45 +692,6 @@ CREATE TABLE IF NOT EXISTS `tbl_role_permissions` (
   CONSTRAINT `tbl_role_permissions_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `tbl_roles` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `tbl_role_permissions` (`id`, `role_id`, `permission_id`, `created_at`, `updated_at`) VALUES
-	(1, 1, 1, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(2, 1, 2, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(3, 1, 3, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(4, 1, 4, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(5, 1, 5, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(6, 1, 6, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(7, 1, 7, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(8, 1, 8, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(9, 1, 9, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(10, 1, 10, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(11, 1, 11, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(12, 2, 1, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(13, 2, 2, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(14, 2, 3, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(15, 2, 5, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(16, 2, 6, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(17, 2, 7, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(18, 2, 8, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(19, 2, 9, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(20, 3, 6, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(21, 3, 7, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(22, 3, 8, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(23, 3, 9, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(24, 3, 10, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(25, 3, 11, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(26, 4, 6, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(27, 4, 7, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(28, 4, 8, '2026-03-26 05:20:45', '2026-03-26 06:02:46'),
-	(29, 4, 9, '2026-03-26 05:20:46', '2026-03-26 06:02:46'),
-	(30, 5, 12, '2026-03-26 05:25:24', '2026-03-26 06:02:46'),
-	(31, 5, 13, '2026-03-26 05:25:24', '2026-03-26 06:02:46'),
-	(32, 5, 14, '2026-03-26 05:25:24', '2026-03-26 06:02:46'),
-	(33, 5, 15, '2026-03-26 05:25:24', '2026-03-26 06:02:46'),
-	(34, 5, 16, '2026-03-26 05:25:24', '2026-03-26 06:02:46'),
-	(35, 5, 17, '2026-03-26 05:25:24', '2026-03-26 06:02:46'),
-	(36, 5, 18, '2026-03-26 05:25:24', '2026-03-26 06:02:46'),
-	(37, 5, 19, '2026-03-26 05:25:24', '2026-03-26 06:02:46');
-
 CREATE TABLE IF NOT EXISTS `tbl_services` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `studio_id` bigint unsigned NOT NULL,
@@ -1213,10 +705,6 @@ CREATE TABLE IF NOT EXISTS `tbl_services` (
   CONSTRAINT `tbl_services_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `tbl_categories` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_services_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_services` (`id`, `studio_id`, `category_id`, `service_name`, `created_at`, `updated_at`) VALUES
-	(1, 1, 1, '"[\\"Full-Day Wedding Coverage\\",\\"Engagement Photo Session\\",\\"Bridal Portrait Shoot\\"]"', '2026-03-02 00:18:06', '2026-03-02 00:18:06'),
-	(2, 1, 2, '"[\\"Corporate Event Coverage\\",\\"Birthday Party Photography\\",\\"Conference & Seminar Documentation\\"]"', '2026-03-02 00:18:32', '2026-03-02 00:18:32');
 
 CREATE TABLE IF NOT EXISTS `tbl_studios` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1259,9 +747,6 @@ CREATE TABLE IF NOT EXISTS `tbl_studios` (
   CONSTRAINT `tbl_studios_chk_1` CHECK (json_valid(`operating_days`))
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `tbl_studios` (`id`, `user_id`, `category_id`, `location_id`, `street`, `barangay`, `contact_number`, `studio_email`, `facebook_url`, `instagram_url`, `website_url`, `studio_name`, `studio_type`, `year_established`, `studio_description`, `studio_logo`, `starting_price`, `downpayment_percentage`, `operating_days`, `start_time`, `end_time`, `max_clients_per_day`, `advance_booking_days`, `business_permit`, `owner_id_document`, `status`, `rejection_note`, `created_at`, `updated_at`) VALUES
-	(1, 96, 3, 1, 'Unit 402, 4th Floor, Valero Tower, 122 Valero St.', 'Salitran III', '09171234567', 'hello@prismandpine.com', 'https://facebook.com/prismandpinestudio', 'https://insgram.com/prismandpine', 'https://www.prismandpine.com', 'Prism & Pine Creative Spaces', 'photography_studio', 2022, 'A 120sqm minimalist, Scandinavian-inspired daylight studio located in the heart of the city. We specialize in editorial fashion, high-end portraits, and commercial product shoots. Our space features floor-to-ceiling windows, a motorized cyclorama wall, and a dedicated makeup and dressing area.', 'studio_logo/0ebd87e6-4dd2-4d74-a7aa-8ed3675fe311.png', '3500', 67.00, '"[\\"monday\\",\\"wednesday\\",\\"friday\\",\\"saturday\\"]"', '08:00:00', '18:00:00', 4, 3, 'studio_documents/943b5df4-4eda-4b65-9ca0-504ce5e79fa8.pdf', 'studio_documents/016bf19e-a03b-41db-bbea-bd122b1baa7c.jpg', 'verified', NULL, '2026-02-24 20:10:55', '2026-03-08 05:08:45');
-
 CREATE TABLE IF NOT EXISTS `tbl_studio_employee_schedule` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint unsigned NOT NULL,
@@ -1280,28 +765,6 @@ CREATE TABLE IF NOT EXISTS `tbl_studio_employee_schedule` (
   CONSTRAINT `tbl_studio_employee_schedule_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_studio_employee_schedule_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_studio_employee_schedule` (`id`, `user_id`, `studio_id`, `operating_days`, `start_time`, `end_time`, `is_active`, `notes`, `created_at`, `updated_at`) VALUES
-	(30, 143, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:03', '2026-03-26 05:38:03'),
-	(31, 144, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:03', '2026-03-26 05:38:03'),
-	(32, 145, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:03', '2026-03-26 05:38:03'),
-	(33, 146, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:03', '2026-03-26 05:38:03'),
-	(34, 147, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:03', '2026-03-26 05:38:03'),
-	(35, 148, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:04', '2026-03-26 05:38:04'),
-	(36, 149, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:04', '2026-03-26 05:38:04'),
-	(37, 150, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:04', '2026-03-26 05:38:04'),
-	(38, 151, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:04', '2026-03-26 05:38:04'),
-	(39, 152, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(40, 153, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(41, 154, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(42, 155, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(43, 156, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(44, 157, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(45, 158, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(46, 159, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(47, 160, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(48, 161, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:07', '2026-03-26 05:38:07'),
-	(49, 162, 1, '["monday", "wednesday", "friday", "saturday"]', '08:00:00', '18:00:00', 1, 'Seeded employee schedule', '2026-03-26 05:38:07', '2026-03-26 05:38:07');
 
 CREATE TABLE IF NOT EXISTS `tbl_studio_members` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1324,7 +787,6 @@ CREATE TABLE IF NOT EXISTS `tbl_studio_members` (
   CONSTRAINT `tbl_studio_members_invited_by_foreign` FOREIGN KEY (`invited_by`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_studio_members_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
 CREATE TABLE IF NOT EXISTS `tbl_studio_online_gallery` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1351,7 +813,6 @@ CREATE TABLE IF NOT EXISTS `tbl_studio_online_gallery` (
   CONSTRAINT `tbl_studio_online_gallery_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE IF NOT EXISTS `tbl_studio_photographers` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `studio_id` bigint unsigned NOT NULL,
@@ -1375,18 +836,6 @@ CREATE TABLE IF NOT EXISTS `tbl_studio_photographers` (
   CONSTRAINT `tbl_studio_photographers_specialization_foreign` FOREIGN KEY (`specialization`) REFERENCES `tbl_services` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_studio_photographers_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_studio_photographers` (`id`, `studio_id`, `owner_id`, `photographer_id`, `position`, `specialization`, `years_of_experience`, `status`, `created_at`, `updated_at`) VALUES
-	(15, 1, 96, 153, 'Lead Photographer', 1, 6, 'active', '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(16, 1, 96, 154, 'Senior Photographer', 2, 8, 'active', '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(17, 1, 96, 155, 'Event Photographer', 1, 5, 'active', '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(18, 1, 96, 156, 'Portrait Photographer', 2, 7, 'active', '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(19, 1, 96, 157, 'Lighting Photographer', 1, 4, 'active', '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(20, 1, 96, 158, 'Creative Photographer', 2, 9, 'active', '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(21, 1, 96, 159, 'Studio Photographer', 1, 3, 'active', '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(22, 1, 96, 160, 'Product Photographer', 2, 10, 'active', '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(23, 1, 96, 161, 'Fashion Photographer', 1, 6, 'active', '2026-03-26 05:38:07', '2026-03-26 05:38:07'),
-	(24, 1, 96, 162, 'Assistant Photographer', 2, 2, 'active', '2026-03-26 05:38:07', '2026-03-26 05:38:07');
 
 CREATE TABLE IF NOT EXISTS `tbl_studio_plans` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1419,7 +868,6 @@ CREATE TABLE IF NOT EXISTS `tbl_studio_plans` (
   CONSTRAINT `tbl_studio_plans_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE IF NOT EXISTS `tbl_studio_ratings` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `booking_id` bigint unsigned NOT NULL,
@@ -1442,7 +890,6 @@ CREATE TABLE IF NOT EXISTS `tbl_studio_ratings` (
   CONSTRAINT `tbl_studio_ratings_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE IF NOT EXISTS `tbl_studio_schedules` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `studio_id` bigint unsigned NOT NULL,
@@ -1461,9 +908,6 @@ CREATE TABLE IF NOT EXISTS `tbl_studio_schedules` (
   CONSTRAINT `tbl_studio_schedules_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_studio_schedules_chk_1` CHECK (json_valid(`operating_days`))
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_studio_schedules` (`id`, `studio_id`, `location_id`, `operating_days`, `opening_time`, `closing_time`, `booking_limit`, `advance_booking`, `created_at`, `updated_at`) VALUES
-	(1, 1, 1, '"[\\"monday\\",\\"wednesday\\",\\"friday\\",\\"saturday\\"]"', '08:00:00', '18:00:00', 4, 3, '2026-02-24 20:10:55', '2026-02-24 20:10:55');
 
 CREATE TABLE IF NOT EXISTS `tbl_subscription_plans` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1491,11 +935,6 @@ CREATE TABLE IF NOT EXISTS `tbl_subscription_plans` (
   KEY `tbl_subscription_plans_plan_code_index` (`plan_code`),
   KEY `tbl_subscription_plans_priority_level_index` (`priority_level`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_subscription_plans` (`id`, `user_type`, `plan_type`, `billing_cycle`, `plan_code`, `name`, `description`, `price`, `commission_rate`, `max_booking`, `max_studio_photographers`, `max_studios`, `staff_limit`, `priority_level`, `features`, `support_level`, `status`, `created_at`, `updated_at`) VALUES
-	(1, 'studio', 'basic', 'monthly', 'STU_BASIC_MON', 'Studio Basic (Monthly)', NULL, 599.00, 5.00, 50, 3, 2, 3, 0, '["Manage up to 2 Studios (Locations/Brands)", "3 Photographer Seats", "Consolidated Calendar View (See both studios)", "Automated Invoice Reminders", "Client Portal Access", "100 GB Storage"]', 'basic', 'active', '2026-02-24 00:30:41', '2026-02-24 00:30:41'),
-	(2, 'studio', 'premium', 'yearly', 'STU_PREMIUM_YEA', 'Studio Premium (Yearly)', NULL, 1490.00, 2.00, 100, 10, 5, 10, 2, '["Manage up to 5 Studios", "10 Photographer Seats", "Team Permissions & Roles", "Advanced Analytics (Revenue per Studio)", "Automated SMS/Email Reminders", "API Access for Website Integration", "500 GB Storage + Automated Backup"]', 'priority', 'active', '2026-02-24 00:32:25', '2026-02-24 00:32:25'),
-	(3, 'studio', 'enterprise', 'yearly', 'STU_ENTERPRISE_YEA', 'Studio Enterprise (Yearly)', NULL, 7500.00, 1.00, 500, 50, 10, 25, 5, '["Unlimited Studios & Photographers", "Unlimited Staff Accounts", "White-Label Solution (Remove our branding)", "Custom Contract Templates", "Advanced API Access & Webhooks", "2 TB Cloud Storage", "Priority Feature Requests"]', 'dedicated', 'active', '2026-02-24 00:34:00', '2026-02-24 00:34:00');
 
 CREATE TABLE IF NOT EXISTS `tbl_system_revenue` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1531,7 +970,6 @@ CREATE TABLE IF NOT EXISTS `tbl_system_revenue` (
   CONSTRAINT `tbl_system_revenue_subscription_id_foreign` FOREIGN KEY (`subscription_id`) REFERENCES `tbl_studio_plans` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE IF NOT EXISTS `tbl_users` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `uuid` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -1560,32 +998,7 @@ CREATE TABLE IF NOT EXISTS `tbl_users` (
   KEY `tbl_users_status_index` (`status`),
   KEY `tbl_users_location_id_index` (`location_id`),
   CONSTRAINT `tbl_users_location_id_foreign` FOREIGN KEY (`location_id`) REFERENCES `tbl_locations` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=163 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_users` (`id`, `uuid`, `role`, `first_name`, `middle_name`, `last_name`, `user_type`, `email`, `mobile_number`, `password`, `profile_photo`, `cover_photo`, `location_id`, `status`, `email_verified`, `verification_token`, `token_expiry`, `created_at`, `updated_at`) VALUES
-	(1, 'fe0cd758-dbd6-47f5-a71f-de0ef3dd6079', 'admin', 'Studio', 'System', 'Administrator', 'Admin', 'lumora_admin@gmail.com', '+633109293132', '$2y$12$1q3FNPIgmFlGo6tcIn/FT.2rvUxNAJW5.JlWJ/9Xq0bwTt8lMOxZS', 'profile-photos/aChzeEPXOAX2MjHLzzQwK69mbic7wgBWtQrLdetU.png', 'cover-photos/Ifa0FHx27fnNcXcOCP1fC4mLm0oiVORx61Naftef.png', 2, 'active', 1, NULL, NULL, '2026-01-24 09:49:41', '2026-03-01 06:59:51'),
-	(96, 'eb625247-c75c-411b-8ad7-f50137d4617c', 'owner', 'Daphne', 'Karina Marsh', 'Russo', 'Photographer', 'gorocoke@fxzig.com', '+631111111111', '$2y$12$KSqKICxKT5mjSyB52sKCh.eutgq1.aJr9lKegVDeyK3sLemXvXYyi', 'profile_photos/154ecda4-0230-425d-bdf8-2ef5eccce372.png', NULL, 18, 'active', 1, NULL, NULL, '2026-02-22 06:32:13', '2026-02-24 20:14:26'),
-	(98, '0c687fb3-a3b4-48fd-a359-b08adc11cfe0', 'freelancer', 'Ivor', 'Katell Hart', 'Mueller', 'Photographer', 'pixe@mailinator.com', '+633333333333', '$2y$12$1nXgt7UpNVM8Q/H9rvxOeOJzi/jEetFtNn3ejqkXuJqsiguA/LPqO', 'profile-photos/RHGZQg39HrcO0RSd0r3aQsOBOTO4soJQScJNBn3X.png', 'cover-photos/RsSsEIWlHwOxZIsv5FNel5ci8tU1LkjH5DfklQEC.png', 2, 'active', 1, NULL, NULL, '2026-02-26 21:46:34', '2026-03-01 07:03:50'),
-	(143, 'ecf7e3b1-a21d-44fb-9c08-a46aaa029e89', 'studio-hr', 'Ariana', 'Mae', 'Lopez', 'Manager', 'seed.studio-hr-manager.1@lumora.test', '+63917500001', '$2y$12$.Y8OcnxPlMxQ7f3hPqZpLeaIOYHJ1S3iNrm9Xoi7fkjP.h3Xbyzha', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:02', '2026-03-26 06:02:47'),
-	(144, '24dd096a-cde0-45b7-a3e4-6348846d569c', 'studio-hr', 'Bianca', 'Joy', 'Reyes', 'Staff', 'seed.studio-hr-staff.1@lumora.test', '+63917500001', '$2y$12$k7P4Zw7W3V1/nLTNOhJu7eBsQUT8bxrgLfoBjcIJSUxMwba1bGW8u', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:03', '2026-03-26 06:02:47'),
-	(145, 'b95d103d-e65c-4cd1-bd95-6c679f6b7001', 'studio-hr', 'Camille', 'Rose', 'Torres', 'Staff', 'seed.studio-hr-staff.2@lumora.test', '+63917500002', '$2y$12$4Kh5XsAZxp5HWwwdJ6BsbulOXLYhkut8Mq.BkC4GxnIlaQA5kaEI.', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:03', '2026-03-26 06:02:47'),
-	(146, '216cf4d2-4170-4898-888f-62b90468d416', 'studio-hr', 'Danica', 'Faith', 'Mendoza', 'Staff', 'seed.studio-hr-staff.3@lumora.test', '+63917500003', '$2y$12$.rEVSKrCEvsPR9AhtopEH.b1KjoV1tSZwggN/wBb8foRg2mPS2lay', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:03', '2026-03-26 06:02:47'),
-	(147, '2db604d7-59cb-4b05-aab6-55556d9df846', 'studio-hr', 'Elise', 'Anne', 'Garcia', 'Staff', 'seed.studio-hr-staff.4@lumora.test', '+63917500004', '$2y$12$yz/BJuM14COvabmb/Wt7Q.xkZwPEROkd6tauLwYEldqq4CG4oOjFu', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:03', '2026-03-26 06:02:48'),
-	(148, '3bfbc7c2-b102-4068-a882-885529d10242', 'studio-finance', 'Felix', 'James', 'Santos', 'Manager', 'seed.studio-finance-manager.1@lumora.test', '+63917500001', '$2y$12$F44o0EpMO2hF48iwgFZ2fOPs/AhPJNMvb6WsaYx7JsTipykfxS.re', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:04', '2026-03-26 06:02:48'),
-	(149, '17c87b9f-94cd-4edf-8330-ea5999e72243', 'studio-finance', 'Gavin', 'Lee', 'Flores', 'Staff', 'seed.studio-finance-staff.1@lumora.test', '+63917500001', '$2y$12$CkD1UCY18gZ1UkhoX/hxTOfknMxGDoBLYK7k0wEfgX2pSisUjmvFe', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:04', '2026-03-26 06:02:48'),
-	(150, '7f53cf20-be8d-4814-b92e-6048fdfdb4a4', 'studio-finance', 'Hannah', 'Grace', 'Rivera', 'Staff', 'seed.studio-finance-staff.2@lumora.test', '+63917500002', '$2y$12$JzFaWV1r7O4foMgIz8TtU.yzCDUnFvwvlOBkuhTKbpsXidpFxZLdC', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:04', '2026-03-26 06:02:48'),
-	(151, '7582afec-1cd2-417d-8361-6a2fbc0fec1f', 'studio-finance', 'Ian', 'Paul', 'Navarro', 'Staff', 'seed.studio-finance-staff.3@lumora.test', '+63917500003', '$2y$12$y5.GOwMLvsoAe62k3016T.0Nt/XCUjsxFF1tIpM9D6bVVASoczPoy', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:04', '2026-03-26 06:02:49'),
-	(152, 'a250800d-918b-4ee5-9ca6-daa88d005b46', 'studio-finance', 'Jessa', 'Marie', 'Aquino', 'Staff', 'seed.studio-finance-staff.4@lumora.test', '+63917500004', '$2y$12$X6P0F6lCg3ieiMj80aCSaeq4q/LnNzcNfEHIQAzgoW.vtZS2JPTUK', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:05', '2026-03-26 06:02:49'),
-	(153, 'e3bc7857-e1a8-4ed5-9b4e-923d1f16895a', 'studio-photographer', 'Kyla', 'May', 'Valdez', 'Photographer', 'seed.studio-photographer.1@lumora.test', '+63917500101', '$2y$12$uriDNyvT4kIuX8SmL.dOBuBVP.tfdQ08A4LwHcfD1SJ5lXYTt39w2', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:05', '2026-03-26 06:02:49'),
-	(154, '6fe28465-f907-4273-84f2-19665ef5a3c7', 'studio-photographer', 'Liam', 'Cruz', 'Padilla', 'Photographer', 'seed.studio-photographer.2@lumora.test', '+63917500102', '$2y$12$8V97REmwIf4DYIt2/FuIy.VduD8IYQgoLE9rfl/g5uiQX8XqXl1eG', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:05', '2026-03-26 06:02:49'),
-	(155, '7297d217-2cfb-46af-a543-d6599e8b627e', 'studio-photographer', 'Mia', 'Nicole', 'Ramos', 'Photographer', 'seed.studio-photographer.3@lumora.test', '+63917500103', '$2y$12$7GiPzl0m.YenJfhqhy94auf.qQF5w5xBUI4ikh.K1dleR09UnKA.S', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:05', '2026-03-26 06:02:49'),
-	(156, 'b0301c2b-e063-419e-87aa-4383def7b11a', 'studio-photographer', 'Noah', 'Dean', 'Castro', 'Photographer', 'seed.studio-photographer.4@lumora.test', '+63917500104', '$2y$12$aP836hESEhLhkcYDc0Z4Dudy4tPcmMZfIdBxdtPi11g2PqcvIog6i', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:05', '2026-03-26 06:02:50'),
-	(157, '10b1b711-2d6e-4bcf-b282-3df572c2bb52', 'studio-photographer', 'Olivia', 'Jane', 'Morales', 'Photographer', 'seed.studio-photographer.5@lumora.test', '+63917500105', '$2y$12$4D9TFAoo0m.d.iY5SQ13U.fvmAqdoMbcLM.gsaAFxKYawugKNjg0C', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:06', '2026-03-26 06:02:50'),
-	(158, 'cfebdde1-f47e-4bc8-b11d-3f2f8f8f1a01', 'studio-photographer', 'Paolo', 'Luis', 'Gutierrez', 'Photographer', 'seed.studio-photographer.6@lumora.test', '+63917500106', '$2y$12$wKIhouOYQZMYVFM4QBlYW.gUw4yECuh05apRo6u3zR/SkkglfZNMS', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:06', '2026-03-26 06:02:50'),
-	(159, 'c3a83f88-3c2b-4527-9ff6-7b6a1611e429', 'studio-photographer', 'Queenie', 'Anne', 'Delos Santos', 'Photographer', 'seed.studio-photographer.7@lumora.test', '+63917500107', '$2y$12$KesT.Q7t.JYgY8zj5bYhBek2u3fj.ot6KdbLZNq2kX69DwwU68ZT2', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:06', '2026-03-26 06:02:50'),
-	(160, '59b9afc6-e9bc-4b45-bcf1-3c1ccc147912', 'studio-photographer', 'Rafael', 'Miguel', 'Herrera', 'Photographer', 'seed.studio-photographer.8@lumora.test', '+63917500108', '$2y$12$0PicnkdHRC/R1wbvvVlJZ.YKoQsd//ZJ8BSrRU5/MWMM5BuuO.9Ui', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:06', '2026-03-26 06:02:51'),
-	(161, '6dffc58f-70b7-4e79-844a-9a05e1d5bcb1', 'studio-photographer', 'Sofia', 'Claire', 'Domingo', 'Photographer', 'seed.studio-photographer.9@lumora.test', '+63917500109', '$2y$12$MSign7iJe38aSw5TB3UTNeQK2LrSvAg17HZEr7VL3nI4ifIUOpAhS', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:07', '2026-03-26 06:02:51'),
-	(162, 'bf98207e-895a-4f97-a551-f6f82596e69d', 'studio-photographer', 'Theo', 'Marc', 'Salazar', 'Photographer', 'seed.studio-photographer.10@lumora.test', '+63917500110', '$2y$12$zm8rCSZyZZsTKK33xHenau/gOuZ35ky/J68faZ7KAEud9Q1sWpJMq', NULL, NULL, NULL, 'active', 1, NULL, NULL, '2026-03-26 05:38:07', '2026-03-26 06:02:51');
+) ENGINE=InnoDB AUTO_INCREMENT=164 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `tbl_user_roles` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1599,28 +1012,6 @@ CREATE TABLE IF NOT EXISTS `tbl_user_roles` (
   CONSTRAINT `tbl_user_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `tbl_roles` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_user_roles_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `tbl_user_roles` (`id`, `user_id`, `role_id`, `created_at`, `updated_at`) VALUES
-	(10, 143, 1, '2026-03-26 05:38:02', '2026-03-26 05:38:02'),
-	(11, 144, 2, '2026-03-26 05:38:03', '2026-03-26 05:38:03'),
-	(12, 145, 2, '2026-03-26 05:38:03', '2026-03-26 05:38:03'),
-	(13, 146, 2, '2026-03-26 05:38:03', '2026-03-26 05:38:03'),
-	(14, 147, 2, '2026-03-26 05:38:03', '2026-03-26 05:38:03'),
-	(15, 148, 3, '2026-03-26 05:38:04', '2026-03-26 05:38:04'),
-	(16, 149, 4, '2026-03-26 05:38:04', '2026-03-26 05:38:04'),
-	(17, 150, 4, '2026-03-26 05:38:04', '2026-03-26 05:38:04'),
-	(18, 151, 4, '2026-03-26 05:38:04', '2026-03-26 05:38:04'),
-	(19, 152, 4, '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(20, 153, 5, '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(21, 154, 5, '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(22, 155, 5, '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(23, 156, 5, '2026-03-26 05:38:05', '2026-03-26 05:38:05'),
-	(24, 157, 5, '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(25, 158, 5, '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(26, 159, 5, '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(27, 160, 5, '2026-03-26 05:38:06', '2026-03-26 05:38:06'),
-	(28, 161, 5, '2026-03-26 05:38:07', '2026-03-26 05:38:07'),
-	(29, 162, 5, '2026-03-26 05:38:07', '2026-03-26 05:38:07');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
