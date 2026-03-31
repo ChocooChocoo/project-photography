@@ -41,7 +41,10 @@
 
             {{-- Request --}}
             @php
-                $requestRoutes = Route::is('studio-hr.leave-requests.*') || Route::is('studio-hr.employees-leave-requests.*');
+                $requestRoutes = Route::is('studio-hr.leave-requests.*')
+                    || Route::is('studio-hr.employees-leave-requests.*')
+                    || Route::is('studio-hr.overtime-requests.*')
+                    || Route::is('studio-hr.employees-overtime-requests.*');
             @endphp
 
             <li class="side-nav-item {{ $requestRoutes ? 'active' : '' }}">
@@ -65,6 +68,21 @@
                         <li class="side-nav-item">
                             <a href="{{ route('studio-hr.employees-leave-requests.index') }}" class="side-nav-link {{ Route::is('studio-hr.employees-leave-requests.index') ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="employees-leave-requests">Employees Leave Requests</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-hr.overtime-requests.create') }}" class="side-nav-link {{ Route::is('studio-hr.overtime-requests.create') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="request-overtime">Request Overtime</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-hr.overtime-requests.index') }}" class="side-nav-link {{ Route::is('studio-hr.overtime-requests.index') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="view-requested-overtime">View Requested Overtime</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-hr.employees-overtime-requests.index') }}" class="side-nav-link {{ Route::is('studio-hr.employees-overtime-requests.index') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="employees-overtime-requests">Employees Overtime Requests</span>
                             </a>
                         </li>
                     </ul>

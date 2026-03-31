@@ -223,7 +223,7 @@
 
             {{-- Leave Requests --}}
             @php
-                $hrLeaveRequestRoutes = Route::is('owner.hr-leave-requests.*');
+                $hrLeaveRequestRoutes = Route::is('owner.hr-leave-requests.*') || Route::is('owner.hr-overtime-requests.*');
             @endphp
 
             <li class="side-nav-item {{ $hrLeaveRequestRoutes ? 'active' : '' }}">
@@ -237,6 +237,11 @@
                         <li class="side-nav-item">
                             <a href="{{ route('owner.hr-leave-requests.index') }}" class="side-nav-link {{ $hrLeaveRequestRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="hr-leave-requests">HR Leave Requests</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('owner.hr-overtime-requests.index') }}" class="side-nav-link {{ Route::is('owner.hr-overtime-requests.*') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="hr-overtime-requests">HR Overtime Requests</span>
                             </a>
                         </li>
                     </ul>

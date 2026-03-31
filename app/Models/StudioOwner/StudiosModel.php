@@ -177,4 +177,12 @@ class StudiosModel extends Model
     {
         return $this->hasMany(\App\Models\LeaveRequestModel::class, 'studio_id');
     }
+
+    /**
+     * Get the overtime requests filed under the studio.
+     */
+    public function overtimeRequests()
+    {
+        return $this->hasMany(\App\Models\OvertimeRequestModel::class, 'studio_id');
+    }
 }

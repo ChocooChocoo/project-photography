@@ -41,7 +41,7 @@
 
             {{-- Request --}}
             @php
-                $requestRoutes = Route::is('studio-finance.leave-requests.*');
+                $requestRoutes = Route::is('studio-finance.leave-requests.*') || Route::is('studio-finance.overtime-requests.*');
             @endphp
 
             <li class="side-nav-item {{ $requestRoutes ? 'active' : '' }}">
@@ -60,6 +60,16 @@
                         <li class="side-nav-item">
                             <a href="{{ route('studio-finance.leave-requests.index') }}" class="side-nav-link {{ Route::is('studio-finance.leave-requests.index') ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="view-requested-leave">View Requested Leave</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-finance.overtime-requests.create') }}" class="side-nav-link {{ Route::is('studio-finance.overtime-requests.create') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="request-overtime">Request Overtime</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-finance.overtime-requests.index') }}" class="side-nav-link {{ Route::is('studio-finance.overtime-requests.index') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="view-requested-overtime">View Requested Overtime</span>
                             </a>
                         </li>
                     </ul>

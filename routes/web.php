@@ -213,6 +213,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/hr-leave-requests',                            [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'index'])->name('owner.hr-leave-requests.index');
         Route::get('/hr-leave-requests/{id}',                       [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'show'])->name('owner.hr-leave-requests.show');
         Route::post('/hr-leave-requests/{id}/{action}',             [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'process'])->name('owner.hr-leave-requests.process');
+        Route::get('/hr-overtime-requests',                         [\App\Http\Controllers\StudioOwner\OvertimeRequestController::class, 'index'])->name('owner.hr-overtime-requests.index');
+        Route::get('/hr-overtime-requests/{id}',                    [\App\Http\Controllers\StudioOwner\OvertimeRequestController::class, 'show'])->name('owner.hr-overtime-requests.show');
+        Route::post('/hr-overtime-requests/{id}/{action}',          [\App\Http\Controllers\StudioOwner\OvertimeRequestController::class, 'process'])->name('owner.hr-overtime-requests.process');
 
         // Manage Roles
         Route::get('/view/roles',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'index'])->name('owner.role.index');
@@ -288,6 +291,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/employees-leave-requests',                     [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'employeesIndex'])->name('studio-hr.employees-leave-requests.index');
         Route::get('/employees-leave-requests/{id}',                [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'employeeShow'])->name('studio-hr.employees-leave-requests.show');
         Route::post('/employees-leave-requests/{id}/{action}',      [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'process'])->name('studio-hr.employees-leave-requests.process');
+        Route::get('/overtime-requests/create',                     [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'create'])->name('studio-hr.overtime-requests.create');
+        Route::get('/overtime-requests',                            [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'index'])->name('studio-hr.overtime-requests.index');
+        Route::post('/overtime-requests',                           [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'store'])->name('studio-hr.overtime-requests.store');
+        Route::get('/overtime-requests/{id}',                       [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'show'])->name('studio-hr.overtime-requests.show');
+        Route::put('/overtime-requests/{id}',                       [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'update'])->name('studio-hr.overtime-requests.update');
+        Route::post('/overtime-requests/{id}/cancel',               [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'cancel'])->name('studio-hr.overtime-requests.cancel');
+        Route::delete('/overtime-requests/{id}',                    [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'destroy'])->name('studio-hr.overtime-requests.destroy');
+        Route::get('/employees-overtime-requests',                  [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'employeesIndex'])->name('studio-hr.employees-overtime-requests.index');
+        Route::get('/employees-overtime-requests/{id}',             [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'employeeShow'])->name('studio-hr.employees-overtime-requests.show');
+        Route::post('/employees-overtime-requests/{id}/{action}',   [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'process'])->name('studio-hr.employees-overtime-requests.process');
 
         // Manage Employee
         Route::get('/view/employee',                                [\App\Http\Controllers\StudioHR\EmployeeController::class, 'index'])->name('studio-hr.employee.index');
@@ -355,6 +368,13 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/leave-requests/{id}',                          [\App\Http\Controllers\Finance\LeaveRequestController::class, 'update'])->name('studio-finance.leave-requests.update');
         Route::post('/leave-requests/{id}/cancel',                  [\App\Http\Controllers\Finance\LeaveRequestController::class, 'cancel'])->name('studio-finance.leave-requests.cancel');
         Route::delete('/leave-requests/{id}',                       [\App\Http\Controllers\Finance\LeaveRequestController::class, 'destroy'])->name('studio-finance.leave-requests.destroy');
+        Route::get('/overtime-requests/create',                     [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'create'])->name('studio-finance.overtime-requests.create');
+        Route::get('/overtime-requests',                            [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'index'])->name('studio-finance.overtime-requests.index');
+        Route::post('/overtime-requests',                           [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'store'])->name('studio-finance.overtime-requests.store');
+        Route::get('/overtime-requests/{id}',                       [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'show'])->name('studio-finance.overtime-requests.show');
+        Route::put('/overtime-requests/{id}',                       [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'update'])->name('studio-finance.overtime-requests.update');
+        Route::post('/overtime-requests/{id}/cancel',               [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'cancel'])->name('studio-finance.overtime-requests.cancel');
+        Route::delete('/overtime-requests/{id}',                    [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'destroy'])->name('studio-finance.overtime-requests.destroy');
 
         // Payroll Approvals
         Route::get('/payroll-approvals',                            [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'index'])->name('studio-finance.payroll-approvals.index');
@@ -437,6 +457,13 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/leave-requests/{id}',              [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'update'])->name('studio-photographer.leave-requests.update');
         Route::post('/leave-requests/{id}/cancel',      [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'cancel'])->name('studio-photographer.leave-requests.cancel');
         Route::delete('/leave-requests/{id}',           [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'destroy'])->name('studio-photographer.leave-requests.destroy');
+        Route::get('/overtime-requests/create',         [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'create'])->name('studio-photographer.overtime-requests.create');
+        Route::get('/overtime-requests',                [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'index'])->name('studio-photographer.overtime-requests.index');
+        Route::post('/overtime-requests',               [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'store'])->name('studio-photographer.overtime-requests.store');
+        Route::get('/overtime-requests/{id}',           [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'show'])->name('studio-photographer.overtime-requests.show');
+        Route::put('/overtime-requests/{id}',           [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'update'])->name('studio-photographer.overtime-requests.update');
+        Route::post('/overtime-requests/{id}/cancel',   [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'cancel'])->name('studio-photographer.overtime-requests.cancel');
+        Route::delete('/overtime-requests/{id}',        [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'destroy'])->name('studio-photographer.overtime-requests.destroy');
 
         // Attendance
         Route::get('/view/attendance',                  [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'index'])->name('studio-photographer.attendance.index');

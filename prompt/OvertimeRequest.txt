@@ -1,0 +1,99 @@
+Objective #1: Finance, Studio Photographer Overtime Requests
+
+    1). Now since we've already finish the process and for multi-roles leave request, now let's move to the overtime requests.
+
+    2). In the both Finance and Studio Photographer, they can request an overtime.
+
+    3). Create a table using artisan migration for "tbl_overtime_requests" with the important columns, make sure that the
+        primary key is "id" and has a proper constraint.
+
+        Kindly check the file (DB-SCHEMA.SQL) for whole database schema as reference.
+
+    4). The sidebar of the Finance and Studio Photographer should be:
+
+        Request
+          └── Request Overtime             (Request Form)
+          └── View Requested Overtime      (View Own Request)
+    
+    5). The sidebar of the HR should be:
+
+        Request
+          └── Request Overtime                  (Request Form)
+          └── View Requested Overtime           (View Own Request)
+          └── Employees Overtime Requests       (View all employees requested Overtime on that studio)
+    
+    6). In the HR, same process, the HR overtime request will be approval on the Studio Owner Side.
+
+Important Note:
+
+    1). Give the summary first of the process, what is the intial plan for this objective, what files
+        need to be modified, created, or deleted (risky) and wait for my "Go" command. 
+
+Instructions that are converted to JSON for better readabilty:
+
+    {
+    "project_overview": {
+        "main_objective": "Finance, Studio Photographer Overtime Requests",
+        "context": "This builds upon the previously completed leave request process for multi-roles."
+    },
+    "objective_1_overtime_requests_setup": {
+        "description": "Implement overtime request functionality for Finance and Studio Photographer roles.",
+        "instructions": [
+        {
+            "step": 1,
+            "action": "Both Finance and Studio Photographer roles can request overtime."
+        },
+        {
+            "step": 2,
+            "action": "Create a database table using artisan migration named 'tbl_overtime_requests'.",
+            "table_specifications": {
+            "table_name": "tbl_overtime_requests",
+            "primary_key": "id",
+            "constraints": "Must have proper constraints. Reference the file 'DB-SCHEMA.SQL' for the whole database schema."
+            }
+        },
+        {
+            "step": 3,
+            "action": "Modify the sidebar for Finance and Studio Photographer roles to include the following structure:",
+            "sidebar_structure": {
+            "Request": {
+                "children": [
+                "Request Overtime",
+                "View Requested Overtime"
+                ]
+            }
+            },
+            "child_descriptions": {
+            "Request Overtime": "Request Form",
+            "View Requested Overtime": "View Own Request"
+            }
+        },
+        {
+            "step": 4,
+            "action": "Modify the sidebar for HR role to include the following structure:",
+            "sidebar_structure": {
+            "Request": {
+                "children": [
+                "Request Overtime",
+                "View Requested Overtime",
+                "Employees Overtime Requests"
+                ]
+            }
+            },
+            "child_descriptions": {
+            "Request Overtime": "Request Form",
+            "View Requested Overtime": "View Own Request",
+            "Employees Overtime Requests": "View all employees requested overtime on that studio"
+            }
+        },
+        {
+            "step": 5,
+            "action": "Note on HR overtime requests: The HR overtime request will be approved on the Studio Owner side.",
+            "approval_flow": "HR overtime requests require approval from Studio Owner (same process as leave requests where HR approves others)."
+        }
+        ]
+    },
+    "important_note": {
+        "summary_requirement": "Provide a summary of the initial plan for this objective, including what files need to be modified, created, or deleted (risky). Await the 'Go' command before proceeding with implementation."
+    }
+    }

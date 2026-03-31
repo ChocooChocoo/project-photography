@@ -364,6 +364,30 @@ class UserModel extends Authenticatable
     {
         return $this->hasMany(LeaveRequestModel::class, 'rejected_by');
     }
+
+    /**
+     * Get the overtime requests created by the user.
+     */
+    public function overtimeRequests()
+    {
+        return $this->hasMany(OvertimeRequestModel::class, 'user_id');
+    }
+
+    /**
+     * Get the overtime requests approved by the user.
+     */
+    public function approvedOvertimeRequests()
+    {
+        return $this->hasMany(OvertimeRequestModel::class, 'approved_by');
+    }
+
+    /**
+     * Get the overtime requests rejected by the user.
+     */
+    public function rejectedOvertimeRequests()
+    {
+        return $this->hasMany(OvertimeRequestModel::class, 'rejected_by');
+    }
     
     /**
      * Get the roles assigned to this user.
