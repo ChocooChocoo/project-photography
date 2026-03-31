@@ -5,36 +5,51 @@
     <div class="content-page">
         <div class="container-fluid">
             <div class="row mt-3">
-                <div class="col-md-6 col-xl-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <span class="text-muted small d-block mb-2">Pending Requests</span>
-                            <h3 class="mb-0">{{ $overtimeRequestSummary['pending'] }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <span class="text-muted small d-block mb-2">Approved Requests</span>
-                            <h3 class="mb-0">{{ $overtimeRequestSummary['approved'] }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <span class="text-muted small d-block mb-2">Rejected Requests</span>
-                            <h3 class="mb-0">{{ $overtimeRequestSummary['rejected'] }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <span class="text-muted small d-block mb-2">Cancelled Requests</span>
-                            <h3 class="mb-0">{{ $overtimeRequestSummary['cancelled'] }}</h3>
-                        </div>
+                @php
+                    $totalOvertimeRequests = max(array_sum($overtimeRequestSummary), 1);
+                    $overtimeSummaryCards = [
+                        ['count' => $overtimeRequestSummary['pending'], 'label' => 'Pending Requests', 'meta' => 'WAITING OWNER', 'color' => 'warning', 'icon' => 'ti ti-clock-hour-4'],
+                        ['count' => $overtimeRequestSummary['approved'], 'label' => 'Approved Requests', 'meta' => 'DECISIONS MADE', 'color' => 'success', 'icon' => 'ti ti-checklist'],
+                        ['count' => $overtimeRequestSummary['rejected'], 'label' => 'Rejected Requests', 'meta' => 'DECLINED', 'color' => 'danger', 'icon' => 'ti ti-xbox-x'],
+                        ['count' => $overtimeRequestSummary['cancelled'], 'label' => 'Cancelled Requests', 'meta' => 'WITHDRAWN', 'color' => 'secondary', 'icon' => 'ti ti-ban'],
+                    ];
+                @endphp
+
+                <div class="col-12">
+                    <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1 g-3 align-items-center">
+                        @foreach ($overtimeSummaryCards as $overtimeSummaryCard)
+                            @php
+                                $percentage = $overtimeSummaryCard['count'] > 0
+                                    ? round(($overtimeSummaryCard['count'] / $totalOvertimeRequests) * 100)
+                                    : 0;
+                            @endphp
+                            <div class="col">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                <span class="avatar-title bg-{{ $overtimeSummaryCard['color'] }}-subtle text-{{ $overtimeSummaryCard['color'] }} rounded fs-24">
+                                                    <i class="{{ $overtimeSummaryCard['icon'] }}"></i>
+                                                </span>
+                                            </div>
+                                            <div class="text-end">
+                                                <h4 class="mb-0">{{ $overtimeSummaryCard['count'] }}</h4>
+                                                <p class="mb-0 text-muted">{{ $overtimeSummaryCard['label'] }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="text-muted fs-xs fw-semibold">{{ $overtimeSummaryCard['meta'] }}</span>
+                                                <span class="text-muted">{{ $percentage }}%</span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-{{ $overtimeSummaryCard['color'] }}" style="width: {{ $percentage }}%;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 

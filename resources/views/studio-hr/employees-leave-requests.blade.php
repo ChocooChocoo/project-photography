@@ -6,10 +6,53 @@
     <div class="content-page">
         <div class="container-fluid">
             <div class="row mt-3">
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Pending Requests</span><h3 class="mb-0">{{ $leaveRequestSummary['pending'] }}</h3></div></div></div>
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Approved Requests</span><h3 class="mb-0">{{ $leaveRequestSummary['approved'] }}</h3></div></div></div>
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Rejected Requests</span><h3 class="mb-0">{{ $leaveRequestSummary['rejected'] }}</h3></div></div></div>
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Cancelled Requests</span><h3 class="mb-0">{{ $leaveRequestSummary['cancelled'] }}</h3></div></div></div>
+                @php
+                    $totalLeaveRequests = max(array_sum($leaveRequestSummary), 1);
+                    $leaveSummaryCards = [
+                        ['count' => $leaveRequestSummary['pending'], 'label' => 'Pending Requests', 'meta' => 'WAITING HR', 'color' => 'warning', 'icon' => 'ti ti-clock-hour-4'],
+                        ['count' => $leaveRequestSummary['approved'], 'label' => 'Approved Requests', 'meta' => 'PROCESSED', 'color' => 'success', 'icon' => 'ti ti-checklist'],
+                        ['count' => $leaveRequestSummary['rejected'], 'label' => 'Rejected Requests', 'meta' => 'NEEDS REVIEW', 'color' => 'danger', 'icon' => 'ti ti-xbox-x'],
+                        ['count' => $leaveRequestSummary['cancelled'], 'label' => 'Cancelled Requests', 'meta' => 'WITHDRAWN', 'color' => 'secondary', 'icon' => 'ti ti-ban'],
+                    ];
+                @endphp
+
+                <div class="col-12">
+                    <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1 g-3 align-items-center">
+                        @foreach ($leaveSummaryCards as $leaveSummaryCard)
+                            @php
+                                $percentage = $leaveSummaryCard['count'] > 0
+                                    ? round(($leaveSummaryCard['count'] / $totalLeaveRequests) * 100)
+                                    : 0;
+                            @endphp
+                            <div class="col">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                <span class="avatar-title bg-{{ $leaveSummaryCard['color'] }}-subtle text-{{ $leaveSummaryCard['color'] }} rounded fs-24">
+                                                    <i class="{{ $leaveSummaryCard['icon'] }}"></i>
+                                                </span>
+                                            </div>
+                                            <div class="text-end">
+                                                <h4 class="mb-0">{{ $leaveSummaryCard['count'] }}</h4>
+                                                <p class="mb-0 text-muted">{{ $leaveSummaryCard['label'] }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="text-muted fs-xs fw-semibold">{{ $leaveSummaryCard['meta'] }}</span>
+                                                <span class="text-muted">{{ $percentage }}%</span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-{{ $leaveSummaryCard['color'] }}" style="width: {{ $percentage }}%;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
 
                 <div class="col-12">
                     <div class="card">

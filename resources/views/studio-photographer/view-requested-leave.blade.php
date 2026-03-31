@@ -18,12 +18,133 @@
                     </div>
                 </div>
 
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Pending Requests</span><h3 class="mb-0">{{ $leaveRequestSummary['pending'] }}</h3></div></div></div>
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Approved Requests</span><h3 class="mb-0">{{ $leaveRequestSummary['approved'] }}</h3></div></div></div>
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Rejected Requests</span><h3 class="mb-0">{{ $leaveRequestSummary['rejected'] }}</h3></div></div></div>
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Cancelled Requests</span><h3 class="mb-0">{{ $leaveRequestSummary['cancelled'] }}</h3></div></div></div>
+                @php
+                    $totalLeaveRequests = max(array_sum($leaveRequestSummary), 1);
+                    $leaveSummaryCards = [
+                        ['count' => $leaveRequestSummary['pending'], 'label' => 'Pending Requests', 'meta' => 'WAITING REVIEW', 'color' => 'warning', 'icon' => 'ti ti-clock-hour-4'],
+                        ['count' => $leaveRequestSummary['approved'], 'label' => 'Approved Requests', 'meta' => 'APPROVAL RATE', 'color' => 'success', 'icon' => 'ti ti-checklist'],
+                        ['count' => $leaveRequestSummary['rejected'], 'label' => 'Rejected Requests', 'meta' => 'NEEDS ACTION', 'color' => 'danger', 'icon' => 'ti ti-xbox-x'],
+                        ['count' => $leaveRequestSummary['cancelled'], 'label' => 'Cancelled Requests', 'meta' => 'WITHDRAWN', 'color' => 'secondary', 'icon' => 'ti ti-ban'],
+                    ];
+                @endphp
 
                 <div class="col-12">
+                    <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1 g-3 align-items-center">
+                        @foreach ($leaveSummaryCards as $leaveSummaryCard)
+                            @php
+                                $percentage = $leaveSummaryCard['count'] > 0
+                                    ? round(($leaveSummaryCard['count'] / $totalLeaveRequests) * 100)
+                                    : 0;
+                            @endphp
+                            <div class="col">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                <span class="avatar-title bg-{{ $leaveSummaryCard['color'] }}-subtle text-{{ $leaveSummaryCard['color'] }} rounded fs-24">
+                                                    <i class="{{ $leaveSummaryCard['icon'] }}"></i>
+                                                </span>
+                                            </div>
+                                            <div class="text-end">
+                                                <h4 class="mb-0">{{ $leaveSummaryCard['count'] }}</h4>
+                                                <p class="mb-0 text-muted">{{ $leaveSummaryCard['label'] }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="text-muted fs-xs fw-semibold">{{ $leaveSummaryCard['meta'] }}</span>
+                                                <span class="text-muted">{{ $percentage }}%</span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-{{ $leaveSummaryCard['color'] }}" style="width: {{ $percentage }}%;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                @php
+                    $timelineEvents = collect();
+                    $defaultTimelinePhoto = asset('assets/images/users/user-3.jpg');
+
+                    foreach ($leaveRequests->take(5) as $timelineRequest) {
+                        $timelineEvents->push([
+                            'title' => 'Leave Request Submitted',
+                            'description' => $timelineRequest->request_reference . ' for ' . $timelineRequest->leave_type_label .
+                                ' covering ' . ($timelineRequest->start_date?->format('M d, Y') ?? 'N/A') . ' to ' .
+                                ($timelineRequest->end_date?->format('M d, Y') ?? 'N/A') . '.',
+                            'actor' => 'By You',
+                            'photo' => auth()->user()->profile_photo_url ?? $defaultTimelinePhoto,
+                            'event_at' => $timelineRequest->created_at,
+                        ]);
+
+                        if ($timelineRequest->approved_at) {
+                            $timelineEvents->push([
+                                'title' => 'Leave Request Approved',
+                                'description' => $timelineRequest->request_reference . ' was approved for ' . $timelineRequest->leave_type_label . '.',
+                                'actor' => 'By ' . ($timelineRequest->approver->full_name ?? 'HR'),
+                                'photo' => $timelineRequest->approver->profile_photo_url ?? $defaultTimelinePhoto,
+                                'event_at' => $timelineRequest->approved_at,
+                            ]);
+                        }
+
+                        if ($timelineRequest->rejected_at) {
+                            $timelineEvents->push([
+                                'title' => 'Leave Request Rejected',
+                                'description' => $timelineRequest->request_reference . ' was rejected. Reason: ' . ($timelineRequest->rejection_reason ?? 'No reason provided.'),
+                                'actor' => 'By ' . ($timelineRequest->rejector->full_name ?? 'HR'),
+                                'photo' => $timelineRequest->rejector->profile_photo_url ?? $defaultTimelinePhoto,
+                                'event_at' => $timelineRequest->rejected_at,
+                            ]);
+                        }
+
+                        if ($timelineRequest->cancelled_at) {
+                            $timelineEvents->push([
+                                'title' => 'Leave Request Cancelled',
+                                'description' => $timelineRequest->request_reference . ' was cancelled before final processing.',
+                                'actor' => 'By You',
+                                'photo' => auth()->user()->profile_photo_url ?? $defaultTimelinePhoto,
+                                'event_at' => $timelineRequest->cancelled_at,
+                            ]);
+                        }
+                    }
+
+                    $timelineEvents = $timelineEvents->sortByDesc('event_at')->take(5)->values();
+                @endphp
+
+                <div class="col-12 col-xxl-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h4 class="card-title mb-0">Leave Request Timeline</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline timeline-users">
+                                @forelse ($timelineEvents as $timelineEvent)
+                                    <div class="timeline-item d-flex align-items-stretch">
+                                        <div class="timeline-dot">
+                                            <img src="{{ $timelineEvent['photo'] }}" alt="timeline-user" class="img-fluid rounded-circle">
+                                        </div>
+                                        <div class="timeline-content ps-3 {{ $loop->last ? '' : 'pb-4' }}">
+                                            <h5 class="mb-1">{{ $timelineEvent['title'] }}</h5>
+                                            <p class="mb-1 text-muted">{{ $timelineEvent['description'] }}</p>
+                                            <span class="text-primary fw-semibold">{{ $timelineEvent['actor'] }}</span>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="text-center py-4">
+                                        <i class="ti ti-clock-off fs-1 text-muted"></i>
+                                        <p class="mt-2 mb-0 text-muted">No leave activity yet.</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-xxl-8">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <div>

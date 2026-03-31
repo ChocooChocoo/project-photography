@@ -17,12 +17,134 @@
                     </div>
                 </div>
 
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Pending Requests</span><h3 class="mb-0">{{ $overtimeRequestSummary['pending'] }}</h3></div></div></div>
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Approved Requests</span><h3 class="mb-0">{{ $overtimeRequestSummary['approved'] }}</h3></div></div></div>
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Rejected Requests</span><h3 class="mb-0">{{ $overtimeRequestSummary['rejected'] }}</h3></div></div></div>
-                <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><span class="text-muted small d-block mb-2">Cancelled Requests</span><h3 class="mb-0">{{ $overtimeRequestSummary['cancelled'] }}</h3></div></div></div>
+                @php
+                    $totalOvertimeRequests = max(array_sum($overtimeRequestSummary), 1);
+                    $overtimeSummaryCards = [
+                        ['count' => $overtimeRequestSummary['pending'], 'label' => 'Pending Requests', 'meta' => 'WAITING OWNER', 'color' => 'warning', 'icon' => 'ti ti-clock-hour-4'],
+                        ['count' => $overtimeRequestSummary['approved'], 'label' => 'Approved Requests', 'meta' => 'APPROVAL RATE', 'color' => 'success', 'icon' => 'ti ti-checklist'],
+                        ['count' => $overtimeRequestSummary['rejected'], 'label' => 'Rejected Requests', 'meta' => 'NEEDS ACTION', 'color' => 'danger', 'icon' => 'ti ti-xbox-x'],
+                        ['count' => $overtimeRequestSummary['cancelled'], 'label' => 'Cancelled Requests', 'meta' => 'WITHDRAWN', 'color' => 'secondary', 'icon' => 'ti ti-ban'],
+                    ];
+                @endphp
 
                 <div class="col-12">
+                    <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1 g-3 align-items-center">
+                        @foreach ($overtimeSummaryCards as $overtimeSummaryCard)
+                            @php
+                                $percentage = $overtimeSummaryCard['count'] > 0
+                                    ? round(($overtimeSummaryCard['count'] / $totalOvertimeRequests) * 100)
+                                    : 0;
+                            @endphp
+                            <div class="col">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="avatar avatar-lg flex-shrink-0">
+                                                <span class="avatar-title bg-{{ $overtimeSummaryCard['color'] }}-subtle text-{{ $overtimeSummaryCard['color'] }} rounded fs-24">
+                                                    <i class="{{ $overtimeSummaryCard['icon'] }}"></i>
+                                                </span>
+                                            </div>
+                                            <div class="text-end">
+                                                <h4 class="mb-0">{{ $overtimeSummaryCard['count'] }}</h4>
+                                                <p class="mb-0 text-muted">{{ $overtimeSummaryCard['label'] }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="text-muted fs-xs fw-semibold">{{ $overtimeSummaryCard['meta'] }}</span>
+                                                <span class="text-muted">{{ $percentage }}%</span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-{{ $overtimeSummaryCard['color'] }}" style="width: {{ $percentage }}%;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                @php
+                    $timelineEvents = collect();
+                    $defaultTimelinePhoto = asset('assets/images/users/user-3.jpg');
+
+                    foreach ($overtimeRequests->take(5) as $timelineRequest) {
+                        $timelineEvents->push([
+                            'title' => 'Overtime Request Submitted',
+                            'description' => $timelineRequest->request_reference . ' for ' .
+                                ($timelineRequest->overtime_date?->format('M d, Y') ?? 'N/A') . ' from ' .
+                                ($timelineRequest->start_time?->format('h:i A') ?? 'N/A') . ' to ' .
+                                ($timelineRequest->end_time?->format('h:i A') ?? 'N/A') . '.',
+                            'actor' => 'By You',
+                            'photo' => auth()->user()->profile_photo_url ?? $defaultTimelinePhoto,
+                            'event_at' => $timelineRequest->created_at,
+                        ]);
+
+                        if ($timelineRequest->approved_at) {
+                            $timelineEvents->push([
+                                'title' => 'Overtime Request Approved',
+                                'description' => $timelineRequest->request_reference . ' was approved for ' . ($timelineRequest->overtime_date?->format('M d, Y') ?? 'N/A') . '.',
+                                'actor' => 'By ' . ($timelineRequest->approver->full_name ?? 'Studio Owner'),
+                                'photo' => $timelineRequest->approver->profile_photo_url ?? $defaultTimelinePhoto,
+                                'event_at' => $timelineRequest->approved_at,
+                            ]);
+                        }
+
+                        if ($timelineRequest->rejected_at) {
+                            $timelineEvents->push([
+                                'title' => 'Overtime Request Rejected',
+                                'description' => $timelineRequest->request_reference . ' was rejected. Reason: ' . ($timelineRequest->rejection_reason ?? 'No reason provided.'),
+                                'actor' => 'By ' . ($timelineRequest->rejector->full_name ?? 'Studio Owner'),
+                                'photo' => $timelineRequest->rejector->profile_photo_url ?? $defaultTimelinePhoto,
+                                'event_at' => $timelineRequest->rejected_at,
+                            ]);
+                        }
+
+                        if ($timelineRequest->cancelled_at) {
+                            $timelineEvents->push([
+                                'title' => 'Overtime Request Cancelled',
+                                'description' => $timelineRequest->request_reference . ' was cancelled before final processing.',
+                                'actor' => 'By You',
+                                'photo' => auth()->user()->profile_photo_url ?? $defaultTimelinePhoto,
+                                'event_at' => $timelineRequest->cancelled_at,
+                            ]);
+                        }
+                    }
+
+                    $timelineEvents = $timelineEvents->sortByDesc('event_at')->take(5)->values();
+                @endphp
+
+                <div class="col-12 col-xxl-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h4 class="card-title mb-0">Overtime Request Timeline</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline timeline-users">
+                                @forelse ($timelineEvents as $timelineEvent)
+                                    <div class="timeline-item d-flex align-items-stretch">
+                                        <div class="timeline-dot">
+                                            <img src="{{ $timelineEvent['photo'] }}" alt="timeline-user" class="img-fluid rounded-circle">
+                                        </div>
+                                        <div class="timeline-content ps-3 {{ $loop->last ? '' : 'pb-4' }}">
+                                            <h5 class="mb-1">{{ $timelineEvent['title'] }}</h5>
+                                            <p class="mb-1 text-muted">{{ $timelineEvent['description'] }}</p>
+                                            <span class="text-primary fw-semibold">{{ $timelineEvent['actor'] }}</span>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="text-center py-4">
+                                        <i class="ti ti-clock-off fs-1 text-muted"></i>
+                                        <p class="mt-2 mb-0 text-muted">No overtime activity yet.</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-xxl-8">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <div>
