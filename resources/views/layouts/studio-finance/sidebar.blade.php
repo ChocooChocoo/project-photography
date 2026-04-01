@@ -76,6 +76,18 @@
                 </div>
             </li>
 
+            {{-- Attendance --}}
+            @php
+                $attendanceRoutes = Route::is('studio-finance.attendance.index');
+            @endphp
+
+            <li class="side-nav-item {{ $attendanceRoutes ? 'active' : '' }}">
+                <a href="{{ route('studio-finance.attendance.index') }}" class="side-nav-link {{ $attendanceRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-calendar-time"></i></span>
+                    <span class="menu-text" data-lang="attendance">Attendance</span>
+                </a>
+            </li>
+
             {{-- Payroll Approvals --}}
             @php
                 $isPayrollApprovalActive = Route::is('studio-finance.payroll-approvals.*');

@@ -268,6 +268,7 @@
                                         <option value="ON_TIME">On Time</option>
                                         <option value="LATE">Late</option>
                                         <option value="UNDERTIME">Undertime</option>
+                                        <option value="ON_LEAVE">On Leave</option>
                                     </select>
                                 </div>
                             </div>
@@ -290,7 +291,10 @@
                                 </thead>
                                 <tbody>
                                     @forelse($myAttendance as $record)
-                                        <tr>
+                                        @php
+                                            $isLeaveRecord = ($record->record_type ?? 'attendance') === 'leave';
+                                        @endphp
+                                        <tr data-record-type="{{ $record->record_type ?? 'attendance' }}">
                                             <td>{{ $record->attendance_date?->format('M d, Y') }}</td>
                                             <td>{{ $record->studio->studio_name ?? 'N/A' }}</td>
                                             <td>
@@ -298,42 +302,54 @@
                                                     {{ \Carbon\Carbon::parse($record->scheduled_start_time)->format('h:i A') }} -
                                                     {{ \Carbon\Carbon::parse($record->scheduled_end_time)->format('h:i A') }}
                                                 @else
-                                                    <span class="text-muted">No schedule</span>
+                                                    <span class="text-muted">{{ $isLeaveRecord ? 'Approved Leave' : 'No schedule' }}</span>
                                                 @endif
                                             </td>
                                             <td>{{ $record->formatted_check_in }}</td>
                                             <td>
                                                 @if($record->check_in_status)
-                                                    <span class="badge {{ $record->check_in_status_badge }}">{{ $record->check_in_status }}</span>
-                                                    @if($record->late_minutes > 0)
+                                                    <span class="badge {{ $isLeaveRecord ? 'badge-soft-info' : $record->check_in_status_badge }}">{{ $record->check_in_status }}</span>
+                                                    @if(!$isLeaveRecord && $record->late_minutes > 0)
                                                         <small class="d-block text-muted">{{ $record->late_display }}</small>
                                                     @endif
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
-                                            <td>{{ $record->formatted_check_out }}</td>
+                                            <td>{{ $record->display_check_out ?? $record->formatted_check_out }}</td>
                                             <td>
                                                 @if($record->check_out_status)
                                                     <span class="badge {{ $record->check_out_status_badge }}">{{ $record->check_out_status }}</span>
                                                     @if($record->undertime_minutes > 0)
                                                         <small class="d-block text-muted">{{ $record->undertime_display }}</small>
                                                     @endif
+                                                    @if(($record->is_overtime_applied ?? false) === true)
+                                                        <small class="d-block text-primary">OT Applied until {{ $record->counted_check_out }}</small>
+                                                    @endif
+                                                @elseif($isLeaveRecord)
+                                                    <span class="text-muted">Leave Day</span>
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($record->duration)
-                                                    <span class="badge badge-soft-info">{{ $record->duration }}</span>
+                                                @if($record->display_duration ?? $record->duration)
+                                                    <span class="badge badge-soft-info">{{ $record->display_duration ?? $record->duration }}</span>
+                                                    @if(($record->is_overtime_applied ?? false) === true && ($record->actual_duration ?? null) !== ($record->display_duration ?? $record->duration))
+                                                        <small class="d-block text-muted">Actual: {{ $record->actual_duration }}</small>
+                                                    @endif
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <button class="btn btn-sm btn-light view-attendance-details-btn" data-attendance-id="{{ $record->id }}">
-                                                    <i class="ti ti-eye"></i>
-                                                </button>
+                                                @if(!$isLeaveRecord)
+                                                    <button class="btn btn-sm btn-light view-attendance-details-btn" data-attendance-id="{{ $record->id }}">
+                                                        <i class="ti ti-eye"></i>
+                                                    </button>
+                                                @else
+                                                    <span class="text-muted">View Only</span>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty
@@ -517,7 +533,12 @@
 
             if (!studioId) {
                 currentAttendanceId = null;
-                updateActionButtons(false, false, false);
+                updateActionButtons({
+                    has_schedule: false,
+                    is_checked_in: false,
+                    is_checked_out: false,
+                    blocked_by_leave: false
+                });
                 $('#todayStatusTitle').text('No studio selected');
                 $('#todayStatusText').text('Select one of your assigned studios to continue.');
                 return;
@@ -537,11 +558,16 @@
                     currentAttendanceId = response.today_attendance_id;
                     renderScheduleAlert(response);
                     renderTodayStatus(response);
-                    updateActionButtons(true, response.is_checked_in, response.is_checked_out);
+                    updateActionButtons(response);
                 },
                 error: function (xhr) {
                     currentAttendanceId = null;
-                    updateActionButtons(false, false, false);
+                    updateActionButtons({
+                        has_schedule: false,
+                        is_checked_in: false,
+                        is_checked_out: false,
+                        blocked_by_leave: false
+                    });
 
                     Swal.fire({
                         icon: 'error',
@@ -554,6 +580,34 @@
         }
 
         function renderScheduleAlert(response) {
+            if (response.blocked_by_leave && response.leave_summary) {
+                $('#scheduleAlert').html(`
+                    <h4 class="alert-heading">
+                        <i class="ti ti-beach me-2"></i>
+                        Approved Leave for Today
+                    </h4>
+                    <p class="mb-2"><strong>Leave Type:</strong> ${response.leave_summary.leave_type}</p>
+                    <p class="mb-2"><strong>Covered Dates:</strong> ${response.leave_summary.start_date} - ${response.leave_summary.end_date}</p>
+                    <hr class="border-warning border-opacity-25">
+                    <p class="mb-0 text-muted">${response.blocked_message}</p>
+                `);
+                return;
+            }
+
+            if (response.has_approved_overtime && response.overtime_summary) {
+                $('#scheduleAlert').html(`
+                    <h4 class="alert-heading">
+                        <i class="ti ti-clock-plus me-2"></i>
+                        Approved Overtime for Today
+                    </h4>
+                    <p class="mb-2"><strong>Approved Window:</strong> ${response.overtime_summary.time_range}</p>
+                    <p class="mb-2"><strong>Effective Check-Out Cutoff:</strong> ${response.overtime_summary.effective_checkout_cutoff || 'N/A'}</p>
+                    <hr class="border-warning border-opacity-25">
+                    <p class="mb-0 text-muted">Your attendance can count overtime only up to the approved cutoff.</p>
+                `);
+                return;
+            }
+
             const schedule = response.schedule || {};
             const operatingDays = Array.isArray(schedule.operating_days) && schedule.operating_days.length
                 ? schedule.operating_days.map(day => day.charAt(0).toUpperCase() + day.slice(1)).join(', ')
@@ -577,6 +631,20 @@
         }
 
         function renderTodayStatus(response) {
+            if (response.blocked_by_leave) {
+                $('#todayStatusTitle').text('On Leave');
+                $('#todayStatusText').text(response.blocked_message);
+                return;
+            }
+
+            if (response.has_approved_overtime && !response.is_checked_out) {
+                $('#todayStatusTitle').text(response.is_checked_in ? 'Overtime Active' : 'Overtime Ready');
+                $('#todayStatusText').text(`Approved overtime is active today up to ${response.overtime_summary?.effective_checkout_cutoff || 'the approved cutoff'}.`);
+                if (response.is_checked_in) {
+                    return;
+                }
+            }
+
             if (response.is_checked_in && response.is_checked_out) {
                 $('#todayStatusTitle').text('Completed');
                 $('#todayStatusText').text('You already checked in and checked out today.');
@@ -593,9 +661,10 @@
             $('#todayStatusText').text('You can submit your attendance for the selected studio.');
         }
 
-        function updateActionButtons(hasStudio, isCheckedIn, isCheckedOut) {
-            $('#openCheckInModalBtn').prop('disabled', !hasStudio || isCheckedIn);
-            $('#openCheckOutModalBtn').prop('disabled', !hasStudio || !isCheckedIn || isCheckedOut);
+        function updateActionButtons(response) {
+            const isBlocked = response.blocked_by_leave === true;
+            $('#openCheckInModalBtn').prop('disabled', isBlocked || !response.has_schedule || response.is_checked_in);
+            $('#openCheckOutModalBtn').prop('disabled', isBlocked || !response.is_checked_in || response.is_checked_out);
         }
 
         // ==================== FORM SUBMIT ====================
@@ -688,7 +757,7 @@
                                     <span class="text-muted small d-block mt-3 mb-1">Scheduled Time</span>
                                     <span class="fw-medium">${attendance.scheduled_start_time} - ${attendance.scheduled_end_time}</span>
                                     <span class="text-muted small d-block mt-3 mb-1">Total Hours</span>
-                                    <span class="fw-medium">${attendance.duration || '-'}</span>
+                                    <span class="fw-medium">${attendance.counted_duration || attendance.duration || '-'}</span>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -710,11 +779,32 @@
                                 <h6 class="mb-2">Check-Out Details</h6>
                                 ${checkOutImageHtml}
                                 <div class="mt-2">
-                                    <div><strong>Time:</strong> ${attendance.formatted_check_out || '-'}</div>
+                                    <div><strong>Actual Time:</strong> ${attendance.formatted_check_out || '-'}</div>
+                                    <div><strong>Counted Time:</strong> ${attendance.counted_check_out || attendance.formatted_check_out || '-'}</div>
                                     <div><strong>Status:</strong> ${attendance.check_out_status || '-'}</div>
                                     <div><strong>Undertime:</strong> ${attendance.undertime_display || '-'}</div>
                                 </div>
                             </div>
+                            ${attendance.has_approved_overtime ? `
+                                <div class="col-12">
+                                    <div class="p-3 bg-light rounded">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                            <div>
+                                                <span class="text-muted small d-block mb-1">Approved Overtime</span>
+                                                <span class="fw-medium">${attendance.overtime_summary?.time_range || 'N/A'}</span>
+                                            </div>
+                                            <div>
+                                                <span class="badge badge-soft-primary">${attendance.is_overtime_applied ? 'OT Applied' : 'OT Approved'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 text-muted">
+                                            Cutoff: ${attendance.overtime_summary?.effective_checkout_cutoff || 'N/A'} |
+                                            Counted Hours: ${attendance.counted_duration || attendance.duration || '-'}
+                                            ${attendance.actual_duration && attendance.actual_duration !== attendance.counted_duration ? `| Actual Hours: ${attendance.actual_duration}` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
                     `);
                 },
@@ -736,7 +826,7 @@
 
             $('#attendanceHistoryTable tbody tr').each(function () {
                 const rowText = $(this).text().toLowerCase();
-                const hasStatus = statusValue === '' || $(this).text().includes(statusValue);
+                const hasStatus = statusValue === '' || $(this).text().includes(statusValue) || (statusValue === 'ON_LEAVE' && $(this).data('record-type') === 'leave');
                 const hasSearch = searchValue === '' || rowText.includes(searchValue);
 
                 $(this).toggle(hasStatus && hasSearch);

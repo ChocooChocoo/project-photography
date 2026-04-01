@@ -4,6 +4,8 @@ namespace App\Http\Controllers\StudioHR;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StudioHR\GeneratePayrollRequest;
+use App\Models\LeaveRequestModel;
+use App\Models\OvertimeRequestModel;
 use App\Models\StudioHR\EmployeeAttendanceModel;
 use App\Models\StudioHR\GeneratedPayrollModel;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
@@ -149,9 +151,14 @@ class GeneratePayrollController extends Controller
                         'attendance_preview' => [
                             'days_present' => $attendanceSummary['attendance_days_present'],
                             'days_absent' => $attendanceSummary['attendance_days_absent'],
+                            'approved_leave_days' => $attendanceSummary['approved_leave_days'],
+                            'payable_days' => $attendanceSummary['payable_days'],
                             'late_minutes' => $attendanceSummary['attendance_minutes_late'],
                             'undertime_minutes' => $attendanceSummary['attendance_minutes_undertime'],
                             'worked_hours' => $attendanceSummary['worked_hours'],
+                            'approved_overtime_hours' => $attendanceSummary['approved_overtime_hours'],
+                            'regular_attendance_amount' => round((float) $attendanceSummary['regular_attendance_amount'], 2),
+                            'overtime_amount' => round((float) $attendanceSummary['overtime_amount'], 2),
                             'attendance_amount' => round((float) $attendanceSummary['attendance_amount'], 2),
                         ],
                         'booking_preview' => [
@@ -330,6 +337,7 @@ class GeneratePayrollController extends Controller
             $generatedPayroll = GeneratedPayrollModel::with(['employee', 'studio', 'generator', 'payrollSetting', 'reviewer'])
                 ->whereIn('studio_id', $assignedStudioIds)
                 ->findOrFail($id);
+            $attendanceSummary = $generatedPayroll->computation_summary['attendance'] ?? [];
 
             return response()->json([
                 'status' => 'success',
@@ -355,8 +363,14 @@ class GeneratePayrollController extends Controller
                     'period_end' => $generatedPayroll->period_end?->format('F d, Y'),
                     'attendance_days_present' => $generatedPayroll->attendance_days_present,
                     'attendance_days_absent' => $generatedPayroll->attendance_days_absent,
+                    'approved_leave_days' => (int) ($attendanceSummary['approved_leave_days'] ?? 0),
+                    'payable_days' => (int) ($attendanceSummary['payable_days'] ?? $generatedPayroll->attendance_days_present),
                     'attendance_minutes_late' => $generatedPayroll->attendance_minutes_late,
                     'attendance_minutes_undertime' => $generatedPayroll->attendance_minutes_undertime,
+                    'worked_hours' => number_format((float) ($attendanceSummary['worked_hours'] ?? 0), 2),
+                    'approved_overtime_hours' => number_format((float) ($attendanceSummary['approved_overtime_hours'] ?? 0), 2),
+                    'regular_attendance_amount' => number_format((float) ($attendanceSummary['regular_attendance_amount'] ?? $generatedPayroll->attendance_amount), 2),
+                    'overtime_amount' => number_format((float) ($attendanceSummary['overtime_amount'] ?? 0), 2),
                     'booking_count' => $generatedPayroll->booking_count,
                     'attendance_amount' => number_format((float) $generatedPayroll->attendance_amount, 2),
                     'booking_amount' => number_format((float) $generatedPayroll->booking_amount, 2),
@@ -413,10 +427,7 @@ class GeneratePayrollController extends Controller
                 'completed_booking_total' => 0,
             ];
 
-        $grossAmount = round(
-            (float) $attendanceMetrics['attendance_amount'] + (float) $bookingMetrics['booking_amount'],
-            2
-        );
+        $grossAmount = round((float) $attendanceMetrics['attendance_amount'] + (float) $bookingMetrics['booking_amount'], 2);
 
         $deductionBreakdown = $this->getDeductionBreakdown(
             $payrollSetting,
@@ -468,31 +479,57 @@ class GeneratePayrollController extends Controller
      */
     private function getAttendanceMetrics(EmployeePayrollModel $payrollSetting, Carbon $periodStart, Carbon $periodEnd): array
     {
+        $schedule = EmployeeScheduleModel::query()
+            ->where('user_id', $payrollSetting->user_id)
+            ->where('studio_id', $payrollSetting->studio_id)
+            ->where('is_active', true)
+            ->first();
+
         $attendanceRecords = EmployeeAttendanceModel::query()
             ->where('user_id', $payrollSetting->user_id)
             ->where('studio_id', $payrollSetting->studio_id)
             ->whereBetween('attendance_date', [$periodStart->toDateString(), $periodEnd->toDateString()])
             ->get();
 
-        $daysPresent = $attendanceRecords
+        $presentDates = $attendanceRecords
             ->filter(fn (EmployeeAttendanceModel $attendance) => !is_null($attendance->check_in_time))
             ->pluck('attendance_date')
             ->map(fn ($date) => Carbon::parse($date)->toDateString())
             ->unique()
-            ->count();
-
+            ->values();
+        $daysPresent = $presentDates->count();
+        $approvedLeaveDates = $schedule
+            ? $this->getApprovedLeaveDatesWithinPeriod($payrollSetting, $schedule, $periodStart, $periodEnd)
+            : collect();
+        $workBreakdown = $this->getAttendanceWorkBreakdown($payrollSetting, $attendanceRecords, $approvedLeaveDates);
+        $approvedOvertimeHours = $workBreakdown['approved_overtime_hours'];
+        $workedHours = $workBreakdown['regular_worked_hours'];
+        $paidLeaveDays = $approvedLeaveDates->count();
+        $payableDays = $daysPresent + $paidLeaveDays;
         $lateMinutes = (int) $attendanceRecords->sum('late_minutes');
         $undertimeMinutes = (int) $attendanceRecords->sum('undertime_minutes');
-        $workedHours = round((float) $attendanceRecords->sum('worked_hours_decimal'), 2);
-        $daysAbsent = $this->getAbsentDaysCount($payrollSetting, $periodStart, $periodEnd, $daysPresent);
-        $attendanceAmount = $this->getAttendanceAmount($payrollSetting, $daysPresent, $workedHours);
+        $daysAbsent = $this->getAbsentDaysCount($payrollSetting, $periodStart, $periodEnd, $presentDates, $approvedLeaveDates);
+        $regularAttendanceAmount = $this->getRegularAttendanceAmount(
+            $payrollSetting,
+            $schedule,
+            $payableDays,
+            $paidLeaveDays,
+            $workedHours
+        );
+        $overtimeAmount = round($approvedOvertimeHours * $payrollSetting->calculateHourlyRate(), 2);
+        $attendanceAmount = round($regularAttendanceAmount + $overtimeAmount, 2);
 
         return [
             'attendance_days_present' => $daysPresent,
             'attendance_days_absent' => $daysAbsent,
+            'approved_leave_days' => $paidLeaveDays,
+            'payable_days' => $payableDays,
             'attendance_minutes_late' => $lateMinutes,
             'attendance_minutes_undertime' => $undertimeMinutes,
             'worked_hours' => $workedHours,
+            'approved_overtime_hours' => round($approvedOvertimeHours, 2),
+            'regular_attendance_amount' => round($regularAttendanceAmount, 2),
+            'overtime_amount' => round($overtimeAmount, 2),
             'attendance_amount' => $attendanceAmount,
         ];
     }
@@ -601,7 +638,8 @@ class GeneratePayrollController extends Controller
         EmployeePayrollModel $payrollSetting,
         Carbon $periodStart,
         Carbon $periodEnd,
-        int $daysPresent
+        $presentDates,
+        $approvedLeaveDates = null
     ): int {
         $schedule = EmployeeScheduleModel::query()
             ->where('user_id', $payrollSetting->user_id)
@@ -613,6 +651,14 @@ class GeneratePayrollController extends Controller
             return 0;
         }
 
+        $approvedLeaveDates = collect($approvedLeaveDates ?? $this->getApprovedLeaveDatesWithinPeriod(
+            $payrollSetting,
+            $schedule,
+            $periodStart,
+            $periodEnd
+        ));
+        $presentDateValues = collect($presentDates)->unique()->values();
+        $coveredDates = $presentDateValues->merge($approvedLeaveDates)->unique();
         $workingDays = 0;
         $period = CarbonPeriod::create($periodStart->copy()->startOfDay(), $periodEnd->copy()->startOfDay());
 
@@ -622,7 +668,160 @@ class GeneratePayrollController extends Controller
             }
         }
 
-        return max($workingDays - $daysPresent, 0);
+        return max($workingDays - $coveredDates->count(), 0);
+    }
+
+    /**
+     * Get approved leave dates inside the payroll period that should not count as absences.
+     */
+    private function getApprovedLeaveDatesWithinPeriod(
+        EmployeePayrollModel $payrollSetting,
+        EmployeeScheduleModel $schedule,
+        Carbon $periodStart,
+        Carbon $periodEnd
+    ) {
+        $approvedLeaves = LeaveRequestModel::query()
+            ->where('user_id', $payrollSetting->user_id)
+            ->where('studio_id', $payrollSetting->studio_id)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $periodEnd->toDateString())
+            ->whereDate('end_date', '>=', $periodStart->toDateString())
+            ->get();
+
+        $leaveDates = collect();
+
+        foreach ($approvedLeaves as $leaveRequest) {
+            $rangeStart = Carbon::parse($leaveRequest->start_date)->greaterThan($periodStart)
+                ? Carbon::parse($leaveRequest->start_date)
+                : $periodStart->copy();
+            $rangeEnd = Carbon::parse($leaveRequest->end_date)->lessThan($periodEnd)
+                ? Carbon::parse($leaveRequest->end_date)
+                : $periodEnd->copy();
+
+            foreach (CarbonPeriod::create($rangeStart->startOfDay(), $rangeEnd->startOfDay()) as $leaveDate) {
+                if ($schedule->worksOnDay(strtolower($leaveDate->format('l')))) {
+                    $leaveDates->push($leaveDate->toDateString());
+                }
+            }
+        }
+
+        return $leaveDates->unique()->values();
+    }
+
+    /**
+     * Get regular worked hours for payroll after removing approved overtime from the base bucket.
+     */
+    private function getAttendanceWorkBreakdown(
+        EmployeePayrollModel $payrollSetting,
+        $attendanceRecords,
+        $approvedLeaveDates
+    ): array {
+        $approvedLeaveDateValues = collect($approvedLeaveDates)->map(fn ($date) => Carbon::parse($date)->toDateString())->unique();
+        $approvedOvertimeRequests = OvertimeRequestModel::query()
+            ->where('user_id', $payrollSetting->user_id)
+            ->where('studio_id', $payrollSetting->studio_id)
+            ->where('status', 'approved')
+            ->whereIn('overtime_date', $attendanceRecords->pluck('attendance_date')->map(
+                fn ($date) => Carbon::parse($date)->toDateString()
+            )->unique()->values())
+            ->get()
+            ->keyBy(fn (OvertimeRequestModel $overtimeRequest) => $overtimeRequest->overtime_date?->toDateString());
+
+        $overtimeMinutes = 0;
+        $regularMinutes = 0;
+
+        foreach ($attendanceRecords as $attendanceRecord) {
+            $attendanceDate = $attendanceRecord->attendance_date?->toDateString();
+
+            if (
+                !$attendanceDate ||
+                $approvedLeaveDateValues->contains($attendanceDate) ||
+                !$attendanceRecord->check_in_time ||
+                !$attendanceRecord->check_out_time
+            ) {
+                continue;
+            }
+
+            $countedCheckOut = $attendanceRecord->check_out_time->copy();
+            $overtimeForRecord = 0;
+            $approvedOvertime = $approvedOvertimeRequests->get($attendanceDate);
+
+            if ($approvedOvertime && !empty($attendanceRecord->scheduled_end_time)) {
+                $scheduledEnd = Carbon::parse($attendanceDate . ' ' . $attendanceRecord->scheduled_end_time, 'Asia/Manila');
+
+                if ($attendanceRecord->check_out_time->gt($scheduledEnd)) {
+                    $effectiveCutoff = $scheduledEnd->copy()->addMinutes((int) round(((float) $approvedOvertime->total_hours) * 60));
+                    $countedCheckOut = $attendanceRecord->check_out_time->gt($effectiveCutoff)
+                        ? $effectiveCutoff
+                        : $attendanceRecord->check_out_time->copy();
+                    $overtimeStart = $attendanceRecord->check_in_time->gt($scheduledEnd)
+                        ? $attendanceRecord->check_in_time->copy()
+                        : $scheduledEnd;
+
+                    if ($countedCheckOut->gt($overtimeStart)) {
+                        $overtimeForRecord = $overtimeStart->diffInMinutes($countedCheckOut);
+                    }
+                }
+            }
+
+            $countedMinutes = $attendanceRecord->check_in_time->diffInMinutes($countedCheckOut);
+            $regularMinutes += max($countedMinutes - $overtimeForRecord, 0);
+            $overtimeMinutes += $overtimeForRecord;
+        }
+
+        return [
+            'regular_worked_hours' => round($regularMinutes / 60, 2),
+            'approved_overtime_hours' => round($overtimeMinutes / 60, 2),
+        ];
+    }
+
+    /**
+     * Compute the regular attendance amount before overtime is added.
+     */
+    private function getRegularAttendanceAmount(
+        EmployeePayrollModel $payrollSetting,
+        ?EmployeeScheduleModel $schedule,
+        int $payableDays,
+        int $paidLeaveDays,
+        float $workedHours
+    ): float {
+        if ((float) ($payrollSetting->daily_rate ?? 0) > 0) {
+            return round($payableDays * (float) $payrollSetting->daily_rate, 2);
+        }
+
+        if ((float) ($payrollSetting->hourly_rate ?? 0) > 0) {
+            $paidLeaveHours = $paidLeaveDays * $this->getScheduledDailyHours($schedule);
+            return round(($workedHours + $paidLeaveHours) * (float) $payrollSetting->hourly_rate, 2);
+        }
+
+        if ((float) ($payrollSetting->monthly_salary ?? 0) > 0) {
+            return round($payableDays * $payrollSetting->calculateDailyRate(), 2);
+        }
+
+        return 0.00;
+    }
+
+    /**
+     * Get the scheduled hours of one workday.
+     */
+    private function getScheduledDailyHours(?EmployeeScheduleModel $schedule): float
+    {
+        if (!$schedule || !$schedule->start_time || !$schedule->end_time) {
+            return 0.00;
+        }
+
+        $startTime = $schedule->start_time instanceof Carbon
+            ? $schedule->start_time->copy()
+            : Carbon::parse($schedule->start_time, 'Asia/Manila');
+        $endTime = $schedule->end_time instanceof Carbon
+            ? $schedule->end_time->copy()
+            : Carbon::parse($schedule->end_time, 'Asia/Manila');
+
+        if ($endTime->lessThanOrEqualTo($startTime)) {
+            return 0.00;
+        }
+
+        return round($startTime->diffInMinutes($endTime) / 60, 2);
     }
 
     /**

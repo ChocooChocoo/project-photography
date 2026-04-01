@@ -547,6 +547,11 @@
 
             function getAttendancePreviewAmount(employee) {
                 const preview = employee.attendance_preview || {};
+
+                if (preview.attendance_amount !== undefined && preview.attendance_amount !== null) {
+                    return Number(preview.attendance_amount || 0);
+                }
+
                 const daysPresent = Number(preview.days_present || 0);
                 const workedHours = Number(preview.worked_hours || 0);
 
@@ -674,9 +679,14 @@
                             </td>
                             <td>
                                 <div><strong>Present:</strong> ${attendance.days_present ?? 0} day(s)</div>
+                                <div><strong>Paid Leave:</strong> ${attendance.approved_leave_days ?? 0} day(s)</div>
+                                <div><strong>Payable Days:</strong> ${attendance.payable_days ?? attendance.days_present ?? 0} day(s)</div>
                                 <div><strong>Absent:</strong> ${attendance.days_absent ?? 0} day(s)</div>
                                 <div><strong>Late:</strong> ${attendance.late_minutes ?? 0} minute(s)</div>
                                 <div><strong>Undertime:</strong> ${attendance.undertime_minutes ?? 0} minute(s)</div>
+                                <div><strong>Approved OT:</strong> ${attendance.approved_overtime_hours ?? 0} hour(s)</div>
+                                <div><strong>Regular Pay:</strong> PHP ${formatCurrency(attendance.regular_attendance_amount ?? 0)}</div>
+                                <div><strong>OT Pay:</strong> PHP ${formatCurrency(attendance.overtime_amount ?? 0)}</div>
                                 <div><strong>Preview:</strong> PHP ${formatCurrency(attendance.attendance_amount ?? getAttendancePreviewAmount(employee))}</div>
                             </td>
                             <td>
@@ -730,20 +740,35 @@
             function renderInvoiceLineItems(data) {
                 const lineItems = [
                     {
-                        label: 'Attendance Compensation',
-                        description: 'Computed from attendance records within the payroll period.',
-                        quantity: Number(data.attendance_days_present || 0),
-                        unitPrice: parseNumericAmount(data.attendance_amount),
-                        total: parseNumericAmount(data.attendance_amount)
+                        label: 'Regular Attendance Compensation',
+                        description: 'Computed from present workdays plus paid leave coverage within the payroll period.',
+                        quantity: Number(data.payable_days || data.attendance_days_present || 0),
+                        unitPrice: parseNumericAmount(data.regular_attendance_amount),
+                        total: parseNumericAmount(data.regular_attendance_amount),
+                        isDeduction: false
                     },
                     {
                         label: 'Booking Compensation',
                         description: 'Computed from completed booking records within the payroll period.',
                         quantity: Number(data.booking_count || 0),
                         unitPrice: parseNumericAmount(data.booking_amount),
-                        total: parseNumericAmount(data.booking_amount)
+                        total: parseNumericAmount(data.booking_amount),
+                        isDeduction: false
                     }
                 ];
+
+                if (parseNumericAmount(data.overtime_amount) > 0) {
+                    lineItems.splice(1, 0, {
+                        label: 'Approved Overtime Compensation',
+                        description: 'Computed from approved overtime hours capped by the attendance overtime cutoff.',
+                        quantity: Number(data.approved_overtime_hours || 0),
+                        unitPrice: Number(data.approved_overtime_hours || 0) > 0
+                            ? parseNumericAmount(data.overtime_amount) / Number(data.approved_overtime_hours || 1)
+                            : parseNumericAmount(data.overtime_amount),
+                        total: parseNumericAmount(data.overtime_amount),
+                        isDeduction: false
+                    });
+                }
 
                 renderDeductionBreakdown(data.deduction_breakdown).forEach(function ([key, value]) {
                     const numericValue = parseNumericAmount(value);
@@ -757,7 +782,8 @@
                         description: 'Payroll deduction applied during computation.',
                         quantity: 1,
                         unitPrice: numericValue,
-                        total: numericValue
+                        total: numericValue,
+                        isDeduction: true
                     });
                 });
 
@@ -770,8 +796,8 @@
                             </td>
                             <td class="text-start">${item.quantity}</td>
                             <td class="text-start">PHP ${formatCurrency(item.unitPrice)}</td>
-                            <td class="text-start ${index > 1 ? 'text-danger' : ''}">
-                                ${index > 1 ? '- ' : ''}PHP ${formatCurrency(item.total)}
+                            <td class="text-start ${item.isDeduction ? 'text-danger' : ''}">
+                                ${item.isDeduction ? '- ' : ''}PHP ${formatCurrency(item.total)}
                             </td>
                         </tr>
                     `;
@@ -798,6 +824,14 @@
                         <td class="text-start fw-medium">${data.attendance_days_present} day(s)</td>
                     </tr>
                     <tr>
+                        <td class="text-muted">Paid Leave</td>
+                        <td class="text-start fw-medium">${data.approved_leave_days} day(s)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Payable Days</td>
+                        <td class="text-start fw-medium">${data.payable_days} day(s)</td>
+                    </tr>
+                    <tr>
                         <td class="text-muted">Absent</td>
                         <td class="text-start fw-medium">${data.attendance_days_absent} day(s)</td>
                     </tr>
@@ -808,6 +842,14 @@
                     <tr>
                         <td class="text-muted">Undertime</td>
                         <td class="text-start fw-medium">${data.attendance_minutes_undertime} minute(s)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Regular Worked Hours</td>
+                        <td class="text-start fw-medium">${data.worked_hours} hour(s)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Approved Overtime</td>
+                        <td class="text-start fw-medium">${data.approved_overtime_hours} hour(s)</td>
                     </tr>
                 `);
                 $('#modalBookingCount').text(data.booking_count + ' booking(s)');

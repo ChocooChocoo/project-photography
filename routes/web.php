@@ -376,6 +376,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/overtime-requests/{id}/cancel',               [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'cancel'])->name('studio-finance.overtime-requests.cancel');
         Route::delete('/overtime-requests/{id}',                    [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'destroy'])->name('studio-finance.overtime-requests.destroy');
 
+        // Attendance
+        Route::get('/view/attendance',                              [\App\Http\Controllers\Finance\AttendanceController::class, 'index'])->name('studio-finance.attendance.index');
+        Route::get('/attendance/current-time',                      [\App\Http\Controllers\Finance\AttendanceController::class, 'getCurrentTime'])->name('studio-finance.attendance.current-time');
+        Route::get('/attendance/schedule',                          [\App\Http\Controllers\Finance\AttendanceController::class, 'getFinanceSchedule'])->name('studio-finance.attendance.schedule');
+        Route::post('/attendance/check-in',                         [\App\Http\Controllers\Finance\AttendanceController::class, 'checkIn'])->name('studio-finance.attendance.check-in');
+        Route::post('/attendance/check-out',                        [\App\Http\Controllers\Finance\AttendanceController::class, 'checkOut'])->name('studio-finance.attendance.check-out');
+        Route::get('/attendance/{id}/details',                      [\App\Http\Controllers\Finance\AttendanceController::class, 'getAttendanceDetails'])->name('studio-finance.attendance.details');
+
         // Payroll Approvals
         Route::get('/payroll-approvals',                            [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'index'])->name('studio-finance.payroll-approvals.index');
         Route::get('/payroll-approvals/{id}',                       [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'show'])->name('studio-finance.payroll-approvals.show');

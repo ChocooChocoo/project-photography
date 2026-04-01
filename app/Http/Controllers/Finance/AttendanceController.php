@@ -1,23 +1,23 @@
 <?php
 
-namespace App\Http\Controllers\StudioPhotographer;
+namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StudioPhotographer\PhotographerCheckInRequest;
-use App\Http\Requests\StudioPhotographer\PhotographerCheckOutRequest;
+use App\Http\Requests\Finance\CheckInRequest;
+use App\Http\Requests\Finance\CheckOutRequest;
 use App\Models\LeaveRequestModel;
 use App\Models\OvertimeRequestModel;
-use App\Models\StudioOwner\StudioPhotographersModel;
-use App\Models\StudioPhotographer\PhotographerAttendanceModel;
+use App\Models\StudioHR\EmployeeAttendanceModel;
+use App\Models\StudioOwner\EmployeeScheduleModel;
+use App\Models\StudioOwner\StudiosModel;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
-class PhotographerAttendanceController extends Controller
+class AttendanceController extends Controller
 {
     /**
      * Grace period for check-in in minutes.
@@ -25,7 +25,7 @@ class PhotographerAttendanceController extends Controller
     protected const GRACE_PERIOD_MINUTES = 15;
 
     /**
-     * Display the attendance page for the authenticated photographer.
+     * Display the finance attendance page.
      */
     public function index()
     {
@@ -34,18 +34,9 @@ class PhotographerAttendanceController extends Controller
         $monthStart = $today->copy()->startOfMonth()->toDateString();
         $monthEnd = $today->copy()->endOfMonth()->toDateString();
 
-        $assignedStudios = StudioPhotographersModel::with('studio')
-            ->where('photographer_id', $user->id)
-            ->where('status', 'active')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $attendanceBaseQuery = PhotographerAttendanceModel::forUser($user->id);
-
-        $myAttendance = $this->getPhotographerAttendanceHistory($user->id);
-
-        $defaultStudioId = optional($assignedStudios->first())->studio_id;
-        $scheduleInfo = $defaultStudioId ? $this->buildStudioScheduleInfo($defaultStudioId) : null;
+        $attendanceBaseQuery = EmployeeAttendanceModel::query()->where('user_id', $user->id);
+        $myAttendance = $this->getFinanceAttendanceHistory($user->id);
+        $scheduleInfo = $this->buildScheduleInfo($user->id);
         $attendanceStats = [
             'today' => [
                 'checked_in' => (clone $attendanceBaseQuery)
@@ -76,10 +67,8 @@ class PhotographerAttendanceController extends Controller
             ],
         ];
 
-        return view('studio-photographer.view-attendance', compact(
-            'assignedStudios',
+        return view('studio-finance.view-attendance', compact(
             'myAttendance',
-            'defaultStudioId',
             'scheduleInfo',
             'attendanceStats'
         ));
@@ -100,42 +89,32 @@ class PhotographerAttendanceController extends Controller
     }
 
     /**
-     * Get the selected studio schedule and today's attendance state.
+     * Get the finance schedule and today's attendance state.
      */
-    public function getPhotographerSchedule(Request $request)
+    public function getFinanceSchedule()
     {
         try {
             $user = Auth::user();
-            $studioId = (int) $request->input('studio_id');
             $now = Carbon::now('Asia/Manila');
             $todayDate = $now->toDateString();
-
-            $assignment = $this->getAssignedStudio($user->id, $studioId);
-
-            if (!$assignment || !$assignment->studio) {
-                return response()->json([
-                    'status' => 'error',
-                    'success' => false,
-                    'message' => 'No active assigned studio found for the selected studio.',
-                ], 422);
-            }
-
-            $schedule = $this->buildStudioSchedulePayload($assignment->studio);
-            $todayAttendance = PhotographerAttendanceModel::forUser($user->id)
-                ->forDate($todayDate)
-                ->first();
+            $schedule = $this->getTodaySchedule($user->id);
+            $studio = $this->getAssignedStudio($user->id);
             $approvedLeave = $this->getApprovedLeaveForDate($user->id, $todayDate);
-            $approvedOvertime = $approvedLeave ? null : $this->getApprovedOvertimeForDate($user->id, $todayDate, $assignment->studio_id);
-            $scheduledEnd = !empty($schedule['schedule']['end_time'])
-                ? Carbon::parse($todayDate . ' ' . $schedule['schedule']['end_time'], 'Asia/Manila')
+            $approvedOvertime = $approvedLeave ? null : $this->getApprovedOvertimeForDate($user->id, $todayDate, $studio?->id);
+            $todayAttendance = EmployeeAttendanceModel::query()
+                ->where('user_id', $user->id)
+                ->whereDate('attendance_date', $todayDate)
+                ->first();
+            $scheduledEnd = $schedule && !empty($schedule['end_time'])
+                ? Carbon::parse($todayDate . ' ' . $schedule['end_time'], 'Asia/Manila')
                 : null;
 
             return response()->json([
                 'status' => 'success',
                 'success' => true,
-                'has_schedule' => $schedule['has_schedule'],
-                'schedule' => $schedule['schedule'],
-                'studio_name' => $assignment->studio->studio_name,
+                'has_schedule' => !is_null($schedule),
+                'schedule' => $schedule,
+                'studio_name' => $studio?->studio_name,
                 'is_checked_in' => $todayAttendance && $todayAttendance->isCheckedIn(),
                 'is_checked_out' => $todayAttendance && $todayAttendance->isCheckedOut(),
                 'today_attendance_id' => $todayAttendance?->id,
@@ -157,7 +136,7 @@ class PhotographerAttendanceController extends Controller
                 'current_date' => $now->format('l, F d, Y'),
             ]);
         } catch (\Throwable $throwable) {
-            Log::error('Failed to get photographer schedule.', [
+            Log::error('Failed to get finance attendance schedule.', [
                 'user_id' => Auth::id(),
                 'message' => $throwable->getMessage(),
             ]);
@@ -165,19 +144,18 @@ class PhotographerAttendanceController extends Controller
             return response()->json([
                 'status' => 'error',
                 'success' => false,
-                'message' => 'Failed to load the selected studio schedule.',
+                'message' => 'Failed to load your attendance schedule.',
             ], 500);
         }
     }
 
     /**
-     * Store the photographer check-in record.
+     * Store the finance check-in record.
      */
-    public function checkIn(PhotographerCheckInRequest $request)
+    public function checkIn(CheckInRequest $request)
     {
         try {
             $user = Auth::user();
-            $studioId = (int) $request->input('studio_id');
             $now = Carbon::now('Asia/Manila');
             $today = $now->toDateString();
             $approvedLeave = $this->getApprovedLeaveForDate($user->id, $today);
@@ -193,38 +171,34 @@ class PhotographerAttendanceController extends Controller
                 ], 422);
             }
 
-            $assignment = $this->getAssignedStudio($user->id, $studioId);
-
-            if (!$assignment || !$assignment->studio) {
-                return response()->json([
-                    'status' => 'error',
-                    'success' => false,
-                    'message' => 'You are not assigned to the selected studio.',
-                ], 422);
-            }
-
-            $existingAttendance = PhotographerAttendanceModel::forUser($user->id)
-                ->forDate($today)
+            $existingAttendance = EmployeeAttendanceModel::query()
+                ->where('user_id', $user->id)
+                ->whereDate('attendance_date', $today)
                 ->first();
 
             if ($existingAttendance && $existingAttendance->isCheckedIn()) {
-                $studioName = $existingAttendance->studio->studio_name ?? 'another studio';
-
                 return response()->json([
                     'status' => 'error',
                     'success' => false,
-                    'message' => 'You have already checked in today for ' . $studioName . '.',
+                    'message' => 'You have already checked in today.',
                 ], 422);
             }
 
-            $schedulePayload = $this->buildStudioSchedulePayload($assignment->studio);
-            $schedule = $schedulePayload['schedule'];
-            $imagePath = $this->storeAttendanceImage($request->file('image'), 'check-in');
+            $studio = $this->getAssignedStudio($user->id);
+            if (!$studio) {
+                return response()->json([
+                    'status' => 'error',
+                    'success' => false,
+                    'message' => 'No studio associated with your account.',
+                ], 422);
+            }
 
+            $schedule = $this->getTodaySchedule($user->id);
+            $imagePath = $this->storeAttendanceImage($request->file('image'), 'check-in');
             $checkInStatus = 'ON_TIME';
             $lateMinutes = 0;
 
-            if (!empty($schedule['start_time'])) {
+            if ($schedule && !empty($schedule['start_time'])) {
                 $scheduledStart = Carbon::parse($today . ' ' . $schedule['start_time'], 'Asia/Manila');
                 $gracePeriodEnd = $scheduledStart->copy()->addMinutes(self::GRACE_PERIOD_MINUTES);
 
@@ -234,14 +208,14 @@ class PhotographerAttendanceController extends Controller
                 }
             }
 
-            $attendance = PhotographerAttendanceModel::updateOrCreate(
+            $attendance = EmployeeAttendanceModel::updateOrCreate(
                 [
                     'user_id' => $user->id,
                     'attendance_date' => $today,
                 ],
                 [
-                    'studio_id' => $assignment->studio_id,
-                    'schedule_id' => null,
+                    'studio_id' => $studio->id,
+                    'schedule_id' => $schedule['schedule_id'] ?? null,
                     'scheduled_start_time' => $schedule['start_time'] ?? null,
                     'scheduled_end_time' => $schedule['end_time'] ?? null,
                     'check_in_time' => $now,
@@ -263,7 +237,7 @@ class PhotographerAttendanceController extends Controller
                 'attendance' => $attendance,
             ]);
         } catch (\Throwable $throwable) {
-            Log::error('Photographer check-in failed.', [
+            Log::error('Finance check-in failed.', [
                 'user_id' => Auth::id(),
                 'message' => $throwable->getMessage(),
             ]);
@@ -277,9 +251,9 @@ class PhotographerAttendanceController extends Controller
     }
 
     /**
-     * Store the photographer check-out record.
+     * Store the finance check-out record.
      */
-    public function checkOut(PhotographerCheckOutRequest $request)
+    public function checkOut(CheckOutRequest $request)
     {
         try {
             $user = Auth::user();
@@ -297,7 +271,7 @@ class PhotographerAttendanceController extends Controller
                 ], 422);
             }
 
-            $attendance = PhotographerAttendanceModel::with('studio')
+            $attendance = EmployeeAttendanceModel::query()
                 ->where('id', $request->input('attendance_id'))
                 ->where('user_id', $user->id)
                 ->first();
@@ -370,7 +344,7 @@ class PhotographerAttendanceController extends Controller
                 'attendance' => $this->buildAttendanceDetailPayload($attendance->fresh('studio')),
             ]);
         } catch (\Throwable $throwable) {
-            Log::error('Photographer check-out failed.', [
+            Log::error('Finance check-out failed.', [
                 'user_id' => Auth::id(),
                 'message' => $throwable->getMessage(),
             ]);
@@ -384,13 +358,11 @@ class PhotographerAttendanceController extends Controller
     }
 
     /**
-     * Get attendance details for the authenticated photographer.
-     *
-     * @param int $id
+     * Get attendance details for the authenticated finance user.
      */
     public function getAttendanceDetails(int $id)
     {
-        $attendance = PhotographerAttendanceModel::with('studio')
+        $attendance = EmployeeAttendanceModel::with('studio')
             ->where('id', $id)
             ->where('user_id', Auth::id())
             ->first();
@@ -411,83 +383,76 @@ class PhotographerAttendanceController extends Controller
     }
 
     /**
-     * Build the displayable studio schedule information block.
-     *
-     * @param int $studioId
-     * @return array<string, mixed>|null
+     * Build finance schedule info.
      */
-    private function buildStudioScheduleInfo(int $studioId): ?array
+    private function buildScheduleInfo(int $userId): ?array
     {
-        $assignment = $this->getAssignedStudio(Auth::id(), $studioId);
+        $schedule = EmployeeScheduleModel::query()
+            ->where('user_id', $userId)
+            ->where('is_active', true)
+            ->first();
 
-        if (!$assignment || !$assignment->studio) {
+        if (!$schedule) {
             return null;
         }
 
-        $operatingDays = $assignment->studio->operating_days ?? [];
-        $operatingDays = is_array($operatingDays) ? $operatingDays : [];
-
         return [
-            'studio_name' => $assignment->studio->studio_name,
-            'operating_days' => $operatingDays,
-            'start_time' => $assignment->studio->start_time
-                ? Carbon::parse($assignment->studio->start_time)->format('h:i A')
-                : 'Not set',
-            'end_time' => $assignment->studio->end_time
-                ? Carbon::parse($assignment->studio->end_time)->format('h:i A')
-                : 'Not set',
+            'studio_name' => $schedule->studio->studio_name ?? 'Assigned Studio',
+            'operating_days' => $schedule->operating_days ?? [],
+            'start_time' => $schedule->start_time ? Carbon::parse($schedule->start_time)->format('h:i A') : 'Not set',
+            'end_time' => $schedule->end_time ? Carbon::parse($schedule->end_time)->format('h:i A') : 'Not set',
         ];
     }
 
     /**
-     * Get the active assignment for the authenticated photographer and studio.
-     *
-     * @param int $photographerId
-     * @param int|null $studioId
+     * Get the assigned studio of the finance user.
      */
-    private function getAssignedStudio(int $photographerId, ?int $studioId = null): ?StudioPhotographersModel
+    private function getAssignedStudio(int $userId): ?StudiosModel
     {
-        $query = StudioPhotographersModel::with('studio')
-            ->where('photographer_id', $photographerId)
-            ->where('status', 'active');
+        $schedule = EmployeeScheduleModel::query()
+            ->where('user_id', $userId)
+            ->where('is_active', true)
+            ->first();
 
-        if ($studioId) {
-            $query->where('studio_id', $studioId);
-        }
-
-        return $query->orderBy('created_at', 'desc')->first();
+        return $schedule ? StudiosModel::find($schedule->studio_id) : null;
     }
 
     /**
-     * Build the schedule payload based on the studio operating days and hours.
-     *
-     * @param mixed $studio
-     * @return array<string, mixed>
+     * Get today's active schedule for the finance user.
      */
-    private function buildStudioSchedulePayload($studio): array
+    private function getTodaySchedule(int $userId): ?array
     {
         $today = strtolower(Carbon::now('Asia/Manila')->format('l'));
-        $operatingDays = $studio->operating_days ?? [];
-        $operatingDays = is_array($operatingDays) ? $operatingDays : [];
-        $normalizedDays = array_map('strtolower', $operatingDays);
-        $hasSchedule = in_array($today, $normalizedDays, true);
+        $schedule = EmployeeScheduleModel::query()
+            ->where('user_id', $userId)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$schedule || !$schedule->worksOnDay($today)) {
+            return null;
+        }
+
+        $startTime = $schedule->start_time instanceof Carbon
+            ? $schedule->start_time->format('H:i:s')
+            : Carbon::parse($schedule->start_time)->format('H:i:s');
+        $endTime = $schedule->end_time instanceof Carbon
+            ? $schedule->end_time->format('H:i:s')
+            : Carbon::parse($schedule->end_time)->format('H:i:s');
 
         return [
-            'has_schedule' => $hasSchedule,
-            'schedule' => [
-                'start_time' => $studio->start_time ? Carbon::parse($studio->start_time)->format('H:i:s') : null,
-                'end_time' => $studio->end_time ? Carbon::parse($studio->end_time)->format('H:i:s') : null,
-                'operating_days' => $operatingDays,
-            ],
+            'schedule_id' => $schedule->id,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'operating_days' => $schedule->operating_days ?? [],
         ];
     }
 
     /**
-     * Get the approved leave covering the supplied date.
+     * Get an approved leave for the given date.
      */
     private function getApprovedLeaveForDate(int $userId, string $date): ?LeaveRequestModel
     {
-        return LeaveRequestModel::with('studio')
+        return LeaveRequestModel::with(['studio', 'approver', 'rejector'])
             ->where('user_id', $userId)
             ->where('status', 'approved')
             ->whereDate('start_date', '<=', $date)
@@ -537,7 +502,7 @@ class PhotographerAttendanceController extends Controller
     /**
      * Apply overtime-aware presentation fields to an attendance record.
      */
-    private function applyAttendancePresentation(PhotographerAttendanceModel $attendance): void
+    private function applyAttendancePresentation(EmployeeAttendanceModel $attendance): void
     {
         $attendance->display_duration = $attendance->duration;
         $attendance->actual_duration = $attendance->duration;
@@ -584,7 +549,7 @@ class PhotographerAttendanceController extends Controller
     /**
      * Build the attendance detail payload with overtime-aware fields.
      */
-    private function buildAttendanceDetailPayload(PhotographerAttendanceModel $attendance): array
+    private function buildAttendanceDetailPayload(EmployeeAttendanceModel $attendance): array
     {
         $this->applyAttendancePresentation($attendance);
 
@@ -631,16 +596,16 @@ class PhotographerAttendanceController extends Controller
     }
 
     /**
-     * Build leave-aware attendance history for the photographer page.
+     * Build finance attendance history with approved leave rows.
      */
-    private function getPhotographerAttendanceHistory(int $userId, int $perPage = 10): LengthAwarePaginator
+    private function getFinanceAttendanceHistory(int $userId, int $perPage = 10): LengthAwarePaginator
     {
-        $attendanceRecords = PhotographerAttendanceModel::with('studio')
-            ->forUser($userId)
+        $attendanceRecords = EmployeeAttendanceModel::with(['studio'])
+            ->where('user_id', $userId)
             ->orderBy('attendance_date', 'desc')
             ->orderBy('check_in_time', 'desc')
             ->get()
-            ->map(function (PhotographerAttendanceModel $attendance) {
+            ->map(function (EmployeeAttendanceModel $attendance) {
                 $attendance->record_type = 'attendance';
                 $this->applyAttendancePresentation($attendance);
 
@@ -658,7 +623,7 @@ class PhotographerAttendanceController extends Controller
         $leaveEntries = $this->buildApprovedLeaveHistoryEntries($userId, $attendanceDates);
         $mergedRecords = $attendanceRecords
             ->concat($leaveEntries)
-            ->sortByDesc(fn ($record) => Carbon::parse($record->attendance_date)->format('Y-m-d') . ' ' . ($record->sort_time ?? '00:00:00'))
+            ->sortByDesc(fn ($record) => Carbon::parse($record->attendance_date)->toDateString() . ' ' . ($record->sort_time ?? '00:00:00'))
             ->values();
 
         $currentPage = (int) request()->input('page', 1);
@@ -677,7 +642,7 @@ class PhotographerAttendanceController extends Controller
     }
 
     /**
-     * Build synthetic approved leave rows for the self-history table.
+     * Build synthetic approved leave history entries.
      */
     private function buildApprovedLeaveHistoryEntries(int $userId, array $attendanceDates): Collection
     {
@@ -690,10 +655,7 @@ class PhotographerAttendanceController extends Controller
         $leaveEntries = collect();
 
         foreach ($approvedLeaves as $leaveRequest) {
-            $period = CarbonPeriod::create(
-                Carbon::parse($leaveRequest->start_date)->startOfDay(),
-                Carbon::parse($leaveRequest->end_date)->startOfDay()
-            );
+            $period = Carbon::parse($leaveRequest->start_date)->daysUntil(Carbon::parse($leaveRequest->end_date)->addDay());
 
             foreach ($period as $leaveDate) {
                 $leaveDateString = $leaveDate->toDateString();
@@ -713,13 +675,11 @@ class PhotographerAttendanceController extends Controller
                     'formatted_check_out' => 'On Leave',
                     'check_in_status' => 'ON_LEAVE',
                     'check_out_status' => null,
-                    'check_in_status_badge' => 'badge-soft-info',
-                    'check_out_status_badge' => 'badge-soft-secondary',
                     'late_minutes' => 0,
                     'undertime_minutes' => 0,
                     'late_display' => '—',
                     'undertime_display' => '—',
-                    'duration' => $leaveRequest->leave_type_label,
+                    'duration' => 'Approved Leave',
                     'leave_type_label' => $leaveRequest->leave_type_label,
                     'notes' => $leaveRequest->reason,
                     'sort_time' => '23:59:59',
@@ -731,13 +691,10 @@ class PhotographerAttendanceController extends Controller
     }
 
     /**
-     * Store the uploaded attendance image.
-     *
-     * @param mixed $image
-     * @param string $type
+     * Store attendance image.
      */
     private function storeAttendanceImage($image, string $type): string
     {
-        return $image->store('photographer-attendance/' . $type . '/' . now()->format('Y/m/d'), 'public');
+        return $image->store('employee-attendance/' . $type . '/' . now()->format('Y/m/d'), 'public');
     }
 }

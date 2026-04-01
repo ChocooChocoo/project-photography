@@ -77,6 +77,7 @@ class PayrollApprovalController extends Controller
             $generatedPayroll = GeneratedPayrollModel::with(['employee', 'studio', 'generator', 'payrollSetting', 'reviewer'])
                 ->whereIn('studio_id', $assignedStudioIds)
                 ->findOrFail($id);
+            $attendanceSummary = $generatedPayroll->computation_summary['attendance'] ?? [];
 
             return response()->json([
                 'status' => 'success',
@@ -102,8 +103,14 @@ class PayrollApprovalController extends Controller
                     'period_end' => $generatedPayroll->period_end?->format('F d, Y'),
                     'attendance_days_present' => $generatedPayroll->attendance_days_present,
                     'attendance_days_absent' => $generatedPayroll->attendance_days_absent,
+                    'approved_leave_days' => (int) ($attendanceSummary['approved_leave_days'] ?? 0),
+                    'payable_days' => (int) ($attendanceSummary['payable_days'] ?? $generatedPayroll->attendance_days_present),
                     'attendance_minutes_late' => $generatedPayroll->attendance_minutes_late,
                     'attendance_minutes_undertime' => $generatedPayroll->attendance_minutes_undertime,
+                    'worked_hours' => number_format((float) ($attendanceSummary['worked_hours'] ?? 0), 2),
+                    'approved_overtime_hours' => number_format((float) ($attendanceSummary['approved_overtime_hours'] ?? 0), 2),
+                    'regular_attendance_amount' => number_format((float) ($attendanceSummary['regular_attendance_amount'] ?? $generatedPayroll->attendance_amount), 2),
+                    'overtime_amount' => number_format((float) ($attendanceSummary['overtime_amount'] ?? 0), 2),
                     'booking_count' => $generatedPayroll->booking_count,
                     'attendance_amount' => number_format((float) $generatedPayroll->attendance_amount, 2),
                     'booking_amount' => number_format((float) $generatedPayroll->booking_amount, 2),

@@ -44,7 +44,7 @@
 
                                         <!-- Schedule Alert - Dynamic based on user's actual schedule -->
                                         @if(isset($scheduleInfo) && $scheduleInfo)
-                                            <div class="alert alert-warning p-3 mb-4" role="alert">
+                                            <div class="alert alert-warning p-3 mb-4" role="alert" id="scheduleAlert">
                                                 <h4 class="alert-heading">
                                                     <i class="ti ti-calendar-clock me-2"></i>
                                                     Your Work Schedule
@@ -64,7 +64,7 @@
                                                 </p>
                                             </div>
                                         @else
-                                            <div class="alert alert-warning p-3 mb-4" role="alert">
+                                            <div class="alert alert-warning p-3 mb-4" role="alert" id="scheduleAlert">
                                                 <h4 class="alert-heading">
                                                     <i class="ti ti-alert-triangle me-2"></i>
                                                     No Schedule Found
@@ -164,6 +164,7 @@
                                                                 <option value="ON_TIME">On Time</option>
                                                                 <option value="LATE">Late</option>
                                                                 <option value="UNDERTIME">Undertime</option>
+                                                                <option value="ON_LEAVE">On Leave</option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -184,30 +185,35 @@
                                                         </thead>
                                                         <tbody>
                                                             @forelse($myAttendance as $record)
-                                                                <tr>
+                                                                @php
+                                                                    $isLeaveRecord = ($record->record_type ?? 'attendance') === 'leave';
+                                                                @endphp
+                                                                <tr data-record-type="{{ $record->record_type ?? 'attendance' }}">
                                                                     <td>{{ $record->attendance_date->format('M d, Y') }}</td>
                                                                     <td>
                                                                         @if($record->scheduled_start_time && $record->scheduled_end_time)
                                                                             {{ \Carbon\Carbon::parse($record->scheduled_start_time)->format('h:i A') }} - 
                                                                             {{ \Carbon\Carbon::parse($record->scheduled_end_time)->format('h:i A') }}
+                                                                        @elseif($isLeaveRecord)
+                                                                            <span class="text-muted">Leave Day</span>
                                                                         @else
-                                                                            <span class="text-muted">No schedule</span>
+                                                                            <span class="text-muted">{{ $isLeaveRecord ? 'Approved Leave' : 'No schedule' }}</span>
                                                                         @endif
                                                                     </td>
                                                                     <td>{{ $record->formatted_check_in }}</td>
                                                                     <td>
                                                                         @if($record->check_in_status)
-                                                                            <span class="badge {{ $record->check_in_status_badge }}">
+                                                                            <span class="badge {{ $isLeaveRecord ? 'badge-soft-info' : $record->check_in_status_badge }}">
                                                                                 {{ $record->check_in_status }}
                                                                             </span>
-                                                                            @if($record->late_minutes > 0)
+                                                                            @if(!$isLeaveRecord && $record->late_minutes > 0)
                                                                                 <small class="d-block text-muted">{{ $record->late_display }}</small>
                                                                             @endif
                                                                         @else
                                                                             <span class="text-muted">—</span>
                                                                         @endif
                                                                     </td>
-                                                                    <td>{{ $record->formatted_check_out }}</td>
+                                                                    <td>{{ $record->display_check_out ?? $record->formatted_check_out }}</td>
                                                                     <td>
                                                                         @if($record->check_out_status)
                                                                             <span class="badge {{ $record->check_out_status_badge }}">
@@ -216,13 +222,19 @@
                                                                             @if($record->undertime_minutes > 0)
                                                                                 <small class="d-block text-muted">{{ $record->undertime_display }}</small>
                                                                             @endif
+                                                                            @if(($record->is_overtime_applied ?? false) === true)
+                                                                                <small class="d-block text-primary">OT Applied until {{ $record->counted_check_out }}</small>
+                                                                            @endif
                                                                         @else
                                                                             <span class="text-muted">—</span>
                                                                         @endif
                                                                     </td>
                                                                     <td>
-                                                                        @if($record->duration)
-                                                                            <span class="badge badge-soft-info">{{ $record->duration }}</span>
+                                                                        @if($record->display_duration ?? $record->duration)
+                                                                            <span class="badge badge-soft-info">{{ $record->display_duration ?? $record->duration }}</span>
+                                                                            @if(($record->is_overtime_applied ?? false) === true && ($record->actual_duration ?? null) !== ($record->display_duration ?? $record->duration))
+                                                                                <small class="d-block text-muted">Actual: {{ $record->actual_duration }}</small>
+                                                                            @endif
                                                                         @else
                                                                             <span class="text-muted">—</span>
                                                                         @endif
@@ -406,6 +418,7 @@
                                                             <option value="ON_TIME">On Time</option>
                                                             <option value="LATE">Late</option>
                                                             <option value="UNDERTIME">Undertime</option>
+                                                            <option value="ON_LEAVE">On Leave</option>
                                                         </select>
                                                     </div>
                                                     <div class="app-filter d-none" id="employeeAttendanceCustomRange">
@@ -574,7 +587,8 @@
             }
             
             attendance.forEach(function(record) {
-                const checkInStatusClass = record.check_in_status === 'ON_TIME' ? 'badge-soft-success' : 'badge-soft-warning';
+                const isLeaveRecord = record.record_type === 'leave';
+                const checkInStatusClass = isLeaveRecord ? 'badge-soft-info' : (record.check_in_status === 'ON_TIME' ? 'badge-soft-success' : 'badge-soft-warning');
                 const checkOutStatusClass = record.check_out_status === 'UNDERTIME' ? 'badge-soft-danger' : 'badge-soft-success';
                 
                 const row = `
@@ -596,9 +610,7 @@
                         </td>
                         <td>${record.duration || '—'}</td>
                         <td class="text-center">
-                            <button class="btn btn-sm" onclick="viewAttendanceDetails(${record.id})">
-                                <i class="ti ti-eye"></i>
-                            </button>
+                            ${isLeaveRecord ? '<span class="text-muted">View Only</span>' : `<button class="btn btn-sm" onclick="viewAttendanceDetails(${record.id})"><i class="ti ti-eye"></i></button>`}
                         </td>
                     </tr>
                 `;
@@ -609,14 +621,40 @@
         function updateButtonStates(data) {
             const checkInBtn = $('#checkInBtn');
             const checkOutBtn = $('#checkOutBtn');
+            const isBlocked = data.blocked_by_leave === true;
+
+            if (isBlocked) {
+                $('#scheduleAlert').removeClass('alert-warning').addClass('alert-info').html(`
+                    <h4 class="alert-heading">
+                        <i class="ti ti-beach me-2"></i>
+                        Approved Leave for Today
+                    </h4>
+                    <p class="mb-2"><strong>Leave Type:</strong> ${data.leave_summary?.leave_type || 'Approved Leave'}</p>
+                    <p class="mb-2"><strong>Covered Dates:</strong> ${data.leave_summary?.start_date || ''} - ${data.leave_summary?.end_date || ''}</p>
+                    <hr class="border-info border-opacity-25">
+                    <p class="mb-0 text-muted">${data.blocked_message || 'Attendance is unavailable today because you have an approved leave request.'}</p>
+                `);
+            } else if (data.has_approved_overtime && data.overtime_summary) {
+                $('#scheduleAlert').removeClass('alert-info').addClass('alert-warning').html(`
+                    <h4 class="alert-heading">
+                        <i class="ti ti-clock-plus me-2"></i>
+                        Approved Overtime for Today
+                    </h4>
+                    <p class="mb-2"><strong>Approved Window:</strong> ${data.overtime_summary.time_range}</p>
+                    <p class="mb-2"><strong>Effective Check-Out Cutoff:</strong> ${data.overtime_summary.effective_checkout_cutoff || 'N/A'}</p>
+                    <hr class="border-warning border-opacity-25">
+                    <p class="mb-0 text-muted">Your attendance can count overtime only up to the approved cutoff.</p>
+                `);
+            }
             
-            // Update check-in button state
-            if (data.has_schedule && !data.is_checked_in) {
+            if (!isBlocked && data.has_schedule && !data.is_checked_in) {
                 checkInBtn.prop('disabled', false).removeClass('disabled');
             } else {
                 checkInBtn.prop('disabled', true).addClass('disabled');
                 
-                if (!data.has_schedule) {
+                if (isBlocked) {
+                    checkInBtn.attr('title', data.blocked_message || 'Attendance is blocked by approved leave');
+                } else if (!data.has_schedule) {
                     checkInBtn.attr('title', 'No schedule for today');
                 } else if (data.is_checked_in) {
                     checkInBtn.attr('title', 'Already checked in');
@@ -630,10 +668,12 @@
             
             // Update check-out button state
             // Disable if: not checked in OR already checked out
-            if (!data.is_checked_in || data.is_checked_out) {
+            if (isBlocked || !data.is_checked_in || data.is_checked_out) {
                 checkOutBtn.prop('disabled', true).addClass('disabled');
                 
-                if (!data.is_checked_in) {
+                if (isBlocked) {
+                    checkOutBtn.attr('title', data.blocked_message || 'Attendance is blocked by approved leave');
+                } else if (!data.is_checked_in) {
                     checkOutBtn.attr('title', 'You have not checked in today');
                 } else if (data.is_checked_out) {
                     checkOutBtn.attr('title', 'Already checked out today');

@@ -5,295 +5,178 @@ namespace App\Http\Controllers\StudioHR;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StudioHR\CheckInRequest;
 use App\Http\Requests\StudioHR\CheckOutRequest;
+use App\Models\LeaveRequestModel;
+use App\Models\OvertimeRequestModel;
 use App\Models\StudioHR\EmployeeAttendanceModel;
 use App\Models\StudioOwner\EmployeeScheduleModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class EmployeeAttendanceController extends Controller
 {
     /**
-     * @var int Grace period in minutes
+     * Grace period for check-in in minutes.
      */
     protected const GRACE_PERIOD_MINUTES = 15;
 
     /**
-     * Display the attendance page with user's attendance records.
+     * Display the attendance page with leave-aware personal history.
      */
     public function index()
     {
         $user = Auth::user();
-        
-        // Get logged-in user's attendance records
-        $myAttendance = EmployeeAttendanceModel::with(['schedule'])
+        $schedule = EmployeeScheduleModel::query()
             ->where('user_id', $user->id)
-            ->orderBy('attendance_date', 'desc')
-            ->orderBy('check_in_time', 'desc')
-            ->paginate(10);
-        
-        // Get user's schedule for the alert box
-        $schedule = EmployeeScheduleModel::where('user_id', $user->id)
             ->where('is_active', true)
             ->first();
-        
+
         $scheduleInfo = null;
-        if ($schedule && $schedule->operating_days) {
-            $operatingDays = is_array($schedule->operating_days) 
-                ? $schedule->operating_days 
-                : json_decode($schedule->operating_days, true) ?? [];
-            
+        if ($schedule) {
             $scheduleInfo = [
-                'operating_days' => $operatingDays,
+                'operating_days' => $schedule->operating_days ?? [],
                 'start_time' => $schedule->start_time ? Carbon::parse($schedule->start_time)->format('h:i A') : 'Not set',
                 'end_time' => $schedule->end_time ? Carbon::parse($schedule->end_time)->format('h:i A') : 'Not set',
             ];
         }
-        
+
+        $myAttendance = $this->buildSelfAttendanceHistory($user->id);
+
         return view('studio-hr.view-attendance', compact('myAttendance', 'scheduleInfo'));
     }
 
     /**
-     * Get current server time for real-time display.
+     * Return the current server time for the attendance page.
      */
     public function getCurrentTime()
     {
         return response()->json([
             'success' => true,
-            'time' => now()->format('h:i:s A'),
-            'date' => now()->format('l, F d, Y'),
-            'timestamp' => now()->toDateTimeString()
+            'time' => now('Asia/Manila')->format('h:i:s A'),
+            'date' => now('Asia/Manila')->format('l, F d, Y'),
+            'timestamp' => now('Asia/Manila')->toDateTimeString(),
         ]);
     }
 
     /**
-     * Get employee schedule for today.
+     * Get the authenticated employee schedule and leave-block state.
      */
     public function getEmployeeSchedule()
     {
         try {
             $user = Auth::user();
-            $now = Carbon::now('Asia/Manila'); // Use Asia/Manila timezone
-            $today = $now->format('l'); // Get current day name (Monday, Tuesday, etc.)
-            $todayLower = strtolower($today);
-            $todayDate = $now->toDateString(); // Get today's date in Y-m-d format
-            
-            \Log::info('getEmployeeSchedule - Current time with timezone', [
-                'user_id' => $user->id,
-                'current_time' => $now->toDateTimeString(),
-                'timezone' => $now->timezoneName,
-                'today' => $today,
-                'today_date' => $todayDate
-            ]);
-            
-            // Get employee's schedule for today
-            $schedule = EmployeeScheduleModel::where('user_id', $user->id)
-                ->where('is_active', true)
-                ->first();
-            
-            $hasSchedule = false;
-            $scheduleData = null;
-            
-            if ($schedule && $schedule->operating_days) {
-                // Decode operating days - handle various JSON formats
-                $operatingDays = $schedule->operating_days;
-                
-                if (is_string($operatingDays)) {
-                    // Clean up the string - remove extra quotes if present
-                    $cleaned = str_replace('""', '"', $operatingDays);
-                    $operatingDays = json_decode($cleaned, true) ?? [];
-                }
-                
-                // Ensure we have an array
-                if (!is_array($operatingDays)) {
-                    $operatingDays = [];
-                }
-                
-                // Convert all to lowercase for comparison
-                $operatingDaysLower = array_map('strtolower', $operatingDays);
-                
-                // Check if today is in operating days
-                $hasSchedule = in_array($todayLower, $operatingDaysLower);
-                
-                \Log::info('Schedule check', [
-                    'operating_days_raw' => $schedule->operating_days,
-                    'operating_days_parsed' => $operatingDays,
-                    'operating_days_lower' => $operatingDaysLower,
-                    'today_lower' => $todayLower,
-                    'has_schedule' => $hasSchedule
-                ]);
-                
-                if ($hasSchedule) {
-                    $scheduleData = [
-                        'start_time' => $schedule->start_time ? Carbon::parse($schedule->start_time)->format('H:i:s') : null,
-                        'end_time' => $schedule->end_time ? Carbon::parse($schedule->end_time)->format('H:i:s') : null,
-                        'schedule_id' => $schedule->id,
-                    ];
-                }
-            }
-            
-            // Check if already checked in today (using the same timezone date)
-            $todayAttendance = EmployeeAttendanceModel::where('user_id', $user->id)
+            $now = Carbon::now('Asia/Manila');
+            $todayDate = $now->toDateString();
+            $schedule = $this->getTodaySchedule($user);
+            $todayAttendance = EmployeeAttendanceModel::query()
+                ->where('user_id', $user->id)
                 ->whereDate('attendance_date', $todayDate)
                 ->first();
-            
-            \Log::info('Today attendance check', [
-                'user_id' => $user->id,
-                'attendance_date' => $todayDate,
-                'has_attendance' => $todayAttendance ? true : false,
-                'is_checked_in' => $todayAttendance ? $todayAttendance->isCheckedIn() : false,
-                'is_checked_out' => $todayAttendance ? $todayAttendance->isCheckedOut() : false
-            ]);
-            
+            $approvedLeave = $this->getApprovedLeaveForDate($user->id, $todayDate);
+            $studio = $this->getUserStudio($user);
+            $approvedOvertime = $approvedLeave ? null : $this->getApprovedOvertimeForDate($user->id, $todayDate, $studio?->id);
+            $scheduledEnd = $schedule && !empty($schedule['end_time'])
+                ? Carbon::parse($todayDate . ' ' . $schedule['end_time'], 'Asia/Manila')
+                : null;
+
             return response()->json([
                 'success' => true,
-                'has_schedule' => $hasSchedule,
-                'schedule' => $scheduleData,
+                'has_schedule' => !is_null($schedule),
+                'schedule' => $schedule,
                 'is_checked_in' => $todayAttendance && $todayAttendance->isCheckedIn(),
                 'is_checked_out' => $todayAttendance && $todayAttendance->isCheckedOut(),
                 'today_attendance_id' => $todayAttendance?->id,
                 'today_attendance' => $todayAttendance,
-                'current_time' => $now->format('h:i:s A'), // Send formatted time to frontend
+                'blocked_by_leave' => !is_null($approvedLeave),
+                'attendance_blocked' => !is_null($approvedLeave),
+                'blocked_message' => $approvedLeave
+                    ? 'Attendance is unavailable today because you have an approved leave request.'
+                    : null,
+                'leave_summary' => $approvedLeave ? [
+                    'request_reference' => $approvedLeave->request_reference,
+                    'leave_type' => $approvedLeave->leave_type_label,
+                    'start_date' => $approvedLeave->start_date?->format('F d, Y'),
+                    'end_date' => $approvedLeave->end_date?->format('F d, Y'),
+                ] : null,
+                'has_approved_overtime' => !is_null($approvedOvertime),
+                'overtime_summary' => $this->buildOvertimeSummary($approvedOvertime, $scheduledEnd, $todayDate),
+                'current_time' => $now->format('h:i:s A'),
                 'current_date' => $now->format('l, F d, Y'),
-                'timezone' => $now->timezoneName,
-                'debug' => [
-                    'user_id' => $user->id,
-                    'today' => $today,
-                    'today_date' => $todayDate,
-                    'operating_days' => $schedule?->operating_days ?? null,
-                    'parsed_operating_days' => isset($operatingDays) ? $operatingDays : null,
-                    'server_time' => $now->toDateTimeString(),
-                    'server_timezone' => $now->timezoneName
-                ]
             ]);
-            
-        } catch (\Exception $e) {
-            \Log::error('Error getting employee schedule: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'user_id' => Auth::id() ?? 'unknown'
+        } catch (\Throwable $throwable) {
+            Log::error('Failed to get HR attendance schedule.', [
+                'user_id' => Auth::id(),
+                'message' => $throwable->getMessage(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to get schedule: ' . $e->getMessage()
+                'message' => 'Failed to load your attendance schedule.',
             ], 500);
         }
     }
 
     /**
-     * Handle check-in with photo.
+     * Store a new check-in record unless the day is blocked by approved leave.
      */
     public function checkIn(CheckInRequest $request)
     {
         try {
             $user = Auth::user();
             $now = Carbon::now('Asia/Manila');
-            $today = $now->toDateString(); // This gives '2026-03-16'
-            
-            \Log::info('Check-in attempt', [
-                'user_id' => $user->id,
-                'current_time' => $now->toDateTimeString(),
-                'timezone' => $now->timezoneName,
-                'today' => $today
-            ]);
-            
-            // Check if already checked in today
-            $existingAttendance = EmployeeAttendanceModel::where('user_id', $user->id)
+            $today = $now->toDateString();
+
+            if ($this->getApprovedLeaveForDate($user->id, $today)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attendance is unavailable today because you have an approved leave request.',
+                    'errors' => [
+                        'attendance' => ['You cannot check in on an approved leave date.'],
+                    ],
+                ], 422);
+            }
+
+            $existingAttendance = EmployeeAttendanceModel::query()
+                ->where('user_id', $user->id)
                 ->whereDate('attendance_date', $today)
                 ->first();
-                
+
             if ($existingAttendance && $existingAttendance->isCheckedIn()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You have already checked in today.'
+                    'message' => 'You have already checked in today.',
                 ], 422);
             }
-            
-            // Get employee's studio
+
             $studio = $this->getUserStudio($user);
             if (!$studio) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No studio associated with your account.'
+                    'message' => 'No studio associated with your account.',
                 ], 422);
             }
-            
-            // Get today's schedule
+
             $schedule = $this->getTodaySchedule($user);
-            
-            // DEBUG: Log the actual schedule values
-            \Log::info('Schedule data for check-in', [
-                'schedule_exists' => $schedule ? true : false,
-                'schedule_data' => $schedule,
-                'start_time_raw' => $schedule['start_time'] ?? null,
-                'start_time_type' => $schedule ? gettype($schedule['start_time']) : 'null'
-            ]);
-            
-            // Process and store the image
             $imagePath = $this->storeAttendanceImage($request->file('image'), 'check-in');
-            
-            // Calculate check-in status with proper timezone
-            $checkInTime = $now;
             $checkInStatus = 'ON_TIME';
             $lateMinutes = 0;
-            
-            // Only calculate lateness if we have a schedule
-            if ($schedule && !empty($schedule['start_time'])) {
-                // Get the date part from check-in time
-                $datePart = $checkInTime->format('Y-m-d');
-                $timePart = $schedule['start_time'];
-                
-                // DEBUG: Log what we're about to parse
-                \Log::info('Parsing scheduled time', [
-                    'date_part' => $datePart,
-                    'time_part' => $timePart,
-                    'full_string' => $datePart . ' ' . $timePart
-                ]);
-                
-                // FIXED: Ensure we're not double-dating
-                // If the time part already contains the date, extract just the time
-                if (strpos($timePart, $datePart) !== false) {
-                    // Time part contains the date, extract just the time portion
-                    $timePart = substr($timePart, strpos($timePart, ' ') + 1);
-                    \Log::info('Extracted time part', ['extracted' => $timePart]);
-                }
-                
-                $scheduledStart = Carbon::parse(
-                    $datePart . ' ' . $timePart,
-                    'Asia/Manila'
-                );
-                
+
+            if (!empty($schedule['start_time'])) {
+                $scheduledStart = Carbon::parse($today . ' ' . $schedule['start_time'], 'Asia/Manila');
                 $gracePeriodEnd = $scheduledStart->copy()->addMinutes(self::GRACE_PERIOD_MINUTES);
-                
-                \Log::info('Check-in time calculation', [
-                    'scheduled_start' => $scheduledStart->toDateTimeString(),
-                    'grace_period_end' => $gracePeriodEnd->toDateTimeString(),
-                    'check_in_time' => $checkInTime->toDateTimeString(),
-                    'timezone' => $checkInTime->timezoneName,
-                    'is_after_grace' => $checkInTime->gt($gracePeriodEnd)
-                ]);
-                
-                if ($checkInTime->gt($gracePeriodEnd)) {
+
+                if ($now->gt($gracePeriodEnd)) {
                     $checkInStatus = 'LATE';
-                    $lateMinutes = (int) $scheduledStart->diffInMinutes($checkInTime);
-                    
-                    \Log::info('Employee is late', [
-                        'late_minutes' => $lateMinutes,
-                        'scheduled_start' => $scheduledStart->toDateTimeString(),
-                        'check_in' => $checkInTime->toDateTimeString()
-                    ]);
+                    $lateMinutes = (int) $scheduledStart->diffInMinutes($now);
                 }
-            } else {
-                \Log::info('No schedule found for today, skipping lateness calculation', [
-                    'schedule' => $schedule
-                ]);
             }
-            
-            // Create attendance record
+
             $attendance = EmployeeAttendanceModel::updateOrCreate(
                 [
                     'user_id' => $user->id,
@@ -304,7 +187,7 @@ class EmployeeAttendanceController extends Controller
                     'schedule_id' => $schedule['schedule_id'] ?? null,
                     'scheduled_start_time' => $schedule['start_time'] ?? null,
                     'scheduled_end_time' => $schedule['end_time'] ?? null,
-                    'check_in_time' => $checkInTime,
+                    'check_in_time' => $now,
                     'check_in_image' => $imagePath,
                     'check_in_status' => $checkInStatus,
                     'late_minutes' => $lateMinutes,
@@ -313,344 +196,254 @@ class EmployeeAttendanceController extends Controller
                     'notes' => $request->input('notes'),
                 ]
             );
-            
-            Log::info('Employee check-in recorded', [
-                'user_id' => $user->id,
-                'attendance_id' => $attendance->id,
-                'status' => $checkInStatus,
-                'late_minutes' => $lateMinutes,
-                'has_schedule' => $schedule ? true : false
-            ]);
-            
-            $message = 'Check-in successful!';
-            if ($checkInStatus === 'LATE') {
-                $message = "Check-in successful! You are {$lateMinutes} minute(s) late.";
-            } else if (!$schedule) {
-                $message = 'Check-in successful! (No schedule found for today)';
-            }
-            
+
             return response()->json([
                 'success' => true,
-                'message' => $message,
+                'message' => $checkInStatus === 'LATE'
+                    ? 'Check-in successful! You are ' . $lateMinutes . ' minute(s) late.'
+                    : 'Check-in successful!',
                 'attendance' => $attendance,
                 'status' => $checkInStatus,
-                'late_minutes' => $lateMinutes
+                'late_minutes' => $lateMinutes,
             ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Check-in failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'user_id' => Auth::id()
+        } catch (\Throwable $throwable) {
+            Log::error('HR attendance check-in failed.', [
+                'user_id' => Auth::id(),
+                'message' => $throwable->getMessage(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to process check-in: ' . $e->getMessage()
+                'message' => 'Failed to process check-in.',
             ], 500);
         }
     }
 
     /**
-     * Handle check-out.
+     * Store a new check-out record unless the day is blocked by approved leave.
      */
     public function checkOut(CheckOutRequest $request)
     {
         try {
             $user = Auth::user();
-            
-            // Find the attendance record
-            $attendance = EmployeeAttendanceModel::where('id', $request->attendance_id)
+            $today = Carbon::now('Asia/Manila')->toDateString();
+
+            if ($this->getApprovedLeaveForDate($user->id, $today)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attendance is unavailable today because you have an approved leave request.',
+                    'errors' => [
+                        'attendance' => ['You cannot check out on an approved leave date.'],
+                    ],
+                ], 422);
+            }
+
+            $attendance = EmployeeAttendanceModel::query()
+                ->where('id', $request->attendance_id)
                 ->where('user_id', $user->id)
                 ->first();
-                
+
             if (!$attendance) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Attendance record not found.'
+                    'message' => 'Attendance record not found.',
                 ], 404);
             }
-            
+
+            if (!$attendance->isCheckedIn()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You must check in first before checking out.',
+                ], 422);
+            }
+
             if ($attendance->isCheckedOut()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You have already checked out today.'
+                    'message' => 'You have already checked out today.',
                 ], 422);
             }
-            
-            // Process image if provided
-            $imagePath = null;
-            if ($request->hasFile('image')) {
-                $imagePath = $this->storeAttendanceImage($request->file('image'), 'check-out');
-            }
-            
-            // Calculate check-out status - FIXED VERSION
+
             $checkOutTime = Carbon::now('Asia/Manila');
             $checkOutStatus = 'ON_TIME';
             $undertimeMinutes = 0;
+            $imagePath = $attendance->check_out_image;
+            $approvedOvertime = $this->getApprovedOvertimeForDate($user->id, $today, $attendance->studio_id);
+
+            if ($request->hasFile('image')) {
+                $imagePath = $this->storeAttendanceImage($request->file('image'), 'check-out');
+            }
 
             if ($attendance->scheduled_end_time) {
-                $attendanceDate = $attendance->attendance_date->format('Y-m-d');
-                $scheduledEnd = Carbon::parse($attendanceDate . ' ' . $attendance->scheduled_end_time, 'Asia/Manila');
-                
+                $scheduledEnd = Carbon::parse(
+                    $attendance->attendance_date->format('Y-m-d') . ' ' . $attendance->scheduled_end_time,
+                    'Asia/Manila'
+                );
+
                 if ($checkOutTime->lt($scheduledEnd)) {
                     $checkOutStatus = 'UNDERTIME';
                     $undertimeMinutes = $checkOutTime->diffInMinutes($scheduledEnd);
+                } elseif ($approvedOvertime && $checkOutTime->gt($scheduledEnd)) {
+                    $checkOutStatus = 'ON_TIME';
+                    $undertimeMinutes = 0;
                 }
             }
-            
-            // Update attendance record
+
             $attendance->update([
                 'check_out_time' => $checkOutTime,
-                'check_out_image' => $imagePath ?? $attendance->check_out_image,
+                'check_out_image' => $imagePath,
                 'check_out_status' => $checkOutStatus,
                 'undertime_minutes' => $undertimeMinutes,
                 'check_out_ip' => $request->ip(),
                 'check_out_user_agent' => $request->userAgent(),
                 'notes' => $request->input('notes', $attendance->notes),
             ]);
-            
-            Log::info('Employee check-out recorded', [
-                'user_id' => $user->id,
-                'attendance_id' => $attendance->id,
-                'status' => $checkOutStatus,
-                'undertime_minutes' => $undertimeMinutes
-            ]);
-            
+
             return response()->json([
                 'success' => true,
-                'message' => $checkOutStatus === 'ON_TIME'
-                    ? 'Check-out successful! Have a great day!'
-                    : "Check-out successful! You left {$undertimeMinutes} minute(s) early.",
-                'attendance' => $attendance,
+                'message' => $checkOutStatus === 'UNDERTIME'
+                    ? 'Check-out successful! You left ' . $undertimeMinutes . ' minute(s) early.'
+                    : 'Check-out successful! Have a great day!',
+                'attendance' => $this->buildAttendanceDetailPayload($attendance->fresh(['employee', 'schedule'])),
                 'status' => $checkOutStatus,
-                'undertime_minutes' => $undertimeMinutes
+                'undertime_minutes' => $undertimeMinutes,
             ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Check-out failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'user_id' => Auth::id()
+        } catch (\Throwable $throwable) {
+            Log::error('HR attendance check-out failed.', [
+                'user_id' => Auth::id(),
+                'message' => $throwable->getMessage(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to process check-out: ' . $e->getMessage()
+                'message' => 'Failed to process check-out.',
             ], 500);
         }
     }
 
     /**
-     * Get today's attendance records.
+     * Get the studio's attendance rows for today, including synthetic leave rows.
      */
     public function getTodaysAttendance()
     {
-        try {
-            $user = Auth::user();
-            
-            // Get user's studio
-            $studio = $this->getUserStudio($user);
-            
-            if (!$studio) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No studio associated.'
-                ]);
-            }
-            
-            // Get all employees in this studio
-            $employeeIds = EmployeeScheduleModel::where('studio_id', $studio->id)
-                ->where('is_active', true)
-                ->pluck('user_id')
-                ->toArray();
-            
-            // Get today's attendance for these employees
-            $attendance = EmployeeAttendanceModel::with(['employee'])
-                ->whereIn('user_id', $employeeIds)
-                ->whereDate('attendance_date', now()->toDateString())
-                ->orderBy('check_in_time', 'desc')
-                ->get()
-                ->map(function ($record) {
-                    return [
-                        'id' => $record->id,
-                        'employee_name' => $record->employee->full_name ?? 'Unknown',
-                        'formatted_check_in' => $record->formatted_check_in,
-                        'formatted_check_out' => $record->formatted_check_out,
-                        'check_in_status' => $record->check_in_status,
-                        'check_out_status' => $record->check_out_status,
-                        'late_display' => $record->late_display,
-                        'undertime_display' => $record->undertime_display,
-                        'duration' => $record->duration,
-                    ];
-                });
-            
-            return response()->json([
-                'success' => true,
-                'attendance' => $attendance,
-                'total' => $attendance->count()
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to get today\'s attendance: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to load attendance data'
-            ], 500);
-        }
+        $request = request();
+        $request->merge(['filter_date' => 'today']);
+
+        return $this->getAttendanceHistory($request);
     }
 
     /**
-     * Get attendance history with filters.
+     * Get attendance history with approved leave rows merged in.
      */
     public function getAttendanceHistory(Request $request)
     {
         try {
-            $user = Auth::user();
-            
-            // Get user's studio
-            $studio = $this->getUserStudio($user);
-            
+            $studio = $this->getUserStudio(Auth::user());
+
             if (!$studio) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No studio associated.'
+                    'message' => 'No studio associated.',
                 ]);
             }
-            
-            $query = EmployeeAttendanceModel::with(['employee'])
-                ->where('studio_id', $studio->id);
-            
-            $this->applyAttendanceDateFilter($query, $request);
-            
-            if ($request->has('employee_id') && $request->employee_id) {
-                $query->where('user_id', $request->employee_id);
-            }
 
-            if ($request->filled('search')) {
-                $search = $request->search;
-                $query->whereHas('employee', function ($employeeQuery) use ($search) {
-                    $employeeQuery->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                });
-            }
-            
-            if ($request->has('status') && $request->status) {
-                if ($request->status === 'LATE') {
-                    $query->late();
-                } elseif ($request->status === 'UNDERTIME') {
-                    $query->undertime();
-                } elseif ($request->status === 'ON_TIME') {
-                    $query->onTime();
-                }
-            }
-            
-            $attendance = $query->orderBy('attendance_date', 'desc')
-                ->orderBy('check_in_time', 'desc')
-                ->get()
-                ->map(function ($record) {
-                    return [
-                        'id' => $record->id,
-                        'employee_name' => $record->employee->full_name ?? 'Unknown',
-                        'attendance_date' => $record->attendance_date?->format('M d, Y') ?? 'N/A',
-                        'formatted_check_in' => $record->formatted_check_in,
-                        'formatted_check_out' => $record->formatted_check_out,
-                        'check_in_status' => $record->check_in_status,
-                        'check_out_status' => $record->check_out_status,
-                        'late_display' => $record->late_display,
-                        'undertime_display' => $record->undertime_display,
-                        'duration' => $record->duration,
-                    ];
-                })
-                ->values();
-            
+            $records = $this->buildStudioAttendanceRows($studio->id, $request);
+
             return response()->json([
                 'success' => true,
-                'attendance' => $attendance,
-                'total' => $attendance->count(),
+                'attendance' => $records->values(),
+                'total' => $records->count(),
             ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to get attendance history: ' . $e->getMessage());
-            
+        } catch (\Throwable $throwable) {
+            Log::error('Failed to get attendance history.', [
+                'user_id' => Auth::id(),
+                'message' => $throwable->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load attendance history'
+                'message' => 'Failed to load attendance history',
             ], 500);
         }
     }
 
     /**
-     * Get attendance statistics.
+     * Get attendance statistics for the current HR studio.
      */
     public function getAttendanceStats()
     {
         try {
-            $user = Auth::user();
-            
-            // Get user's studio
-            $studio = $this->getUserStudio($user);
-            
+            $studio = $this->getUserStudio(Auth::user());
+
             if (!$studio) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No studio associated.'
+                    'message' => 'No studio associated.',
                 ]);
             }
-            
-            $today = now()->toDateString();
-            $monthStart = now()->startOfMonth()->toDateString();
-            
+
+            $today = Carbon::today('Asia/Manila')->toDateString();
+            $monthStart = Carbon::today('Asia/Manila')->startOfMonth()->toDateString();
+
             $stats = [
                 'today' => [
-                    'total' => EmployeeAttendanceModel::where('studio_id', $studio->id)
+                    'total' => EmployeeAttendanceModel::query()
+                        ->where('studio_id', $studio->id)
                         ->whereDate('attendance_date', $today)
                         ->count(),
-                    'checked_in' => EmployeeAttendanceModel::where('studio_id', $studio->id)
+                    'checked_in' => EmployeeAttendanceModel::query()
+                        ->where('studio_id', $studio->id)
                         ->whereDate('attendance_date', $today)
                         ->whereNotNull('check_in_time')
                         ->count(),
-                    'checked_out' => EmployeeAttendanceModel::where('studio_id', $studio->id)
+                    'checked_out' => EmployeeAttendanceModel::query()
+                        ->where('studio_id', $studio->id)
                         ->whereDate('attendance_date', $today)
                         ->whereNotNull('check_out_time')
                         ->count(),
-                    'late' => EmployeeAttendanceModel::where('studio_id', $studio->id)
+                    'late' => EmployeeAttendanceModel::query()
+                        ->where('studio_id', $studio->id)
                         ->whereDate('attendance_date', $today)
                         ->where('check_in_status', 'LATE')
                         ->count(),
                 ],
                 'month' => [
-                    'total' => EmployeeAttendanceModel::where('studio_id', $studio->id)
+                    'total' => EmployeeAttendanceModel::query()
+                        ->where('studio_id', $studio->id)
                         ->whereDate('attendance_date', '>=', $monthStart)
                         ->count(),
-                    'late' => EmployeeAttendanceModel::where('studio_id', $studio->id)
+                    'late' => EmployeeAttendanceModel::query()
+                        ->where('studio_id', $studio->id)
                         ->whereDate('attendance_date', '>=', $monthStart)
                         ->where('check_in_status', 'LATE')
                         ->count(),
-                    'undertime' => EmployeeAttendanceModel::where('studio_id', $studio->id)
+                    'undertime' => EmployeeAttendanceModel::query()
+                        ->where('studio_id', $studio->id)
                         ->whereDate('attendance_date', '>=', $monthStart)
                         ->where('check_out_status', 'UNDERTIME')
                         ->count(),
-                ]
+                ],
             ];
-            
+
             return response()->json([
                 'success' => true,
-                'stats' => $stats
+                'stats' => $stats,
             ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to get attendance stats: ' . $e->getMessage());
-            
+        } catch (\Throwable $throwable) {
+            Log::error('Failed to get attendance stats.', [
+                'user_id' => Auth::id(),
+                'message' => $throwable->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load statistics'
+                'message' => 'Failed to load statistics',
             ], 500);
         }
     }
 
     /**
-     * Get attendance details by ID.
+     * Get attendance details for a real attendance record.
      */
     public function getAttendanceDetails($id)
     {
@@ -658,152 +451,66 @@ class EmployeeAttendanceController extends Controller
             $attendance = EmployeeAttendanceModel::with(['employee', 'schedule'])
                 ->where('id', $id)
                 ->first();
-                
+
             if (!$attendance) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Attendance record not found.'
+                    'message' => 'Attendance record not found.',
                 ], 404);
             }
-            
+
             return response()->json([
                 'success' => true,
-                'attendance' => [
-                    'id' => $attendance->id,
-                    'employee_name' => $attendance->employee->full_name ?? 'Unknown',
-                    'attendance_date' => $attendance->attendance_date->format('F d, Y'),
-                    'scheduled_start_time' => $attendance->scheduled_start_time ? Carbon::parse($attendance->scheduled_start_time)->format('h:i A') : '—',
-                    'scheduled_end_time' => $attendance->scheduled_end_time ? Carbon::parse($attendance->scheduled_end_time)->format('h:i A') : '—',
-                    'formatted_check_in' => $attendance->formatted_check_in,
-                    'formatted_check_out' => $attendance->formatted_check_out,
-                    'check_in_status' => $attendance->check_in_status,
-                    'check_out_status' => $attendance->check_out_status,
-                    'late_display' => $attendance->late_display,
-                    'undertime_display' => $attendance->undertime_display,
-                    'duration' => $attendance->duration,
-                    'check_in_image' => $attendance->check_in_image,
-                    'check_out_image' => $attendance->check_out_image,
-                    'notes' => $attendance->notes,
-                ]
+                'attendance' => $this->buildAttendanceDetailPayload($attendance),
             ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to get attendance details: ' . $e->getMessage());
-            
+        } catch (\Throwable $throwable) {
+            Log::error('Failed to get attendance details.', [
+                'attendance_id' => $id,
+                'message' => $throwable->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load attendance details'
+                'message' => 'Failed to load attendance details',
             ], 500);
         }
     }
 
     /**
-     * Helper: Get user's studio
+     * Resolve the studio associated with the authenticated user.
      */
-    private function getUserStudio($user)
+    private function getUserStudio(UserModel $user): ?StudiosModel
     {
-        // First, try to find via studio photographers assignments.
-        $studio = StudiosModel::whereHas('studioPhotographers', function ($query) use ($user) {
-            $query->where('photographer_id', $user->id);
-        })->first();
-
-        if ($studio) {
-            return $studio;
-        }
-
-        // For HR and finance, the active employee schedule is the source of truth.
-        $schedule = EmployeeScheduleModel::where('user_id', $user->id)
+        $schedule = EmployeeScheduleModel::query()
+            ->where('user_id', $user->id)
             ->where('is_active', true)
             ->first();
 
-        if ($schedule) {
-            return StudiosModel::find($schedule->studio_id);
-        }
-
-        return null;
+        return $schedule ? StudiosModel::find($schedule->studio_id) : null;
     }
 
     /**
-     * Helper: Get today's schedule for user
+     * Get today's schedule payload for the authenticated user.
      */
-    private function getTodaySchedule($user)
+    private function getTodaySchedule(UserModel $user): ?array
     {
-        $now = Carbon::now('Asia/Manila');
-        $today = strtolower($now->format('l'));
-        
-        \Log::info('getTodaySchedule - Input', [
-            'user_id' => $user->id,
-            'today' => $today,
-            'current_time' => $now->toDateTimeString()
-        ]);
-        
-        $schedule = EmployeeScheduleModel::where('user_id', $user->id)
+        $today = strtolower(Carbon::now('Asia/Manila')->format('l'));
+        $schedule = EmployeeScheduleModel::query()
+            ->where('user_id', $user->id)
             ->where('is_active', true)
             ->first();
-            
-        if (!$schedule) {
-            \Log::info('No active schedule found for user', ['user_id' => $user->id]);
+
+        if (!$schedule || !$schedule->worksOnDay($today)) {
             return null;
         }
-        
-        \Log::info('Schedule found', [
-            'schedule_id' => $schedule->id,
-            'operating_days_raw' => $schedule->operating_days,
-            'start_time_raw' => $schedule->start_time,
-            'end_time_raw' => $schedule->end_time,
-            'start_time_type' => gettype($schedule->start_time)
-        ]);
-        
-        // Parse operating days
-        $operatingDays = $schedule->operating_days;
-        
-        if (is_string($operatingDays)) {
-            $operatingDays = json_decode($operatingDays, true);
-        }
-        
-        // Ensure we have an array
-        if (!is_array($operatingDays)) {
-            $operatingDays = [];
-        }
-        
-        // Convert to lowercase for comparison
-        $operatingDaysLower = array_map('strtolower', $operatingDays);
-        
-        \Log::info('Parsed operating days', [
-            'original' => $schedule->operating_days,
-            'parsed' => $operatingDays,
-            'lowercase' => $operatingDaysLower,
-            'today' => $today
-        ]);
-        
-        $hasSchedule = in_array($today, $operatingDaysLower);
-        
-        if (!$hasSchedule) {
-            \Log::info('Today is not a working day', [
-                'today' => $today,
-                'working_days' => $operatingDaysLower
-            ]);
-            return null;
-        }
-        
-        // Get the time values - ensure they're just time strings
-        $startTime = $schedule->start_time;
-        $endTime = $schedule->end_time;
-        
-        // If they're Carbon instances or DateTime objects, format them
-        if ($startTime instanceof \Carbon\Carbon || $startTime instanceof \DateTime) {
-            $startTime = $startTime->format('H:i:s');
-        }
-        if ($endTime instanceof \Carbon\Carbon || $endTime instanceof \DateTime) {
-            $endTime = $endTime->format('H:i:s');
-        }
-        
-        \Log::info('Returning schedule', [
-            'schedule_id' => $schedule->id,
-            'start_time' => $startTime,
-            'end_time' => $endTime
-        ]);
-        
+
+        $startTime = $schedule->start_time instanceof Carbon
+            ? $schedule->start_time->format('H:i:s')
+            : Carbon::parse($schedule->start_time)->format('H:i:s');
+        $endTime = $schedule->end_time instanceof Carbon
+            ? $schedule->end_time->format('H:i:s')
+            : Carbon::parse($schedule->end_time)->format('H:i:s');
+
         return [
             'schedule_id' => $schedule->id,
             'start_time' => $startTime,
@@ -812,55 +519,458 @@ class EmployeeAttendanceController extends Controller
     }
 
     /**
-     * Helper: Store attendance image
+     * Store an attendance image in public storage.
      */
-    private function storeAttendanceImage($image, $type)
+    private function storeAttendanceImage($image, string $type): string
     {
-        $path = $image->store('employee-attendance/' . now()->format('Y/m/d'), 'public');
-        return $path;
+        return $image->store('employee-attendance/' . $type . '/' . now()->format('Y/m/d'), 'public');
     }
 
     /**
-     * Apply date filtering for studio attendance history.
+     * Get the approved leave covering the supplied date.
      */
-    private function applyAttendanceDateFilter($query, Request $request): void
+    private function getApprovedLeaveForDate(int $userId, string $date): ?LeaveRequestModel
     {
-        $filterDate = $request->input('filter_date', 'today');
+        return LeaveRequestModel::with(['studio', 'approver', 'rejector'])
+            ->where('user_id', $userId)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
+            ->first();
+    }
+
+    /**
+     * Get an approved overtime request for the supplied date.
+     */
+    private function getApprovedOvertimeForDate(int $userId, string $date, ?int $studioId = null): ?OvertimeRequestModel
+    {
+        $query = OvertimeRequestModel::with('studio')
+            ->where('user_id', $userId)
+            ->where('status', 'approved')
+            ->whereDate('overtime_date', $date);
+
+        if (!is_null($studioId)) {
+            $query->where('studio_id', $studioId);
+        }
+
+        return $query->orderByDesc('approved_at')->first();
+    }
+
+    /**
+     * Build the overtime summary payload for attendance endpoints.
+     */
+    private function buildOvertimeSummary(?OvertimeRequestModel $overtimeRequest, ?Carbon $scheduledEnd, string $date): ?array
+    {
+        if (!$overtimeRequest) {
+            return null;
+        }
+
+        $effectiveCutoff = $scheduledEnd
+            ? $scheduledEnd->copy()->addMinutes((int) round((float) $overtimeRequest->total_hours * 60))
+            : null;
+
+        return [
+            'request_reference' => $overtimeRequest->request_reference,
+            'time_range' => $overtimeRequest->start_time?->format('h:i A') . ' - ' . $overtimeRequest->end_time?->format('h:i A'),
+            'total_hours' => rtrim(rtrim(number_format((float) $overtimeRequest->total_hours, 2), '0'), '.'),
+            'overtime_date' => Carbon::parse($date)->format('F d, Y'),
+            'effective_checkout_cutoff' => $effectiveCutoff?->format('h:i A'),
+        ];
+    }
+
+    /**
+     * Apply overtime-aware presentation fields to an attendance record.
+     */
+    private function applyAttendancePresentation(EmployeeAttendanceModel $attendance): void
+    {
+        $attendance->display_duration = $attendance->duration;
+        $attendance->actual_duration = $attendance->duration;
+        $attendance->counted_duration = $attendance->duration;
+        $attendance->display_check_out = $attendance->formatted_check_out;
+        $attendance->actual_check_out = $attendance->formatted_check_out;
+        $attendance->counted_check_out = $attendance->formatted_check_out;
+        $attendance->is_overtime_applied = false;
+        $attendance->has_approved_overtime = false;
+        $attendance->overtime_summary = null;
+
+        if (!$attendance->scheduled_end_time || !$attendance->check_out_time || !$attendance->check_in_time) {
+            return;
+        }
+
+        $attendanceDate = $attendance->attendance_date?->toDateString();
+        if (!$attendanceDate) {
+            return;
+        }
+
+        $scheduledEnd = Carbon::parse($attendanceDate . ' ' . $attendance->scheduled_end_time, 'Asia/Manila');
+        $approvedOvertime = $this->getApprovedOvertimeForDate($attendance->user_id, $attendanceDate, $attendance->studio_id);
+        $attendance->has_approved_overtime = !is_null($approvedOvertime);
+        $attendance->overtime_summary = $this->buildOvertimeSummary($approvedOvertime, $scheduledEnd, $attendanceDate);
+
+        if (!$approvedOvertime || !$attendance->check_out_time->gt($scheduledEnd)) {
+            return;
+        }
+
+        $effectiveCutoff = $scheduledEnd->copy()->addMinutes((int) round((float) $approvedOvertime->total_hours * 60));
+        $countedCheckOut = $attendance->check_out_time->gt($effectiveCutoff)
+            ? $effectiveCutoff
+            : $attendance->check_out_time->copy();
+
+        $attendance->is_overtime_applied = true;
+        $attendance->counted_check_out = $countedCheckOut->format('h:i A');
+        $attendance->display_check_out = $countedCheckOut->format('h:i A');
+        $attendance->actual_check_out = $attendance->check_out_time->format('h:i A');
+        $attendance->counted_duration = $this->formatMinutesAsDuration($attendance->check_in_time->diffInMinutes($countedCheckOut));
+        $attendance->actual_duration = $this->formatMinutesAsDuration($attendance->check_in_time->diffInMinutes($attendance->check_out_time));
+        $attendance->display_duration = $attendance->counted_duration;
+    }
+
+    /**
+     * Build the attendance detail payload with overtime-aware fields.
+     */
+    private function buildAttendanceDetailPayload(EmployeeAttendanceModel $attendance): array
+    {
+        $this->applyAttendancePresentation($attendance);
+
+        return [
+            'id' => $attendance->id,
+            'employee_name' => $attendance->employee->full_name ?? 'Unknown',
+            'attendance_date' => $attendance->attendance_date->format('F d, Y'),
+            'scheduled_start_time' => $attendance->scheduled_start_time ? Carbon::parse($attendance->scheduled_start_time)->format('h:i A') : '—',
+            'scheduled_end_time' => $attendance->scheduled_end_time ? Carbon::parse($attendance->scheduled_end_time)->format('h:i A') : '—',
+            'formatted_check_in' => $attendance->formatted_check_in,
+            'formatted_check_out' => $attendance->formatted_check_out,
+            'display_check_out' => $attendance->display_check_out,
+            'actual_check_out' => $attendance->actual_check_out,
+            'counted_check_out' => $attendance->counted_check_out,
+            'check_in_status' => $attendance->check_in_status,
+            'check_out_status' => $attendance->check_out_status,
+            'late_display' => $attendance->late_display,
+            'undertime_display' => $attendance->undertime_display,
+            'duration' => $attendance->display_duration,
+            'actual_duration' => $attendance->actual_duration,
+            'counted_duration' => $attendance->counted_duration,
+            'has_approved_overtime' => $attendance->has_approved_overtime,
+            'is_overtime_applied' => $attendance->is_overtime_applied,
+            'overtime_summary' => $attendance->overtime_summary,
+            'check_in_image' => $attendance->check_in_image,
+            'check_out_image' => $attendance->check_out_image,
+            'check_in_ip' => $attendance->check_in_ip,
+            'check_out_ip' => $attendance->check_out_ip,
+            'notes' => $attendance->notes,
+        ];
+    }
+
+    /**
+     * Format a minute count into HH:MM:SS.
+     */
+    private function formatMinutesAsDuration(int $minutes): string
+    {
+        $hours = intdiv($minutes, 60);
+        $remainingMinutes = $minutes % 60;
+
+        return sprintf('%02d:%02d:00', $hours, $remainingMinutes);
+    }
+
+    /**
+     * Build leave-aware self attendance history for pagination.
+     */
+    private function buildSelfAttendanceHistory(int $userId, int $perPage = 10): LengthAwarePaginator
+    {
+        $attendanceRecords = EmployeeAttendanceModel::with(['studio'])
+            ->where('user_id', $userId)
+            ->orderBy('attendance_date', 'desc')
+            ->orderBy('check_in_time', 'desc')
+            ->get()
+            ->map(function (EmployeeAttendanceModel $attendance) {
+                $attendance->record_type = 'attendance';
+                $this->applyAttendancePresentation($attendance);
+
+                return $attendance;
+            });
+
+        $attendanceDates = $attendanceRecords
+            ->pluck('attendance_date')
+            ->filter()
+            ->map(fn ($date) => Carbon::parse($date)->toDateString())
+            ->unique()
+            ->values()
+            ->all();
+
+        $leaveEntries = $this->buildApprovedLeaveHistoryEntries($userId, $attendanceDates);
+        $mergedRecords = $attendanceRecords
+            ->concat($leaveEntries)
+            ->sortByDesc(fn ($record) => Carbon::parse($record->attendance_date)->format('Y-m-d') . ' ' . ($record->sort_time ?? '00:00:00'))
+            ->values();
+
+        $currentPage = (int) request()->input('page', 1);
+        $items = $mergedRecords->forPage($currentPage, $perPage)->values();
+
+        return new LengthAwarePaginator(
+            $items,
+            $mergedRecords->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => request()->url(),
+                'query' => request()->query(),
+            ]
+        );
+    }
+
+    /**
+     * Build synthetic approved leave rows for the self-history table.
+     */
+    private function buildApprovedLeaveHistoryEntries(int $userId, array $attendanceDates): Collection
+    {
+        $approvedLeaves = LeaveRequestModel::with(['studio'])
+            ->where('user_id', $userId)
+            ->where('status', 'approved')
+            ->orderByDesc('start_date')
+            ->get();
+
+        $leaveEntries = collect();
+
+        foreach ($approvedLeaves as $leaveRequest) {
+            $period = CarbonPeriod::create(
+                Carbon::parse($leaveRequest->start_date)->startOfDay(),
+                Carbon::parse($leaveRequest->end_date)->startOfDay()
+            );
+
+            foreach ($period as $leaveDate) {
+                $leaveDateString = $leaveDate->toDateString();
+
+                if (in_array($leaveDateString, $attendanceDates, true)) {
+                    continue;
+                }
+
+                $leaveEntries->push($this->makeSyntheticLeaveRecord([
+                    'employee_name' => 'You',
+                    'attendance_date' => $leaveDateString,
+                    'studio_name' => $leaveRequest->studio->studio_name ?? 'N/A',
+                    'leave_type_label' => $leaveRequest->leave_type_label,
+                    'notes' => $leaveRequest->reason,
+                ]));
+            }
+        }
+
+        return $leaveEntries;
+    }
+
+    /**
+     * Build attendance rows for the HR studio employee table.
+     */
+    private function buildStudioAttendanceRows(int $studioId, Request $request): Collection
+    {
+        $employeeSchedules = EmployeeScheduleModel::query()
+            ->with('user')
+            ->where('studio_id', $studioId)
+            ->where('is_active', true)
+            ->get();
+
+        $employeeIds = $employeeSchedules->pluck('user_id')->unique()->values();
+        if ($employeeIds->isEmpty()) {
+            return collect();
+        }
+
+        [$dateFrom, $dateTo] = $this->resolveHistoryDateRange($request);
+        $search = trim((string) $request->input('search', ''));
+        $status = (string) $request->input('status', '');
+        $employeeIdFilter = $request->input('employee_id');
+
+        $attendanceQuery = EmployeeAttendanceModel::with('employee')
+            ->where('studio_id', $studioId)
+            ->whereIn('user_id', $employeeIds);
+
+        if ($dateFrom && $dateTo) {
+            $attendanceQuery->whereBetween('attendance_date', [$dateFrom, $dateTo]);
+        }
+
+        if (!empty($employeeIdFilter)) {
+            $attendanceQuery->where('user_id', $employeeIdFilter);
+        }
+
+        if ($search !== '') {
+            $attendanceQuery->whereHas('employee', function ($employeeQuery) use ($search) {
+                $employeeQuery->where('first_name', 'like', '%' . $search . '%')
+                    ->orWhere('last_name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($status === 'LATE') {
+            $attendanceQuery->where('check_in_status', 'LATE');
+        } elseif ($status === 'UNDERTIME') {
+            $attendanceQuery->where('check_out_status', 'UNDERTIME');
+        } elseif ($status === 'ON_TIME') {
+            $attendanceQuery->where('check_in_status', 'ON_TIME');
+        }
+
+        $attendanceRecords = $attendanceQuery
+            ->orderBy('attendance_date', 'desc')
+            ->orderBy('check_in_time', 'desc')
+            ->get();
+
+        $attendanceDateMap = [];
+        foreach ($attendanceRecords as $record) {
+            $attendanceDateMap[$record->user_id][] = $record->attendance_date?->toDateString();
+        }
+
+        $formattedAttendance = $attendanceRecords->map(function (EmployeeAttendanceModel $record) {
+            $this->applyAttendancePresentation($record);
+
+            return [
+                'id' => $record->id,
+                'record_type' => 'attendance',
+                'employee_name' => $record->employee->full_name ?? 'Unknown',
+                'attendance_date' => $record->attendance_date?->format('M d, Y') ?? 'N/A',
+                'formatted_check_in' => $record->formatted_check_in,
+                'formatted_check_out' => $record->display_check_out ?? $record->formatted_check_out,
+                'actual_check_out' => $record->actual_check_out ?? $record->formatted_check_out,
+                'check_in_status' => $record->check_in_status,
+                'check_out_status' => $record->check_out_status,
+                'late_display' => $record->late_minutes > 0 ? $record->late_display : null,
+                'undertime_display' => $record->undertime_minutes > 0 ? $record->undertime_display : null,
+                'duration' => $record->display_duration ?? $record->duration,
+                'actual_duration' => $record->actual_duration ?? $record->duration,
+                'is_overtime_applied' => $record->is_overtime_applied ?? false,
+            ];
+        });
+
+        $leaveRows = collect();
+        if ($dateFrom && $dateTo) {
+            $approvedLeaves = LeaveRequestModel::with('user')
+                ->where('studio_id', $studioId)
+                ->where('status', 'approved')
+                ->whereIn('user_id', $employeeIds)
+                ->whereDate('start_date', '<=', $dateTo)
+                ->whereDate('end_date', '>=', $dateFrom)
+                ->get();
+
+            foreach ($approvedLeaves as $leaveRequest) {
+                if (!empty($employeeIdFilter) && (int) $employeeIdFilter !== (int) $leaveRequest->user_id) {
+                    continue;
+                }
+
+                $employeeName = $leaveRequest->user->full_name ?? 'Unknown';
+                $employeeEmail = $leaveRequest->user->email ?? '';
+
+                if ($search !== '' && !str_contains(strtolower($employeeName . ' ' . $employeeEmail), strtolower($search))) {
+                    continue;
+                }
+
+                if ($status !== '' && $status !== 'ON_LEAVE') {
+                    continue;
+                }
+
+                $period = CarbonPeriod::create(
+                    Carbon::parse($leaveRequest->start_date)->startOfDay(),
+                    Carbon::parse($leaveRequest->end_date)->startOfDay()
+                );
+
+                foreach ($period as $leaveDate) {
+                    $leaveDateString = $leaveDate->toDateString();
+
+                    if ($leaveDateString < $dateFrom || $leaveDateString > $dateTo) {
+                        continue;
+                    }
+
+                    if (in_array($leaveDateString, $attendanceDateMap[$leaveRequest->user_id] ?? [], true)) {
+                        continue;
+                    }
+
+                    $leaveRows->push([
+                        'id' => null,
+                        'record_type' => 'leave',
+                        'employee_name' => $employeeName,
+                        'attendance_date' => $leaveDate->format('M d, Y'),
+                        'formatted_check_in' => 'On Leave',
+                        'formatted_check_out' => 'On Leave',
+                        'check_in_status' => 'ON_LEAVE',
+                        'check_out_status' => null,
+                        'late_display' => null,
+                        'undertime_display' => null,
+                        'duration' => $leaveRequest->leave_type_label,
+                    ]);
+                }
+            }
+        }
+
+        return $formattedAttendance
+            ->concat($leaveRows)
+            ->sortByDesc(function (array $record) {
+                return Carbon::parse($record['attendance_date'])->format('Y-m-d') . ' ' . ($record['record_type'] === 'leave' ? '23:59:59' : '12:00:00');
+            })
+            ->values();
+    }
+
+    /**
+     * Resolve the date window used by the studio attendance filters.
+     */
+    private function resolveHistoryDateRange(Request $request): array
+    {
         $today = Carbon::today('Asia/Manila');
+        $filterDate = (string) $request->input('filter_date', 'today');
 
         if ($filterDate === 'yesterday') {
-            $query->whereDate('attendance_date', $today->copy()->subDay()->toDateString());
-            return;
+            $date = $today->copy()->subDay()->toDateString();
+
+            return [$date, $date];
         }
 
         if ($filterDate === 'this-week') {
-            $query->whereBetween('attendance_date', [
+            return [
                 $today->copy()->startOfWeek()->toDateString(),
                 $today->copy()->endOfWeek()->toDateString(),
-            ]);
-            return;
+            ];
         }
 
         if ($filterDate === 'this-month') {
-            $query->whereBetween('attendance_date', [
+            return [
                 $today->copy()->startOfMonth()->toDateString(),
                 $today->copy()->endOfMonth()->toDateString(),
-            ]);
-            return;
+            ];
         }
 
         if ($filterDate === 'custom') {
-            if ($request->filled('date_from')) {
-                $query->whereDate('attendance_date', '>=', $request->date_from);
-            }
+            $dateFrom = $request->input('date_from');
+            $dateTo = $request->input('date_to');
 
-            if ($request->filled('date_to')) {
-                $query->whereDate('attendance_date', '<=', $request->date_to);
-            }
-
-            return;
+            return [$dateFrom ?: $today->toDateString(), $dateTo ?: $today->toDateString()];
         }
 
-        $query->whereDate('attendance_date', $today->toDateString());
+        $date = $today->toDateString();
+
+        return [$date, $date];
+    }
+
+    /**
+     * Build a synthetic leave row with attendance-like fields for Blade rendering.
+     */
+    private function makeSyntheticLeaveRecord(array $data): object
+    {
+        return (object) [
+            'id' => null,
+            'record_type' => 'leave',
+            'attendance_date' => Carbon::parse($data['attendance_date']),
+            'studio' => (object) ['studio_name' => $data['studio_name']],
+            'scheduled_start_time' => null,
+            'scheduled_end_time' => null,
+            'formatted_check_in' => 'On Leave',
+            'formatted_check_out' => 'On Leave',
+            'check_in_status' => 'ON_LEAVE',
+            'check_out_status' => null,
+            'check_in_status_badge' => 'badge-soft-info',
+            'check_out_status_badge' => 'badge-soft-secondary',
+            'late_minutes' => 0,
+            'undertime_minutes' => 0,
+            'late_display' => '—',
+            'undertime_display' => '—',
+            'duration' => $data['leave_type_label'],
+            'leave_type_label' => $data['leave_type_label'],
+            'notes' => $data['notes'],
+            'sort_time' => '23:59:59',
+            'employee_name' => $data['employee_name'] ?? 'Unknown',
+        ];
     }
 }
