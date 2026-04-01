@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `migrations` (
   `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=124 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=126 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `pvt_freelancer_categories` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -570,6 +570,39 @@ CREATE TABLE IF NOT EXISTS `tbl_generated_payrolls` (
   CONSTRAINT `tbl_generated_payrolls_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `tbl_leave_requests` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `request_reference` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `studio_id` bigint unsigned NOT NULL,
+  `user_id` bigint unsigned NOT NULL,
+  `leave_type` enum('vacation_leave','sick_leave','emergency_leave','maternity_leave','paternity_leave','bereavement_leave','unpaid_leave','other_leave') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `total_days` decimal(5,2) NOT NULL DEFAULT '1.00',
+  `reason` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('pending','approved','rejected','cancelled') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `rejection_reason` text COLLATE utf8mb4_unicode_ci,
+  `approved_by` bigint unsigned DEFAULT NULL,
+  `approved_at` timestamp NULL DEFAULT NULL,
+  `rejected_by` bigint unsigned DEFAULT NULL,
+  `rejected_at` timestamp NULL DEFAULT NULL,
+  `cancelled_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tbl_leave_requests_request_reference_unique` (`request_reference`),
+  KEY `tbl_leave_requests_approved_by_foreign` (`approved_by`),
+  KEY `tbl_leave_requests_rejected_by_foreign` (`rejected_by`),
+  KEY `tbl_leave_requests_studio_id_status_index` (`studio_id`,`status`),
+  KEY `tbl_leave_requests_user_id_status_index` (`user_id`,`status`),
+  KEY `tbl_leave_requests_start_date_end_date_index` (`start_date`,`end_date`),
+  CONSTRAINT `tbl_leave_requests_approved_by_foreign` FOREIGN KEY (`approved_by`) REFERENCES `tbl_users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tbl_leave_requests_rejected_by_foreign` FOREIGN KEY (`rejected_by`) REFERENCES `tbl_users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tbl_leave_requests_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_leave_requests_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `tbl_locations` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `province` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'cavite',
@@ -602,6 +635,39 @@ CREATE TABLE IF NOT EXISTS `tbl_notifications` (
   KEY `tbl_notifications_created_at_index` (`created_at`),
   CONSTRAINT `tbl_notifications_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `tbl_overtime_requests` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `request_reference` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `studio_id` bigint unsigned NOT NULL,
+  `user_id` bigint unsigned NOT NULL,
+  `overtime_date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `total_hours` decimal(5,2) NOT NULL DEFAULT '0.00',
+  `reason` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('pending','approved','rejected','cancelled') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `rejection_reason` text COLLATE utf8mb4_unicode_ci,
+  `approved_by` bigint unsigned DEFAULT NULL,
+  `approved_at` timestamp NULL DEFAULT NULL,
+  `rejected_by` bigint unsigned DEFAULT NULL,
+  `rejected_at` timestamp NULL DEFAULT NULL,
+  `cancelled_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tbl_overtime_requests_request_reference_unique` (`request_reference`),
+  KEY `tbl_overtime_requests_approved_by_foreign` (`approved_by`),
+  KEY `tbl_overtime_requests_rejected_by_foreign` (`rejected_by`),
+  KEY `tbl_overtime_requests_studio_id_status_index` (`studio_id`,`status`),
+  KEY `tbl_overtime_requests_user_id_status_index` (`user_id`,`status`),
+  KEY `tbl_overtime_requests_overtime_date_index` (`overtime_date`),
+  CONSTRAINT `tbl_overtime_requests_approved_by_foreign` FOREIGN KEY (`approved_by`) REFERENCES `tbl_users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tbl_overtime_requests_rejected_by_foreign` FOREIGN KEY (`rejected_by`) REFERENCES `tbl_users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tbl_overtime_requests_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_overtime_requests_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `tbl_packages` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,

@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             StudioEmployeePayrollSeeder::class,
             StudioEmployeeAttendanceSeeder::class,
             StudioPhotographerAttendanceSeeder::class,
+            EmployeeAttendanceLeaveOvertimePayrollSeeder::class,
             WeddingPackagesSeeder::class,
             EventPackagesSeeder::class,
             FamilyPortraitPackagesSeeder::class,
