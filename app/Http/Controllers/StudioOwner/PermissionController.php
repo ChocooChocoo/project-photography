@@ -23,7 +23,8 @@ class PermissionController extends Controller
      */
     public function getPermissions(Request $request)
     {
-        $query = PermissionModel::query();
+        $query = PermissionModel::query()
+            ->whereIn('portal', ['owner', 'studio-hr', 'studio-finance', 'studio-photographer']);
 
         // Filter by status
         if ($request->filled('status')) {
@@ -72,6 +73,7 @@ class PermissionController extends Controller
     public function getAllPermissions()
     {
         $permissions = PermissionModel::where('status', 'active')
+            ->whereIn('portal', ['owner', 'studio-hr', 'studio-finance', 'studio-photographer'])
             ->orderBy('permission_string')
             ->get(['id', 'name', 'resource', 'action', 'permission_string', 'description']);
 
@@ -112,6 +114,7 @@ class PermissionController extends Controller
                 'permission_string' => $permissionData['permission_string'],
                 'description' => $request->description,
                 'status' => $request->status,
+                'portal' => $permissionData['portal'],
             ]);
 
             DB::commit();
@@ -199,6 +202,7 @@ class PermissionController extends Controller
                 'permission_string' => $permissionData['permission_string'],
                 'description' => $request->description,
                 'status' => $request->status,
+                'portal' => $permissionData['portal'],
             ]);
 
             DB::commit();
@@ -307,14 +311,20 @@ class PermissionController extends Controller
      */
     private function preparePermissionData(Request $request): array
     {
-        $resource = $this->normalizePermissionSegment($request->input('resource'));
-        $action = $this->normalizePermissionSegment($request->input('action'));
+        $normalizedPermissionString = $this->normalizePermissionString($request->input('permission_string'));
+        $segments = array_values(array_filter(explode('.', str_replace(':', '.', $normalizedPermissionString))));
+        $action = end($segments) ?: $this->normalizePermissionSegment($request->input('action'));
+        $resourceSegments = array_slice($segments, 0, -1);
+        $resource = !empty($resourceSegments)
+            ? implode('_', $resourceSegments)
+            : $this->normalizePermissionSegment($request->input('resource'));
 
         return [
-            'name' => $action . '_' . $resource,
+            'name' => $this->buildPermissionName($segments, $resource, $action),
             'resource' => $resource,
             'action' => $action,
-            'permission_string' => $resource . ':' . $action,
+            'permission_string' => $normalizedPermissionString,
+            'portal' => $this->inferPortalFromPermissionString($normalizedPermissionString),
         ];
     }
 
@@ -330,5 +340,55 @@ class PermissionController extends Controller
         $normalizedValue = preg_replace('/[^a-z0-9]+/', '_', $normalizedValue) ?? '';
 
         return trim($normalizedValue, '_');
+    }
+
+    /**
+     * Normalize a permission string while preserving dot notation.
+     */
+    private function normalizePermissionString(?string $value): string
+    {
+        $normalizedValue = strtolower(trim((string) $value));
+        $normalizedValue = str_replace(':', '.', $normalizedValue);
+        $normalizedValue = preg_replace('/[^a-z0-9.]+/', '_', $normalizedValue) ?? '';
+        $normalizedValue = preg_replace('/_+/', '_', $normalizedValue) ?? '';
+        $normalizedValue = preg_replace('/\.+/', '.', $normalizedValue) ?? '';
+
+        return trim($normalizedValue, '._');
+    }
+
+    /**
+     * Build a stable permission name from parsed segments.
+     *
+     * @param array<int, string> $segments
+     */
+    private function buildPermissionName(array $segments, string $resource, string $action): string
+    {
+        if (!empty($segments)) {
+            return implode('_', $segments);
+        }
+
+        return trim($action . '_' . $resource, '_');
+    }
+
+    /**
+     * Infer the RBAC portal from a permission string.
+     */
+    private function inferPortalFromPermissionString(string $permissionString): string
+    {
+        $portal = explode('.', $permissionString)[0] ?? '';
+
+        if (in_array($portal, ['owner', 'studio-hr', 'studio-finance', 'studio-photographer'], true)) {
+            return $portal;
+        }
+
+        if (str_contains($permissionString, 'payroll')) {
+            return 'studio-finance';
+        }
+
+        if (str_contains($permissionString, 'employee') || str_contains($permissionString, 'schedule')) {
+            return 'studio-hr';
+        }
+
+        return auth()->user()?->role ?? 'owner';
     }
 }

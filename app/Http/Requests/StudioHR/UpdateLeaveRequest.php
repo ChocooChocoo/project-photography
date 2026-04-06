@@ -16,7 +16,9 @@ class UpdateLeaveRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->isStudioHr();
+        return auth()->check()
+            && auth()->user()->isStudioHr()
+            && auth()->user()->hasPermission('studio-hr.leave-requests.manage');
     }
 
     /**

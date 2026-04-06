@@ -30,6 +30,24 @@
             {{-- Dashboard --}}
             @php
                 $isDashboardActive = Route::is('owner.dashboard');
+                $ownerUser = auth()->user();
+                $canManageStudios = $ownerUser?->hasPermission('owner.studios.manage') ?? false;
+                $canManageBookings = $ownerUser?->hasPermission('owner.bookings.manage') ?? false;
+                $canManageOnlineGallery = $ownerUser?->hasPermission('owner.online-gallery.manage') ?? false;
+                $canManageSchedules = $ownerUser?->hasPermission('owner.schedules.manage') ?? false;
+                $canManageMembers = $ownerUser?->hasPermission('owner.members.manage') ?? false;
+                $canManagePhotographers = $ownerUser?->hasPermission('owner.photographers.manage') ?? false;
+                $canManageEmployees = $ownerUser?->hasPermission('owner.employees.manage') ?? false;
+                $canManageLeaveRequests = $ownerUser?->hasPermission('owner.leave-requests.manage') ?? false;
+                $canManageOvertimeRequests = $ownerUser?->hasPermission('owner.overtime-requests.manage') ?? false;
+                $canManageRoles = $ownerUser?->hasPermission('owner.roles.manage') ?? false;
+                $canManagePermissions = $ownerUser?->hasPermission('owner.permissions.manage') ?? false;
+                $canManagePayroll = $ownerUser?->hasPermission('owner.payroll.manage') ?? false;
+                $canManagePackages = $ownerUser?->hasPermission('owner.packages.manage') ?? false;
+                $canManageServices = $ownerUser?->hasPermission('owner.services.manage') ?? false;
+                $canManageSubscription = $ownerUser?->hasPermission('owner.subscription.manage') ?? false;
+                $canManageInquiries = $ownerUser?->hasPermission('owner.inquiries.manage') ?? false;
+                $canManageChatbot = $ownerUser?->hasPermission('owner.chatbot.manage') ?? false;
             @endphp
             
             <li class="side-nav-item {{ $isDashboardActive ? 'active' : '' }}">
@@ -45,6 +63,7 @@
                 $pendingStudiosRoutes  = Route::is('owner.studio.create');
             @endphp
             
+            @if ($canManageStudios || Route::has('owner.studio.create'))
             <li class="side-nav-item {{ $manageStudiosRoutes || $pendingStudiosRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageStudios" aria-expanded="{{ $manageStudiosRoutes || $pendingStudiosRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageStudios" class="side-nav-link {{ $manageStudiosRoutes || $pendingStudiosRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-aperture"></i></span>
@@ -73,6 +92,7 @@
                 $pendingBookingsRoutes  = Route::is('owner.booking.create');
             @endphp
             
+            @if ($canManageBookings)
             <li class="side-nav-item {{ $manageBookingsRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageBookings" aria-expanded="{{ $manageBookingsRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageBookings" class="side-nav-link {{ $manageBookingsRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-notebook"></i></span>
@@ -100,6 +120,7 @@
                 $manageOnlineGalleryRoutes = Route::is('owner.online-gallery.index');
             @endphp
             
+            @if ($canManageOnlineGallery)
             <li class="side-nav-item {{ $manageOnlineGalleryRoutes ? 'active' : '' }}">
                 <a href="{{ route('owner.online-gallery.index') }}" class="side-nav-link {{ $manageOnlineGalleryRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-photo"></i></span>
@@ -113,6 +134,7 @@
                 $setupSchedulesRoutes   = Route::is('owner.setup-studio-schedules');
             @endphp
             
+            @if ($canManageSchedules)
             <li class="side-nav-item {{ $manageSchedulesRoutes || $setupSchedulesRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageSchedules" aria-expanded="{{ $manageSchedulesRoutes || $setupSchedulesRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageSchedules" class="side-nav-link {{ $manageSchedulesRoutes || $setupSchedulesRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-calendar-check"></i></span>
@@ -140,6 +162,7 @@
                 $manageMembersRoutes   = Route::is('owner.members.index');
             @endphp
             
+            @if ($canManageMembers)
             <li class="side-nav-item {{ $manageMembersRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageMembers" aria-expanded="{{ $manageMembersRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageMembers" class="side-nav-link {{ $manageMembersRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-user-star"></i></span>
@@ -172,6 +195,7 @@
                 $manageStudioPhotographersRoutes = Route::is('owner.studio-photographers.index');
             @endphp
 
+            @if ($canManagePhotographers)
             <li class="side-nav-item {{ $manageStudioPhotographersRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageStudioPhotographers" aria-expanded="{{ $manageStudioPhotographersRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageStudioPhotographers" class="side-nav-link {{ $manageStudioPhotographersRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-user-plus"></i></span>
@@ -199,6 +223,7 @@
                 $manageEmployeeRoutes = Route::is('owner.employee.index');
             @endphp
 
+            @if ($canManageEmployees)
             <li class="side-nav-item {{ $manageEmployeeRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageEmployee" aria-expanded="{{ $manageEmployeeRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageEmployee" class="side-nav-link {{ $manageEmployeeRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-user-shield"></i></span>
@@ -220,12 +245,20 @@
                     </ul>
                 </div>
             </li>
+            @endif
+            @endif
+            @endif
+            @endif
+            @endif
+            @endif
+            @endif
 
             {{-- Leave Requests --}}
             @php
                 $hrLeaveRequestRoutes = Route::is('owner.hr-leave-requests.*') || Route::is('owner.hr-overtime-requests.*');
             @endphp
 
+            @if ($canManageLeaveRequests || $canManageOvertimeRequests)
             <li class="side-nav-item {{ $hrLeaveRequestRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarLeaveRequests" aria-expanded="{{ $hrLeaveRequestRoutes ? 'true' : 'false' }}" aria-controls="sidebarLeaveRequests" class="side-nav-link {{ $hrLeaveRequestRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-calendar-time"></i></span>
@@ -234,19 +267,24 @@
                 </a>
                 <div class="collapse {{ $hrLeaveRequestRoutes ? 'show' : '' }}" id="sidebarLeaveRequests">
                     <ul class="sub-menu">
+                        @if ($canManageLeaveRequests)
                         <li class="side-nav-item">
                             <a href="{{ route('owner.hr-leave-requests.index') }}" class="side-nav-link {{ $hrLeaveRequestRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="hr-leave-requests">HR Leave Requests</span>
                             </a>
                         </li>
+                        @endif
+                        @if ($canManageOvertimeRequests)
                         <li class="side-nav-item">
                             <a href="{{ route('owner.hr-overtime-requests.index') }}" class="side-nav-link {{ Route::is('owner.hr-overtime-requests.*') ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="hr-overtime-requests">HR Overtime Requests</span>
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Manage Roles and Permission --}}
             @php
@@ -256,6 +294,7 @@
                 $createPermissionRoute = Route::is('owner.permission.create');
             @endphp
 
+            @if ($canManageRoles || $canManagePermissions)
             <li class="side-nav-item {{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageRoles" aria-expanded="{{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'true' : 'false' }}" aria-controls="sidebarManageRoles" class="side-nav-link {{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-shield-check"></i></span>
@@ -264,19 +303,24 @@
                 </a>
                 <div class="collapse {{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'show' : '' }}" id="sidebarManageRoles">
                     <ul class="sub-menu">
+                        @if ($canManageRoles)
                         <li class="side-nav-item">
                             <a href="{{ route('owner.role.index') }}" class="side-nav-link {{ $manageRolesRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="manage-roles">View Roles</span>
                             </a>
                         </li>
+                        @endif
+                        @if ($canManagePermissions)
                         <li class="side-nav-item">
                             <a href="{{ route('owner.permission.index') }}" class="side-nav-link {{ $managePermissionsRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="manage-permissions">View Permissions</span>
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Manage Payroll --}}
             @php
@@ -284,6 +328,7 @@
                 $createPayrollSettingsRoute = Route::is('owner.payroll-settings.create');
             @endphp
 
+            @if ($canManagePayroll)
             <li class="side-nav-item {{ $managePayrollRoutes || $createPayrollSettingsRoute ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManagePayroll" aria-expanded="{{ $managePayrollRoutes || $createPayrollSettingsRoute ? 'true' : 'false' }}" aria-controls="sidebarManagePayroll" class="side-nav-link {{ $managePayrollRoutes || $createPayrollSettingsRoute ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-cash-banknote-edit"></i></span>
@@ -305,6 +350,7 @@
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Manage Packages --}}
             @php
@@ -313,6 +359,7 @@
                 $listPackagesRoutes   = Route::is('owner.packages.list');
             @endphp
 
+            @if ($canManagePackages)
             <li class="side-nav-item {{ $managePackagesRoutes || $createPackagesRoutes || $listPackagesRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManagePackages" aria-expanded="{{ $managePackagesRoutes || $createPackagesRoutes || $listPackagesRoutes ? 'true' : 'false' }}" aria-controls="sidebarManagePackages" class="side-nav-link {{ $managePackagesRoutes || $createPackagesRoutes || $listPackagesRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-package"></i></span>
@@ -339,6 +386,7 @@
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Manage Category Services --}}
             @php
@@ -346,6 +394,7 @@
                 $createCategoryServicesRoutes  = Route::is('owner.services.create');
             @endphp
             
+            @if ($canManageServices)
             <li class="side-nav-item {{ $manageCategoryServicesRoutes || $createCategoryServicesRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageCategoryServices" aria-expanded="{{ $manageCategoryServicesRoutes || $createCategoryServicesRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageCategoryServices" class="side-nav-link {{ $manageCategoryServicesRoutes || $createCategoryServicesRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-list-tree"></i></span>
@@ -367,6 +416,7 @@
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Manage Subscription --}}
             @php
@@ -374,6 +424,7 @@
                 $statusSubscriptionRoutes = Route::is('owner.subscription.status');
             @endphp
             
+            @if ($canManageSubscription)
             <li class="side-nav-item {{ $manageSubscriptionRoutes || $statusSubscriptionRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageSubscription" aria-expanded="{{ $manageSubscriptionRoutes || $statusSubscriptionRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageSubscription" class="side-nav-link {{ $manageSubscriptionRoutes || $statusSubscriptionRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-carambola"></i></span>
@@ -395,6 +446,7 @@
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Inquiries & Chatbot --}}
             @php
@@ -406,6 +458,7 @@
                 $isChatbotActive = $chatbotConfigRoutes || $chatbotIntentsRoutes || $chatbotConversationsRoutes;
             @endphp
 
+            @if ($canManageInquiries || $canManageChatbot)
             <li class="side-nav-item {{ $inquiriesRoutes || $isChatbotActive ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarInquiries" aria-expanded="{{ $inquiriesRoutes || $isChatbotActive ? 'true' : 'false' }}" aria-controls="sidebarInquiries" class="side-nav-link {{ $inquiriesRoutes || $isChatbotActive ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-message-2-question"></i></span>
@@ -415,13 +468,16 @@
                 <div class="collapse {{ $inquiriesRoutes || $isChatbotActive ? 'show' : '' }}" id="sidebarInquiries">
                     <ul class="sub-menu">
                         {{-- View Inquiries --}}
+                        @if ($canManageInquiries)
                         <li class="side-nav-item">
                             <a href="{{ route('owner.inquiries.index') }}" class="side-nav-link {{ $inquiriesRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="view-inquiries">View Inquiries</span>
                             </a>
                         </li>
+                        @endif
                         
                         {{-- Chatbot Configuration --}}
+                        @if ($canManageChatbot)
                         <li class="side-nav-item">
                             <a href="{{ route('chatbot.config') }}" class="side-nav-link {{ $chatbotConfigRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="chatbot-config">Chatbot Settings</span>
@@ -441,9 +497,11 @@
                                 <span class="menu-text" data-lang="conversation-history">Chat History</span>
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </div>
             </li>
+            @endif
         </ul>
     </div>
 </div>

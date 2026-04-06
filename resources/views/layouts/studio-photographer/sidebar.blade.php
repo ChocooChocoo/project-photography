@@ -30,20 +30,31 @@
             {{-- Dashboard --}}
             @php
                 $isDashboardActive = Route::is('studio-photographer.dashboard');
+                $photographerUser = auth()->user();
+                $canViewDashboard = $photographerUser?->hasPermission('studio-photographer.dashboard.view') ?? false;
+                $canManageLeaveRequests = $photographerUser?->hasPermission('studio-photographer.leave-requests.manage') ?? false;
+                $canManageOvertimeRequests = $photographerUser?->hasPermission('studio-photographer.overtime-requests.manage') ?? false;
+                $canViewAttendance = $photographerUser?->hasPermission('studio-photographer.attendance.view') ?? false;
+                $canViewStudio = $photographerUser?->hasPermission('studio-photographer.studio.view') ?? false;
+                $canViewBookings = $photographerUser?->hasPermission('studio-photographer.bookings.view') ?? false;
+                $canViewOnlineGallery = $photographerUser?->hasPermission('studio-photographer.online_gallery.view') ?? false;
             @endphp
             
+            @if($canViewDashboard)
             <li class="side-nav-item {{ $isDashboardActive ? 'active' : '' }}">
                 <a href="{{ route('studio-photographer.dashboard') }}" class="side-nav-link {{ $isDashboardActive ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-layout-dashboard"></i></span>
                     <span class="menu-text" data-lang="dashboard">Dashboard</span>
                 </a>
             </li>
+            @endif
 
             {{-- Request --}}
             @php
                 $requestRoutes = Route::is('studio-photographer.leave-requests.*') || Route::is('studio-photographer.overtime-requests.*');
             @endphp
 
+            @if($canManageLeaveRequests || $canManageOvertimeRequests)
             <li class="side-nav-item {{ $requestRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarPhotographerRequest" aria-expanded="{{ $requestRoutes ? 'true' : 'false' }}" aria-controls="sidebarPhotographerRequest" class="side-nav-link {{ $requestRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-file-text"></i></span>
@@ -52,6 +63,7 @@
                 </a>
                 <div class="collapse {{ $requestRoutes ? 'show' : '' }}" id="sidebarPhotographerRequest">
                     <ul class="sub-menu">
+                        @if($canManageLeaveRequests)
                         <li class="side-nav-item">
                             <a href="{{ route('studio-photographer.leave-requests.create') }}" class="side-nav-link {{ Route::is('studio-photographer.leave-requests.create') ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="request-leave">Request Leave</span>
@@ -62,6 +74,8 @@
                                 <span class="menu-text" data-lang="view-requested-leave">View Requested Leave</span>
                             </a>
                         </li>
+                        @endif
+                        @if($canManageOvertimeRequests)
                         <li class="side-nav-item">
                             <a href="{{ route('studio-photographer.overtime-requests.create') }}" class="side-nav-link {{ Route::is('studio-photographer.overtime-requests.create') ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="request-overtime">Request Overtime</span>
@@ -72,27 +86,32 @@
                                 <span class="menu-text" data-lang="view-requested-overtime">View Requested Overtime</span>
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Attendance --}}
             @php
                 $attendanceRoutes = Route::is('studio-photographer.attendance.index');
             @endphp
 
+            @if($canViewAttendance)
             <li class="side-nav-item {{ $attendanceRoutes ? 'active' : '' }}">
                 <a href="{{ route('studio-photographer.attendance.index') }}" class="side-nav-link {{ $attendanceRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-calendar-time"></i></span>
                     <span class="menu-text" data-lang="attendance">Attendance</span>
                 </a>
             </li>
+            @endif
 
             {{-- Assigned Studio --}}
             @php
                 $assignedStudioRoutes   = Route::is('studio-photographer.studio.index');
             @endphp
             
+            @if($canViewStudio)
             <li class="side-nav-item {{ $assignedStudioRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageAssignedStudio" aria-expanded="{{ $assignedStudioRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageAssignedStudio" class="side-nav-link {{ $assignedStudioRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-aperture"></i></span>
@@ -109,12 +128,14 @@
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Assigned Booking --}}
             @php
                 $assignedBookingRoutes = Route::is('assigned.bookings');
             @endphp
 
+            @if($canViewBookings)
             <li class="side-nav-item {{ $assignedBookingRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageAssignedBooking" aria-expanded="{{ $assignedBookingRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageAssignedBooking" class="side-nav-link {{ $assignedBookingRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-calendar-check"></i></span>
@@ -131,18 +152,21 @@
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Manage Online Gallery --}}
             @php
                 $manageOnlineGalleryRoutes = Route::is('studio-photographer.online-gallery.index');
             @endphp
 
+            @if($canViewOnlineGallery)
             <li class="side-nav-item {{ $manageOnlineGalleryRoutes ? 'active' : '' }}">
                 <a href="{{ route('studio-photographer.online-gallery.index') }}" class="side-nav-link {{ $manageOnlineGalleryRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-photo"></i></span>
                     <span class="menu-text" data-lang="online-gallery">Online Gallery</span>
                 </a>
             </li>
+            @endif
         </ul>
     </div>
 </div>

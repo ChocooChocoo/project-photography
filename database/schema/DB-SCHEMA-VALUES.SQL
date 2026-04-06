@@ -98,7 +98,6 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 	(93, '2026_03_02_135545_add_multiple_locations_to_tbl_freelancer_packages_table', 67),
 	(98, '2026_03_03_090434_add_multiple_locations_to_tbl_bookings_table', 68),
 	(99, '2026_03_03_090606_add_multiple_locations_to_tbl_bookings_table', 69),
-	(100, '2026_03_04_060017_create_tbl_rbac_table', 70),
 	(101, '2026_03_04_060048_create_tbl_studio_employee_schedule_table', 70),
 	(102, '2026_03_04_061555_update_users_role_enum_for_employees', 71),
 	(103, '2026_03_04_062314_update_users_user_type_enum', 72),

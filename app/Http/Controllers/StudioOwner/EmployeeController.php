@@ -47,6 +47,7 @@ class EmployeeController extends Controller
                   ->from('tbl_user_roles')
                   ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
                   ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_user_roles.studio_id', $studioIds)
                   ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             });
         
@@ -194,7 +195,7 @@ class EmployeeController extends Controller
             }
             
             // Assign role to user (new RBAC system)
-            $user->assignRole($selectedRole);
+            $user->assignRole($selectedRole, (int) $request->studio_id);
             
             // Create employee schedule
             $schedule = EmployeeScheduleModel::create([
@@ -276,6 +277,7 @@ class EmployeeController extends Controller
                   ->from('tbl_user_roles')
                   ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
                   ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_user_roles.studio_id', $studioIds)
                   ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             });
         
@@ -385,6 +387,7 @@ class EmployeeController extends Controller
                   ->from('tbl_user_roles')
                   ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
                   ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_user_roles.studio_id', $studioIds)
                   ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             })
             ->firstOrFail();
@@ -554,6 +557,7 @@ class EmployeeController extends Controller
                   ->from('tbl_user_roles')
                   ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
                   ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_user_roles.studio_id', $studioIds)
                   ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             })
             ->firstOrFail();
@@ -621,6 +625,7 @@ class EmployeeController extends Controller
                       ->from('tbl_user_roles')
                       ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
                       ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                      ->whereIn('tbl_user_roles.studio_id', $studioIds)
                       ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
                 })
                 ->firstOrFail();

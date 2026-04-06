@@ -108,7 +108,7 @@ class StudioEmployeesSeeder extends Seeder
                 ]
             );
 
-            $user->assignRole($role);
+            $user->assignRole($role, $studio->id);
 
             $operatingDays = $this->normalizeOperatingDays($studio->operating_days);
             $startTime = $studio->start_time ?: '09:00:00';

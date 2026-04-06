@@ -28,9 +28,7 @@ class EmployeeController extends Controller
     {
         $hrId = auth()->id();
         
-        // Get the HR user's role and permissions
-        $hrUser = UserModel::with('roles')->findOrFail($hrId);
-        $hrRole = $hrUser->roles->first();
+        $hrUser = UserModel::findOrFail($hrId);
         
         // Get studios assigned to this HR via tbl_user_roles (new RBAC)
         $assignedStudioIds = $this->getAssignedStudioIds($hrId);
@@ -41,11 +39,11 @@ class EmployeeController extends Controller
             ->get();
         
         // Check if HR has view_employees permission
-        $canView = $hrRole ? $hrRole->hasPermission('view_employees') : false;
+        $canView = $hrUser->hasPermission('view_employees');
         
         // Check if HR has update permission for edit/delete actions
-        $canUpdate = $hrRole ? $hrRole->hasPermission('edit_employee') : false;
-        $canDelete = $hrRole ? $hrRole->hasPermission('delete_employee') : false;
+        $canUpdate = $hrUser->hasPermission('edit_employee');
+        $canDelete = $hrUser->hasPermission('delete_employee');
         
         // Build query for employees (excluding HR themselves)
         $query = UserModel::with(['roles', 'employeeSchedule' => function($q) use ($assignedStudioIds) {
@@ -58,6 +56,7 @@ class EmployeeController extends Controller
                   ->from('tbl_user_roles')
                   ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
                   ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_user_roles.studio_id', $assignedStudioIds)
                   ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             });
         
@@ -132,12 +131,8 @@ class EmployeeController extends Controller
     {
         $hrId = auth()->id();
         
-        // Get the HR user's role and check create permission
-        $hrUser = UserModel::with('roles')->findOrFail($hrId);
-        $hrRole = $hrUser->roles->first();
-        
-        // Check if HR has create_employee permission
-        $canCreate = $hrRole ? $hrRole->hasPermission('create_employee') : false;
+        $hrUser = UserModel::findOrFail($hrId);
+        $canCreate = $hrUser->hasPermission('create_employee');
         
         // Get studios assigned to this HR via tbl_user_roles
         $assignedStudioIds = $this->getAssignedStudioIds($hrId);
@@ -160,11 +155,9 @@ class EmployeeController extends Controller
         try {
             $hrId = auth()->id();
             
-            // Verify HR has create permission
-            $hrUser = UserModel::with('roles')->findOrFail($hrId);
-            $hrRole = $hrUser->roles->first();
-            
-            if (!$hrRole || !$hrRole->hasPermission('create_employee')) {
+            $hrUser = UserModel::findOrFail($hrId);
+
+            if (!$hrUser->hasPermission('create_employee')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'You do not have permission to create employees.'
@@ -228,7 +221,7 @@ class EmployeeController extends Controller
             }
             
             // Assign role to user (new RBAC system)
-            $user->assignRole($selectedRole);
+            $user->assignRole($selectedRole, (int) $request->studio_id);
             
             // Create employee schedule
             $schedule = EmployeeScheduleModel::create([
@@ -311,6 +304,7 @@ class EmployeeController extends Controller
                   ->from('tbl_user_roles')
                   ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
                   ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_user_roles.studio_id', $assignedStudioIds)
                   ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             });
         
@@ -416,6 +410,7 @@ class EmployeeController extends Controller
                   ->from('tbl_user_roles')
                   ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
                   ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_user_roles.studio_id', $assignedStudioIds)
                   ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             })
             ->firstOrFail();
@@ -511,12 +506,13 @@ class EmployeeController extends Controller
             return collect();
         }
         
-        // Get studios where this HR is assigned (via employee schedule or directly)
-        $studioIds = EmployeeScheduleModel::where('user_id', $hrId)->pluck('studio_id');
-        
-        // If no schedule found, get studios from the role's assigned studios
+        $studioIds = $hrUser->getAssignedStudioIds('studio-hr');
+
         if ($studioIds->isEmpty()) {
-            // This is a fallback - in practice, HR users should have schedules
+            $studioIds = EmployeeScheduleModel::where('user_id', $hrId)->pluck('studio_id');
+        }
+
+        if ($studioIds->isEmpty()) {
             $studioIds = StudiosModel::where('user_id', $hrId)->pluck('id');
         }
         
@@ -534,11 +530,9 @@ class EmployeeController extends Controller
         
         $hrId = auth()->id();
         
-        // Check if HR has edit_employee permission
-        $hrUser = UserModel::with('roles')->findOrFail($hrId);
-        $hrRole = $hrUser->roles->first();
-        
-        if (!$hrRole || !$hrRole->hasPermission('edit_employee')) {
+        $hrUser = UserModel::findOrFail($hrId);
+
+        if (!$hrUser->hasPermission('edit_employee')) {
             return response()->json([
                 'success' => false,
                 'message' => 'You do not have permission to update employee status.'
@@ -556,6 +550,7 @@ class EmployeeController extends Controller
                   ->from('tbl_user_roles')
                   ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
                   ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                  ->whereIn('tbl_user_roles.studio_id', $assignedStudioIds)
                   ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             })
             ->firstOrFail();
@@ -584,11 +579,9 @@ class EmployeeController extends Controller
         
         $hrId = auth()->id();
         
-        // Check if HR has manage_schedules permission
-        $hrUser = UserModel::with('roles')->findOrFail($hrId);
-        $hrRole = $hrUser->roles->first();
-        
-        if (!$hrRole || !$hrRole->hasPermission('manage_schedules')) {
+        $hrUser = UserModel::findOrFail($hrId);
+
+        if (!$hrUser->hasPermission('manage_schedules')) {
             return response()->json([
                 'success' => false,
                 'message' => 'You do not have permission to update employee schedules.'
@@ -624,11 +617,9 @@ class EmployeeController extends Controller
         try {
             $hrId = auth()->id();
             
-            // Check if HR has delete_employee permission
-            $hrUser = UserModel::with('roles')->findOrFail($hrId);
-            $hrRole = $hrUser->roles->first();
-            
-            if (!$hrRole || !$hrRole->hasPermission('delete_employee')) {
+            $hrUser = UserModel::findOrFail($hrId);
+
+            if (!$hrUser->hasPermission('delete_employee')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'You do not have permission to delete employees.'
@@ -653,6 +644,7 @@ class EmployeeController extends Controller
                       ->from('tbl_user_roles')
                       ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
                       ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                      ->whereIn('tbl_user_roles.studio_id', $assignedStudioIds)
                       ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
                 })
                 ->firstOrFail();

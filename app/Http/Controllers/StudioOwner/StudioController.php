@@ -10,6 +10,7 @@ use App\Models\StudioOwner\StudioCategoryModel;
 use App\Models\Admin\LocationModel;
 use App\Models\Admin\CategoriesModel;
 use App\Models\StudioOwner\UserModel;
+use App\Models\StudioOwner\RoleModel;
 use App\Models\StudioPlanModel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -269,6 +270,11 @@ class StudioController extends Controller
             \Log::info('Studio Data to Create:', $studioData);
 
             $studio = StudiosModel::create($studioData);
+
+            $ownerRole = RoleModel::where('name', 'owner-super-admin')->first();
+            if ($ownerRole) {
+                $user->assignRole($ownerRole, $studio->id);
+            }
 
             // Create studio schedule
             $this->createStudioSchedule($studio, $location, $validatedData);

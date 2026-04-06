@@ -16,7 +16,9 @@ class StoreLeaveRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->role === 'studio-photographer';
+        return auth()->check()
+            && auth()->user()->isStudioPhotographer()
+            && auth()->user()->hasPermission('studio-photographer.leave-requests.manage');
     }
 
     /**

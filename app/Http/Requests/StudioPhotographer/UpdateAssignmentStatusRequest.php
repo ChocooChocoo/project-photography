@@ -9,7 +9,9 @@ class UpdateAssignmentStatusRequest extends FormRequest
 {
     public function authorize()
     {
-        return true;
+        return auth()->check()
+            && auth()->user()->isStudioPhotographer()
+            && auth()->user()->hasPermission('studio-photographer.assignment.update_status');
     }
 
     public function rules()

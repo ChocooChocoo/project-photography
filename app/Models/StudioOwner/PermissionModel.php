@@ -23,6 +23,7 @@ class PermissionModel extends Model
      */
     protected $fillable = [
         'name',
+        'portal',
         'resource',
         'action',
         'permission_string',
@@ -57,7 +58,19 @@ class PermissionModel extends Model
 
         $identifiers = [$trimmedPermissionIdentifier];
 
-        if (str_contains($trimmedPermissionIdentifier, ':')) {
+        if (str_contains($trimmedPermissionIdentifier, '.')) {
+            $segments = array_values(array_filter(explode('.', $trimmedPermissionIdentifier), static fn ($segment) => $segment !== ''));
+
+            if (count($segments) >= 2) {
+                $action = array_pop($segments);
+                $resource = array_pop($segments);
+
+                if ($resource && $action) {
+                    $identifiers[] = $action . '_' . $resource;
+                    $identifiers[] = $resource . ':' . $action;
+                }
+            }
+        } elseif (str_contains($trimmedPermissionIdentifier, ':')) {
             [$resource, $action] = array_pad(explode(':', $trimmedPermissionIdentifier, 2), 2, '');
             $identifiers[] = $action . '_' . $resource;
         } elseif (str_contains($trimmedPermissionIdentifier, '_')) {

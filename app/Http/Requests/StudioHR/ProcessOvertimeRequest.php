@@ -18,7 +18,9 @@ class ProcessOvertimeRequest extends FormRequest
         /** @var \App\Models\UserModel|null $user */
         $user = UserModel::find(auth()->id());
 
-        return $user !== null && $user->isStudioHr();
+        return $user !== null
+            && $user->isStudioHr()
+            && $user->hasPermission('studio-hr.overtime-requests.manage');
     }
 
     /**

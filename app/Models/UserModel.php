@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use App\Models\Admin\LocationModel;
 
@@ -326,14 +327,6 @@ class UserModel extends Authenticatable
     }
 
     /**
-     * Get the RBAC permissions for this user.
-     */
-    public function rbac()
-    {
-        return $this->hasMany(\App\Models\StudioOwner\RbacModel::class, 'user_id');
-    }
-
-    /**
      * Get the employee schedule for this user.
      */
     public function employeeSchedule()
@@ -395,76 +388,143 @@ class UserModel extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(\App\Models\StudioOwner\RoleModel::class, 'tbl_user_roles', 'user_id', 'role_id')
+            ->withPivot('studio_id')
             ->withTimestamps();
+    }
+
+    /**
+     * Get active RBAC roles, optionally scoped by portal and studio.
+     */
+    public function activeRoles(?string $portal = null, ?int $studioId = null)
+    {
+        $query = $this->roles()->where('tbl_roles.status', 'active');
+
+        if ($portal !== null) {
+            $query->where('tbl_roles.portal', $portal);
+        }
+
+        if ($studioId !== null) {
+            $query->wherePivot('studio_id', $studioId);
+        }
+
+        return $query;
     }
 
     /**
      * Check if user has a specific role.
      */
-    public function hasRole(string $roleName): bool
+    public function hasRole(string $roleName, ?int $studioId = null): bool
     {
-        return $this->roles()->where('name', $roleName)->exists();
+        return $this->activeRoles(null, $studioId)->where('name', $roleName)->exists();
     }
 
     /**
      * Check if user has any of the given roles.
      */
-    public function hasAnyRole(array $roleNames): bool
+    public function hasAnyRole(array $roleNames, ?int $studioId = null): bool
     {
-        return $this->roles()->whereIn('name', $roleNames)->exists();
+        return $this->activeRoles(null, $studioId)->whereIn('name', $roleNames)->exists();
     }
 
     /**
      * Assign a role to the user.
      */
-    public function assignRole($role)
+    public function assignRole($role, ?int $studioId = null)
     {
         if (is_string($role)) {
             $role = \App\Models\StudioOwner\RoleModel::where('name', $role)->first();
         }
-        
-        if ($role && !$this->hasRole($role->name)) {
-            $this->roles()->attach($role->id);
+
+        if ($role && !$this->roles()
+            ->where('tbl_roles.id', $role->id)
+            ->wherePivot('studio_id', $studioId)
+            ->exists()) {
+            $this->roles()->attach($role->id, ['studio_id' => $studioId]);
         }
-        
+
         return $this;
     }
 
     /**
      * Sync roles for the user.
      */
-    public function syncRoles(array $roleNames)
+    public function syncRoles(array $roleNames, ?int $studioId = null)
     {
         $roleIds = \App\Models\StudioOwner\RoleModel::whereIn('name', $roleNames)->pluck('id')->toArray();
-        $this->roles()->sync($roleIds);
-        
+
+        if ($studioId === null) {
+            $this->roles()->sync($roleIds);
+
+            return $this;
+        }
+
+        $this->roles()->newPivotStatement()
+            ->where('user_id', $this->id)
+            ->where('studio_id', $studioId)
+            ->delete();
+
+        foreach ($roleIds as $roleId) {
+            $this->roles()->attach($roleId, ['studio_id' => $studioId]);
+        }
+
         return $this;
     }
 
     /**
      * Get all permissions for this user through their roles.
      */
-    public function getAllPermissions(): \Illuminate\Support\Collection
+    public function getAllPermissions(?int $studioId = null, ?string $portal = null): Collection
     {
         $permissions = collect();
-        
-        foreach ($this->roles as $role) {
-            $permissions = $permissions->merge($role->permissions);
+
+        $roles = $this->activeRoles($portal, $studioId)->with(['permissions' => function ($query) use ($portal) {
+            $query->where('tbl_permissions.status', 'active');
+
+            if ($portal !== null) {
+                $query->where('tbl_permissions.portal', $portal);
+            }
+        }])->get();
+
+        foreach ($roles as $role) {
+            $permissions = $permissions->merge(
+                $role->permissions->where('status', 'active')
+            );
         }
-        
+
         return $permissions->unique('id');
     }
 
     /**
      * Check if user has a specific permission.
      */
-    public function hasPermission(string $permissionName): bool
+    public function hasPermission(string $permissionName, ?int $studioId = null): bool
     {
         $permissionIdentifiers = \App\Models\StudioOwner\PermissionModel::buildPermissionIdentifiers($permissionName);
+        $portal = $this->getPortalName();
 
-        return $this->getAllPermissions()->contains(function ($permission) use ($permissionIdentifiers) {
+        return $this->getAllPermissions($studioId, $portal)->contains(function ($permission) use ($permissionIdentifiers) {
             return in_array($permission->name, $permissionIdentifiers, true)
                 || in_array($permission->permission_string, $permissionIdentifiers, true);
         });
+    }
+
+    /**
+     * Get the current portal identifier for this user.
+     */
+    public function getPortalName(): string
+    {
+        return $this->role;
+    }
+
+    /**
+     * Get studio IDs assigned through active RBAC roles for the current portal.
+     */
+    public function getAssignedStudioIds(?string $portal = null): Collection
+    {
+        return $this->activeRoles($portal ?? $this->getPortalName())
+            ->pluck('tbl_user_roles.studio_id')
+            ->filter()
+            ->unique()
+            ->values();
     }
 }

@@ -73,8 +73,8 @@ class UpdatePayrollApprovalRequest extends FormRequest
     private function hasPayrollPermission(UserModel $user, string $action): bool
     {
         $permissionMap = [
-            'approve' => ['approve_payroll', 'manage_payroll'],
-            'reject' => ['reject_payroll', 'manage_payroll'],
+            'approve' => ['studio-finance.payroll.approve', 'studio-finance.payroll.manage'],
+            'reject' => ['studio-finance.payroll.reject', 'studio-finance.payroll.manage'],
         ];
 
         foreach ($permissionMap[$action] ?? [] as $permissionName) {

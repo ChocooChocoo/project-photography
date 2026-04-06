@@ -190,8 +190,13 @@ class EmployeePayrollRequest extends FormRequest
 
     private function getAssignedStudioIds($hrId): array
     {
-        $studioIds = EmployeeScheduleModel::where('user_id', $hrId)
-            ->pluck('studio_id');
+        $user = UserModel::find($hrId);
+        $studioIds = $user ? $user->getAssignedStudioIds('studio-hr') : collect();
+
+        if ($studioIds->isEmpty()) {
+            $studioIds = EmployeeScheduleModel::where('user_id', $hrId)
+                ->pluck('studio_id');
+        }
 
         if ($studioIds->isEmpty()) {
             $studioIds = DB::table('tbl_studio_photographers')

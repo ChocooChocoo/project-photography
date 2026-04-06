@@ -13,7 +13,9 @@ class CheckInRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check();
+        return auth()->check()
+            && auth()->user()->isStudioFinance()
+            && auth()->user()->hasPermission('studio-finance.attendance.view');
     }
 
     /**

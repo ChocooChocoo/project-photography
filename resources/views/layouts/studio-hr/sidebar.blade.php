@@ -30,14 +30,26 @@
             {{-- Dashboard --}}
             @php
                 $isDashboardActive = Route::is('studio-hr.dashboard');
+                $hrUser = auth()->user();
+                $canViewDashboard = $hrUser?->hasPermission('studio-hr.dashboard.view') ?? false;
+                $canManageLeaveRequests = $hrUser?->hasPermission('studio-hr.leave-requests.manage') ?? false;
+                $canManageOvertimeRequests = $hrUser?->hasPermission('studio-hr.overtime-requests.manage') ?? false;
+                $canViewEmployees = $hrUser?->hasPermission('studio-hr.employees.view') ?? false;
+                $canCreateEmployees = $hrUser?->hasPermission('studio-hr.employee.create') ?? false;
+                $canViewPayroll = $hrUser?->hasPermission('studio-hr.payroll.view') ?? false;
+                $canCreatePayroll = $hrUser?->hasPermission('studio-hr.payroll.create') ?? false;
+                $canGeneratePayroll = $hrUser?->hasPermission('studio-hr.generate-payroll.manage') ?? false;
+                $canViewAttendance = $hrUser?->hasPermission('studio-hr.attendance.view') ?? false;
             @endphp
             
+            @if($canViewDashboard)
             <li class="side-nav-item {{ $isDashboardActive ? 'active' : '' }}">
                 <a href="{{ route('studio-hr.dashboard') }}" class="side-nav-link {{ $isDashboardActive ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-layout-dashboard"></i></span>
                     <span class="menu-text" data-lang="dashboard">Dashboard</span>
                 </a>
             </li>
+            @endif
 
             {{-- Request --}}
             @php
@@ -47,6 +59,7 @@
                     || Route::is('studio-hr.employees-overtime-requests.*');
             @endphp
 
+            @if($canManageLeaveRequests || $canManageOvertimeRequests)
             <li class="side-nav-item {{ $requestRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarHrRequest" aria-expanded="{{ $requestRoutes ? 'true' : 'false' }}" aria-controls="sidebarHrRequest" class="side-nav-link {{ $requestRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-file-text"></i></span>
@@ -55,6 +68,7 @@
                 </a>
                 <div class="collapse {{ $requestRoutes ? 'show' : '' }}" id="sidebarHrRequest">
                     <ul class="sub-menu">
+                        @if($canManageLeaveRequests)
                         <li class="side-nav-item">
                             <a href="{{ route('studio-hr.leave-requests.create') }}" class="side-nav-link {{ Route::is('studio-hr.leave-requests.create') ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="request-leave">Request Leave</span>
@@ -70,6 +84,8 @@
                                 <span class="menu-text" data-lang="employees-leave-requests">Employees Leave Requests</span>
                             </a>
                         </li>
+                        @endif
+                        @if($canManageOvertimeRequests)
                         <li class="side-nav-item">
                             <a href="{{ route('studio-hr.overtime-requests.create') }}" class="side-nav-link {{ Route::is('studio-hr.overtime-requests.create') ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="request-overtime">Request Overtime</span>
@@ -85,15 +101,18 @@
                                 <span class="menu-text" data-lang="employees-overtime-requests">Employees Overtime Requests</span>
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Manage Employee --}}
             @php
                 $manageEmployeeRoutes = Route::is('studio-hr.employee.index');
             @endphp
 
+            @if($canViewEmployees || $canCreateEmployees)
             <li class="side-nav-item {{ $manageEmployeeRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageEmployee" aria-expanded="{{ $manageEmployeeRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageEmployee" class="side-nav-link {{ $manageEmployeeRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-user-shield"></i></span>
@@ -102,26 +121,29 @@
                 </a>
                 <div class="collapse {{ $manageEmployeeRoutes ? 'show' : '' }}" id="sidebarManageEmployee">
                     <ul class="sub-menu">
+                        @if($canViewEmployees)
                         <li class="side-nav-item">
                             <a href="{{ route('studio-hr.employee.index') }}" class="side-nav-link {{ $manageEmployeeRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="manage-employee">View Employee</span>
                             </a>
                         </li>
+                        @endif
+                        @if($canCreateEmployees)
                         <li class="side-nav-item">
                             <a href="{{ route('studio-hr.employee.create') }}" class="side-nav-link">
                                 <span class="menu-text" data-lang="create-employee">Create Employee</span>
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Manage Payroll --}}
             @php
                 $managePayrollRoutes = Route::is('studio-hr.payroll-settings.index');
                 $createPayrollRoute = Route::is('studio-hr.payroll-settings.create');
-                $canViewPayroll = auth()->user()->hasPermission('view_payroll') || auth()->user()->hasPermission('manage_payroll');
-                $canCreatePayroll = auth()->user()->hasPermission('create_payroll') || auth()->user()->hasPermission('manage_payroll');
             @endphp
 
             @if($canViewPayroll || $canCreatePayroll)
@@ -157,18 +179,21 @@
                 $generatePayrollRoutes = Route::is('studio-hr.generate-payroll.index');
             @endphp
 
+            @if($canGeneratePayroll)
             <li class="side-nav-item {{ $generatePayrollRoutes ? 'active' : '' }}">
                 <a href="{{ route('studio-hr.generate-payroll.index') }}" class="side-nav-link {{ $generatePayrollRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-cash-register"></i></span>
                     <span class="menu-text" data-lang="generate-payroll">Generate Payroll</span>
                 </a>
             </li>
+            @endif
 
             {{-- Manage Attendance --}}
             @php
                 $manageAttendanceRoutes = Route::is('studio-hr.attendance.index');
             @endphp
 
+            @if($canViewAttendance)
             <li class="side-nav-item {{ $manageAttendanceRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarManageAttendance" aria-expanded="{{ $manageAttendanceRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageAttendance" class="side-nav-link {{ $manageAttendanceRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-calendar"></i></span>
@@ -185,6 +210,7 @@
                     </ul>
                 </div>
             </li>
+            @endif
         </ul>
     </div>
 </div>

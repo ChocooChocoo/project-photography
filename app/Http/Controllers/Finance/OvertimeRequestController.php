@@ -337,8 +337,13 @@ class OvertimeRequestController extends Controller
      */
     private function getAssignedStudio(int $financeUserId): ?StudiosModel
     {
-        $studioIds = EmployeeScheduleModel::where('user_id', $financeUserId)
-            ->pluck('studio_id');
+        $financeUser = UserModel::find($financeUserId);
+        $studioIds = $financeUser ? $financeUser->getAssignedStudioIds('studio-finance') : collect();
+
+        if ($studioIds->isEmpty()) {
+            $studioIds = EmployeeScheduleModel::where('user_id', $financeUserId)
+                ->pluck('studio_id');
+        }
 
         if ($studioIds->isEmpty()) {
             $studioIds = StudiosModel::where('user_id', $financeUserId)->pluck('id');

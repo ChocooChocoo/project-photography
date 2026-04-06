@@ -14,7 +14,9 @@ class StoreOvertimeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->isStudioPhotographer();
+        return auth()->check()
+            && auth()->user()->isStudioPhotographer()
+            && auth()->user()->hasPermission('studio-photographer.overtime-requests.manage');
     }
 
     /**

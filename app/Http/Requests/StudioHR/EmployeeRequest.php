@@ -5,7 +5,6 @@ namespace App\Http\Requests\StudioHR;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Models\StudioOwner\RoleModel;
-use App\Models\UserModel;
 
 class EmployeeRequest extends FormRequest
 {
@@ -15,18 +14,10 @@ class EmployeeRequest extends FormRequest
     public function authorize(): bool
     {
         $user = auth()->user();
-        
-        // Check if user is authenticated and has studio-hr role
-        if (!$user || $user->role !== 'studio-hr') {
-            return false;
-        }
-        
-        // Get the HR user's role and check create permission
-        $hrUser = UserModel::with('roles')->find($user->id);
-        $hrRole = $hrUser ? $hrUser->roles->first() : null;
-        
-        // Only allow if HR has create_employee permission
-        return $hrRole && $hrRole->hasPermission('create_employee');
+
+        return $user
+            && $user->role === 'studio-hr'
+            && $user->hasPermission('create_employee');
     }
 
     /**
@@ -36,11 +27,17 @@ class EmployeeRequest extends FormRequest
      */
     public function rules(): array
     {
+        $assignedStudioIds = auth()->user()?->getAssignedStudioIds('studio-hr')->all() ?? [];
+
         $rules = [
             'studio_id' => [
                 'required',
-                Rule::exists('tbl_studios', 'id')->where(function ($query) {
+                Rule::exists('tbl_studios', 'id')->where(function ($query) use ($assignedStudioIds) {
                     $query->whereIn('status', ['verified', 'active']);
+
+                    if (!empty($assignedStudioIds)) {
+                        $query->whereIn('id', $assignedStudioIds);
+                    }
                 })
             ],
             'first_name' => 'required|string|max:100',
@@ -53,7 +50,18 @@ class EmployeeRequest extends FormRequest
                 Rule::unique('tbl_users', 'email')
             ],
             'mobile_number' => 'required|string|max:20',
-            'role_id' => 'required|exists:tbl_roles,id', // Changed from 'role' to 'role_id'
+            'role_id' => [
+                'required',
+                Rule::exists('tbl_roles', 'id')->where(function ($query) {
+                    $query->whereIn('name', [
+                        'studio-hr-manager',
+                        'studio-hr-staff',
+                        'studio-finance-manager',
+                        'studio-finance-staff',
+                        'studio-photographer',
+                    ]);
+                }),
+            ],
             'status' => 'required|in:active,inactive',
             
             // Schedule fields

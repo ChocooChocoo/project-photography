@@ -30,20 +30,32 @@
             {{-- Dashboard --}}
             @php
                 $isDashboardActive = Route::is('studio-finance.dashboard');
+                $financeUser = auth()->user();
+                $canViewDashboard = $financeUser?->hasPermission('studio-finance.dashboard.view') ?? false;
+                $canManageLeaveRequests = $financeUser?->hasPermission('studio-finance.leave-requests.manage') ?? false;
+                $canManageOvertimeRequests = $financeUser?->hasPermission('studio-finance.overtime-requests.manage') ?? false;
+                $canViewAttendance = $financeUser?->hasPermission('studio-finance.attendance.view') ?? false;
+                $canViewPayrollApprovals = ($financeUser?->hasPermission('studio-finance.payroll.view') ?? false)
+                    || ($financeUser?->hasPermission('studio-finance.payroll.approve') ?? false)
+                    || ($financeUser?->hasPermission('studio-finance.payroll.reject') ?? false)
+                    || ($financeUser?->hasPermission('studio-finance.payroll.manage') ?? false);
             @endphp
             
+            @if($canViewDashboard)
             <li class="side-nav-item {{ $isDashboardActive ? 'active' : '' }}">
                 <a href="{{ route('studio-finance.dashboard') }}" class="side-nav-link {{ $isDashboardActive ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-layout-dashboard"></i></span>
                     <span class="menu-text" data-lang="dashboard">Dashboard</span>
                 </a>
             </li>
+            @endif
 
             {{-- Request --}}
             @php
                 $requestRoutes = Route::is('studio-finance.leave-requests.*') || Route::is('studio-finance.overtime-requests.*');
             @endphp
 
+            @if($canManageLeaveRequests || $canManageOvertimeRequests)
             <li class="side-nav-item {{ $requestRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarFinanceRequest" aria-expanded="{{ $requestRoutes ? 'true' : 'false' }}" aria-controls="sidebarFinanceRequest" class="side-nav-link {{ $requestRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-file-text"></i></span>
@@ -52,6 +64,7 @@
                 </a>
                 <div class="collapse {{ $requestRoutes ? 'show' : '' }}" id="sidebarFinanceRequest">
                     <ul class="sub-menu">
+                        @if($canManageLeaveRequests)
                         <li class="side-nav-item">
                             <a href="{{ route('studio-finance.leave-requests.create') }}" class="side-nav-link {{ Route::is('studio-finance.leave-requests.create') ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="request-leave">Request Leave</span>
@@ -62,6 +75,8 @@
                                 <span class="menu-text" data-lang="view-requested-leave">View Requested Leave</span>
                             </a>
                         </li>
+                        @endif
+                        @if($canManageOvertimeRequests)
                         <li class="side-nav-item">
                             <a href="{{ route('studio-finance.overtime-requests.create') }}" class="side-nav-link {{ Route::is('studio-finance.overtime-requests.create') ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="request-overtime">Request Overtime</span>
@@ -72,29 +87,29 @@
                                 <span class="menu-text" data-lang="view-requested-overtime">View Requested Overtime</span>
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Attendance --}}
             @php
                 $attendanceRoutes = Route::is('studio-finance.attendance.index');
             @endphp
 
+            @if($canViewAttendance)
             <li class="side-nav-item {{ $attendanceRoutes ? 'active' : '' }}">
                 <a href="{{ route('studio-finance.attendance.index') }}" class="side-nav-link {{ $attendanceRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-calendar-time"></i></span>
                     <span class="menu-text" data-lang="attendance">Attendance</span>
                 </a>
             </li>
+            @endif
 
             {{-- Payroll Approvals --}}
             @php
                 $isPayrollApprovalActive = Route::is('studio-finance.payroll-approvals.*');
-                $canViewPayrollApprovals = auth()->user()->hasPermission('view_payroll')
-                    || auth()->user()->hasPermission('approve_payroll')
-                    || auth()->user()->hasPermission('reject_payroll')
-                    || auth()->user()->hasPermission('manage_payroll');
             @endphp
 
             @if($canViewPayrollApprovals)

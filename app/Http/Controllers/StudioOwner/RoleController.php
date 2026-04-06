@@ -23,7 +23,8 @@ class RoleController extends Controller
      */
     public function getRoles(Request $request)
     {
-        $query = RoleModel::query();
+        $query = RoleModel::query()
+            ->whereIn('portal', ['owner', 'studio-hr', 'studio-finance', 'studio-photographer']);
 
         // Filter by status
         if ($request->filled('status')) {
@@ -83,6 +84,7 @@ class RoleController extends Controller
                 'description' => $request->description,
                 'status' => $request->status,
                 'is_system' => $request->boolean('is_system'),
+                'portal' => $this->inferPortalFromRoleName($request->name),
             ]);
 
             DB::commit();
@@ -158,6 +160,7 @@ class RoleController extends Controller
                 'description' => $request->description,
                 'status' => $request->status,
                 'is_system' => $request->boolean('is_system'),
+                'portal' => $this->inferPortalFromRoleName($request->name),
             ]);
 
             DB::commit();
@@ -295,5 +298,31 @@ class RoleController extends Controller
                 'message' => 'Failed to update role status: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Infer the RBAC portal from a role name.
+     */
+    private function inferPortalFromRoleName(string $roleName): string
+    {
+        $normalizedRoleName = strtolower(trim($roleName));
+
+        if (str_starts_with($normalizedRoleName, 'owner')) {
+            return 'owner';
+        }
+
+        if (str_starts_with($normalizedRoleName, 'studio-hr')) {
+            return 'studio-hr';
+        }
+
+        if (str_starts_with($normalizedRoleName, 'studio-finance')) {
+            return 'studio-finance';
+        }
+
+        if (str_starts_with($normalizedRoleName, 'studio-photographer')) {
+            return 'studio-photographer';
+        }
+
+        return auth()->user()?->role ?? 'owner';
     }
 }

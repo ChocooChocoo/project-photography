@@ -23,6 +23,7 @@ class RoleModel extends Model
      */
     protected $fillable = [
         'name',
+        'portal',
         'description',
         'status',
         'is_system',
@@ -90,6 +91,7 @@ class RoleModel extends Model
         $permissionIdentifiers = PermissionModel::buildPermissionIdentifiers($permissionName);
 
         return $this->permissions()
+            ->where('tbl_permissions.status', 'active')
             ->where(function ($query) use ($permissionIdentifiers) {
                 $query->whereIn('name', $permissionIdentifiers)
                     ->orWhereIn('permission_string', $permissionIdentifiers);

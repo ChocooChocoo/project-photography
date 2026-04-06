@@ -13,7 +13,9 @@ class PhotographerCheckOutRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check();
+        return auth()->check()
+            && auth()->user()->isStudioPhotographer()
+            && auth()->user()->hasPermission('studio-photographer.attendance.view');
     }
 
     /**

@@ -246,8 +246,13 @@ class PayrollApprovalController extends Controller
      */
     private function getAssignedStudioIds(int $financeUserId)
     {
-        $studioIds = EmployeeScheduleModel::where('user_id', $financeUserId)
-            ->pluck('studio_id');
+        $financeUser = UserModel::find($financeUserId);
+        $studioIds = $financeUser ? $financeUser->getAssignedStudioIds('studio-finance') : collect();
+
+        if ($studioIds->isEmpty()) {
+            $studioIds = EmployeeScheduleModel::where('user_id', $financeUserId)
+                ->pluck('studio_id');
+        }
 
         if ($studioIds->isEmpty()) {
             $studioIds = StudiosModel::where('user_id', $financeUserId)->pluck('id');
@@ -279,9 +284,9 @@ class PayrollApprovalController extends Controller
     private function hasPayrollPermission(UserModel $user, string $action): bool
     {
         $permissionMap = [
-            'view' => ['view_payroll', 'manage_payroll'],
-            'approve' => ['approve_payroll', 'manage_payroll'],
-            'reject' => ['reject_payroll', 'manage_payroll'],
+            'view' => ['studio-finance.payroll.view', 'studio-finance.payroll.manage'],
+            'approve' => ['studio-finance.payroll.approve', 'studio-finance.payroll.manage'],
+            'reject' => ['studio-finance.payroll.reject', 'studio-finance.payroll.manage'],
         ];
 
         foreach ($permissionMap[$action] ?? [] as $permissionName) {

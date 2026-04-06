@@ -13,7 +13,9 @@ class CheckInRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check();
+        return auth()->check()
+            && auth()->user()->isStudioHr()
+            && auth()->user()->hasPermission('studio-hr.attendance.view');
     }
 
     /**

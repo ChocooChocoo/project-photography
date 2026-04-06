@@ -11,7 +11,9 @@ class GeneratePayrollRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return auth()->check()
+            && auth()->user()->isStudioHr()
+            && auth()->user()->hasPermission('studio-hr.generate-payroll.manage');
     }
 
     /**

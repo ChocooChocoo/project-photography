@@ -12,7 +12,9 @@ class EmployeeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->role === 'owner';
+        return auth()->check()
+            && auth()->user()->role === 'owner'
+            && auth()->user()->hasPermission('owner.employees.manage');
     }
 
     /**
@@ -40,7 +42,18 @@ class EmployeeRequest extends FormRequest
                 Rule::unique('tbl_users', 'email')
             ],
             'mobile_number' => 'required|string|max:20',
-            'role_id' => 'required|exists:tbl_roles,id', // Changed from 'role' to 'role_id'
+            'role_id' => [
+                'required',
+                Rule::exists('tbl_roles', 'id')->where(function ($query) {
+                    $query->whereIn('name', [
+                        'studio-hr-manager',
+                        'studio-hr-staff',
+                        'studio-finance-manager',
+                        'studio-finance-staff',
+                        'studio-photographer',
+                    ]);
+                }),
+            ],
             'status' => 'required|in:active,inactive',
             
             // Schedule fields

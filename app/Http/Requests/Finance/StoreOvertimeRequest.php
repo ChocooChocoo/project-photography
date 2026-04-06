@@ -14,7 +14,9 @@ class StoreOvertimeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->isStudioFinance();
+        return auth()->check()
+            && auth()->user()->isStudioFinance()
+            && auth()->user()->hasPermission('studio-finance.overtime-requests.manage');
     }
 
     /**

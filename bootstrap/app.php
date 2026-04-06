@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'studio.hr'             => \App\Http\Middleware\StudioHRMiddleware::class,
             'studio.finance'        => \App\Http\Middleware\StudioFinanceMiddleware::class,
             'check.studio.limit'    => \App\Http\Middleware\CheckStudioRegistrationLimit::class,
+            'permission'            => \App\Http\Middleware\CheckPermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

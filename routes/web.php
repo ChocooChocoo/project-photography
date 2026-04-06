@@ -119,138 +119,137 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // Manage Studio                            
-        Route::get('/view/studio',                                  [\App\Http\Controllers\StudioOwner\StudioController::class, 'index'])->name('owner.studio.index');
-        Route::get('/edit/studio/{id}',                             [\App\Http\Controllers\StudioOwner\StudioController::class, 'edit'])->name('owner.studio.edit');
-        Route::put('/studio/{id}',                                  [\App\Http\Controllers\StudioOwner\StudioController::class, 'update'])->name('owner.studio.update');
-        Route::get('/studio/barangays/{municipality}',              [\App\Http\Controllers\StudioOwner\StudioController::class, 'getBarangays'])->name('owner.studio.get-barangays');
-        Route::delete('/studio/{id}',                               [\App\Http\Controllers\StudioOwner\StudioController::class, 'destroy'])->name('owner.studio.destroy');
+        Route::get('/view/studio',                                  [\App\Http\Controllers\StudioOwner\StudioController::class, 'index'])->middleware('permission:owner.studios.manage')->name('owner.studio.index');
+        Route::get('/edit/studio/{id}',                             [\App\Http\Controllers\StudioOwner\StudioController::class, 'edit'])->middleware('permission:owner.studios.manage')->name('owner.studio.edit');
+        Route::put('/studio/{id}',                                  [\App\Http\Controllers\StudioOwner\StudioController::class, 'update'])->middleware('permission:owner.studios.manage')->name('owner.studio.update');
+        Route::get('/studio/barangays/{municipality}',              [\App\Http\Controllers\StudioOwner\StudioController::class, 'getBarangays'])->middleware('permission:owner.studios.manage')->name('owner.studio.get-barangays');
+        Route::delete('/studio/{id}',                               [\App\Http\Controllers\StudioOwner\StudioController::class, 'destroy'])->middleware('permission:owner.studios.manage')->name('owner.studio.destroy');
 
         // Manage Bookings                          
-        Route::get('/view/bookings',                                [\App\Http\Controllers\StudioOwner\BookingController::class, 'index'])->name('owner.booking.index');
-        Route::get('/booking/history',                              [\App\Http\Controllers\StudioOwner\BookingController::class, 'history'])->name('owner.booking.history');
-        Route::get('/bookings/{id}/details',                        [\App\Http\Controllers\StudioOwner\BookingController::class, 'getBookingDetails'])->name('owner.booking.details');
-        Route::get('/bookings/{id}/available-photographers',        [\App\Http\Controllers\StudioOwner\BookingController::class, 'getAvailablePhotographers'])->name('owner.booking.available.photographers');
-        Route::post('/bookings/{id}/assign-photographers',          [\App\Http\Controllers\StudioOwner\BookingController::class, 'assignPhotographers'])->name('owner.booking.assign.photographers');
-        Route::delete('/assignments/{id}',                          [\App\Http\Controllers\StudioOwner\BookingController::class, 'removePhotographerAssignment'])->name('owner.booking.remove.assignment');
-        Route::put('/assignments/{id}/status',                      [\App\Http\Controllers\StudioOwner\BookingController::class, 'updateAssignmentStatus'])->name('owner.booking.update.assignment.status');
-        Route::put('/bookings/{id}/status',                         [\App\Http\Controllers\StudioOwner\BookingController::class, 'updateStatus'])->name('owner.booking.update.status');
-        Route::put('/bookings/{id}/complete',                       [\App\Http\Controllers\StudioOwner\BookingController::class, 'completeBooking'])->name('owner.booking.complete');
+        Route::get('/view/bookings',                                [\App\Http\Controllers\StudioOwner\BookingController::class, 'index'])->middleware('permission:owner.bookings.manage')->name('owner.booking.index');
+        Route::get('/booking/history',                              [\App\Http\Controllers\StudioOwner\BookingController::class, 'history'])->middleware('permission:owner.bookings.manage')->name('owner.booking.history');
+        Route::get('/bookings/{id}/details',                        [\App\Http\Controllers\StudioOwner\BookingController::class, 'getBookingDetails'])->middleware('permission:owner.bookings.manage')->name('owner.booking.details');
+        Route::get('/bookings/{id}/available-photographers',        [\App\Http\Controllers\StudioOwner\BookingController::class, 'getAvailablePhotographers'])->middleware('permission:owner.bookings.manage')->name('owner.booking.available.photographers');
+        Route::post('/bookings/{id}/assign-photographers',          [\App\Http\Controllers\StudioOwner\BookingController::class, 'assignPhotographers'])->middleware('permission:owner.bookings.manage')->name('owner.booking.assign.photographers');
+        Route::delete('/assignments/{id}',                          [\App\Http\Controllers\StudioOwner\BookingController::class, 'removePhotographerAssignment'])->middleware('permission:owner.bookings.manage')->name('owner.booking.remove.assignment');
+        Route::put('/assignments/{id}/status',                      [\App\Http\Controllers\StudioOwner\BookingController::class, 'updateAssignmentStatus'])->middleware('permission:owner.bookings.manage')->name('owner.booking.update.assignment.status');
+        Route::put('/bookings/{id}/status',                         [\App\Http\Controllers\StudioOwner\BookingController::class, 'updateStatus'])->middleware('permission:owner.bookings.manage')->name('owner.booking.update.status');
+        Route::put('/bookings/{id}/complete',                       [\App\Http\Controllers\StudioOwner\BookingController::class, 'completeBooking'])->middleware('permission:owner.bookings.manage')->name('owner.booking.complete');
 
         // Manage Online Gallery
-        Route::get('/view/online-gallery',                          [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'index'])->name('owner.online-gallery.index');
-        Route::get('/online-gallery/completed-bookings',            [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getCompletedBookings'])->name('owner.online-gallery.completed-bookings');
-        Route::get('/online-gallery/{bookingId}/details',           [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getGalleryDetails'])->name('owner.online-gallery.details');
-        Route::post('/online-gallery/{bookingId}/upload',           [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'uploadImages'])->name('owner.online-gallery.upload');
-        Route::delete('/online-gallery/{galleryId}/image',          [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteImage'])->name('owner.online-gallery.delete-image');
-        Route::delete('/online-gallery/{galleryId}',                [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteGallery'])->name('owner.online-gallery.delete');
-        Route::put('/online-gallery/{galleryId}',                   [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'updateGallery'])->name('owner.online-gallery.update');
+        Route::get('/view/online-gallery',                          [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'index'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.index');
+        Route::get('/online-gallery/completed-bookings',            [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getCompletedBookings'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.completed-bookings');
+        Route::get('/online-gallery/{bookingId}/details',           [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getGalleryDetails'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.details');
+        Route::post('/online-gallery/{bookingId}/upload',           [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'uploadImages'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.upload');
+        Route::delete('/online-gallery/{galleryId}/image',          [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteImage'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.delete-image');
+        Route::delete('/online-gallery/{galleryId}',                [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteGallery'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.delete');
+        Route::put('/online-gallery/{galleryId}',                   [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'updateGallery'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.update');
         
         // Manage Studio Schedule                       
-        Route::get('/view/schedules',                               [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'index'])->name('owner.studio-schedule.index');
-        Route::get('/setup/studio-schedules',                       [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'setupStudioSchedule'])->name('owner.setup-studio-schedules');
-        Route::post('/store/studio-schedules',                      [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'store'])->name('owner.studio-schedule.store');
-        Route::delete('/delete/studio-schedules/{id}',              [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'destroy'])->name('owner.studio-schedule.destroy');
+        Route::get('/view/schedules',                               [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'index'])->middleware('permission:owner.schedules.manage')->name('owner.studio-schedule.index');
+        Route::get('/setup/studio-schedules',                       [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'setupStudioSchedule'])->middleware('permission:owner.schedules.manage')->name('owner.setup-studio-schedules');
+        Route::post('/store/studio-schedules',                      [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'store'])->middleware('permission:owner.schedules.manage')->name('owner.studio-schedule.store');
+        Route::delete('/delete/studio-schedules/{id}',              [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'destroy'])->middleware('permission:owner.schedules.manage')->name('owner.studio-schedule.destroy');
 
         // Studio Members                           
-        Route::get('/view/members',                                 [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'index'])->name('owner.members.index');
-        Route::get('/invite/members',                               [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'invite'])->name('owner.members.invite');
-        Route::get('/apply/members',                                [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'apply'])->name('owner.members.apply');
-        Route::post('/members/invite',                              [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'store'])->name('owner.members.invite.store');
-        Route::post('/members/{id}/cancel',                         [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'cancel'])->name('owner.members.cancel');
-        Route::get('/members/freelancer/{id}/details',              [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'getFreelancerDetails'])->name('owner.members.freelancer.details');
+        Route::get('/view/members',                                 [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'index'])->middleware('permission:owner.members.manage')->name('owner.members.index');
+        Route::get('/invite/members',                               [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'invite'])->middleware('permission:owner.members.manage')->name('owner.members.invite');
+        Route::get('/apply/members',                                [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'apply'])->middleware('permission:owner.members.manage')->name('owner.members.apply');
+        Route::post('/members/invite',                              [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'store'])->middleware('permission:owner.members.manage')->name('owner.members.invite.store');
+        Route::post('/members/{id}/cancel',                         [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'cancel'])->middleware('permission:owner.members.manage')->name('owner.members.cancel');
+        Route::get('/members/freelancer/{id}/details',              [\App\Http\Controllers\StudioOwner\StudioMemberController::class, 'getFreelancerDetails'])->middleware('permission:owner.members.manage')->name('owner.members.freelancer.details');
 
         // Studio Photographers 
-        Route::get('/view/studio-photographers',                    [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'index'])->name('owner.studio-photographers.index');
-        Route::get('/create/studio-photographers',                  [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'create'])->name('owner.studio-photographers.create');
-        Route::post('/studio-photographers',                        [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'store'])->name('owner.studio-photographers.store');
-        Route::get('/studio-photographers/{id}',                    [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'show'])->name('owner.studio-photographers.show');
-        Route::get('/studio/{id}/services',                         [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'getStudioServices'])->name('owner.studio.services');
+        Route::get('/view/studio-photographers',                    [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'index'])->middleware('permission:owner.photographers.manage')->name('owner.studio-photographers.index');
+        Route::get('/create/studio-photographers',                  [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'create'])->middleware('permission:owner.photographers.manage')->name('owner.studio-photographers.create');
+        Route::post('/studio-photographers',                        [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'store'])->middleware('permission:owner.photographers.manage')->name('owner.studio-photographers.store');
+        Route::get('/studio-photographers/{id}',                    [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'show'])->middleware('permission:owner.photographers.manage')->name('owner.studio-photographers.show');
+        Route::get('/studio/{id}/services',                         [\App\Http\Controllers\StudioOwner\StudioPhotographersController::class, 'getStudioServices'])->middleware('permission:owner.photographers.manage')->name('owner.studio.services');
 
         // Manage Category Services                         
-        Route::get('/view/services',                                [\App\Http\Controllers\StudioOwner\ServicesController::class, 'index'])->name('owner.services.index');
-        Route::get('/create/services',                              [\App\Http\Controllers\StudioOwner\ServicesController::class, 'create'])->name('owner.services.create');
-        Route::post('/services',                                    [\App\Http\Controllers\StudioOwner\ServicesController::class, 'store'])->name('owner.services.store');
-        Route::get('/services/{id}',                                [\App\Http\Controllers\StudioOwner\ServicesController::class, 'show'])->name('owner.services.show');
-        Route::get('/services/{id}/edit',                           [\App\Http\Controllers\StudioOwner\ServicesController::class, 'edit'])->name('owner.services.edit');
-        Route::put('/services/{id}',                                [\App\Http\Controllers\StudioOwner\ServicesController::class, 'update'])->name('owner.services.update');
-        Route::delete('/services/{id}',                             [\App\Http\Controllers\StudioOwner\ServicesController::class, 'destroy'])->name('owner.services.destroy');
-        Route::get('/services/data/get',                            [\App\Http\Controllers\StudioOwner\ServicesController::class, 'getServices'])->name('owner.services.data');
+        Route::get('/view/services',                                [\App\Http\Controllers\StudioOwner\ServicesController::class, 'index'])->middleware('permission:owner.services.manage')->name('owner.services.index');
+        Route::get('/create/services',                              [\App\Http\Controllers\StudioOwner\ServicesController::class, 'create'])->middleware('permission:owner.services.manage')->name('owner.services.create');
+        Route::post('/services',                                    [\App\Http\Controllers\StudioOwner\ServicesController::class, 'store'])->middleware('permission:owner.services.manage')->name('owner.services.store');
+        Route::get('/services/{id}',                                [\App\Http\Controllers\StudioOwner\ServicesController::class, 'show'])->middleware('permission:owner.services.manage')->name('owner.services.show');
+        Route::get('/services/{id}/edit',                           [\App\Http\Controllers\StudioOwner\ServicesController::class, 'edit'])->middleware('permission:owner.services.manage')->name('owner.services.edit');
+        Route::put('/services/{id}',                                [\App\Http\Controllers\StudioOwner\ServicesController::class, 'update'])->middleware('permission:owner.services.manage')->name('owner.services.update');
+        Route::delete('/services/{id}',                             [\App\Http\Controllers\StudioOwner\ServicesController::class, 'destroy'])->middleware('permission:owner.services.manage')->name('owner.services.destroy');
+        Route::get('/services/data/get',                            [\App\Http\Controllers\StudioOwner\ServicesController::class, 'getServices'])->middleware('permission:owner.services.manage')->name('owner.services.data');
 
         // Manage Packages  
-        Route::get('/view/packages',                                [\App\Http\Controllers\StudioOwner\PackagesController::class, 'index'])->name('owner.packages.index');
-        Route::get('/create/packages',                              [\App\Http\Controllers\StudioOwner\PackagesController::class, 'create'])->name('owner.packages.create');
-        Route::post('/packages',                                    [\App\Http\Controllers\StudioOwner\PackagesController::class, 'store'])->name('owner.packages.store');
-        Route::get('/packages/lists',                               [\App\Http\Controllers\StudioOwner\PackagesController::class, 'list'])->name('owner.packages.list');
-        Route::get('/packages/{package}',                           [\App\Http\Controllers\StudioOwner\PackagesController::class, 'show'])->name('owner.packages.show');
+        Route::get('/view/packages',                                [\App\Http\Controllers\StudioOwner\PackagesController::class, 'index'])->middleware('permission:owner.packages.manage')->name('owner.packages.index');
+        Route::get('/create/packages',                              [\App\Http\Controllers\StudioOwner\PackagesController::class, 'create'])->middleware('permission:owner.packages.manage')->name('owner.packages.create');
+        Route::post('/packages',                                    [\App\Http\Controllers\StudioOwner\PackagesController::class, 'store'])->middleware('permission:owner.packages.manage')->name('owner.packages.store');
+        Route::get('/packages/lists',                               [\App\Http\Controllers\StudioOwner\PackagesController::class, 'list'])->middleware('permission:owner.packages.manage')->name('owner.packages.list');
+        Route::get('/packages/{package}',                           [\App\Http\Controllers\StudioOwner\PackagesController::class, 'show'])->middleware('permission:owner.packages.manage')->name('owner.packages.show');
 
         // Manage Subscription  
-        Route::get('/view/subscription',                            [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'index'])->name('owner.subscription.index');
-        Route::get('/view/status',                                  [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'status'])->name('owner.subscription.status');
-        Route::get('/subscription/{id}',                            [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'show'])->name('owner.subscription.show');
-        Route::post('/subscription/subscribe',                      [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'subscribe'])->name('owner.subscription.subscribe');
-        Route::get('/subscription/history/data',                    [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'history'])->name('owner.subscription.history');
-        Route::get('/subscription/status/data',                     [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'getStatusData'])->name('owner.subscription.status.data');
-        Route::post('/subscription/{id}/cancel',                    [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'cancel'])->name('owner.subscription.cancel');
-        Route::get('/subscription/{id}/details',                    [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'getSubscriptionDetails'])->name('owner.subscription.details');
-        Route::get('/subscription/verify/{reference}',              [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'verifyPayment'])->name('owner.subscription.verify');
-        Route::get('/subscription/success/{reference}',             [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentSuccess'])->name('owner.subscription.success');
-        Route::get('/subscription/failed/{reference}',              [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentFailed'])->name('owner.subscription.failed');
+        Route::get('/view/subscription',                            [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'index'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.index');
+        Route::get('/view/status',                                  [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'status'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.status');
+        Route::get('/subscription/{id}',                            [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'show'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.show');
+        Route::post('/subscription/subscribe',                      [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'subscribe'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.subscribe');
+        Route::get('/subscription/history/data',                    [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'history'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.history');
+        Route::get('/subscription/status/data',                     [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'getStatusData'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.status.data');
+        Route::post('/subscription/{id}/cancel',                    [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'cancel'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.cancel');
+        Route::get('/subscription/{id}/details',                    [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'getSubscriptionDetails'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.details');
+        Route::get('/subscription/verify/{reference}',              [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'verifyPayment'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.verify');
+        Route::get('/subscription/success/{reference}',             [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentSuccess'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.success');
+        Route::get('/subscription/failed/{reference}',              [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentFailed'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.failed');
 
         // Manage Employee  
-        Route::get('/view/employee',                                [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'index'])->name('owner.employee.index');
-        Route::get('/create/employee',                              [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'create'])->name('owner.employee.create');
-        Route::post('/employee',                                    [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'store'])->name('owner.employee.store');
-        Route::get('/employees/data',                               [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getEmployees'])->name('owner.employee.data');
-        Route::get('/employee/categories',                          [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getCategories'])->name('owner.employee.categories');
-        Route::get('/employee/{id}',                                [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'show'])->name('owner.employee.show');
-        Route::put('/employee/{id}/status',                         [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'updateStatus'])->name('owner.employee.update-status');
-        Route::put('/employee/{id}/permissions',                    [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'updatePermissions'])->name('owner.employee.update-permissions');
-        Route::put('/employee/{id}/schedule',                       [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'updateSchedule'])->name('owner.employee.update-schedule');
-        Route::delete('/employee/{id}',                             [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'destroy'])->name('owner.employee.destroy');
-        Route::get('/employee/{studioId}/services/{categoryId}',    [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getServicesByCategory'])->name('owner.employee.services-by-category');
+        Route::get('/view/employee',                                [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'index'])->middleware('permission:owner.employees.manage')->name('owner.employee.index');
+        Route::get('/create/employee',                              [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'create'])->middleware('permission:owner.employees.manage')->name('owner.employee.create');
+        Route::post('/employee',                                    [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'store'])->middleware('permission:owner.employees.manage')->name('owner.employee.store');
+        Route::get('/employees/data',                               [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getEmployees'])->middleware('permission:owner.employees.manage')->name('owner.employee.data');
+        Route::get('/employee/categories',                          [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getCategories'])->middleware('permission:owner.employees.manage')->name('owner.employee.categories');
+        Route::get('/employee/{id}',                                [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'show'])->middleware('permission:owner.employees.manage')->name('owner.employee.show');
+        Route::put('/employee/{id}/status',                         [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'updateStatus'])->middleware('permission:owner.employees.manage')->name('owner.employee.update-status');
+        Route::put('/employee/{id}/schedule',                       [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'updateSchedule'])->middleware('permission:owner.employees.manage')->name('owner.employee.update-schedule');
+        Route::delete('/employee/{id}',                             [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'destroy'])->middleware('permission:owner.employees.manage')->name('owner.employee.destroy');
+        Route::get('/employee/{studioId}/services/{categoryId}',    [\App\Http\Controllers\StudioOwner\EmployeeController::class, 'getServicesByCategory'])->middleware('permission:owner.employees.manage')->name('owner.employee.services-by-category');
 
         // HR Leave Requests
-        Route::get('/hr-leave-requests',                            [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'index'])->name('owner.hr-leave-requests.index');
-        Route::get('/hr-leave-requests/{id}',                       [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'show'])->name('owner.hr-leave-requests.show');
-        Route::post('/hr-leave-requests/{id}/{action}',             [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'process'])->name('owner.hr-leave-requests.process');
-        Route::get('/hr-overtime-requests',                         [\App\Http\Controllers\StudioOwner\OvertimeRequestController::class, 'index'])->name('owner.hr-overtime-requests.index');
-        Route::get('/hr-overtime-requests/{id}',                    [\App\Http\Controllers\StudioOwner\OvertimeRequestController::class, 'show'])->name('owner.hr-overtime-requests.show');
-        Route::post('/hr-overtime-requests/{id}/{action}',          [\App\Http\Controllers\StudioOwner\OvertimeRequestController::class, 'process'])->name('owner.hr-overtime-requests.process');
+        Route::get('/hr-leave-requests',                            [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'index'])->middleware('permission:owner.leave-requests.manage')->name('owner.hr-leave-requests.index');
+        Route::get('/hr-leave-requests/{id}',                       [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'show'])->middleware('permission:owner.leave-requests.manage')->name('owner.hr-leave-requests.show');
+        Route::post('/hr-leave-requests/{id}/{action}',             [\App\Http\Controllers\StudioOwner\LeaveRequestController::class, 'process'])->middleware('permission:owner.leave-requests.manage')->name('owner.hr-leave-requests.process');
+        Route::get('/hr-overtime-requests',                         [\App\Http\Controllers\StudioOwner\OvertimeRequestController::class, 'index'])->middleware('permission:owner.overtime-requests.manage')->name('owner.hr-overtime-requests.index');
+        Route::get('/hr-overtime-requests/{id}',                    [\App\Http\Controllers\StudioOwner\OvertimeRequestController::class, 'show'])->middleware('permission:owner.overtime-requests.manage')->name('owner.hr-overtime-requests.show');
+        Route::post('/hr-overtime-requests/{id}/{action}',          [\App\Http\Controllers\StudioOwner\OvertimeRequestController::class, 'process'])->middleware('permission:owner.overtime-requests.manage')->name('owner.hr-overtime-requests.process');
 
         // Manage Roles
-        Route::get('/view/roles',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'index'])->name('owner.role.index');
-        Route::get('/roles/data',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'getRoles'])->name('owner.role.data');
-        Route::post('/roles',                                       [\App\Http\Controllers\StudioOwner\RoleController::class, 'store'])->name('owner.role.store');
-        Route::get('/roles/{id}',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'show'])->name('owner.role.show');
-        Route::put('/roles/{id}',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'update'])->name('owner.role.update');
-        Route::put('/roles/{id}/permissions',                       [\App\Http\Controllers\StudioOwner\RoleController::class, 'updatePermissions'])->name('owner.role.update-permissions');
-        Route::delete('/roles/{id}',                                [\App\Http\Controllers\StudioOwner\RoleController::class, 'destroy'])->name('owner.role.destroy');
-        Route::post('/roles/{id}/toggle-status',                    [\App\Http\Controllers\StudioOwner\RoleController::class, 'toggleStatus'])->name('owner.role.toggle-status');
+        Route::get('/view/roles',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'index'])->middleware('permission:owner.roles.manage')->name('owner.role.index');
+        Route::get('/roles/data',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'getRoles'])->middleware('permission:owner.roles.manage')->name('owner.role.data');
+        Route::post('/roles',                                       [\App\Http\Controllers\StudioOwner\RoleController::class, 'store'])->middleware('permission:owner.roles.manage')->name('owner.role.store');
+        Route::get('/roles/{id}',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'show'])->middleware('permission:owner.roles.manage')->name('owner.role.show');
+        Route::put('/roles/{id}',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'update'])->middleware('permission:owner.roles.manage')->name('owner.role.update');
+        Route::put('/roles/{id}/permissions',                       [\App\Http\Controllers\StudioOwner\RoleController::class, 'updatePermissions'])->middleware('permission:owner.roles.manage')->name('owner.role.update-permissions');
+        Route::delete('/roles/{id}',                                [\App\Http\Controllers\StudioOwner\RoleController::class, 'destroy'])->middleware('permission:owner.roles.manage')->name('owner.role.destroy');
+        Route::post('/roles/{id}/toggle-status',                    [\App\Http\Controllers\StudioOwner\RoleController::class, 'toggleStatus'])->middleware('permission:owner.roles.manage')->name('owner.role.toggle-status');
 
         // Manage Permissions
-        Route::get('/view/permissions',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'index'])->name('owner.permission.index');
-        Route::get('/permissions/data',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'getPermissions'])->name('owner.permission.data');
-        Route::get('/permissions/all',                              [\App\Http\Controllers\StudioOwner\PermissionController::class, 'getAllPermissions'])->name('owner.permission.all');
-        Route::post('/permissions',                                 [\App\Http\Controllers\StudioOwner\PermissionController::class, 'store'])->name('owner.permission.store');
-        Route::get('/permissions/{id}',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'show'])->name('owner.permission.show');
-        Route::put('/permissions/{id}',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'update'])->name('owner.permission.update');
-        Route::delete('/permissions/{id}',                          [\App\Http\Controllers\StudioOwner\PermissionController::class, 'destroy'])->name('owner.permission.destroy');
-        Route::post('/permissions/{id}/toggle-status',              [\App\Http\Controllers\StudioOwner\PermissionController::class, 'toggleStatus'])->name('owner.permission.toggle-status');
+        Route::get('/view/permissions',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'index'])->middleware('permission:owner.permissions.manage')->name('owner.permission.index');
+        Route::get('/permissions/data',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'getPermissions'])->middleware('permission:owner.permissions.manage')->name('owner.permission.data');
+        Route::get('/permissions/all',                              [\App\Http\Controllers\StudioOwner\PermissionController::class, 'getAllPermissions'])->middleware('permission:owner.permissions.manage')->name('owner.permission.all');
+        Route::post('/permissions',                                 [\App\Http\Controllers\StudioOwner\PermissionController::class, 'store'])->middleware('permission:owner.permissions.manage')->name('owner.permission.store');
+        Route::get('/permissions/{id}',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'show'])->middleware('permission:owner.permissions.manage')->name('owner.permission.show');
+        Route::put('/permissions/{id}',                             [\App\Http\Controllers\StudioOwner\PermissionController::class, 'update'])->middleware('permission:owner.permissions.manage')->name('owner.permission.update');
+        Route::delete('/permissions/{id}',                          [\App\Http\Controllers\StudioOwner\PermissionController::class, 'destroy'])->middleware('permission:owner.permissions.manage')->name('owner.permission.destroy');
+        Route::post('/permissions/{id}/toggle-status',              [\App\Http\Controllers\StudioOwner\PermissionController::class, 'toggleStatus'])->middleware('permission:owner.permissions.manage')->name('owner.permission.toggle-status');
 
         // Manage Payroll  
-        Route::get('/payroll-settings',                             [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'index'])->name('owner.payroll-settings.index');
-        Route::get('/payroll-settings/create',                      [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'create'])->name('owner.payroll-settings.create');
-        Route::post('/payroll-settings',                            [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'store'])->name('owner.payroll-settings.store');
-        Route::get('/payroll-settings/employees',                   [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'getEmployees'])->name('owner.payroll-settings.employees');
-        Route::get('/payroll-settings/data',                        [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'getPayrollSettings'])->name('owner.payroll-settings.data');
-        Route::get('/payroll-settings/{id}',                        [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'show'])->name('owner.payroll-settings.show');
-        Route::get('/payroll-settings/{id}/edit',                   [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'edit'])->name('owner.payroll-settings.edit');
-        Route::put('/payroll-settings/{id}',                        [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'update'])->name('owner.payroll-settings.update');
-        Route::put('/payroll-settings/{id}/status',                 [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'updateStatus'])->name('owner.payroll-settings.status');
-        Route::delete('/payroll-settings/{id}',                     [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'destroy'])->name('owner.payroll-settings.destroy');
+        Route::get('/payroll-settings',                             [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'index'])->middleware('permission:owner.payroll.manage')->name('owner.payroll-settings.index');
+        Route::get('/payroll-settings/create',                      [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'create'])->middleware('permission:owner.payroll.manage')->name('owner.payroll-settings.create');
+        Route::post('/payroll-settings',                            [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'store'])->middleware('permission:owner.payroll.manage')->name('owner.payroll-settings.store');
+        Route::get('/payroll-settings/employees',                   [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'getEmployees'])->middleware('permission:owner.payroll.manage')->name('owner.payroll-settings.employees');
+        Route::get('/payroll-settings/data',                        [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'getPayrollSettings'])->middleware('permission:owner.payroll.manage')->name('owner.payroll-settings.data');
+        Route::get('/payroll-settings/{id}',                        [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'show'])->middleware('permission:owner.payroll.manage')->name('owner.payroll-settings.show');
+        Route::get('/payroll-settings/{id}/edit',                   [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'edit'])->middleware('permission:owner.payroll.manage')->name('owner.payroll-settings.edit');
+        Route::put('/payroll-settings/{id}',                        [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'update'])->middleware('permission:owner.payroll.manage')->name('owner.payroll-settings.update');
+        Route::put('/payroll-settings/{id}/status',                 [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'updateStatus'])->middleware('permission:owner.payroll.manage')->name('owner.payroll-settings.status');
+        Route::delete('/payroll-settings/{id}',                     [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'destroy'])->middleware('permission:owner.payroll.manage')->name('owner.payroll-settings.destroy');
 
         // Manage Chatbot
-        Route::prefix('chatbot')->name('chatbot.')->group(function () {
+        Route::prefix('chatbot')->middleware('permission:owner.chatbot.manage')->name('chatbot.')->group(function () {
             Route::get('/config',                                   [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'index'])->name('config');
             Route::get('/config/data',                              [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getConfig'])->name('config.get');
             Route::post('/config/save',                             [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'saveConfig'])->name('config.save');
@@ -268,7 +267,7 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // Inquiries                            
-        Route::get('/view/inquiries',                              [\App\Http\Controllers\StudioOwner\InquiryController::class, 'index'])->name('owner.inquiries.index');
+        Route::get('/view/inquiries',                              [\App\Http\Controllers\StudioOwner\InquiryController::class, 'index'])->middleware('permission:owner.inquiries.manage')->name('owner.inquiries.index');
     });
 
     // Studio HR Routes ====================================================================================================================================================
@@ -278,72 +277,71 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/profile',                                      [\App\Http\Controllers\GeneralProfileController::class, 'studioHR'])->name('studio-hr.profile');
 
         // Dashboard
-        Route::get('/dashboard',                                    [\App\Http\Controllers\StudioHR\DashboardController::class, 'index'])->name('studio-hr.dashboard');
+        Route::get('/dashboard',                                    [\App\Http\Controllers\StudioHR\DashboardController::class, 'index'])->middleware('permission:studio-hr.dashboard.view')->name('studio-hr.dashboard');
 
         // Leave Requests
-        Route::get('/leave-requests/create',                        [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'create'])->name('studio-hr.leave-requests.create');
-        Route::get('/leave-requests',                               [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'index'])->name('studio-hr.leave-requests.index');
-        Route::post('/leave-requests',                              [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'store'])->name('studio-hr.leave-requests.store');
-        Route::get('/leave-requests/{id}',                          [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'show'])->name('studio-hr.leave-requests.show');
-        Route::put('/leave-requests/{id}',                          [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'update'])->name('studio-hr.leave-requests.update');
-        Route::post('/leave-requests/{id}/cancel',                  [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'cancel'])->name('studio-hr.leave-requests.cancel');
-        Route::delete('/leave-requests/{id}',                       [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'destroy'])->name('studio-hr.leave-requests.destroy');
-        Route::get('/employees-leave-requests',                     [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'employeesIndex'])->name('studio-hr.employees-leave-requests.index');
-        Route::get('/employees-leave-requests/{id}',                [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'employeeShow'])->name('studio-hr.employees-leave-requests.show');
-        Route::post('/employees-leave-requests/{id}/{action}',      [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'process'])->name('studio-hr.employees-leave-requests.process');
-        Route::get('/overtime-requests/create',                     [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'create'])->name('studio-hr.overtime-requests.create');
-        Route::get('/overtime-requests',                            [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'index'])->name('studio-hr.overtime-requests.index');
-        Route::post('/overtime-requests',                           [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'store'])->name('studio-hr.overtime-requests.store');
-        Route::get('/overtime-requests/{id}',                       [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'show'])->name('studio-hr.overtime-requests.show');
-        Route::put('/overtime-requests/{id}',                       [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'update'])->name('studio-hr.overtime-requests.update');
-        Route::post('/overtime-requests/{id}/cancel',               [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'cancel'])->name('studio-hr.overtime-requests.cancel');
-        Route::delete('/overtime-requests/{id}',                    [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'destroy'])->name('studio-hr.overtime-requests.destroy');
-        Route::get('/employees-overtime-requests',                  [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'employeesIndex'])->name('studio-hr.employees-overtime-requests.index');
-        Route::get('/employees-overtime-requests/{id}',             [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'employeeShow'])->name('studio-hr.employees-overtime-requests.show');
-        Route::post('/employees-overtime-requests/{id}/{action}',   [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'process'])->name('studio-hr.employees-overtime-requests.process');
+        Route::get('/leave-requests/create',                        [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'create'])->middleware('permission:studio-hr.leave-requests.manage')->name('studio-hr.leave-requests.create');
+        Route::get('/leave-requests',                               [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'index'])->middleware('permission:studio-hr.leave-requests.manage')->name('studio-hr.leave-requests.index');
+        Route::post('/leave-requests',                              [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'store'])->middleware('permission:studio-hr.leave-requests.manage')->name('studio-hr.leave-requests.store');
+        Route::get('/leave-requests/{id}',                          [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'show'])->middleware('permission:studio-hr.leave-requests.manage')->name('studio-hr.leave-requests.show');
+        Route::put('/leave-requests/{id}',                          [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'update'])->middleware('permission:studio-hr.leave-requests.manage')->name('studio-hr.leave-requests.update');
+        Route::post('/leave-requests/{id}/cancel',                  [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'cancel'])->middleware('permission:studio-hr.leave-requests.manage')->name('studio-hr.leave-requests.cancel');
+        Route::delete('/leave-requests/{id}',                       [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'destroy'])->middleware('permission:studio-hr.leave-requests.manage')->name('studio-hr.leave-requests.destroy');
+        Route::get('/employees-leave-requests',                     [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'employeesIndex'])->middleware('permission:studio-hr.leave-requests.manage')->name('studio-hr.employees-leave-requests.index');
+        Route::get('/employees-leave-requests/{id}',                [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'employeeShow'])->middleware('permission:studio-hr.leave-requests.manage')->name('studio-hr.employees-leave-requests.show');
+        Route::post('/employees-leave-requests/{id}/{action}',      [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'process'])->middleware('permission:studio-hr.leave-requests.manage')->name('studio-hr.employees-leave-requests.process');
+        Route::get('/overtime-requests/create',                     [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'create'])->middleware('permission:studio-hr.overtime-requests.manage')->name('studio-hr.overtime-requests.create');
+        Route::get('/overtime-requests',                            [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'index'])->middleware('permission:studio-hr.overtime-requests.manage')->name('studio-hr.overtime-requests.index');
+        Route::post('/overtime-requests',                           [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'store'])->middleware('permission:studio-hr.overtime-requests.manage')->name('studio-hr.overtime-requests.store');
+        Route::get('/overtime-requests/{id}',                       [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'show'])->middleware('permission:studio-hr.overtime-requests.manage')->name('studio-hr.overtime-requests.show');
+        Route::put('/overtime-requests/{id}',                       [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'update'])->middleware('permission:studio-hr.overtime-requests.manage')->name('studio-hr.overtime-requests.update');
+        Route::post('/overtime-requests/{id}/cancel',               [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'cancel'])->middleware('permission:studio-hr.overtime-requests.manage')->name('studio-hr.overtime-requests.cancel');
+        Route::delete('/overtime-requests/{id}',                    [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'destroy'])->middleware('permission:studio-hr.overtime-requests.manage')->name('studio-hr.overtime-requests.destroy');
+        Route::get('/employees-overtime-requests',                  [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'employeesIndex'])->middleware('permission:studio-hr.overtime-requests.manage')->name('studio-hr.employees-overtime-requests.index');
+        Route::get('/employees-overtime-requests/{id}',             [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'employeeShow'])->middleware('permission:studio-hr.overtime-requests.manage')->name('studio-hr.employees-overtime-requests.show');
+        Route::post('/employees-overtime-requests/{id}/{action}',   [\App\Http\Controllers\StudioHR\OvertimeRequestController::class, 'process'])->middleware('permission:studio-hr.overtime-requests.manage')->name('studio-hr.employees-overtime-requests.process');
 
         // Manage Employee
-        Route::get('/view/employee',                                [\App\Http\Controllers\StudioHR\EmployeeController::class, 'index'])->name('studio-hr.employee.index');
-        Route::get('/create/employee',                              [\App\Http\Controllers\StudioHR\EmployeeController::class, 'create'])->name('studio-hr.employee.create');
-        Route::post('/employee',                                    [\App\Http\Controllers\StudioHR\EmployeeController::class, 'store'])->name('studio-hr.employee.store');
-        Route::get('/employees/data',                               [\App\Http\Controllers\StudioHR\EmployeeController::class, 'getEmployees'])->name('studio-hr.employee.data');
-        Route::get('/employee/categories',                          [\App\Http\Controllers\StudioHR\EmployeeController::class, 'getCategories'])->name('studio-hr.employee.categories');
-        Route::get('/employee/{id}',                                [\App\Http\Controllers\StudioHR\EmployeeController::class, 'show'])->name('studio-hr.employee.show');
-        Route::put('/employee/{id}/status',                         [\App\Http\Controllers\StudioHR\EmployeeController::class, 'updateStatus'])->name('studio-hr.employee.update-status');
-        Route::put('/employee/{id}/permissions',                    [\App\Http\Controllers\StudioHR\EmployeeController::class, 'updatePermissions'])->name('studio-hr.employee.update-permissions');
-        Route::put('/employee/{id}/schedule',                       [\App\Http\Controllers\StudioHR\EmployeeController::class, 'updateSchedule'])->name('studio-hr.employee.update-schedule');
-        Route::delete('/employee/{id}',                             [\App\Http\Controllers\StudioHR\EmployeeController::class, 'destroy'])->name('studio-hr.employee.destroy');
-        Route::get('/employee/{studioId}/services/{categoryId}',    [\App\Http\Controllers\StudioHR\EmployeeController::class, 'getServicesByCategory'])->name('studio-hr.employee.services-by-category');
+        Route::get('/view/employee',                                [\App\Http\Controllers\StudioHR\EmployeeController::class, 'index'])->middleware('permission:studio-hr.employees.view,studio-hr.employee.create,studio-hr.employee.edit,studio-hr.employee.delete')->name('studio-hr.employee.index');
+        Route::get('/create/employee',                              [\App\Http\Controllers\StudioHR\EmployeeController::class, 'create'])->middleware('permission:studio-hr.employee.create')->name('studio-hr.employee.create');
+        Route::post('/employee',                                    [\App\Http\Controllers\StudioHR\EmployeeController::class, 'store'])->middleware('permission:studio-hr.employee.create')->name('studio-hr.employee.store');
+        Route::get('/employees/data',                               [\App\Http\Controllers\StudioHR\EmployeeController::class, 'getEmployees'])->middleware('permission:studio-hr.employees.view,studio-hr.employee.create,studio-hr.employee.edit,studio-hr.employee.delete')->name('studio-hr.employee.data');
+        Route::get('/employee/categories',                          [\App\Http\Controllers\StudioHR\EmployeeController::class, 'getCategories'])->middleware('permission:studio-hr.employee.create')->name('studio-hr.employee.categories');
+        Route::get('/employee/{id}',                                [\App\Http\Controllers\StudioHR\EmployeeController::class, 'show'])->middleware('permission:studio-hr.employees.view,studio-hr.employee.edit,studio-hr.employee.delete')->name('studio-hr.employee.show');
+        Route::put('/employee/{id}/status',                         [\App\Http\Controllers\StudioHR\EmployeeController::class, 'updateStatus'])->middleware('permission:studio-hr.employee.edit')->name('studio-hr.employee.update-status');
+        Route::put('/employee/{id}/schedule',                       [\App\Http\Controllers\StudioHR\EmployeeController::class, 'updateSchedule'])->middleware('permission:studio-hr.schedules.manage')->name('studio-hr.employee.update-schedule');
+        Route::delete('/employee/{id}',                             [\App\Http\Controllers\StudioHR\EmployeeController::class, 'destroy'])->middleware('permission:studio-hr.employee.delete')->name('studio-hr.employee.destroy');
+        Route::get('/employee/{studioId}/services/{categoryId}',    [\App\Http\Controllers\StudioHR\EmployeeController::class, 'getServicesByCategory'])->middleware('permission:studio-hr.employee.create')->name('studio-hr.employee.services-by-category');
 
         // Manage Payroll  
-        Route::get('/payroll-settings',                            [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'index'])->name('studio-hr.payroll-settings.index');
-        Route::get('/payroll-settings/create',                     [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'create'])->name('studio-hr.payroll-settings.create');
-        Route::post('/payroll-settings',                           [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'store'])->name('studio-hr.payroll-settings.store');
-        Route::get('/payroll-settings/employees',                  [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'getEmployees'])->name('studio-hr.payroll-settings.employees');
-        Route::get('/payroll-settings/data',                       [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'getPayrollSettings'])->name('studio-hr.payroll-settings.data');
-        Route::get('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'show'])->name('studio-hr.payroll-settings.show');
-        Route::get('/payroll-settings/{id}/edit',                  [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'edit'])->name('studio-hr.payroll-settings.edit');
-        Route::put('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'update'])->name('studio-hr.payroll-settings.update');
-        Route::put('/payroll-settings/{id}/status',                [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'updateStatus'])->name('studio-hr.payroll-settings.status');
-        Route::delete('/payroll-settings/{id}',                    [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'destroy'])->name('studio-hr.payroll-settings.destroy');
-        Route::post('/payroll-settings/bulk-store',                [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'bulkStore'])->name('studio-hr.payroll-settings.bulk-store');
+        Route::get('/payroll-settings',                            [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'index'])->middleware('permission:studio-hr.payroll.view,studio-hr.payroll.manage')->name('studio-hr.payroll-settings.index');
+        Route::get('/payroll-settings/create',                     [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'create'])->middleware('permission:studio-hr.payroll.create,studio-hr.payroll.manage')->name('studio-hr.payroll-settings.create');
+        Route::post('/payroll-settings',                           [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'store'])->middleware('permission:studio-hr.payroll.create,studio-hr.payroll.manage')->name('studio-hr.payroll-settings.store');
+        Route::get('/payroll-settings/employees',                  [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'getEmployees'])->middleware('permission:studio-hr.payroll.view,studio-hr.payroll.create,studio-hr.payroll.manage')->name('studio-hr.payroll-settings.employees');
+        Route::get('/payroll-settings/data',                       [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'getPayrollSettings'])->middleware('permission:studio-hr.payroll.view,studio-hr.payroll.manage')->name('studio-hr.payroll-settings.data');
+        Route::get('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'show'])->middleware('permission:studio-hr.payroll.view,studio-hr.payroll.manage')->name('studio-hr.payroll-settings.show');
+        Route::get('/payroll-settings/{id}/edit',                  [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'edit'])->middleware('permission:studio-hr.payroll.edit,studio-hr.payroll.manage')->name('studio-hr.payroll-settings.edit');
+        Route::put('/payroll-settings/{id}',                       [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'update'])->middleware('permission:studio-hr.payroll.update,studio-hr.payroll.manage')->name('studio-hr.payroll-settings.update');
+        Route::put('/payroll-settings/{id}/status',                [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'updateStatus'])->middleware('permission:studio-hr.payroll.update,studio-hr.payroll.manage')->name('studio-hr.payroll-settings.status');
+        Route::delete('/payroll-settings/{id}',                    [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'destroy'])->middleware('permission:studio-hr.payroll.delete,studio-hr.payroll.manage')->name('studio-hr.payroll-settings.destroy');
+        Route::post('/payroll-settings/bulk-store',                [\App\Http\Controllers\StudioHR\PayrollSettingsController::class, 'bulkStore'])->middleware('permission:studio-hr.payroll.create,studio-hr.payroll.manage')->name('studio-hr.payroll-settings.bulk-store');
 
         // Generate Payroll
-        Route::get('/generate-payroll',                            [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'index'])->name('studio-hr.generate-payroll.index');
-        Route::get('/generate-payroll/employees',                  [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'getEmployees'])->name('studio-hr.generate-payroll.employees');
-        Route::post('/generate-payroll',                           [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'store'])->name('studio-hr.generate-payroll.store');
-        Route::get('/generate-payroll/{id}',                       [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'show'])->name('studio-hr.generate-payroll.show');
+        Route::get('/generate-payroll',                            [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'index'])->middleware('permission:studio-hr.generate-payroll.manage')->name('studio-hr.generate-payroll.index');
+        Route::get('/generate-payroll/employees',                  [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'getEmployees'])->middleware('permission:studio-hr.generate-payroll.manage')->name('studio-hr.generate-payroll.employees');
+        Route::post('/generate-payroll',                           [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'store'])->middleware('permission:studio-hr.generate-payroll.manage')->name('studio-hr.generate-payroll.store');
+        Route::get('/generate-payroll/{id}',                       [\App\Http\Controllers\StudioHR\GeneratePayrollController::class, 'show'])->middleware('permission:studio-hr.generate-payroll.manage')->name('studio-hr.generate-payroll.show');
 
         // Attendance
-        Route::get('/view/attendance',                              [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'index'])->name('studio-hr.attendance.index');
-        Route::get('/attendance/current-time',                      [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getCurrentTime'])->name('studio-hr.attendance.current-time');
-        Route::get('/attendance/schedule',                          [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getEmployeeSchedule'])->name('studio-hr.attendance.schedule');
-        Route::post('/attendance/check-in',                         [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'checkIn'])->name('studio-hr.attendance.check-in');
-        Route::post('/attendance/check-out',                        [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'checkOut'])->name('studio-hr.attendance.check-out');
-        Route::get('/attendance/today',                             [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getTodaysAttendance'])->name('studio-hr.attendance.today');
-        Route::get('/attendance/history',                           [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceHistory'])->name('studio-hr.attendance.history');
-        Route::get('/attendance/stats',                             [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceStats'])->name('studio-hr.attendance.stats');
-        Route::get('/attendance/{id}/details',                      [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceDetails'])->name('studio-hr.attendance.details');
+        Route::get('/view/attendance',                              [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'index'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.index');
+        Route::get('/attendance/current-time',                      [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getCurrentTime'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.current-time');
+        Route::get('/attendance/schedule',                          [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getEmployeeSchedule'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.schedule');
+        Route::post('/attendance/check-in',                         [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'checkIn'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.check-in');
+        Route::post('/attendance/check-out',                        [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'checkOut'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.check-out');
+        Route::get('/attendance/today',                             [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getTodaysAttendance'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.today');
+        Route::get('/attendance/history',                           [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceHistory'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.history');
+        Route::get('/attendance/stats',                             [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceStats'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.stats');
+        Route::get('/attendance/{id}/details',                      [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceDetails'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.details');
     });
 
     // Studio Finance Routes ===============================================================================================================================================
@@ -358,36 +356,36 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/profile',                                      [\App\Http\Controllers\GeneralProfileController::class, 'studioFinance'])->name('studio-finance.profile');
 
         // Dashboard
-        Route::get('/dashboard',                                    [\App\Http\Controllers\Finance\DashboardController::class, 'index'])->name('studio-finance.dashboard');
+        Route::get('/dashboard',                                    [\App\Http\Controllers\Finance\DashboardController::class, 'index'])->middleware('permission:studio-finance.dashboard.view')->name('studio-finance.dashboard');
 
         // Leave Requests
-        Route::get('/leave-requests/create',                        [\App\Http\Controllers\Finance\LeaveRequestController::class, 'create'])->name('studio-finance.leave-requests.create');
-        Route::get('/leave-requests',                               [\App\Http\Controllers\Finance\LeaveRequestController::class, 'index'])->name('studio-finance.leave-requests.index');
-        Route::post('/leave-requests',                              [\App\Http\Controllers\Finance\LeaveRequestController::class, 'store'])->name('studio-finance.leave-requests.store');
-        Route::get('/leave-requests/{id}',                          [\App\Http\Controllers\Finance\LeaveRequestController::class, 'show'])->name('studio-finance.leave-requests.show');
-        Route::put('/leave-requests/{id}',                          [\App\Http\Controllers\Finance\LeaveRequestController::class, 'update'])->name('studio-finance.leave-requests.update');
-        Route::post('/leave-requests/{id}/cancel',                  [\App\Http\Controllers\Finance\LeaveRequestController::class, 'cancel'])->name('studio-finance.leave-requests.cancel');
-        Route::delete('/leave-requests/{id}',                       [\App\Http\Controllers\Finance\LeaveRequestController::class, 'destroy'])->name('studio-finance.leave-requests.destroy');
-        Route::get('/overtime-requests/create',                     [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'create'])->name('studio-finance.overtime-requests.create');
-        Route::get('/overtime-requests',                            [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'index'])->name('studio-finance.overtime-requests.index');
-        Route::post('/overtime-requests',                           [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'store'])->name('studio-finance.overtime-requests.store');
-        Route::get('/overtime-requests/{id}',                       [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'show'])->name('studio-finance.overtime-requests.show');
-        Route::put('/overtime-requests/{id}',                       [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'update'])->name('studio-finance.overtime-requests.update');
-        Route::post('/overtime-requests/{id}/cancel',               [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'cancel'])->name('studio-finance.overtime-requests.cancel');
-        Route::delete('/overtime-requests/{id}',                    [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'destroy'])->name('studio-finance.overtime-requests.destroy');
+        Route::get('/leave-requests/create',                        [\App\Http\Controllers\Finance\LeaveRequestController::class, 'create'])->middleware('permission:studio-finance.leave-requests.manage')->name('studio-finance.leave-requests.create');
+        Route::get('/leave-requests',                               [\App\Http\Controllers\Finance\LeaveRequestController::class, 'index'])->middleware('permission:studio-finance.leave-requests.manage')->name('studio-finance.leave-requests.index');
+        Route::post('/leave-requests',                              [\App\Http\Controllers\Finance\LeaveRequestController::class, 'store'])->middleware('permission:studio-finance.leave-requests.manage')->name('studio-finance.leave-requests.store');
+        Route::get('/leave-requests/{id}',                          [\App\Http\Controllers\Finance\LeaveRequestController::class, 'show'])->middleware('permission:studio-finance.leave-requests.manage')->name('studio-finance.leave-requests.show');
+        Route::put('/leave-requests/{id}',                          [\App\Http\Controllers\Finance\LeaveRequestController::class, 'update'])->middleware('permission:studio-finance.leave-requests.manage')->name('studio-finance.leave-requests.update');
+        Route::post('/leave-requests/{id}/cancel',                  [\App\Http\Controllers\Finance\LeaveRequestController::class, 'cancel'])->middleware('permission:studio-finance.leave-requests.manage')->name('studio-finance.leave-requests.cancel');
+        Route::delete('/leave-requests/{id}',                       [\App\Http\Controllers\Finance\LeaveRequestController::class, 'destroy'])->middleware('permission:studio-finance.leave-requests.manage')->name('studio-finance.leave-requests.destroy');
+        Route::get('/overtime-requests/create',                     [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'create'])->middleware('permission:studio-finance.overtime-requests.manage')->name('studio-finance.overtime-requests.create');
+        Route::get('/overtime-requests',                            [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'index'])->middleware('permission:studio-finance.overtime-requests.manage')->name('studio-finance.overtime-requests.index');
+        Route::post('/overtime-requests',                           [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'store'])->middleware('permission:studio-finance.overtime-requests.manage')->name('studio-finance.overtime-requests.store');
+        Route::get('/overtime-requests/{id}',                       [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'show'])->middleware('permission:studio-finance.overtime-requests.manage')->name('studio-finance.overtime-requests.show');
+        Route::put('/overtime-requests/{id}',                       [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'update'])->middleware('permission:studio-finance.overtime-requests.manage')->name('studio-finance.overtime-requests.update');
+        Route::post('/overtime-requests/{id}/cancel',               [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'cancel'])->middleware('permission:studio-finance.overtime-requests.manage')->name('studio-finance.overtime-requests.cancel');
+        Route::delete('/overtime-requests/{id}',                    [\App\Http\Controllers\Finance\OvertimeRequestController::class, 'destroy'])->middleware('permission:studio-finance.overtime-requests.manage')->name('studio-finance.overtime-requests.destroy');
 
         // Attendance
-        Route::get('/view/attendance',                              [\App\Http\Controllers\Finance\AttendanceController::class, 'index'])->name('studio-finance.attendance.index');
-        Route::get('/attendance/current-time',                      [\App\Http\Controllers\Finance\AttendanceController::class, 'getCurrentTime'])->name('studio-finance.attendance.current-time');
-        Route::get('/attendance/schedule',                          [\App\Http\Controllers\Finance\AttendanceController::class, 'getFinanceSchedule'])->name('studio-finance.attendance.schedule');
-        Route::post('/attendance/check-in',                         [\App\Http\Controllers\Finance\AttendanceController::class, 'checkIn'])->name('studio-finance.attendance.check-in');
-        Route::post('/attendance/check-out',                        [\App\Http\Controllers\Finance\AttendanceController::class, 'checkOut'])->name('studio-finance.attendance.check-out');
-        Route::get('/attendance/{id}/details',                      [\App\Http\Controllers\Finance\AttendanceController::class, 'getAttendanceDetails'])->name('studio-finance.attendance.details');
+        Route::get('/view/attendance',                              [\App\Http\Controllers\Finance\AttendanceController::class, 'index'])->middleware('permission:studio-finance.attendance.view')->name('studio-finance.attendance.index');
+        Route::get('/attendance/current-time',                      [\App\Http\Controllers\Finance\AttendanceController::class, 'getCurrentTime'])->middleware('permission:studio-finance.attendance.view')->name('studio-finance.attendance.current-time');
+        Route::get('/attendance/schedule',                          [\App\Http\Controllers\Finance\AttendanceController::class, 'getFinanceSchedule'])->middleware('permission:studio-finance.attendance.view')->name('studio-finance.attendance.schedule');
+        Route::post('/attendance/check-in',                         [\App\Http\Controllers\Finance\AttendanceController::class, 'checkIn'])->middleware('permission:studio-finance.attendance.view')->name('studio-finance.attendance.check-in');
+        Route::post('/attendance/check-out',                        [\App\Http\Controllers\Finance\AttendanceController::class, 'checkOut'])->middleware('permission:studio-finance.attendance.view')->name('studio-finance.attendance.check-out');
+        Route::get('/attendance/{id}/details',                      [\App\Http\Controllers\Finance\AttendanceController::class, 'getAttendanceDetails'])->middleware('permission:studio-finance.attendance.view')->name('studio-finance.attendance.details');
 
         // Payroll Approvals
-        Route::get('/payroll-approvals',                            [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'index'])->name('studio-finance.payroll-approvals.index');
-        Route::get('/payroll-approvals/{id}',                       [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'show'])->name('studio-finance.payroll-approvals.show');
-        Route::post('/payroll-approvals/{id}/{action}',             [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'update'])->name('studio-finance.payroll-approvals.update');
+        Route::get('/payroll-approvals',                            [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'index'])->middleware('permission:studio-finance.payroll.view,studio-finance.payroll.approve,studio-finance.payroll.reject,studio-finance.payroll.manage')->name('studio-finance.payroll-approvals.index');
+        Route::get('/payroll-approvals/{id}',                       [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'show'])->middleware('permission:studio-finance.payroll.view,studio-finance.payroll.approve,studio-finance.payroll.reject,studio-finance.payroll.manage')->name('studio-finance.payroll-approvals.show');
+        Route::post('/payroll-approvals/{id}/{action}',             [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'update'])->middleware('permission:studio-finance.payroll.approve,studio-finance.payroll.reject,studio-finance.payroll.manage')->name('studio-finance.payroll-approvals.update');
     });
 
     // Freelancer Routes ===================================================================================================================================================
@@ -455,48 +453,48 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/profile',                                  [\App\Http\Controllers\GeneralProfileController::class, 'studio-photographer'])->name('studio-photographer.profile');
 
         // Dashboard
-        Route::get('/dashboard',                        [\App\Http\Controllers\StudioPhotographer\DashboardController::class, 'index'])->name('studio-photographer.dashboard');
+        Route::get('/dashboard',                        [\App\Http\Controllers\StudioPhotographer\DashboardController::class, 'index'])->middleware('permission:studio-photographer.dashboard.view')->name('studio-photographer.dashboard');
 
         // Leave Requests
-        Route::get('/leave-requests/create',            [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'create'])->name('studio-photographer.leave-requests.create');
-        Route::get('/leave-requests',                   [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'index'])->name('studio-photographer.leave-requests.index');
-        Route::post('/leave-requests',                  [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'store'])->name('studio-photographer.leave-requests.store');
-        Route::get('/leave-requests/{id}',              [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'show'])->name('studio-photographer.leave-requests.show');
-        Route::put('/leave-requests/{id}',              [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'update'])->name('studio-photographer.leave-requests.update');
-        Route::post('/leave-requests/{id}/cancel',      [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'cancel'])->name('studio-photographer.leave-requests.cancel');
-        Route::delete('/leave-requests/{id}',           [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'destroy'])->name('studio-photographer.leave-requests.destroy');
-        Route::get('/overtime-requests/create',         [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'create'])->name('studio-photographer.overtime-requests.create');
-        Route::get('/overtime-requests',                [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'index'])->name('studio-photographer.overtime-requests.index');
-        Route::post('/overtime-requests',               [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'store'])->name('studio-photographer.overtime-requests.store');
-        Route::get('/overtime-requests/{id}',           [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'show'])->name('studio-photographer.overtime-requests.show');
-        Route::put('/overtime-requests/{id}',           [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'update'])->name('studio-photographer.overtime-requests.update');
-        Route::post('/overtime-requests/{id}/cancel',   [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'cancel'])->name('studio-photographer.overtime-requests.cancel');
-        Route::delete('/overtime-requests/{id}',        [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'destroy'])->name('studio-photographer.overtime-requests.destroy');
+        Route::get('/leave-requests/create',            [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'create'])->middleware('permission:studio-photographer.leave-requests.manage')->name('studio-photographer.leave-requests.create');
+        Route::get('/leave-requests',                   [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'index'])->middleware('permission:studio-photographer.leave-requests.manage')->name('studio-photographer.leave-requests.index');
+        Route::post('/leave-requests',                  [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'store'])->middleware('permission:studio-photographer.leave-requests.manage')->name('studio-photographer.leave-requests.store');
+        Route::get('/leave-requests/{id}',              [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'show'])->middleware('permission:studio-photographer.leave-requests.manage')->name('studio-photographer.leave-requests.show');
+        Route::put('/leave-requests/{id}',              [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'update'])->middleware('permission:studio-photographer.leave-requests.manage')->name('studio-photographer.leave-requests.update');
+        Route::post('/leave-requests/{id}/cancel',      [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'cancel'])->middleware('permission:studio-photographer.leave-requests.manage')->name('studio-photographer.leave-requests.cancel');
+        Route::delete('/leave-requests/{id}',           [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'destroy'])->middleware('permission:studio-photographer.leave-requests.manage')->name('studio-photographer.leave-requests.destroy');
+        Route::get('/overtime-requests/create',         [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'create'])->middleware('permission:studio-photographer.overtime-requests.manage')->name('studio-photographer.overtime-requests.create');
+        Route::get('/overtime-requests',                [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'index'])->middleware('permission:studio-photographer.overtime-requests.manage')->name('studio-photographer.overtime-requests.index');
+        Route::post('/overtime-requests',               [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'store'])->middleware('permission:studio-photographer.overtime-requests.manage')->name('studio-photographer.overtime-requests.store');
+        Route::get('/overtime-requests/{id}',           [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'show'])->middleware('permission:studio-photographer.overtime-requests.manage')->name('studio-photographer.overtime-requests.show');
+        Route::put('/overtime-requests/{id}',           [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'update'])->middleware('permission:studio-photographer.overtime-requests.manage')->name('studio-photographer.overtime-requests.update');
+        Route::post('/overtime-requests/{id}/cancel',   [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'cancel'])->middleware('permission:studio-photographer.overtime-requests.manage')->name('studio-photographer.overtime-requests.cancel');
+        Route::delete('/overtime-requests/{id}',        [\App\Http\Controllers\StudioPhotographer\OvertimeRequestController::class, 'destroy'])->middleware('permission:studio-photographer.overtime-requests.manage')->name('studio-photographer.overtime-requests.destroy');
 
         // Attendance
-        Route::get('/view/attendance',                  [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'index'])->name('studio-photographer.attendance.index');
-        Route::get('/attendance/current-time',          [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'getCurrentTime'])->name('studio-photographer.attendance.current-time');
-        Route::get('/attendance/schedule',              [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'getPhotographerSchedule'])->name('studio-photographer.attendance.schedule');
-        Route::post('/attendance/check-in',             [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'checkIn'])->name('studio-photographer.attendance.check-in');
-        Route::post('/attendance/check-out',            [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'checkOut'])->name('studio-photographer.attendance.check-out');
-        Route::get('/attendance/{id}/details',          [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'getAttendanceDetails'])->name('studio-photographer.attendance.details');
+        Route::get('/view/attendance',                  [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'index'])->middleware('permission:studio-photographer.attendance.view')->name('studio-photographer.attendance.index');
+        Route::get('/attendance/current-time',          [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'getCurrentTime'])->middleware('permission:studio-photographer.attendance.view')->name('studio-photographer.attendance.current-time');
+        Route::get('/attendance/schedule',              [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'getPhotographerSchedule'])->middleware('permission:studio-photographer.attendance.view')->name('studio-photographer.attendance.schedule');
+        Route::post('/attendance/check-in',             [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'checkIn'])->middleware('permission:studio-photographer.attendance.view')->name('studio-photographer.attendance.check-in');
+        Route::post('/attendance/check-out',            [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'checkOut'])->middleware('permission:studio-photographer.attendance.view')->name('studio-photographer.attendance.check-out');
+        Route::get('/attendance/{id}/details',          [\App\Http\Controllers\StudioPhotographer\PhotographerAttendanceController::class, 'getAttendanceDetails'])->middleware('permission:studio-photographer.attendance.view')->name('studio-photographer.attendance.details');
 
         // Assigned Studio
-        Route::get('/view/studio',                      [\App\Http\Controllers\StudioPhotographer\AssignedStudioController::class, 'index'])->name('studio-photographer.studio.index');
-        Route::get('/studio/{id}/details',              [\App\Http\Controllers\StudioPhotographer\AssignedStudioController::class, 'getStudioDetails'])->name('studio-photographer.studio.details');
+        Route::get('/view/studio',                      [\App\Http\Controllers\StudioPhotographer\AssignedStudioController::class, 'index'])->middleware('permission:studio-photographer.studio.view')->name('studio-photographer.studio.index');
+        Route::get('/studio/{id}/details',              [\App\Http\Controllers\StudioPhotographer\AssignedStudioController::class, 'getStudioDetails'])->middleware('permission:studio-photographer.studio.view')->name('studio-photographer.studio.details');
 
         // Assigned Studio
-        Route::get('/assigned-bookings',                [\App\Http\Controllers\StudioPhotographer\AssignedBookingController::class, 'index'])->name('assigned.bookings');
-        Route::get('/assignment/{id}/details',          [\App\Http\Controllers\StudioPhotographer\AssignedBookingController::class, 'getBookingDetails'])->name('assignment.details');
-        Route::post('/assignment/{id}/update-status',   [\App\Http\Controllers\StudioPhotographer\AssignedBookingController::class, 'updateAssignmentStatus'])->name('assignment.update-status');
+        Route::get('/assigned-bookings',                [\App\Http\Controllers\StudioPhotographer\AssignedBookingController::class, 'index'])->middleware('permission:studio-photographer.bookings.view')->name('assigned.bookings');
+        Route::get('/assignment/{id}/details',          [\App\Http\Controllers\StudioPhotographer\AssignedBookingController::class, 'getBookingDetails'])->middleware('permission:studio-photographer.bookings.view')->name('assignment.details');
+        Route::post('/assignment/{id}/update-status',   [\App\Http\Controllers\StudioPhotographer\AssignedBookingController::class, 'updateAssignmentStatus'])->middleware('permission:studio-photographer.assignment.update_status')->name('assignment.update-status');
 
         // Manage Online Gallery
-        Route::get('/view/online-gallery',                  [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'index'])->name('studio-photographer.online-gallery.index');
-        Route::get('/online-gallery/{bookingId}/details',   [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'getGalleryDetails'])->name('studio-photographer.online-gallery.details');
-        Route::post('/online-gallery/{bookingId}/upload',   [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'uploadImages'])->name('studio-photographer.online-gallery.upload');
-        Route::delete('/online-gallery/{galleryId}/image',  [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'deleteImage'])->name('studio-photographer.online-gallery.delete-image');
-        Route::delete('/online-gallery/{galleryId}',        [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'deleteGallery'])->name('studio-photographer.online-gallery.delete');
-        Route::put('/online-gallery/{galleryId}',           [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'updateGallery'])->name('studio-photographer.online-gallery.update');
+        Route::get('/view/online-gallery',                  [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'index'])->middleware('permission:studio-photographer.online_gallery.view,studio-photographer.online_gallery.create,studio-photographer.online_gallery.update,studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.index');
+        Route::get('/online-gallery/{bookingId}/details',   [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'getGalleryDetails'])->middleware('permission:studio-photographer.online_gallery.view,studio-photographer.online_gallery.update,studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.details');
+        Route::post('/online-gallery/{bookingId}/upload',   [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'uploadImages'])->middleware('permission:studio-photographer.online_gallery.create')->name('studio-photographer.online-gallery.upload');
+        Route::delete('/online-gallery/{galleryId}/image',  [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'deleteImage'])->middleware('permission:studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.delete-image');
+        Route::delete('/online-gallery/{galleryId}',        [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'deleteGallery'])->middleware('permission:studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.delete');
+        Route::put('/online-gallery/{galleryId}',           [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'updateGallery'])->middleware('permission:studio-photographer.online_gallery.update')->name('studio-photographer.online-gallery.update');
 
     });
 

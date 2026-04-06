@@ -188,11 +188,14 @@ class PayrollSettingsController extends Controller
                 ], 404);
             }
             
-            // Get all employees from tbl_rbac for this studio
+            // Get employees from studio-scoped RBAC assignments for this studio
             $employees = DB::table('tbl_users')
-                ->join('tbl_rbac', 'tbl_users.id', '=', 'tbl_rbac.user_id')
-                ->where('tbl_rbac.studio_id', $studioId)
+                ->join('tbl_user_roles', 'tbl_users.id', '=', 'tbl_user_roles.user_id')
+                ->join('tbl_roles', 'tbl_user_roles.role_id', '=', 'tbl_roles.id')
+                ->where('tbl_user_roles.studio_id', $studioId)
                 ->whereIn('tbl_users.role', ['studio-hr', 'studio-finance', 'studio-photographer'])
+                ->where('tbl_roles.status', 'active')
+                ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer'])
                 ->where('tbl_users.status', 'active')
                 ->select(
                     'tbl_users.id',
@@ -200,8 +203,8 @@ class PayrollSettingsController extends Controller
                     'tbl_users.last_name',
                     'tbl_users.email',
                     'tbl_users.role',
-                    'tbl_rbac.role_type',
-                    'tbl_rbac.studio_id'
+                    'tbl_user_roles.studio_id',
+                    'tbl_roles.name as assigned_role_name'
                 )
                 ->get();
             
@@ -231,8 +234,8 @@ class PayrollSettingsController extends Controller
                 $roleDisplay = $this->getRoleDisplay($employee->role);
                 
                 // Add role type if exists
-                if ($employee->role_type) {
-                    $roleDisplay .= ' - ' . $employee->role_type;
+                if (!empty($employee->assigned_role_name) && $employee->assigned_role_name !== $employee->role) {
+                    $roleDisplay = ucwords(str_replace('-', ' ', $employee->assigned_role_name));
                 }
                 
                 return [
