@@ -197,7 +197,7 @@
                             <div>
                                 <strong>Cannot mark as completed</strong>
                                 <p class="mb-0 small" id="paymentWarningMessage">
-                                    This booking must be fully paid before marking as completed.
+                                    This booking does not yet meet the completion requirements.
                                 </p>
                             </div>
                         </div>
@@ -322,6 +322,8 @@
                 const booking = data.booking;
                 const availableStatuses = data.available_statuses || {};
                 const canMarkCompleted = data.can_mark_completed || false;
+                const completionBlockers = data.completion_blockers || [];
+                const completionBlockReason = data.completion_block_reason || 'This booking does not yet meet the completion requirements.';
                 
                 // Set booking info
                 $('#statusBookingInfo').text(`${booking.booking_reference} - ${data.category ? data.category.category_name : 'N/A'}`);
@@ -334,10 +336,13 @@
                 $.each(availableStatuses, function(value, label) {
                     const isCompleted = value === 'completed';
                     const isDisabled = isCompleted && !canMarkCompleted;
+                    const disabledLabel = completionBlockers.length > 0
+                        ? ` (${completionBlockers[0]})`
+                        : ' (Completion requirements not met)';
                     
                     $statusSelect.append($('<option>', {
                         value: value,
-                        text: label + (isDisabled ? ' (Requires Full Payment)' : ''),
+                        text: label + (isDisabled ? disabledLabel : ''),
                         disabled: isDisabled
                     }));
                 });
@@ -346,6 +351,7 @@
                 $('#cancellationReasonGroup').addClass('d-none');
                 $('#paymentWarningAlert').addClass('d-none');
                 $('#cancellationReason').val('');
+                $('#paymentWarningMessage').text(completionBlockers.length > 0 ? completionBlockers.join(' ') : completionBlockReason);
                 
                 // Handle status change
                 $statusSelect.off('change').on('change', function() {
@@ -645,7 +651,9 @@
                                                     ${booking.status === 'in_progress' && !data.can_owner_complete ? `
                                                         <small class="text-muted d-block mt-1">
                                                             <i data-lucide="info" class="me-1" style="width: 12px; height: 12px;"></i>
-                                                            Waiting for photographers to complete their assignments...
+                                                            ${(data.completion_blockers && data.completion_blockers.length > 0)
+                                                                ? data.completion_blockers.join(' ')
+                                                                : 'This booking does not yet meet the completion requirements.'}
                                                         </small>
                                                     ` : ''}
                                                 </div>

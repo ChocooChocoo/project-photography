@@ -49,7 +49,8 @@ class AssignedBookingController extends Controller
                         $query->with([
                             'client:id,first_name,last_name,email,mobile_number',
                             'category:id,category_name',
-                            'packages:id,booking_id,package_name,package_price,package_inclusions,duration,maximum_edited_photos,coverage_scope',
+                            'packages:id,booking_id,package_id,package_type,package_name,package_price,package_inclusions,duration,maximum_edited_photos,coverage_scope',
+                            'packages.studioPackage:id,package_name,online_gallery',
                             'payments:id,booking_id,amount,status,payment_method,paid_at'
                         ]);
                     },
@@ -70,6 +71,9 @@ class AssignedBookingController extends Controller
             $totalPaid = $booking->payments->where('status', 'succeeded')->sum('amount');
             $isFullyPaid = $totalPaid >= (float) $booking->total_amount;
             $remainingBalance = (float) $booking->total_amount - $totalPaid;
+            $requiresOnlineGallery = $booking->requiresOnlineGalleryUpload();
+            $hasUploadedGalleryContent = $booking->hasUploadedGalleryContent();
+            $completionBlockReason = $booking->getGalleryCompletionBlockReason();
             // ========== End of payment calculation ==========
             
             return response()->json([
@@ -85,7 +89,10 @@ class AssignedBookingController extends Controller
                     'remaining_balance' => $remainingBalance,
                     'is_fully_paid' => $isFullyPaid,
                     'payment_status' => $booking->payment_status
-                ]
+                ],
+                'requires_online_gallery' => $requiresOnlineGallery,
+                'has_uploaded_gallery_content' => $hasUploadedGalleryContent,
+                'completion_block_reason' => $completionBlockReason
                 // ========== End of payment info ==========
             ]);
             
@@ -111,13 +118,20 @@ class AssignedBookingController extends Controller
             
             // ========== NEW: Check payment status before allowing completion ==========
             if ($request->status === 'completed') {
-                $booking = BookingModel::find($assignment->booking_id);
+                $booking = BookingModel::with(['packages.studioPackage', 'studioOnlineGallery'])->find($assignment->booking_id);
                 $totalPaid = $booking->payments()->where('status', 'succeeded')->sum('amount');
                 
                 if ($totalPaid < $booking->total_amount) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Cannot mark as completed because the booking is not fully paid. Remaining balance: PHP ' . number_format($booking->total_amount - $totalPaid, 2)
+                    ], 403);
+                }
+
+                if (!$booking->isGalleryReadyForCompletion()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $booking->getGalleryCompletionBlockReason()
                     ], 403);
                 }
             }

@@ -47,7 +47,6 @@ class PackagesModel extends Model
      */
     protected $casts = [
         'package_inclusions' => 'array',
-        'coverage_scope' => 'array',
         'package_price' => 'decimal:2',
         'online_gallery' => 'boolean',
         'photographer_count' => 'integer',

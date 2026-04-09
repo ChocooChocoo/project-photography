@@ -5,6 +5,7 @@ namespace App\Http\Controllers\StudioOwner;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StudioOwner\EmployeePayrollRequest;
 use App\Models\StudioOwner\EmployeePayrollModel;
+use App\Models\StudioOwner\RoleModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
 use Illuminate\Http\Request;
@@ -235,7 +236,7 @@ class PayrollSettingsController extends Controller
                 
                 // Add role type if exists
                 if (!empty($employee->assigned_role_name) && $employee->assigned_role_name !== $employee->role) {
-                    $roleDisplay = ucwords(str_replace('-', ' ', $employee->assigned_role_name));
+                    $roleDisplay = RoleModel::getFriendlyRoleName($employee->assigned_role_name);
                 }
                 
                 return [
@@ -637,12 +638,6 @@ class PayrollSettingsController extends Controller
      */
     private function getRoleDisplay($role): string
     {
-        $roles = [
-            'studio-hr' => 'Human Resource',
-            'studio-finance' => 'Finance',
-            'studio-photographer' => 'Photographer',
-        ];
-        
-        return $roles[$role] ?? ucfirst(str_replace('-', ' ', $role));
+        return RoleModel::getFriendlyRoleName($role);
     }
 }

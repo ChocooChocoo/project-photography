@@ -57,12 +57,12 @@
                                             <table class="table table-custom table-centered table-select table-hover table-bordered w-100 mb-0">
                                                 <thead class="bg-light align-middle bg-opacity-25 thead-sm">
                                                     <tr class="text-uppercase fs-xxs">
-                                                        <th data-table-sort="name">Role Name</th>
+                                                        <th data-table-sort="name">Role</th>
                                                         <th data-table-sort="description">Description</th>
                                                         <th data-table-sort="permissions">Permissions</th>
                                                         <th data-table-sort="users">Users</th>
                                                         <th data-table-sort="status">Status</th>
-                                                        <th data-table-sort="is_system">System Role</th>
+                                                        <th data-table-sort="is_system">Type</th>
                                                         <th data-table-sort="created_at">Created Date</th>
                                                         <th class="text-center" style="width: 1%;">Actions</th>
                                                     </tr>
@@ -101,9 +101,14 @@
                                         @csrf
                                         <div class="row">
                                             <div class="col-md-12 mb-3">
-                                                <label class="form-label">Role Name <span class="text-danger">*</span></label>
+                                                <label class="form-label">Role Label Preview</label>
+                                                <input type="text" class="form-control" id="createRolePreview" value="Role label will appear here" readonly>
+                                                <div class="form-text">This is how the role will appear to users.</div>
+                                            </div>
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">System Role Key <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="name" placeholder="e.g., studio-hr-manager" required>
-                                                <div class="form-text">Use lowercase with hyphens (e.g., studio-hr-manager)</div>
+                                                <div class="form-text">Internal identifier only. Keep lowercase words separated by hyphens.</div>
                                                 <div class="invalid-feedback">
                                                     Role name is required.
                                                 </div>
@@ -125,9 +130,9 @@
                                             <div class="col-md-12 mb-3">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" role="switch" name="is_system" id="createRoleIsSystem" value="1">
-                                                    <label class="form-check-label" for="createRoleIsSystem">System-Protected Role</label>
+                                                    <label class="form-check-label" for="createRoleIsSystem">Protected System Role</label>
                                                 </div>
-                                                <div class="form-text">Enable this if the role should be protected from deletion.</div>
+                                                <div class="form-text">Use this for built-in roles that should not be deleted accidentally.</div>
                                             </div>
                                         </div>
 
@@ -169,7 +174,12 @@
                             <input type="hidden" name="role_id" id="editRoleId">
                             <div class="row">
                                 <div class="col-md-12 mb-3">
-                                    <label class="form-label">Role Name <span class="text-danger">*</span></label>
+                                    <label class="form-label">Role Label Preview</label>
+                                    <input type="text" class="form-control" id="editRolePreview" readonly>
+                                    <div class="form-text">This is the friendly label that users will see.</div>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">System Role Key <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="name" id="editRoleName" required>
                                     <div class="invalid-feedback">
                                         Role name is required.
@@ -192,14 +202,14 @@
                                 <div class="col-md-12 mb-3">
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" role="switch" name="is_system" id="editRoleIsSystem" value="1">
-                                        <label class="form-check-label" for="editRoleIsSystem">System-Protected Role</label>
+                                        <label class="form-check-label" for="editRoleIsSystem">Protected System Role</label>
                                     </div>
-                                    <div class="form-text">Enable this if the role should be protected from deletion.</div>
+                                    <div class="form-text">Use this for built-in roles that should not be deleted accidentally.</div>
                                 </div>
                                 <div class="col-md-12 mb-3">
-                                    <label class="form-label">Permissions</label>
+                                    <label class="form-label">Access Items</label>
                                     <div id="permissionsChecklist" class="row g-3"></div>
-                                    <div class="form-text">Select which permissions this role should have.</div>
+                                    <div class="form-text">Choose the screens and actions this role can access.</div>
                                 </div>
                             </div>
                         </form>
@@ -225,6 +235,41 @@
             let perPage = 10;
             let totalPages = 1;
             let rolesData = [];
+
+            const roleLabelMap = {
+                'admin': 'Administrator',
+                'owner': 'Studio Owner',
+                'owner-super-admin': 'Studio Owner',
+                'freelancer': 'Freelancer',
+                'client': 'Client',
+                'studio-hr': 'Human Resources',
+                'studio-hr-manager': 'HR Manager',
+                'studio-hr-staff': 'HR Staff',
+                'studio-finance': 'Finance',
+                'studio-finance-manager': 'Finance Manager',
+                'studio-finance-staff': 'Finance Staff',
+                'studio-photographer': 'Photographer'
+            };
+
+            function getFriendlyRoleName(roleName) {
+                const normalizedRoleName = String(roleName || '').trim().toLowerCase();
+
+                if (!normalizedRoleName) {
+                    return 'Role label will appear here';
+                }
+
+                if (roleLabelMap[normalizedRoleName]) {
+                    return roleLabelMap[normalizedRoleName];
+                }
+
+                return normalizedRoleName
+                    .replace(/[-_]+/g, ' ')
+                    .replace(/\b\w/g, char => char.toUpperCase());
+            }
+
+            function syncRolePreview(inputSelector, previewSelector) {
+                $(previewSelector).val(getFriendlyRoleName($(inputSelector).val()));
+            }
 
             // ==================== LOAD ROLES ====================
             function loadRoles() {
@@ -270,7 +315,7 @@
                     const statusBadgeClass = role.status === 'active' ? 'badge-soft-success' : 'badge-soft-danger';
                     const statusText = role.status.toUpperCase();
                     const systemBadgeClass = role.is_system ? 'badge-soft-warning' : 'badge-soft-secondary';
-                    const systemBadgeText = role.is_system ? 'YES' : 'NO';
+                    const systemBadgeText = role.is_system ? 'Protected' : 'Custom';
                     const deleteButtonHtml = role.is_system
                         ? `<button type="button" class="btn btn-sm" title="System-protected roles cannot be deleted" disabled><i class="ti ti-lock fs-lg"></i></button>`
                         : `<button type="button" class="btn btn-sm delete-role" data-id="${role.id}" data-name="${role.display_name || role.name}" title="Delete"><i class="ti ti-trash fs-lg"></i></button>`;
@@ -279,10 +324,10 @@
                         <tr data-role-id="${role.id}">
                             <td>
                                 <h5 class="mb-1">${role.display_name || role.name}</h5>
-                                <p class="mb-0 fs-xxs text-muted">${role.name}</p>
+                                <p class="mb-0 fs-xxs text-muted">System key: ${role.technical_name || role.name}</p>
                             </td>
                             <td>${role.description || '—'}</td>
-                            <td><span class="badge badge-soft-info">${role.permissions_count} permissions</span></td>
+                            <td><span class="badge badge-soft-info">${role.permissions_count} access items</span></td>
                             <td><span class="badge badge-soft-secondary">${role.users_count} users</span></td>
                             <td><span class="badge ${statusBadgeClass}">${statusText}</span></td>
                             <td><span class="badge ${systemBadgeClass}">${systemBadgeText}</span></td>
@@ -358,6 +403,14 @@
             $('#statusFilter, #searchInput').on('change keyup', function() {
                 currentPage = 1;
                 loadRoles();
+            });
+
+            $('#createRoleForm input[name="name"]').on('input', function() {
+                syncRolePreview('#createRoleForm input[name="name"]', '#createRolePreview');
+            });
+
+            $('#editRoleName').on('input', function() {
+                syncRolePreview('#editRoleName', '#editRolePreview');
             });
 
             // ==================== CREATE ROLE ====================
@@ -438,6 +491,7 @@
                             const role = response.data;
                             $('#editRoleId').val(role.id);
                             $('#editRoleName').val(role.name);
+                            $('#editRolePreview').val(role.display_name || getFriendlyRoleName(role.name));
                             $('#editRoleDescription').val(role.description || '');
                             $('#editRoleStatus').val(role.status);
                             $('#editRoleIsSystem').prop('checked', Boolean(role.is_system));
@@ -479,7 +533,8 @@
                                             <div class="form-check">
                                                 <input class="form-check-input permission-checkbox" type="checkbox" name="permissions[]" value="${permission.id}" id="perm_${permission.id}" ${isChecked ? 'checked' : ''}>
                                                 <label class="form-check-label" for="perm_${permission.id}">
-                                                    ${permission.permission_string || permission.name}
+                                                    ${permission.display_label || permission.permission_string || permission.name}
+                                                    <small class="text-muted d-block">${permission.portal_display || ''}</small>
                                                     <small class="text-muted d-block">${permission.description || ''}</small>
                                                 </label>
                                             </div>
@@ -498,10 +553,7 @@
                 const groupedPermissions = {};
 
                 permissions.forEach(permission => {
-                    const resource = permission.resource || 'other';
-                    const groupName = resource
-                        .replace(/_/g, ' ')
-                        .replace(/\b\w/g, char => char.toUpperCase());
+                    const groupName = permission.resource_display || 'Other';
 
                     if (!groupedPermissions[groupName]) {
                         groupedPermissions[groupName] = [];
@@ -660,6 +712,7 @@
             });
             
             // Initial load
+            syncRolePreview('#createRoleForm input[name="name"]', '#createRolePreview');
             loadRoles();
         });
     </script>

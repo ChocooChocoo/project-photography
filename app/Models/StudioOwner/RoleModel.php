@@ -10,6 +10,26 @@ class RoleModel extends Model
     use HasFactory;
 
     /**
+     * Friendly role labels keyed by stored role names.
+     *
+     * @var array<string, string>
+     */
+    protected const DISPLAY_NAMES = [
+        'admin' => 'Administrator',
+        'owner' => 'Studio Owner',
+        'owner-super-admin' => 'Studio Owner',
+        'freelancer' => 'Freelancer',
+        'client' => 'Client',
+        'studio-hr' => 'Human Resources',
+        'studio-hr-manager' => 'HR Manager',
+        'studio-hr-staff' => 'HR Staff',
+        'studio-finance' => 'Finance',
+        'studio-finance-manager' => 'Finance Manager',
+        'studio-finance-staff' => 'Finance Staff',
+        'studio-photographer' => 'Photographer',
+    ];
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -104,13 +124,30 @@ class RoleModel extends Model
      */
     public function getDisplayNameAttribute(): string
     {
-        $displayNames = [
-            'studio-hr-manager' => 'Human Resource Manager',
-            'studio-hr-staff' => 'Human Resource Staff',
-            'studio-finance-manager' => 'Finance Manager',
-            'studio-finance-staff' => 'Finance Staff',
-        ];
+        return static::getFriendlyRoleName($this->name);
+    }
 
-        return $displayNames[$this->name] ?? ucwords(str_replace('-', ' ', $this->name));
+    /**
+     * Resolve a user-friendly label for a stored role name.
+     */
+    public static function getFriendlyRoleName(?string $roleName): string
+    {
+        $normalizedRoleName = strtolower(trim((string) $roleName));
+
+        if ($normalizedRoleName === '') {
+            return 'Unknown Role';
+        }
+
+        return static::DISPLAY_NAMES[$normalizedRoleName] ?? static::humanizeRoleName($normalizedRoleName);
+    }
+
+    /**
+     * Convert a technical role key into a readable label.
+     */
+    private static function humanizeRoleName(string $roleName): string
+    {
+        $label = str_replace(['-', '_'], ' ', $roleName);
+
+        return ucwords($label);
     }
 }

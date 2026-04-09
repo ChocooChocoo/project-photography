@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StudioHR\EmployeePayrollRequest;
 use App\Models\StudioOwner\EmployeePayrollModel;
 use App\Models\StudioOwner\EmployeeScheduleModel;
+use App\Models\StudioOwner\RoleModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
 use Illuminate\Http\Request;
@@ -633,13 +634,7 @@ class PayrollSettingsController extends Controller
 
     private function getRoleDisplay($role): string
     {
-        $roles = [
-            'studio-hr' => 'Human Resource',
-            'studio-finance' => 'Finance',
-            'studio-photographer' => 'Photographer',
-        ];
-
-        return $roles[$role] ?? ucfirst(str_replace('-', ' ', $role));
+        return RoleModel::getFriendlyRoleName($role);
     }
 
     public function bulkStore(Request $request)

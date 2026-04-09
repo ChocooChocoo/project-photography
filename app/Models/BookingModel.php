@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\StudioOwner\PackagesModel as StudioPackagesModel;
+use App\Models\StudioOwner\StudioOnlineGalleryModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -153,6 +155,14 @@ class BookingModel extends Model
     }
 
     /**
+     * Get the studio online gallery associated with this booking.
+     */
+    public function studioOnlineGallery()
+    {
+        return $this->hasOne(StudioOnlineGalleryModel::class, 'booking_id');
+    }
+
+    /**
     * Get the provider based on booking type.
     */
     public function provider()
@@ -291,6 +301,95 @@ class BookingModel extends Model
     {
         return $this->isFullyPaid() && 
                $this->status === self::STATUS_IN_PROGRESS;
+    }
+
+    /**
+     * Check if this studio booking requires online gallery delivery before completion.
+     */
+    public function requiresOnlineGalleryUpload(): bool
+    {
+        if ($this->booking_type !== 'studio') {
+            return false;
+        }
+
+        $this->loadMissing('packages.studioPackage');
+
+        $requiresFromSnapshot = $this->packages
+            ->where('package_type', 'studio')
+            ->contains(function (BookingPackageModel $package) {
+                return (bool) optional($package->studioPackage)->online_gallery;
+            });
+
+        if ($requiresFromSnapshot) {
+            return true;
+        }
+
+        $hasResolvableStudioSnapshot = $this->packages
+            ->where('package_type', 'studio')
+            ->contains(function (BookingPackageModel $package) {
+                return !is_null($package->package_id);
+            });
+
+        // Fallback for older bookings missing tbl_booking_packages snapshots or partial snapshot payloads.
+        if ($this->packages->isEmpty() || !$hasResolvableStudioSnapshot) {
+            $matchedStudioPackage = StudioPackagesModel::query()
+                ->where('studio_id', $this->provider_id)
+                ->where('category_id', $this->category_id)
+                ->where('status', 'active')
+                ->where(function ($query) {
+                    $query->where('package_price', $this->total_amount)
+                        ->orWhere('package_name', $this->event_name);
+                })
+                ->orderByRaw('CASE WHEN package_price = ? THEN 0 ELSE 1 END', [(float) $this->total_amount])
+                ->first();
+
+            return (bool) optional($matchedStudioPackage)->online_gallery;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if this booking has at least one uploaded gallery image.
+     */
+    public function hasUploadedGalleryContent(): bool
+    {
+        $gallery = $this->relationLoaded('studioOnlineGallery')
+            ? $this->studioOnlineGallery
+            : $this->studioOnlineGallery()->first();
+
+        if (!$gallery) {
+            return false;
+        }
+
+        $images = is_array($gallery->images) ? array_filter($gallery->images) : [];
+        $totalPhotos = (int) ($gallery->total_photos ?? 0);
+
+        return $totalPhotos > 0 || count($images) > 0;
+    }
+
+    /**
+     * Check if required gallery delivery is satisfied.
+     */
+    public function isGalleryReadyForCompletion(): bool
+    {
+        if (!$this->requiresOnlineGalleryUpload()) {
+            return true;
+        }
+
+        return $this->hasUploadedGalleryContent();
+    }
+
+    /**
+     * Get the blocking reason when completion is not yet allowed.
+     */
+    public function getGalleryCompletionBlockReason(): ?string
+    {
+        if (!$this->requiresOnlineGalleryUpload() || $this->hasUploadedGalleryContent()) {
+            return null;
+        }
+
+        return 'Cannot mark as completed until at least one image is uploaded to the client\'s online gallery.';
     }
 
     /**

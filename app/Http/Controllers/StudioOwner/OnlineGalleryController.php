@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 class OnlineGalleryController extends Controller
 {
     /**
-     * Display list of completed bookings with online gallery feature.
+     * Display list of in-progress or completed bookings with online gallery feature.
      */
     public function index()
     {
@@ -27,10 +27,10 @@ class OnlineGalleryController extends Controller
         $bookings = collect([]);
         
         if (!empty($studioIds)) {
-            // Get completed bookings where packages have online_gallery = true
+            // Get in-progress or completed bookings where packages have online_gallery = true
             $bookings = BookingModel::whereIn('provider_id', $studioIds)
                 ->where('booking_type', 'studio')
-                ->where('status', 'completed')
+                ->whereIn('status', ['in_progress', 'completed'])
                 ->whereHas('packages', function($q) {
                     $q->where('package_type', 'studio')
                       ->whereHas('studioPackage', function($p) {
@@ -135,7 +135,7 @@ class OnlineGalleryController extends Controller
             $booking = BookingModel::where('id', $bookingId)
                 ->whereIn('provider_id', $studioIds)
                 ->where('booking_type', 'studio')
-                ->where('status', 'completed')
+                ->whereIn('status', ['in_progress', 'completed'])
                 ->firstOrFail();
 
             // Check if booking has online gallery package

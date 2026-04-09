@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Profile\UpdateProfileRequest;
+use App\Models\StudioOwner\RoleModel;
 use App\Models\UserModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -187,16 +188,6 @@ class GeneralProfileController extends Controller
      */
     private function getRoleDisplay($role)
     {
-        $roles = [
-            'admin' => 'Administrator',
-            'owner' => 'Studio Owner',
-            'freelancer' => 'Freelancer',
-            'client' => 'Client',
-            'studio-photographer' => 'Studio Photographer',
-            'studio-hr' => 'Human Resource',
-            'studio-finance' => 'Finance',
-        ];
-        
-        return $roles[$role] ?? ucfirst($role);
+        return RoleModel::getFriendlyRoleName($role);
     }
 }

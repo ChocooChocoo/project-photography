@@ -84,7 +84,7 @@
                                         <tr>
                                             <td colspan="7" class="text-center py-4">
                                                 <i class="ti ti-photo-off fs-3 text-muted mb-2 d-block"></i>
-                                                No completed bookings assigned to you with online gallery found
+                                                No in-progress or completed bookings assigned to you with online gallery found
                                             </td>
                                         </tr>
                                     @endforelse

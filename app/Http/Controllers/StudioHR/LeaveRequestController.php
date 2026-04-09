@@ -8,6 +8,7 @@ use App\Http\Requests\StudioHR\StoreLeaveRequest;
 use App\Http\Requests\StudioHR\UpdateLeaveRequest;
 use App\Models\LeaveRequestModel;
 use App\Models\StudioOwner\EmployeeScheduleModel;
+use App\Models\StudioOwner\RoleModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
 use Carbon\Carbon;
@@ -689,13 +690,6 @@ class LeaveRequestController extends Controller
      */
     private function getRoleDisplay(string $role): string
     {
-        $roles = [
-            'studio-hr' => 'Human Resource',
-            'studio-finance' => 'Finance',
-            'studio-photographer' => 'Photographer',
-            'studio-staff' => 'Studio Staff',
-        ];
-
-        return $roles[$role] ?? ucfirst(str_replace('-', ' ', $role));
+        return RoleModel::getFriendlyRoleName($role);
     }
 }

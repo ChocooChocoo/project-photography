@@ -10,6 +10,66 @@ class PermissionModel extends Model
     use HasFactory;
 
     /**
+     * Friendly portal labels keyed by stored portal names.
+     *
+     * @var array<string, string>
+     */
+    protected const PORTAL_LABELS = [
+        'owner' => 'Owner Portal',
+        'studio-hr' => 'HR Portal',
+        'studio-finance' => 'Finance Portal',
+        'studio-photographer' => 'Photographer Portal',
+    ];
+
+    /**
+     * Friendly resource labels keyed by stored resource names.
+     *
+     * @var array<string, string>
+     */
+    protected const RESOURCE_LABELS = [
+        'assignment' => 'Assignment',
+        'attendance' => 'Attendance',
+        'bookings' => 'Bookings',
+        'chatbot' => 'Chatbot',
+        'dashboard' => 'Dashboard',
+        'employee' => 'Employee',
+        'employees' => 'Employees',
+        'generate_payroll' => 'Payroll Generation',
+        'inquiries' => 'Inquiries',
+        'leave_requests' => 'Leave Requests',
+        'members' => 'Members',
+        'online_gallery' => 'Online Gallery',
+        'overtime_requests' => 'Overtime Requests',
+        'packages' => 'Packages',
+        'payroll' => 'Payroll',
+        'permissions' => 'Permissions',
+        'photographers' => 'Photographers',
+        'roles' => 'Roles',
+        'schedules' => 'Schedules',
+        'services' => 'Services',
+        'studio' => 'Studio',
+        'studios' => 'Studios',
+        'subscription' => 'Subscription',
+    ];
+
+    /**
+     * Friendly action labels keyed by stored action names.
+     *
+     * @var array<string, string>
+     */
+    protected const ACTION_LABELS = [
+        'approve' => 'Approve',
+        'create' => 'Create',
+        'delete' => 'Delete',
+        'edit' => 'Edit',
+        'manage' => 'Manage',
+        'reject' => 'Reject',
+        'update' => 'Update',
+        'update_status' => 'Update Status',
+        'view' => 'View',
+    ];
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -104,5 +164,98 @@ class PermissionModel extends Model
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    /**
+     * Get the user-friendly label for this permission.
+     */
+    public function getDisplayLabelAttribute(): string
+    {
+        $resourceLabel = static::getResourceLabel($this->resource);
+        $actionLabel = static::getActionLabel($this->action);
+
+        return trim($actionLabel . ' ' . $resourceLabel);
+    }
+
+    /**
+     * Get the portal display label for this permission.
+     */
+    public function getPortalDisplayAttribute(): string
+    {
+        return static::getPortalLabel($this->portal);
+    }
+
+    /**
+     * Get the resource display label for this permission.
+     */
+    public function getResourceDisplayAttribute(): string
+    {
+        return static::getResourceLabel($this->resource);
+    }
+
+    /**
+     * Get the action display label for this permission.
+     */
+    public function getActionDisplayAttribute(): string
+    {
+        return static::getActionLabel($this->action);
+    }
+
+    /**
+     * Resolve a user-friendly portal label.
+     */
+    public static function getPortalLabel(?string $portal): string
+    {
+        $normalizedPortal = static::normalizeSegment($portal);
+
+        if ($normalizedPortal === '') {
+            return 'System';
+        }
+
+        return static::PORTAL_LABELS[$normalizedPortal] ?? static::humanizeSegment($normalizedPortal);
+    }
+
+    /**
+     * Resolve a user-friendly resource label.
+     */
+    public static function getResourceLabel(?string $resource): string
+    {
+        $normalizedResource = static::normalizeSegment($resource);
+
+        if ($normalizedResource === '') {
+            return 'Access';
+        }
+
+        return static::RESOURCE_LABELS[$normalizedResource] ?? static::humanizeSegment($normalizedResource);
+    }
+
+    /**
+     * Resolve a user-friendly action label.
+     */
+    public static function getActionLabel(?string $action): string
+    {
+        $normalizedAction = static::normalizeSegment($action);
+
+        if ($normalizedAction === '') {
+            return 'Access';
+        }
+
+        return static::ACTION_LABELS[$normalizedAction] ?? static::humanizeSegment($normalizedAction);
+    }
+
+    /**
+     * Normalize a permission segment for display lookups.
+     */
+    private static function normalizeSegment(?string $value): string
+    {
+        return strtolower(trim(str_replace('-', '_', (string) $value)));
+    }
+
+    /**
+     * Convert a technical segment to a readable label.
+     */
+    private static function humanizeSegment(string $value): string
+    {
+        return ucwords(str_replace('_', ' ', $value));
     }
 }

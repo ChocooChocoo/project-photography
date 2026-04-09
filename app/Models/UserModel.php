@@ -319,7 +319,7 @@ class UserModel extends Authenticatable
     public static function getEmployeeRoles(): array
     {
         return [
-            'studio-hr' => 'Human Resource',
+            'studio-hr' => 'Human Resources',
             'studio-finance' => 'Finance',
             'studio-photographer' => 'Photographer',
             'studio-staff' => 'Studio Staff',

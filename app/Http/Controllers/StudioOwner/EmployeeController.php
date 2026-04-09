@@ -767,13 +767,7 @@ class EmployeeController extends Controller
      */
     private function getRoleDisplay($role)
     {
-        $roles = [
-            'studio-hr' => 'Human Resource',
-            'studio-finance' => 'Finance',
-            'studio-photographer' => 'Photographer',
-        ];
-        
-        return $roles[$role] ?? ucfirst(str_replace('-', ' ', $role));
+        return RoleModel::getFriendlyRoleName($role);
     }
 
     /**

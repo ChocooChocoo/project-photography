@@ -549,6 +549,8 @@ class BookingController extends Controller
             // Create booking
             $booking = BookingModel::create($bookingData);
 
+            $normalizedCoverageScope = $this->normalizeCoverageScope($package->coverage_scope);
+
             // 6. Create booking package record
             BookingPackageModel::create([
                 'booking_id' => $booking->id,
@@ -559,7 +561,7 @@ class BookingController extends Controller
                 'package_inclusions' => json_encode($package->package_inclusions),
                 'duration' => $package->duration,
                 'maximum_edited_photos' => $package->maximum_edited_photos,
-                'coverage_scope' => $package->coverage_scope,
+                'coverage_scope' => $normalizedCoverageScope,
             ]);
 
             // 7. Create initial payment record
@@ -825,6 +827,37 @@ class BookingController extends Controller
                 'message' => 'Error validating package.'
             ];
         }
+    }
+
+    /**
+     * Normalize coverage scope into the string shape expected by booking snapshots.
+     */
+    private function normalizeCoverageScope($coverageScope): ?string
+    {
+        if (is_array($coverageScope)) {
+            $coverageScope = array_values(array_filter(array_map(function ($value) {
+                if (is_scalar($value) || $value === null) {
+                    $text = trim((string) $value);
+                    return $text !== '' ? $text : null;
+                }
+
+                return null;
+            }, $coverageScope)));
+
+            return !empty($coverageScope) ? implode(', ', $coverageScope) : null;
+        }
+
+        if (is_string($coverageScope)) {
+            $trimmedCoverageScope = trim($coverageScope);
+            return $trimmedCoverageScope !== '' ? $trimmedCoverageScope : null;
+        }
+
+        if (is_scalar($coverageScope)) {
+            $stringValue = trim((string) $coverageScope);
+            return $stringValue !== '' ? $stringValue : null;
+        }
+
+        return null;
     }
 
     /**

@@ -52,8 +52,13 @@ class PermissionController extends Controller
                 'id' => $permission->id,
                 'name' => $permission->name,
                 'resource' => $permission->resource,
+                'resource_display' => $permission->resource_display,
                 'action' => $permission->action,
+                'action_display' => $permission->action_display,
+                'portal' => $permission->portal,
+                'portal_display' => $permission->portal_display,
                 'permission_string' => $permission->permission_string,
+                'display_label' => $permission->display_label,
                 'description' => $permission->description,
                 'status' => $permission->status,
                 'roles_count' => $permission->roles()->count(),
@@ -75,11 +80,25 @@ class PermissionController extends Controller
         $permissions = PermissionModel::where('status', 'active')
             ->whereIn('portal', ['owner', 'studio-hr', 'studio-finance', 'studio-photographer'])
             ->orderBy('permission_string')
-            ->get(['id', 'name', 'resource', 'action', 'permission_string', 'description']);
+            ->get(['id', 'name', 'portal', 'resource', 'action', 'permission_string', 'description']);
 
         return response()->json([
             'success' => true,
-            'data' => $permissions
+            'data' => $permissions->map(function ($permission) {
+                return [
+                    'id' => $permission->id,
+                    'name' => $permission->name,
+                    'portal' => $permission->portal,
+                    'portal_display' => $permission->portal_display,
+                    'resource' => $permission->resource,
+                    'resource_display' => $permission->resource_display,
+                    'action' => $permission->action,
+                    'action_display' => $permission->action_display,
+                    'permission_string' => $permission->permission_string,
+                    'display_label' => $permission->display_label,
+                    'description' => $permission->description,
+                ];
+            })->values()
         ]);
     }
 
@@ -154,8 +173,13 @@ class PermissionController extends Controller
                 'id' => $permission->id,
                 'name' => $permission->name,
                 'resource' => $permission->resource,
+                'resource_display' => $permission->resource_display,
                 'action' => $permission->action,
+                'action_display' => $permission->action_display,
+                'portal' => $permission->portal,
+                'portal_display' => $permission->portal_display,
                 'permission_string' => $permission->permission_string,
+                'display_label' => $permission->display_label,
                 'description' => $permission->description,
                 'status' => $permission->status,
                 'roles' => $permission->roles->map(function ($role) {

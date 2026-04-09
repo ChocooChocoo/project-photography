@@ -276,6 +276,10 @@
                     remaining_balance: 0,
                     payment_status: 'pending'
                 };
+                const requiresOnlineGallery = data.requires_online_gallery || false;
+                const hasUploadedGalleryContent = data.has_uploaded_gallery_content || false;
+                const completionBlockReason = data.completion_block_reason || '';
+                const galleryUploadMissing = (requiresOnlineGallery && !hasUploadedGalleryContent) || !!completionBlockReason;
                 // ========== End of payment info ==========
                 
                 if (!booking) {
@@ -290,7 +294,9 @@
                     client_confirmed_at: assignment.client_confirmed_at,
                     has_on_site: !!assignment.on_site_at,
                     has_client_confirmed: !!assignment.client_confirmed_at,
-                    is_fully_paid: paymentInfo.is_fully_paid
+                    is_fully_paid: paymentInfo.is_fully_paid,
+                    requires_online_gallery: requiresOnlineGallery,
+                    has_uploaded_gallery_content: hasUploadedGalleryContent
                 });
                 
                 const client = booking.client;
@@ -389,6 +395,7 @@
                     const remainingBalance = paymentInfo.remaining_balance;
                     
                     let paymentWarningHtml = '';
+                    let galleryWarningHtml = '';
                     let completeButtonHtml = '';
                     
                     if (!isFullyPaid) {
@@ -405,6 +412,20 @@
                         completeButtonHtml = `
                             <button class="btn btn-warning" disabled style="opacity: 0.6; cursor: not-allowed;" title="Payment must be complete before marking as completed">
                                 <i data-lucide="check-circle" class="me-1"></i> Mark as Completed (Payment Incomplete)
+                            </button>
+                        `;
+                    } else if (galleryUploadMissing) {
+                        galleryWarningHtml = `
+                            <div class="alert alert-warning mb-3">
+                                <i data-lucide="images" class="me-2"></i>
+                                <strong>Gallery Upload Required</strong>
+                                <p class="mb-0 mt-1">${completionBlockReason || "You cannot mark this assignment as completed until at least one image is uploaded to the client's online gallery."}</p>
+                            </div>
+                        `;
+
+                        completeButtonHtml = `
+                            <button class="btn btn-secondary" disabled style="opacity: 0.65; cursor: not-allowed; pointer-events: none;" title="You cannot complete this assignment yet because the client's gallery has no uploaded images">
+                                <i data-lucide="lock" class="me-1"></i> Mark as Completed (Locked)
                             </button>
                         `;
                     } else {
@@ -425,6 +446,7 @@
                             </div>
                             
                             ${paymentWarningHtml}
+                            ${galleryWarningHtml}
                             
                             <div class="d-flex justify-content-end">
                                 ${completeButtonHtml}
@@ -509,7 +531,7 @@
                                         <span class="badge ${paymentStatusClass} me-2">${paymentStatusText}</span>
                                         ${!paymentInfo.is_fully_paid ? 
                                             `<small class="text-danger d-block mt-1">Remaining: PHP ${paymentInfo.remaining_balance.toFixed(2)}</small>` : 
-                                            `<small class="text-success d-block mt-1">Fully paid - Ready for completion</small>`
+                                            `<small class="d-block mt-1 ${galleryUploadMissing ? 'text-warning' : 'text-success'}">${galleryUploadMissing ? 'Fully paid - completion locked until gallery upload' : 'Fully paid - Ready for completion'}</small>`
                                         }
                                     </p>
                                 </div>

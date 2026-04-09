@@ -14,31 +14,20 @@ use Illuminate\Support\Facades\Storage;
 class OnlineGalleryController extends Controller
 {
     /**
-     * Display list of completed bookings assigned to this photographer
+     * Display list of in-progress or completed bookings assigned to this photographer.
      */
     public function index()
     {
         $userId = Auth::id();
         
-        // Get all completed bookings where this photographer is assigned
+        // Get all actively assigned bookings where this photographer can manage gallery delivery.
         $assignments = BookingAssignedPhotographerModel::where('photographer_id', $userId)
-            ->whereHas('booking', function($q) {
-                $q->where('status', 'completed')
-                  ->where('booking_type', 'studio');
-            })
+            ->whereIn('status', ['on_site', 'in_progress', 'completed'])
             ->with([
-                'booking' => function($q) {
-                    $q->with([
-                        'client:id,first_name,last_name,email',
-                        'category:id,category_name',
-                        'packages' => function($p) {
-                            $p->where('package_type', 'studio')
-                              ->whereHas('studioPackage', function($sp) {
-                                  $sp->where('online_gallery', 1);
-                              });
-                        }
-                    ]);
-                },
+                'booking.client:id,first_name,last_name,email',
+                'booking.category:id,category_name',
+                'booking.packages.studioPackage',
+                'booking.studioOnlineGallery',
                 'studio:id,studio_name'
             ])
             ->get();
@@ -49,9 +38,9 @@ class OnlineGalleryController extends Controller
         foreach ($assignments as $assignment) {
             $booking = $assignment->booking;
             
-            if ($booking && $booking->packages->isNotEmpty()) {
-                $booking->has_gallery = StudioOnlineGalleryModel::where('booking_id', $booking->id)->exists();
-                $booking->gallery = StudioOnlineGalleryModel::where('booking_id', $booking->id)->first();
+            if ($booking && $booking->booking_type === 'studio' && $booking->requiresOnlineGalleryUpload()) {
+                $booking->has_gallery = (bool) $booking->studioOnlineGallery;
+                $booking->gallery = $booking->studioOnlineGallery;
                 $booking->formatted_event_date = \Carbon\Carbon::parse($booking->event_date)->format('M d, Y');
                 
                 $bookings->push($booking);
@@ -72,9 +61,7 @@ class OnlineGalleryController extends Controller
             // Check if photographer is assigned to this booking
             $assignment = BookingAssignedPhotographerModel::where('photographer_id', $userId)
                 ->where('booking_id', $bookingId)
-                ->whereHas('booking', function($q) {
-                    $q->where('status', 'completed');
-                })
+                ->whereIn('status', ['on_site', 'in_progress', 'completed'])
                 ->first();
 
             if (!$assignment) {
@@ -87,8 +74,15 @@ class OnlineGalleryController extends Controller
             // Get the booking
             $booking = BookingModel::where('id', $bookingId)
                 ->where('booking_type', 'studio')
-                ->with(['client:id,first_name,last_name,email'])
+                ->with(['client:id,first_name,last_name,email', 'packages.studioPackage'])
                 ->firstOrFail();
+
+            if (!$booking->requiresOnlineGalleryUpload()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This booking does not include online gallery feature.'
+                ], 400);
+            }
 
             // Get existing gallery if any
             $gallery = StudioOnlineGalleryModel::where('booking_id', $bookingId)->first();
@@ -133,9 +127,7 @@ class OnlineGalleryController extends Controller
             // Check if photographer is assigned to this booking
             $assignment = BookingAssignedPhotographerModel::where('photographer_id', $userId)
                 ->where('booking_id', $bookingId)
-                ->whereHas('booking', function($q) {
-                    $q->where('status', 'completed');
-                })
+                ->whereIn('status', ['on_site', 'in_progress', 'completed'])
                 ->first();
 
             if (!$assignment) {
@@ -148,16 +140,11 @@ class OnlineGalleryController extends Controller
             // Get the booking
             $booking = BookingModel::where('id', $bookingId)
                 ->where('booking_type', 'studio')
+                ->with(['packages.studioPackage'])
                 ->firstOrFail();
 
             // Check if booking has online gallery package
-            $hasOnlineGallery = $booking->packages()
-                ->where('package_type', 'studio')
-                ->whereHas('studioPackage', function($q) {
-                    $q->where('online_gallery', 1);
-                })->exists();
-
-            if (!$hasOnlineGallery) {
+            if (!$booking->requiresOnlineGalleryUpload()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This booking does not include online gallery feature.'

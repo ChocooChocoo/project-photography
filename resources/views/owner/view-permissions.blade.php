@@ -57,9 +57,10 @@
                                             <table class="table table-custom table-centered table-select table-hover table-bordered w-100 mb-0">
                                                 <thead class="bg-light align-middle bg-opacity-25 thead-sm">
                                                     <tr class="text-uppercase fs-xxs">
-                                                        <th data-table-sort="permission_string">Permission String</th>
-                                                        <th data-table-sort="resource">Resource</th>
-                                                        <th data-table-sort="action">Action</th>
+                                                        <th data-table-sort="display_label">Access Label</th>
+                                                        <th data-table-sort="portal">Portal</th>
+                                                        <th data-table-sort="resource">Access Area</th>
+                                                        <th data-table-sort="action">Allowed Action</th>
                                                         <th data-table-sort="description">Description</th>
                                                         <th data-table-sort="roles">Assigned Roles</th>
                                                         <th data-table-sort="status">Status</th>
@@ -69,7 +70,7 @@
                                                 </thead>
                                                 <tbody id="permissionsTableBody">
                                                     <tr id="loadingRow">
-                                                        <td colspan="8" class="text-center py-4">
+                                                        <td colspan="9" class="text-center py-4">
                                                             <div class="spinner-border text-primary" role="status">
                                                                 <span class="visually-hidden">Loading...</span>
                                                             </div>
@@ -77,7 +78,7 @@
                                                         </td>
                                                     </tr>
                                                     <tr id="noResultsRow" style="display: none;">
-                                                        <td colspan="8" class="text-center py-4">
+                                                        <td colspan="9" class="text-center py-4">
                                                             <i class="ti ti-filter-off fs-1 text-muted"></i>
                                                             <p class="mt-2">No permissions found.</p>
                                                         </td>
@@ -96,28 +97,33 @@
                                 </div>
 
                                 <div class="tab-pane" id="create-permissions">
-                                    <h4 class="card-title text-primary mb-3">Create New Permission</h4>
+                                    <h4 class="card-title text-primary mb-3">Create New Access Rule</h4>
                                     <form id="createPermissionForm" class="needs-validation" novalidate>
                                         @csrf
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Resource <span class="text-danger">*</span></label>
+                                                <label class="form-label">Access Area <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="resource" id="createPermissionResource" placeholder="e.g., user, invoice" required>
                                                 <div class="invalid-feedback">
                                                     Resource is required.
                                                 </div>
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Action <span class="text-danger">*</span></label>
+                                                <label class="form-label">Allowed Action <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="action" id="createPermissionAction" placeholder="e.g., create, read" required>
                                                 <div class="invalid-feedback">
                                                     Action is required.
                                                 </div>
                                             </div>
                                             <div class="col-md-12 mb-3">
-                                                <label class="form-label">Permission String <span class="text-danger">*</span></label>
+                                                <label class="form-label">Access Label Preview</label>
+                                                <input type="text" class="form-control" id="createPermissionLabel" value="Access label will appear here" readonly>
+                                                <div class="form-text">This is the plain-language label that users will understand.</div>
+                                            </div>
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">System Permission Key <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="permission_string" id="createPermissionString" readonly required>
-                                                <div class="form-text">This is automatically generated using the format resource:action.</div>
+                                                <div class="form-text">Internal identifier only. This is generated automatically from the access area and action.</div>
                                             </div>
                                             <div class="col-md-12 mb-3">
                                                 <label class="form-label">Description</label>
@@ -173,23 +179,28 @@
                             <input type="hidden" name="permission_id" id="editPermissionId">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Resource <span class="text-danger">*</span></label>
+                                    <label class="form-label">Access Area <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="resource" id="editPermissionResource" required>
                                     <div class="invalid-feedback">
                                         Resource is required.
                                     </div>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Action <span class="text-danger">*</span></label>
+                                    <label class="form-label">Allowed Action <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="action" id="editPermissionAction" required>
                                     <div class="invalid-feedback">
                                         Action is required.
                                     </div>
                                 </div>
                                 <div class="col-md-12 mb-3">
-                                    <label class="form-label">Permission String <span class="text-danger">*</span></label>
+                                    <label class="form-label">Access Label Preview</label>
+                                    <input type="text" class="form-control" id="editPermissionLabel" readonly>
+                                    <div class="form-text">This is the plain-language label that users will understand.</div>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">System Permission Key <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="permission_string" id="editPermissionString" readonly required>
-                                    <div class="form-text">This is automatically generated using the format resource:action.</div>
+                                    <div class="form-text">Internal identifier only. This is generated automatically from the access area and action.</div>
                                 </div>
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label">Description</label>
@@ -248,6 +259,24 @@
                 $(permissionStringSelector).val(permissionString);
             }
 
+            function humanizePermissionSegment(value) {
+                const normalizedValue = String(value || '').trim().replace(/[-_]+/g, ' ');
+
+                if (!normalizedValue) {
+                    return '';
+                }
+
+                return normalizedValue.replace(/\b\w/g, char => char.toUpperCase());
+            }
+
+            function buildPermissionLabel(resourceSelector, actionSelector, labelSelector) {
+                const resourceLabel = humanizePermissionSegment($(resourceSelector).val() || '');
+                const actionLabel = humanizePermissionSegment($(actionSelector).val() || '');
+                const label = [actionLabel, resourceLabel].filter(Boolean).join(' ');
+
+                $(labelSelector).val(label || 'Access label will appear here');
+            }
+
             // ==================== LOAD PERMISSIONS ====================
             function loadPermissions() {
                 const status = $('#statusFilter').val();
@@ -293,11 +322,12 @@
                     const row = `
                         <tr data-permission-id="${permission.id}">
                             <td>
-                                <h5 class="mb-1">${permission.permission_string}</h5>
-                                <p class="mb-0 fs-xxs text-muted">${permission.name}</p>
+                                <h5 class="mb-1">${permission.display_label || permission.permission_string}</h5>
+                                <p class="mb-0 fs-xxs text-muted">System key: ${permission.permission_string}</p>
                             </td>
-                            <td>${permission.resource || '-'}</td>
-                            <td>${permission.action || '-'}</td>
+                            <td>${permission.portal_display || '-'}</td>
+                            <td>${permission.resource_display || permission.resource || '-'}</td>
+                            <td>${permission.action_display || permission.action || '-'}</td>
                             <td>${permission.description || '—'}</td>
                             <td><span class="badge badge-soft-info">${permission.roles_count} roles</span></td>
                             <td><span class="badge ${statusBadgeClass}">${statusText}</span></td>
@@ -307,7 +337,7 @@
                                     <button type="button" class="btn btn-sm edit-permission" data-id="${permission.id}" title="Edit Permission">
                                         <i class="ti ti-edit fs-lg"></i>
                                     </button>
-                                    <button type="button" class="btn btn-sm delete-permission" data-id="${permission.id}" data-name="${permission.permission_string}" title="Delete">
+                                    <button type="button" class="btn btn-sm delete-permission" data-id="${permission.id}" data-name="${permission.display_label || permission.permission_string}" title="Delete">
                                         <i class="ti ti-trash fs-lg"></i>
                                     </button>
                                 </div>
@@ -380,10 +410,12 @@
             // ==================== PERMISSION STRING GENERATION ====================
             $('#createPermissionResource, #createPermissionAction').on('input', function() {
                 buildPermissionString('#createPermissionResource', '#createPermissionAction', '#createPermissionString');
+                buildPermissionLabel('#createPermissionResource', '#createPermissionAction', '#createPermissionLabel');
             });
 
             $('#editPermissionResource, #editPermissionAction').on('input', function() {
                 buildPermissionString('#editPermissionResource', '#editPermissionAction', '#editPermissionString');
+                buildPermissionLabel('#editPermissionResource', '#editPermissionAction', '#editPermissionLabel');
             });
 
             // ==================== CREATE PERMISSION ====================
@@ -425,6 +457,7 @@
                             
                             $('#createPermissionForm')[0].reset();
                             $('#createPermissionString').val('');
+                            $('#createPermissionLabel').val('Access label will appear here');
                             $('#createPermissionForm').removeClass('was-validated');
                             loadPermissions();
                         }
@@ -468,6 +501,7 @@
                             $('#editPermissionResource').val(permission.resource || '');
                             $('#editPermissionAction').val(permission.action || '');
                             $('#editPermissionString').val(permission.permission_string || '');
+                            $('#editPermissionLabel').val(permission.display_label || 'Access label will appear here');
                             $('#editPermissionDescription').val(permission.description || '');
                             $('#editPermissionStatus').val(permission.status);
                             $('#editModalContent').show();
@@ -604,6 +638,7 @@
             });
             
             // Initial load
+            buildPermissionLabel('#createPermissionResource', '#createPermissionAction', '#createPermissionLabel');
             loadPermissions();
         });
     </script>

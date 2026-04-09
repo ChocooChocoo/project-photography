@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\StudioOwner\RoleModel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -74,12 +75,6 @@ class EmployeeRegistrationMail extends Mailable
      */
     private function getRoleDisplay(): string
     {
-        $roles = [
-            'studio-hr' => 'Human Resource',
-            'studio-finance' => 'Finance',
-            'studio-photographer' => 'Studio Photographer',
-        ];
-
-        return $roles[$this->employeeData['role']] ?? 'Employee';
+        return RoleModel::getFriendlyRoleName($this->employeeData['role'] ?? '') ?: 'Employee';
     }
 }

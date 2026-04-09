@@ -99,9 +99,10 @@ class BookingController extends Controller
                 ->whereIn('provider_id', $studioIds)
                 ->where('booking_type', 'studio')
                 ->with([
+                    'studioOnlineGallery',
                     'client:id,first_name,last_name,email,mobile_number',
                     'category:id,category_name',
-                    'packages',
+                    'packages.studioPackage',
                     'payments' => function($query) {
                         $query->orderBy('created_at', 'desc');
                     },
@@ -118,7 +119,7 @@ class BookingController extends Controller
             $totalPaid = $booking->payments->where('status', 'succeeded')->sum('amount');
             
             // Get available statuses for dropdown
-            $availableStatuses = [];
+            $availableStatuses = $booking->getAvailableStatuses();
             
             // Check if all photographers have completed their assignments
             $allPhotographersCompleted = true;
@@ -130,6 +131,10 @@ class BookingController extends Controller
                     break;
                 }
             }
+
+            $requiresOnlineGallery = $booking->requiresOnlineGalleryUpload();
+            $hasUploadedGalleryContent = $booking->hasUploadedGalleryContent();
+            $galleryBlockReason = $booking->getGalleryCompletionBlockReason();
             
             // Get maximum photographers allowed based on package
             $maxPhotographers = $this->getMaxPhotographersFromPackage($booking);
@@ -147,9 +152,17 @@ class BookingController extends Controller
             // 1. Booking is in 'in_progress' status
             // 2. All assigned photographers have marked as completed
             // 3. Booking is fully paid
+            // 4. Required gallery images have been uploaded
             $canOwnerComplete = $booking->status === 'in_progress' && 
                                 $allPhotographersCompleted && 
-                                $totalPaid >= $booking->total_amount;
+                                $totalPaid >= $booking->total_amount &&
+                                $booking->isGalleryReadyForCompletion();
+
+            $completionBlockers = $this->getOwnerCompletionBlockers(
+                $booking,
+                $allPhotographersCompleted,
+                $totalPaid
+            );
             
             return response()->json([
                 'success' => true,
@@ -161,12 +174,17 @@ class BookingController extends Controller
                 'assignedPhotographers' => $booking->assignedPhotographers,
                 'available_statuses' => $availableStatuses,
                 'can_owner_complete' => $canOwnerComplete,
+                'can_mark_completed' => $canOwnerComplete,
                 'total_paid' => $totalPaid,
                 'status_badge_class' => $booking->getStatusBadgeClass(),
                 'payment_status_badge_class' => $booking->getPaymentStatusBadgeClass(),
                 'max_photographers' => $maxPhotographers,
                 'current_assigned_count' => $currentAssignedCount,
-                'package_photographer_count' => $packageDetails->photographer_count ?? 1
+                'package_photographer_count' => $packageDetails->photographer_count ?? 1,
+                'requires_online_gallery' => $requiresOnlineGallery,
+                'has_uploaded_gallery_content' => $hasUploadedGalleryContent,
+                'completion_block_reason' => $galleryBlockReason,
+                'completion_blockers' => $completionBlockers,
             ]);
             
         } catch (\Exception $e) {
@@ -175,6 +193,32 @@ class BookingController extends Controller
                 'message' => 'Error fetching booking details: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get the current completion blockers for an owner-facing booking flow.
+     */
+    private function getOwnerCompletionBlockers(BookingModel $booking, bool $allPhotographersCompleted, float $totalPaid): array
+    {
+        $blockers = [];
+
+        if ($booking->status !== BookingModel::STATUS_IN_PROGRESS) {
+            $blockers[] = 'Booking must be in progress before it can be completed.';
+        }
+
+        if ($totalPaid < (float) $booking->total_amount) {
+            $blockers[] = 'Booking must be fully paid before it can be completed.';
+        }
+
+        if (!$allPhotographersCompleted) {
+            $blockers[] = 'All assigned photographers must mark their assignments as completed before the owner can complete the booking.';
+        }
+
+        if (!$booking->isGalleryReadyForCompletion()) {
+            $blockers[] = $booking->getGalleryCompletionBlockReason();
+        }
+
+        return $blockers;
     }
 
     /**
@@ -646,6 +690,69 @@ class BookingController extends Controller
     }
 
     /**
+     * Update the owner-managed booking status.
+     */
+    public function updateStatus(UpdateBookingStatusRequest $request, $id)
+    {
+        try {
+            $userId = Auth::id();
+            $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
+
+            if (empty($studioIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No studios found for this owner'
+                ], 404);
+            }
+
+            $booking = BookingModel::where('id', $id)
+                ->whereIn('provider_id', $studioIds)
+                ->where('booking_type', 'studio')
+                ->with(['payments', 'assignedPhotographers', 'packages.studioPackage', 'studioOnlineGallery'])
+                ->firstOrFail();
+
+            $newStatus = $request->status;
+
+            if (!$booking->canTransitionTo($newStatus) && $newStatus !== BookingModel::STATUS_CANCELLED) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid booking status transition.'
+                ], 422);
+            }
+
+            if ($newStatus === BookingModel::STATUS_COMPLETED) {
+                $totalPaid = (float) $booking->payments->where('status', 'succeeded')->sum('amount');
+                $allPhotographersCompleted = $booking->assignedPhotographers->every(function ($assignment) {
+                    return $assignment->status === 'completed';
+                });
+
+                $blockers = $this->getOwnerCompletionBlockers($booking, $allPhotographersCompleted, $totalPaid);
+
+                if (!empty($blockers)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $blockers[0]
+                    ], 403);
+                }
+            }
+
+            $booking->status = $newStatus;
+            $booking->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Booking status updated successfully.',
+                'booking' => $booking
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating booking status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Owner completes the booking (final step)
      */
     public function completeBooking($id)
@@ -667,6 +774,7 @@ class BookingController extends Controller
             $booking = BookingModel::where('id', $id)
                 ->whereIn('provider_id', $studioIds)
                 ->where('booking_type', 'studio')
+                ->with(['packages.studioPackage', 'studioOnlineGallery'])
                 ->firstOrFail();
             
             // Check if booking is in progress
@@ -699,6 +807,13 @@ class BookingController extends Controller
                         ]);
                     }
                 }
+            }
+
+            if (!$booking->isGalleryReadyForCompletion()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $booking->getGalleryCompletionBlockReason()
+                ], 403);
             }
             
             // Update booking status to completed
