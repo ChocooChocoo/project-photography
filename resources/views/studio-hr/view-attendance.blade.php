@@ -1,6 +1,41 @@
 @extends('layouts.studio-hr.app')
 @section('title', 'Employee Attendance')
 
+@section('styles')
+    <link rel="stylesheet" href="{{ asset('assets/plugins/leaflet/leaflet.css') }}">
+    <style>
+        #attendanceMap {
+            min-height: 320px;
+            border-radius: 0.75rem;
+        }
+
+        .attendance-map-marker {
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            border: 3px solid #fff;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .attendance-map-marker i {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .attendance-map-marker.studio-marker {
+            background: #dc3545;
+        }
+
+        .attendance-map-marker.employee-marker {
+            background: #0d6efd;
+        }
+    </style>
+@endsection
+
 {{-- CONTENTS --}}
 @section('content')
     <div class="content-page">
@@ -72,6 +107,35 @@
                                                 <p class="mb-0">You don't have an active work schedule set. Please contact your administrator.</p>
                                             </div>
                                         @endif
+
+                                        <div class="card border-0 bg-light mb-4">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                                    <div>
+                                                        <h5 class="mb-1">Attendance Location Map</h5>
+                                                        <p class="text-muted mb-0">See your live location and the saved studio attendance pin before you submit attendance.</p>
+                                                    </div>
+                                                    <button type="button" class="btn btn-soft-primary btn-sm" id="refreshAttendanceMapBtn">
+                                                        <i class="ti ti-current-location me-1"></i> Refresh My Location
+                                                    </button>
+                                                </div>
+                                                <div id="attendanceMap"></div>
+                                                <div class="row g-3 mt-1">
+                                                    <div class="col-md-6">
+                                                        <div class="border rounded p-3 h-100 bg-white">
+                                                            <span class="text-muted small d-block mb-1">My Current Location</span>
+                                                            <div id="currentLocationText" class="fw-medium">Waiting for location permission...</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="border rounded p-3 h-100 bg-white">
+                                                            <span class="text-muted small d-block mb-1">Studio Attendance Pin</span>
+                                                            <div id="studioLocationText" class="fw-medium">Waiting for studio geofence data...</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
                                         <div class="row g-3 mb-4">
                                             <div class="col-6">
@@ -484,12 +548,16 @@
 {{-- SCRIPTS --}}
 @section('scripts')
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="{{ asset('assets/plugins/leaflet/leaflet.js') }}"></script>
     <script>
         // ==================== ATTENDANCE MODULE ====================
 
         // Global variables
-        let cameraStream = null;
         let currentAttendanceId = null;
+        let attendanceMap = null;
+        let studioMarker = null;
+        let currentLocationMarker = null;
+        let studioRadiusCircle = null;
 
         // ==================== REAL-TIME CLOCK ====================
 
@@ -528,12 +596,126 @@
                 success: function(response) {
                     if (response.success) {
                         updateButtonStates(response);
+                        updateAttendanceMap(response);
                     }
                 },
                 error: function(xhr) {
                     console.error('Failed to load schedule:', xhr);
                 }
             });
+        }
+
+        function updateAttendanceMap(response) {
+            updateStudioMarker(response.studio_geofence);
+            requestCurrentMapLocation(response.studio_geofence);
+        }
+
+        function createAttendanceMapIcon(type) {
+            const iconClass = type === 'studio' ? 'ti ti-map-pin' : 'ti ti-current-location';
+            const markerClass = type === 'studio' ? 'studio-marker' : 'employee-marker';
+
+            return L.divIcon({
+                className: 'attendance-map-icon-wrapper',
+                html: `<div class="attendance-map-marker ${markerClass}"><i class="${iconClass}"></i></div>`,
+                iconSize: [42, 42],
+                iconAnchor: [21, 21],
+                popupAnchor: [0, -18]
+            });
+        }
+
+        function updateStudioMarker(geofence) {
+            if (!geofence || geofence.is_configured !== true) {
+                $('#studioLocationText').text('Studio geofence has not been configured yet.');
+
+                if (studioMarker) {
+                    attendanceMap.removeLayer(studioMarker);
+                    studioMarker = null;
+                }
+
+                if (studioRadiusCircle) {
+                    attendanceMap.removeLayer(studioRadiusCircle);
+                    studioRadiusCircle = null;
+                }
+
+                return;
+            }
+
+            const studioLatLng = [parseFloat(geofence.latitude), parseFloat(geofence.longitude)];
+
+            if (studioMarker) {
+                studioMarker.setLatLng(studioLatLng);
+            } else {
+                studioMarker = L.marker(studioLatLng, {
+                    icon: createAttendanceMapIcon('studio')
+                }).addTo(attendanceMap).bindPopup('Studio attendance pin');
+            }
+
+            if (studioRadiusCircle) {
+                studioRadiusCircle.setLatLng(studioLatLng);
+                studioRadiusCircle.setRadius(Number(geofence.radius_meters));
+            } else {
+                studioRadiusCircle = L.circle(studioLatLng, {
+                    radius: Number(geofence.radius_meters),
+                    color: '#3475db',
+                    fillColor: '#3475db',
+                    fillOpacity: 0.12
+                }).addTo(attendanceMap);
+            }
+
+            $('#studioLocationText').text(`${Number(geofence.latitude).toFixed(6)}, ${Number(geofence.longitude).toFixed(6)} | Radius: ${geofence.radius_meters} meters`);
+            focusAttendanceMap(studioLatLng);
+        }
+
+        function requestCurrentMapLocation(geofence = null) {
+            if (!navigator.geolocation) {
+                $('#currentLocationText').text('Geolocation is not supported by this browser.');
+                return;
+            }
+
+            $('#currentLocationText').text('Fetching your live location...');
+
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const currentLatLng = [position.coords.latitude, position.coords.longitude];
+
+                if (currentLocationMarker) {
+                    currentLocationMarker.setLatLng(currentLatLng);
+                } else {
+                    currentLocationMarker = L.marker(currentLatLng, {
+                        icon: createAttendanceMapIcon('employee')
+                    }).addTo(attendanceMap).bindPopup('My current location');
+                }
+
+                $('#currentLocationText').text(`${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)} | Accuracy: ${Math.round(position.coords.accuracy)} meters`);
+                focusAttendanceMap(geofence && geofence.is_configured ? [parseFloat(geofence.latitude), parseFloat(geofence.longitude)] : currentLatLng, currentLatLng);
+            }, function(error) {
+                $('#currentLocationText').text(resolveGeolocationErrorMessage(error));
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000
+            });
+        }
+
+        function focusAttendanceMap(primaryLatLng, secondaryLatLng = null) {
+            const bounds = [];
+
+            if (primaryLatLng) {
+                bounds.push(primaryLatLng);
+            }
+
+            if (secondaryLatLng) {
+                bounds.push(secondaryLatLng);
+            }
+
+            if (bounds.length === 2) {
+                attendanceMap.fitBounds(bounds, {
+                    padding: [40, 40]
+                });
+                return;
+            }
+
+            if (bounds.length === 1) {
+                attendanceMap.setView(bounds[0], 17);
+            }
         }
 
         function loadEmployeeAttendance() {
@@ -642,8 +824,14 @@
                     </h4>
                     <p class="mb-2"><strong>Approved Window:</strong> ${data.overtime_summary.time_range}</p>
                     <p class="mb-2"><strong>Effective Check-Out Cutoff:</strong> ${data.overtime_summary.effective_checkout_cutoff || 'N/A'}</p>
+                    <p class="mb-2"><strong>Attendance Geofence:</strong> ${formatGeofenceText(data.studio_geofence)}</p>
                     <hr class="border-warning border-opacity-25">
                     <p class="mb-0 text-muted">Your attendance can count overtime only up to the approved cutoff.</p>
+                `);
+            } else if (data.studio_geofence) {
+                $('#scheduleAlert').append(`
+                    <hr class="border-warning border-opacity-25">
+                    <p class="mb-0 text-muted"><strong>Attendance Geofence:</strong> ${formatGeofenceText(data.studio_geofence)}</p>
                 `);
             }
             
@@ -803,12 +991,12 @@
             $('#summaryContent').html(summaryHtml);
         }
 
-        // ==================== CAMERA MODAL FUNCTIONS ====================
+        // ==================== GEOFENCE MODAL FUNCTIONS ====================
 
-        async function openCameraModal(type) {
-            const modalTitle = type === 'check-in' ? 'Check-In Photo' : 'Check-Out Photo';
-            const actionText = type === 'check-in' ? 'Check In' : 'Check Out';
-            
+        function openCameraModal(type) {
+            const modalTitle = type === 'check-in' ? 'Check-In Geolocation' : 'Check-Out Geolocation';
+            const actionText = type === 'check-in' ? 'Confirm Check In' : 'Confirm Check Out';
+
             const modalHtml = `
                 <div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
@@ -818,32 +1006,16 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="text-center mb-3">
-                                    <div class="camera-container bg-light rounded d-flex align-items-center justify-content-center" style="min-height: 300px; width: 100%;">
-                                        <video id="cameraPreview" autoplay playsinline class="img-fluid w-100 rounded" style="max-height: 300px; object-fit: cover;"></video>
-                                        <canvas id="photoCanvas" style="display: none;"></canvas>
-                                        <img id="photoPreview" style="display: none; width: 100%; max-height: 300px; object-fit: contain;" class="img-fluid rounded">
-                                    </div>
+                                <div class="alert alert-info mb-3">
+                                    <strong>Location verification required.</strong> Your current location must be within your studio attendance geofence before this action can be submitted.
                                 </div>
-                                
-                                <div class="d-flex justify-content-center gap-2">
-                                    <button type="button" class="btn btn-primary" id="capturePhotoBtn">
-                                        <i class="ti ti-camera me-1"></i> Capture Photo
-                                    </button>
-                                    <button type="button" class="btn btn-primary w-100" id="retakePhotoBtn" style="display: none;">
-                                        <i class="ti ti-refresh me-1"></i> Retake
-                                    </button>
-                                </div>
-                                
-                                <div id="photoLoading" class="text-center mt-3" style="display: none;">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
+                                <div class="border rounded p-3 bg-light" id="geoAttendanceStatus">
+                                    <span class="text-muted">Your location will be requested when you confirm this action.</span>
                                 </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-soft-primary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" id="confirmActionBtn" data-type="${type}" style="display: none;">
+                                <button type="button" class="btn btn-primary" id="confirmActionBtn" data-type="${type}">
                                     <i class="ti ti-check me-1"></i> ${actionText}
                                 </button>
                             </div>
@@ -851,223 +1023,57 @@
                     </div>
                 </div>
             `;
-            
-            // Remove existing modal if any
+
             $('#cameraModal').remove();
-            
-            // Add modal to body
             $('body').append(modalHtml);
-            
-            // Show modal
+
             const modal = new bootstrap.Modal(document.getElementById('cameraModal'));
             modal.show();
-            
-            // Initialize camera
-            await initializeCamera();
-            
-            // Handle capture button
-            $('#capturePhotoBtn').off('click').on('click', function() {
-                capturePhoto();
-            });
-            
-            // Handle retake button
-            $('#retakePhotoBtn').off('click').on('click', function() {
-                $('#photoPreview').hide();
-                $('#cameraPreview').show();
-                $('#capturePhotoBtn').show();
-                $('#retakePhotoBtn').hide();
-                $('#confirmActionBtn').hide();
-            });
-            
-            // Handle confirm button
+
             $('#confirmActionBtn').off('click').on('click', function() {
-                const type = $(this).data('type');
-                submitAttendance(type);
+                submitAttendance($(this).data('type'));
             });
-        }
-
-        async function initializeCamera() {
-            try {
-                cameraStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: { ideal: 640 },
-                        height: { ideal: 480 },
-                        facingMode: 'user'
-                    }, 
-                    audio: false 
-                });
-                
-                const video = document.getElementById('cameraPreview');
-                video.srcObject = cameraStream;
-            } catch (error) {
-                console.error('Camera error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Camera Error',
-                    text: 'Unable to access camera. Please ensure camera permissions are granted.',
-                    confirmButtonColor: '#3475db'
-                });
-            }
-        }
-
-        function capturePhoto() {
-            const video = document.getElementById('cameraPreview');
-            const canvas = document.getElementById('photoCanvas');
-            const context = canvas.getContext('2d');
-            
-            // Set canvas dimensions to match video
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            
-            // Draw video frame to canvas
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Convert to data URL
-            const imageData = canvas.toDataURL('image/jpeg', 0.8);
-            
-            // Show preview with full width
-            const photoPreview = document.getElementById('photoPreview');
-            photoPreview.src = imageData;
-            photoPreview.style.display = 'block';
-            photoPreview.style.width = '100%';
-            photoPreview.style.maxHeight = '300px';
-            photoPreview.style.objectFit = 'contain';
-            
-            // Hide video
-            video.style.display = 'none';
-            
-            // Update buttons
-            $('#capturePhotoBtn').hide();
-            $('#retakePhotoBtn').show();
-            $('#confirmActionBtn').show();
-            
-            // Stop camera stream
-            if (cameraStream) {
-                cameraStream.getTracks().forEach(track => track.stop());
-                cameraStream = null;
-            }
-        }
-
-        function dataURLtoFile(dataURL, filename) {
-            try {
-                // Handle different data URL formats
-                if (!dataURL || dataURL === '#') {
-                    throw new Error('Invalid image data');
-                }
-                
-                // Check if it's a valid data URL
-                if (!dataURL.startsWith('data:')) {
-                    throw new Error('Invalid data URL format');
-                }
-                
-                const arr = dataURL.split(',');
-                
-                // Check if we have both parts
-                if (arr.length < 2) {
-                    throw new Error('Invalid data URL structure');
-                }
-                
-                // Extract mime type
-                const mimeMatch = arr[0].match(/:(.*?);/);
-                if (!mimeMatch || mimeMatch.length < 2) {
-                    // Default to JPEG if can't extract
-                    console.warn('Could not extract mime type, using image/jpeg');
-                    var mime = 'image/jpeg';
-                } else {
-                    var mime = mimeMatch[1];
-                }
-                
-                // Decode base64 data
-                const bstr = atob(arr[1]);
-                let n = bstr.length;
-                const u8arr = new Uint8Array(n);
-                
-                while (n--) {
-                    u8arr[n] = bstr.charCodeAt(n);
-                }
-                
-                return new File([u8arr], filename, { type: mime });
-                
-            } catch (error) {
-                console.error('Error converting data URL to file:', error);
-                
-                // Return a fallback - this will be handled by the calling function
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Image Error',
-                    text: 'Failed to process the captured image. Please try again.',
-                    confirmButtonColor: '#3475db'
-                });
-                
-                throw error; // Re-throw to be caught by submitAttendance
-            }
         }
 
         function submitAttendance(type) {
-            const photoPreview = document.getElementById('photoPreview');
-            
-            if (!photoPreview.src || photoPreview.src === '#' || photoPreview.src === '') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No Photo',
-                    text: 'Please capture a photo first.',
-                    confirmButtonColor: '#3475db'
-                });
+            if (!navigator.geolocation) {
+                updateLocationStatus('#geoAttendanceStatus', 'Geolocation is not supported by this browser.');
+                showGeolocationError('Your browser does not support geolocation.');
                 return;
             }
-            
-            // Show loading
-            $('#photoLoading').show();
+
+            updateLocationStatus('#geoAttendanceStatus', 'Requesting your current location...');
             $('#confirmActionBtn').prop('disabled', true);
-            
-            try {
-                // Convert data URL to file
-                const imageFile = dataURLtoFile(photoPreview.src, `attendance-${type}-${Date.now()}.jpg`);
-                
+
+            navigator.geolocation.getCurrentPosition(function(position) {
                 const formData = new FormData();
-                formData.append('image', imageFile);
-                
+                formData.append('latitude', position.coords.latitude);
+                formData.append('longitude', position.coords.longitude);
+
                 if (type === 'check-out' && currentAttendanceId) {
                     formData.append('attendance_id', currentAttendanceId);
                 }
-                
-                // Add notes if any
-                const notes = prompt('Add notes (optional):');
-                if (notes !== null) {
-                    formData.append('notes', notes);
-                }
-                
-                // Add location if available
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                        formData.append('latitude', position.coords.latitude);
-                        formData.append('longitude', position.coords.longitude);
-                        sendAttendanceRequest(type, formData);
-                    }, function(error) {
-                        console.warn('Geolocation error:', error);
-                        sendAttendanceRequest(type, formData);
-                    });
-                } else {
-                    sendAttendanceRequest(type, formData);
-                }
-                
-            } catch (error) {
-                console.error('Error in submitAttendance:', error);
-                $('#photoLoading').hide();
+
+                updateLocationStatus(
+                    '#geoAttendanceStatus',
+                    `Location captured: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`
+                );
+
+                sendAttendanceRequest(type, formData);
+            }, function(error) {
+                const message = resolveGeolocationErrorMessage(error);
+                updateLocationStatus('#geoAttendanceStatus', message);
                 $('#confirmActionBtn').prop('disabled', false);
-                
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to process the image. Please try again.',
-                    confirmButtonColor: '#3475db'
-                });
-            }
+                showGeolocationError(message);
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000
+            });
         }
 
         function sendAttendanceRequest(type, formData) {
             const url = type === 'check-in' ? '/studio-hr/attendance/check-in' : '/studio-hr/attendance/check-out';
-            
+
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -1080,7 +1086,7 @@
                 success: function(response) {
                     if (response.success) {
                         $('#cameraModal').modal('hide');
-                        
+
                         Swal.fire({
                             icon: 'success',
                             title: 'Success',
@@ -1089,12 +1095,11 @@
                             timer: 2000,
                             timerProgressBar: true
                         });
-                        
-                        // Reload data
+
                         loadEmployeeSchedule();
                         loadEmployeeAttendance();
-                        
-                        // Reload the page to show updated personal attendance
+                        loadAttendanceStats();
+
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
@@ -1102,13 +1107,13 @@
                 },
                 error: function(xhr) {
                     let errorMessage = 'An error occurred';
-                    
+
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMessage = xhr.responseJSON.message;
                     } else if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors).flat().join('\n');
                     }
-                    
+
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
@@ -1117,7 +1122,6 @@
                     });
                 },
                 complete: function() {
-                    $('#photoLoading').hide();
                     $('#confirmActionBtn').prop('disabled', false);
                 }
             });
@@ -1126,6 +1130,7 @@
         // ==================== CHECK-IN / CHECK-OUT HANDLERS ====================
 
         $(document).ready(function() {
+            initializeAttendanceMap();
             // Initial load
             loadEmployeeSchedule();
             loadEmployeeAttendance();
@@ -1184,12 +1189,9 @@
                 openCameraModal('check-out');
             });
             
-            // Clean up camera on modal close
+            // Clean up modal on close
             $('#cameraModal').on('hidden.bs.modal', function() {
-                if (cameraStream) {
-                    cameraStream.getTracks().forEach(track => track.stop());
-                    cameraStream = null;
-                }
+                $('#cameraModal').remove();
             });
             
             // Refresh button click
@@ -1213,7 +1215,20 @@
                     loadEmployeeAttendance();
                 }
             });
+
+            $('#refreshAttendanceMapBtn').on('click', function() {
+                requestCurrentMapLocation();
+            });
         });
+
+        function initializeAttendanceMap() {
+            attendanceMap = L.map('attendanceMap').setView([14.2820, 120.8660], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(attendanceMap);
+        }
 
         // ==================== ATTENDANCE TABLE FUNCTIONS ====================
 
@@ -1238,16 +1253,6 @@
         }
 
         function showAttendanceDetailsModal(attendance) {
-            // Format check-in image HTML
-            const checkInImageHtml = attendance.check_in_image 
-                ? `<img src="/storage/${attendance.check_in_image}" class="img-fluid rounded" style="max-height: 200px; width: 100%; object-fit: contain;">` 
-                : '<div class="bg-light rounded p-4 text-center"><i class="ti ti-camera-off fs-1 d-block mb-2 text-muted"></i><span class="text-muted">No check-in photo</span></div>';
-            
-            // Format check-out image HTML
-            const checkOutImageHtml = attendance.check_out_image 
-                ? `<img src="/storage/${attendance.check_out_image}" class="img-fluid rounded" style="max-height: 200px; width: 100%; object-fit: contain;">` 
-                : '<div class="bg-light rounded p-4 text-center"><i class="ti ti-camera-off fs-1 d-block mb-2 text-muted"></i><span class="text-muted">No check-out photo</span></div>';
-            
             const modalHtml = `
                 <div class="modal fade" id="attendanceDetailsModal" tabindex="-1">
                     <div class="modal-dialog modal-lg">
@@ -1296,9 +1301,12 @@
                                     <div class="tab-pane fade show active" id="checkin-details" role="tabpanel">
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <div class="text-center mb-3">
-                                                    <span class="text-muted small d-block mb-2">Check-In Photo</span>
-                                                    ${checkInImageHtml}
+                                                <div class="bg-light rounded p-3 h-100">
+                                                    <span class="text-muted small d-block mb-2">Check-In Location</span>
+                                                    <div><strong>Latitude:</strong> ${attendance.check_in_location?.latitude || 'â€”'}</div>
+                                                    <div><strong>Longitude:</strong> ${attendance.check_in_location?.longitude || 'â€”'}</div>
+                                                    <div><strong>Distance:</strong> ${formatDistance(attendance.check_in_location?.distance_meters)}</div>
+                                                    <div><strong>Location Result:</strong> ${attendance.check_in_location?.status || 'â€”'}</div>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
@@ -1334,9 +1342,12 @@
                                     <div class="tab-pane fade" id="checkout-details" role="tabpanel">
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <div class="text-center mb-3">
-                                                    <span class="text-muted small d-block mb-2">Check-Out Photo</span>
-                                                    ${checkOutImageHtml}
+                                                <div class="bg-light rounded p-3 h-100">
+                                                    <span class="text-muted small d-block mb-2">Check-Out Location</span>
+                                                    <div><strong>Latitude:</strong> ${attendance.check_out_location?.latitude || 'â€”'}</div>
+                                                    <div><strong>Longitude:</strong> ${attendance.check_out_location?.longitude || 'â€”'}</div>
+                                                    <div><strong>Distance:</strong> ${formatDistance(attendance.check_out_location?.distance_meters)}</div>
+                                                    <div><strong>Location Result:</strong> ${attendance.check_out_location?.status || 'â€”'}</div>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
@@ -1501,6 +1512,51 @@
                     `Showing ${firstItem} to ${lastItem} of ${totalRows} records`
                 );
             }
+        }
+
+        function formatGeofenceText(geofence) {
+            if (!geofence || geofence.is_configured !== true) {
+                return 'Not configured yet';
+            }
+
+            return `${geofence.radius_meters} meters from the saved studio pin`;
+        }
+
+        function updateLocationStatus(selector, message) {
+            $(selector).html(`<span class="text-muted">${message}</span>`);
+        }
+
+        function resolveGeolocationErrorMessage(error) {
+            if (!error) {
+                return 'Unable to get your current location.';
+            }
+
+            if (error.code === 1) {
+                return 'Location permission was denied. Please allow geolocation and try again.';
+            }
+
+            if (error.code === 2) {
+                return 'Your current location could not be determined.';
+            }
+
+            if (error.code === 3) {
+                return 'Location request timed out. Please try again.';
+            }
+
+            return 'Unable to get your current location.';
+        }
+
+        function showGeolocationError(message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Geolocation Required',
+                text: message,
+                confirmButtonColor: '#3475db'
+            });
+        }
+
+        function formatDistance(distance) {
+            return distance !== null && distance !== undefined && distance !== '' ? `${distance} meters` : 'â€”';
         }
     </script>
 @endsection

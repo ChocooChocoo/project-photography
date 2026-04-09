@@ -8,7 +8,9 @@ use App\Http\Requests\StudioPhotographer\PhotographerCheckOutRequest;
 use App\Models\LeaveRequestModel;
 use App\Models\OvertimeRequestModel;
 use App\Models\StudioOwner\StudioPhotographersModel;
+use App\Models\StudioOwner\StudiosModel;
 use App\Models\StudioPhotographer\PhotographerAttendanceModel;
+use App\Services\AttendanceGeolocationService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -145,6 +147,7 @@ class PhotographerAttendanceController extends Controller
                 'blocked_message' => $approvedLeave
                     ? 'Attendance is unavailable today because you have an approved leave request.'
                     : null,
+                'studio_geofence' => $this->buildStudioGeofenceSummary($assignment->studio),
                 'leave_summary' => $approvedLeave ? [
                     'request_reference' => $approvedLeave->request_reference,
                     'leave_type' => $approvedLeave->leave_type_label,
@@ -203,6 +206,24 @@ class PhotographerAttendanceController extends Controller
                 ], 422);
             }
 
+            $locationValidation = $this->validateAttendanceLocation(
+                $assignment->studio,
+                (float) $request->input('latitude'),
+                (float) $request->input('longitude')
+            );
+
+            if (!$locationValidation['allowed']) {
+                return response()->json([
+                    'status' => 'error',
+                    'success' => false,
+                    'message' => $locationValidation['message'],
+                    'errors' => [
+                        'location' => [$locationValidation['message']],
+                    ],
+                    'location_validation' => $locationValidation,
+                ], 422);
+            }
+
             $existingAttendance = PhotographerAttendanceModel::forUser($user->id)
                 ->forDate($today)
                 ->first();
@@ -219,7 +240,6 @@ class PhotographerAttendanceController extends Controller
 
             $schedulePayload = $this->buildStudioSchedulePayload($assignment->studio);
             $schedule = $schedulePayload['schedule'];
-            $imagePath = $this->storeAttendanceImage($request->file('image'), 'check-in');
 
             $checkInStatus = 'ON_TIME';
             $lateMinutes = 0;
@@ -245,8 +265,11 @@ class PhotographerAttendanceController extends Controller
                     'scheduled_start_time' => $schedule['start_time'] ?? null,
                     'scheduled_end_time' => $schedule['end_time'] ?? null,
                     'check_in_time' => $now,
-                    'check_in_image' => $imagePath,
                     'check_in_status' => $checkInStatus,
+                    'check_in_latitude' => $request->input('latitude'),
+                    'check_in_longitude' => $request->input('longitude'),
+                    'check_in_distance_meters' => $locationValidation['distance_meters'],
+                    'check_in_location_status' => $locationValidation['status'],
                     'late_minutes' => $lateMinutes,
                     'check_in_ip' => $request->ip(),
                     'check_in_user_agent' => $request->userAgent(),
@@ -261,6 +284,7 @@ class PhotographerAttendanceController extends Controller
                     ? 'Check-in successful. You are ' . $lateMinutes . ' minute(s) late.'
                     : 'Check-in successful.',
                 'attendance' => $attendance,
+                'location_validation' => $locationValidation,
             ]);
         } catch (\Throwable $throwable) {
             Log::error('Photographer check-in failed.', [
@@ -326,15 +350,37 @@ class PhotographerAttendanceController extends Controller
                 ], 422);
             }
 
+            $studio = StudiosModel::find($attendance->studio_id);
+            if (!$studio) {
+                return response()->json([
+                    'status' => 'error',
+                    'success' => false,
+                    'message' => 'No studio associated with your attendance record.',
+                ], 422);
+            }
+
+            $locationValidation = $this->validateAttendanceLocation(
+                $studio,
+                (float) $request->input('latitude'),
+                (float) $request->input('longitude')
+            );
+
+            if (!$locationValidation['allowed']) {
+                return response()->json([
+                    'status' => 'error',
+                    'success' => false,
+                    'message' => $locationValidation['message'],
+                    'errors' => [
+                        'location' => [$locationValidation['message']],
+                    ],
+                    'location_validation' => $locationValidation,
+                ], 422);
+            }
+
             $checkOutTime = Carbon::now('Asia/Manila');
             $checkOutStatus = 'ON_TIME';
             $undertimeMinutes = 0;
-            $imagePath = $attendance->check_out_image;
             $approvedOvertime = $this->getApprovedOvertimeForDate($user->id, $today, $attendance->studio_id);
-
-            if ($request->hasFile('image')) {
-                $imagePath = $this->storeAttendanceImage($request->file('image'), 'check-out');
-            }
 
             if ($attendance->scheduled_end_time) {
                 $scheduledEnd = Carbon::parse(
@@ -353,8 +399,11 @@ class PhotographerAttendanceController extends Controller
 
             $attendance->update([
                 'check_out_time' => $checkOutTime,
-                'check_out_image' => $imagePath,
                 'check_out_status' => $checkOutStatus,
+                'check_out_latitude' => $request->input('latitude'),
+                'check_out_longitude' => $request->input('longitude'),
+                'check_out_distance_meters' => $locationValidation['distance_meters'],
+                'check_out_location_status' => $locationValidation['status'],
                 'undertime_minutes' => $undertimeMinutes,
                 'check_out_ip' => $request->ip(),
                 'check_out_user_agent' => $request->userAgent(),
@@ -368,6 +417,7 @@ class PhotographerAttendanceController extends Controller
                     ? 'Check-out successful. You left ' . $undertimeMinutes . ' minute(s) early.'
                     : 'Check-out successful.',
                 'attendance' => $this->buildAttendanceDetailPayload($attendance->fresh('studio')),
+                'location_validation' => $locationValidation,
             ]);
         } catch (\Throwable $throwable) {
             Log::error('Photographer check-out failed.', [
@@ -613,8 +663,18 @@ class PhotographerAttendanceController extends Controller
             'has_approved_overtime' => $attendance->has_approved_overtime,
             'is_overtime_applied' => $attendance->is_overtime_applied,
             'overtime_summary' => $attendance->overtime_summary,
-            'check_in_image' => $attendance->check_in_image,
-            'check_out_image' => $attendance->check_out_image,
+            'check_in_location' => [
+                'latitude' => $attendance->check_in_latitude,
+                'longitude' => $attendance->check_in_longitude,
+                'distance_meters' => $attendance->check_in_distance_meters,
+                'status' => $attendance->check_in_location_status,
+            ],
+            'check_out_location' => [
+                'latitude' => $attendance->check_out_latitude,
+                'longitude' => $attendance->check_out_longitude,
+                'distance_meters' => $attendance->check_out_distance_meters,
+                'status' => $attendance->check_out_location_status,
+            ],
             'notes' => $attendance->notes,
         ];
     }
@@ -731,13 +791,25 @@ class PhotographerAttendanceController extends Controller
     }
 
     /**
-     * Store the uploaded attendance image.
-     *
-     * @param mixed $image
-     * @param string $type
+     * Build studio geofence metadata for the attendance page.
      */
-    private function storeAttendanceImage($image, string $type): string
+    private function buildStudioGeofenceSummary(StudiosModel $studio): array
     {
-        return $image->store('photographer-attendance/' . $type . '/' . now()->format('Y/m/d'), 'public');
+        return [
+            'is_configured' => !is_null($studio->attendance_latitude) && !is_null($studio->attendance_longitude),
+            'radius_meters' => (int) ($studio->attendance_radius_meters ?? 100),
+            'latitude' => $studio->attendance_latitude,
+            'longitude' => $studio->attendance_longitude,
+        ];
+    }
+
+    /**
+     * Validate the submitted attendance location against the studio geofence.
+     *
+     * @return array<string, mixed>
+     */
+    private function validateAttendanceLocation(StudiosModel $studio, float $latitude, float $longitude): array
+    {
+        return app(AttendanceGeolocationService::class)->validateStudioGeofence($studio, $latitude, $longitude);
     }
 }

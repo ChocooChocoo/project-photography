@@ -27,9 +27,8 @@ class CheckOutRequest extends FormRequest
     {
         return [
             'attendance_id' => 'required|exists:tbl_employee_attendance,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
             'notes' => 'nullable|string|max:500',
         ];
     }
@@ -44,10 +43,9 @@ class CheckOutRequest extends FormRequest
         return [
             'attendance_id.required' => 'Attendance record not found.',
             'attendance_id.exists' => 'Invalid attendance record.',
-            'image.image' => 'The file must be an image.',
-            'image.mimes' => 'The image must be a JPEG, PNG, or JPG file.',
-            'image.max' => 'The image size must not exceed 5MB.',
+            'latitude.required' => 'Your current location is required before checking out.',
             'latitude.between' => 'Invalid latitude value.',
+            'longitude.required' => 'Your current location is required before checking out.',
             'longitude.between' => 'Invalid longitude value.',
             'notes.max' => 'Notes must not exceed 500 characters.',
         ];

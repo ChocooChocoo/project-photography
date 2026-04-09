@@ -27,7 +27,8 @@ class PhotographerCheckInRequest extends FormRequest
     {
         return [
             'studio_id' => 'required|exists:tbl_studios,id',
-            'image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
             'notes' => 'nullable|string|max:500',
         ];
     }
@@ -42,10 +43,10 @@ class PhotographerCheckInRequest extends FormRequest
         return [
             'studio_id.required' => 'Please select your assigned studio first.',
             'studio_id.exists' => 'The selected studio is invalid.',
-            'image.required' => 'Please take or upload a photo before checking in.',
-            'image.image' => 'The uploaded file must be an image.',
-            'image.mimes' => 'The image must be a JPEG, JPG, or PNG file.',
-            'image.max' => 'The image size must not exceed 5MB.',
+            'latitude.required' => 'Your current location is required before checking in.',
+            'latitude.between' => 'Invalid latitude value.',
+            'longitude.required' => 'Your current location is required before checking in.',
+            'longitude.between' => 'Invalid longitude value.',
             'notes.max' => 'Notes must not exceed 500 characters.',
         ];
     }

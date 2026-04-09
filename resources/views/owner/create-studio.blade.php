@@ -1,6 +1,41 @@
 @extends('layouts.owner.app')
 @section('title', 'Studio Registration')
 
+@section('styles')
+    <link rel="stylesheet" href="{{ asset('assets/plugins/leaflet/leaflet.css') }}">
+    <style>
+        #attendanceGeofenceMap {
+            min-height: 320px;
+            border-radius: 0.75rem;
+        }
+
+        .attendance-map-marker {
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            border: 3px solid #fff;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .attendance-map-marker i {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .attendance-map-marker.studio-marker {
+            background: #dc3545;
+        }
+
+        .attendance-map-marker.employee-marker {
+            background: #0d6efd;
+        }
+    </style>
+@endsection
+
 {{-- CONTENT --}}
 @section('content')
     <div class="content-page">
@@ -324,6 +359,45 @@
                                 </div>
 
                                 <div class="row">
+                                    <h4 class="card-title text-primary mb-3">Attendance Geofence</h4>
+                                    <div class="col-12">
+                                        <div class="alert alert-info">
+                                            Set the exact studio attendance pin. HR, finance, and studio photographers will only be able to submit attendance within this radius.
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <div id="attendanceGeofenceMap"></div>
+                                    </div>
+                                    <div class="col-12 col-md-4 mb-3">
+                                        <label class="form-label">Attendance Latitude</label>
+                                        <input type="number" class="form-control" id="attendanceLatitude" name="attendance_latitude" step="0.0000001" required>
+                                        <div class="invalid-feedback">
+                                            Please set the attendance latitude.
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4 mb-3">
+                                        <label class="form-label">Attendance Longitude</label>
+                                        <input type="number" class="form-control" id="attendanceLongitude" name="attendance_longitude" step="0.0000001" required>
+                                        <div class="invalid-feedback">
+                                            Please set the attendance longitude.
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4 mb-3">
+                                        <label class="form-label">Attendance Radius (meters)</label>
+                                        <input type="number" class="form-control" id="attendanceRadius" name="attendance_radius_meters" min="1" max="1000" value="100" required>
+                                        <div class="invalid-feedback">
+                                            Please enter a valid attendance radius.
+                                        </div>
+                                    </div>
+                                    <div class="col-12 d-flex flex-wrap gap-2 mb-3">
+                                        <button type="button" class="btn btn-soft-primary" id="useCurrentLocationBtn">
+                                            <i class="ti ti-current-location me-1"></i> Use My Current Location
+                                        </button>
+                                        <span class="text-muted align-self-center">Click the map or drag the marker to save the studio attendance pin.</span>
+                                    </div>
+                                </div>
+
+                                <div class="row">
                                     <h4 class="card-title text-primary mb-3">Service Information</h4>
                                     <div class="col-12 mb-3">
                                         <label class="form-label">Service Categories</label>
@@ -480,8 +554,14 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
+    <script src="{{ asset('assets/plugins/leaflet/leaflet.js') }}"></script>
     <script>
         $(document).ready(function() {
+            let geofenceMap = null;
+            let geofenceMarker = null;
+            let geofenceCircle = null;
+            let currentLocationMarker = null;
+
             // Initialize Choices for service categories only
             function initializeChoices() {
                 if (typeof Choices !== 'undefined') {
@@ -500,6 +580,116 @@
             }
             
             initializeChoices();
+            initializeGeofenceMap();
+
+            function createAttendanceMapIcon(type) {
+                const iconClass = type === 'studio' ? 'ti ti-map-pin' : 'ti ti-current-location';
+                const markerClass = type === 'studio' ? 'studio-marker' : 'employee-marker';
+
+                return L.divIcon({
+                    className: 'attendance-map-icon-wrapper',
+                    html: `<div class="attendance-map-marker ${markerClass}"><i class="${iconClass}"></i></div>`,
+                    iconSize: [42, 42],
+                    iconAnchor: [21, 21],
+                    popupAnchor: [0, -18]
+                });
+            }
+
+            function initializeGeofenceMap() {
+                const defaultCoordinates = [14.2820, 120.8660];
+
+                geofenceMap = L.map('attendanceGeofenceMap').setView(defaultCoordinates, 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(geofenceMap);
+
+                geofenceMarker = L.marker(defaultCoordinates, {
+                    draggable: true,
+                    icon: createAttendanceMapIcon('studio')
+                }).addTo(geofenceMap);
+                geofenceCircle = L.circle(defaultCoordinates, {
+                    radius: Number($('#attendanceRadius').val() || 100),
+                    color: '#3475db',
+                    fillColor: '#3475db',
+                    fillOpacity: 0.15
+                }).addTo(geofenceMap);
+
+                updateGeofenceInputs(defaultCoordinates[0], defaultCoordinates[1]);
+
+                geofenceMap.on('click', function(event) {
+                    setGeofenceLocation(event.latlng.lat, event.latlng.lng);
+                });
+
+                geofenceMarker.on('dragend', function(event) {
+                    const markerLocation = event.target.getLatLng();
+                    setGeofenceLocation(markerLocation.lat, markerLocation.lng);
+                });
+            }
+
+            function setGeofenceLocation(latitude, longitude) {
+                updateGeofenceInputs(latitude, longitude);
+                geofenceMarker.setLatLng([latitude, longitude]);
+                geofenceCircle.setLatLng([latitude, longitude]);
+                geofenceMap.panTo([latitude, longitude]);
+            }
+
+            function updateGeofenceInputs(latitude, longitude) {
+                $('#attendanceLatitude').val(Number(latitude).toFixed(7));
+                $('#attendanceLongitude').val(Number(longitude).toFixed(7));
+            }
+
+            $('#attendanceRadius').on('input change', function() {
+                if (geofenceCircle) {
+                    geofenceCircle.setRadius(Number($(this).val() || 100));
+                }
+            });
+
+            $('#attendanceLatitude, #attendanceLongitude').on('change', function() {
+                const latitude = parseFloat($('#attendanceLatitude').val());
+                const longitude = parseFloat($('#attendanceLongitude').val());
+
+                if (!Number.isNaN(latitude) && !Number.isNaN(longitude)) {
+                    setGeofenceLocation(latitude, longitude);
+                }
+            });
+
+            $('#useCurrentLocationBtn').on('click', function() {
+                if (!navigator.geolocation) {
+                    Swal.fire({
+                        title: 'Geolocation Unavailable',
+                        text: 'Your browser does not support geolocation.',
+                        icon: 'error',
+                        confirmButtonColor: '#3475db'
+                    });
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const currentLatLng = [position.coords.latitude, position.coords.longitude];
+
+                    if (currentLocationMarker) {
+                        currentLocationMarker.setLatLng(currentLatLng);
+                    } else {
+                        currentLocationMarker = L.marker(currentLatLng, {
+                            icon: createAttendanceMapIcon('employee')
+                        }).addTo(geofenceMap).bindPopup('My current location');
+                    }
+
+                    setGeofenceLocation(position.coords.latitude, position.coords.longitude);
+                    geofenceMap.setZoom(18);
+                }, function() {
+                    Swal.fire({
+                        title: 'Location Error',
+                        text: 'Unable to get your current location. Please place the pin manually on the map.',
+                        icon: 'error',
+                        confirmButtonColor: '#3475db'
+                    });
+                }, {
+                    enableHighAccuracy: true,
+                    timeout: 10000
+                });
+            });
 
             // Dynamic location handling
             $('#municipalitySelect').on('change', function() {
@@ -794,6 +984,16 @@
                 if (!zipCode || zipCode === '' || zipCode === 'Loading...') {
                     $('#zipCodeInput').addClass('is-invalid');
                     $('#zipCodeInput').closest('.mb-3').find('.invalid-feedback').show();
+                    isValid = false;
+                }
+
+                if (!$('#attendanceLatitude').val()) {
+                    $('#attendanceLatitude').addClass('is-invalid');
+                    isValid = false;
+                }
+
+                if (!$('#attendanceLongitude').val()) {
+                    $('#attendanceLongitude').addClass('is-invalid');
                     isValid = false;
                 }
                 

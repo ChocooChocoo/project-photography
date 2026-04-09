@@ -26,9 +26,8 @@ class CheckInRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image' => 'required|image|mimes:jpeg,png,jpg|max:5120', // Max 5MB
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
             'notes' => 'nullable|string|max:500',
         ];
     }
@@ -41,11 +40,9 @@ class CheckInRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'image.required' => 'Please take a photo before checking in.',
-            'image.image' => 'The file must be an image.',
-            'image.mimes' => 'The image must be a JPEG, PNG, or JPG file.',
-            'image.max' => 'The image size must not exceed 5MB.',
+            'latitude.required' => 'Your current location is required before checking in.',
             'latitude.between' => 'Invalid latitude value.',
+            'longitude.required' => 'Your current location is required before checking in.',
             'longitude.between' => 'Invalid longitude value.',
             'notes.max' => 'Notes must not exceed 500 characters.',
         ];
