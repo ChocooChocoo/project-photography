@@ -58,15 +58,11 @@ class NotificationController extends Controller
     public function getRecent()
     {
         try {
-            \Log::info('Fetching recent notifications for user: ' . Auth::id());
-            
             $notifications = NotificationModel::where('user_id', Auth::id())
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get();
-            
-            \Log::info('Found notifications: ' . $notifications->count());
-            
+
             $unreadCount = NotificationModel::where('user_id', Auth::id())
                 ->unread()
                 ->count();
@@ -103,9 +99,6 @@ class NotificationController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('Error in getRecent: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
-            
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),

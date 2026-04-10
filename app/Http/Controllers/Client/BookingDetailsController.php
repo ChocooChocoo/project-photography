@@ -3,13 +3,10 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\StudioOwner\PackagesModel;
-use App\Models\StudioOwner\StudioScheduleModel;
 use App\Models\Freelancer\ProfileModel;
 use App\Models\Freelancer\PackagesModel as FreelancerPackagesModel;
-use App\Models\Freelancer\FreelancerScheduleModel;
 use App\Models\Admin\CategoriesModel;
 use App\Models\StudioRatingModel;
 use App\Models\FreelancerRatingModel;
@@ -40,13 +37,7 @@ class BookingDetailsController extends Controller
                 ->get();
 
             // Calculate rating distribution
-            $ratingDistribution = [
-                5 => StudioRatingModel::where('studio_id', $id)->where('rating', 5)->count(),
-                4 => StudioRatingModel::where('studio_id', $id)->where('rating', 4)->count(),
-                3 => StudioRatingModel::where('studio_id', $id)->where('rating', 3)->count(),
-                2 => StudioRatingModel::where('studio_id', $id)->where('rating', 2)->count(),
-                1 => StudioRatingModel::where('studio_id', $id)->where('rating', 1)->count(),
-            ];
+            $ratingDistribution = $this->getRatingDistribution(StudioRatingModel::class, 'studio_id', $id);
 
             // Fetch studio packages grouped by category
             $studioPackages = PackagesModel::where('studio_id', $id)
@@ -94,13 +85,7 @@ class BookingDetailsController extends Controller
             ->get();
 
         // Calculate rating distribution
-        $ratingDistribution = [
-            5 => FreelancerRatingModel::where('freelancer_id', $id)->where('rating', 5)->count(),
-            4 => FreelancerRatingModel::where('freelancer_id', $id)->where('rating', 4)->count(),
-            3 => FreelancerRatingModel::where('freelancer_id', $id)->where('rating', 3)->count(),
-            2 => FreelancerRatingModel::where('freelancer_id', $id)->where('rating', 2)->count(),
-            1 => FreelancerRatingModel::where('freelancer_id', $id)->where('rating', 1)->count(),
-        ];
+        $ratingDistribution = $this->getRatingDistribution(FreelancerRatingModel::class, 'freelancer_id', $id);
 
         // Fetch freelancer packages grouped by category
         $freelancerPackages = FreelancerPackagesModel::where('user_id', $freelancer->user_id)
@@ -128,5 +113,35 @@ class BookingDetailsController extends Controller
         ));
         
         abort(404, 'Invalid type');
+    }
+
+    /**
+     * Build rating distribution with a single grouped query.
+     */
+    private function getRatingDistribution(string $modelClass, string $foreignKey, int $entityId): array
+    {
+        $distribution = [
+            5 => 0,
+            4 => 0,
+            3 => 0,
+            2 => 0,
+            1 => 0,
+        ];
+
+        $counts = $modelClass::query()
+            ->select('rating', DB::raw('COUNT(*) as total'))
+            ->where($foreignKey, $entityId)
+            ->groupBy('rating')
+            ->pluck('total', 'rating');
+
+        foreach ($counts as $rating => $total) {
+            $rating = (int) $rating;
+
+            if (array_key_exists($rating, $distribution)) {
+                $distribution[$rating] = (int) $total;
+            }
+        }
+
+        return $distribution;
     }
 }

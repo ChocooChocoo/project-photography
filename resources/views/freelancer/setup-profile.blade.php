@@ -1,6 +1,10 @@
 @extends('layouts.freelancer.app')
 @section('title', 'Setup Profile')
 
+@section('styles')
+    <link rel="stylesheet" href="{{ asset('assets/plugins/choices/choices.min.css') }}">
+@endsection
+
 {{-- CONTENT --}}
 @section('content')
     <div class="content-page">
@@ -362,6 +366,7 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
+    <script src="{{ asset('assets/plugins/choices/choices.min.js') }}"></script>
     <script>
         $(document).ready(function() {
             // Initialize Choices.js for multiple select

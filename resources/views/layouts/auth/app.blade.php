@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Default Title')</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
 
     {{-- FAVICON --}}
     <link href="{{ asset('assets/images/favicon.ico') }}"/>
@@ -50,14 +47,6 @@
     {{-- SWEETALERT2 JS --}}
     <script src="{{ asset('assets/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
     <script src="{{ asset('assets/js/pages/misc-sweetalerts.js') }}"></script>
-
-    {{-- INPUT MASK --}}
-    <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}"></script>
-    <script src="{{ asset('assets/plugins/inputmask/inputmask.min.js') }}"></script>
-    <script src="{{ asset('assets/plugins/handlebars/handlebars.min.js') }}"></script>
-    <script src="{{ asset('assets/plugins/typeahead/typeahead.bundle.min.js') }}"></script>
-    <script src="{{ asset('assets/js/pages/form-inputmask.js') }}"></script>
-    <script src="{{ asset('assets/js/pages/form-typehead.js') }}"></script>
 
     {{-- YIELD SCRIPT --}}
     @yield('scripts')

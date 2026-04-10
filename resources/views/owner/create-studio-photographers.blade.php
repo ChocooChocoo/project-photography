@@ -152,6 +152,8 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
+    <script src="{{ asset('assets/plugins/inputmask/inputmask.min.js') }}"></script>
+    <script src="{{ asset('assets/js/pages/form-inputmask.js') }}"></script>
     <script>
         $(document).ready(function() {
             // Load categories when studio is selected

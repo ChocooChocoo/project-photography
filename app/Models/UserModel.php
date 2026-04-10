@@ -13,6 +13,8 @@ class UserModel extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    protected static array $permissionCache = [];
+
     protected $table = 'tbl_users';
     
     protected $primaryKey = 'id';
@@ -440,6 +442,7 @@ class UserModel extends Authenticatable
             ->wherePivot('studio_id', $studioId)
             ->exists()) {
             $this->roles()->attach($role->id, ['studio_id' => $studioId]);
+            self::$permissionCache = [];
         }
 
         return $this;
@@ -454,6 +457,7 @@ class UserModel extends Authenticatable
 
         if ($studioId === null) {
             $this->roles()->sync($roleIds);
+            self::$permissionCache = [];
 
             return $this;
         }
@@ -467,6 +471,8 @@ class UserModel extends Authenticatable
             $this->roles()->attach($roleId, ['studio_id' => $studioId]);
         }
 
+        self::$permissionCache = [];
+
         return $this;
     }
 
@@ -475,6 +481,16 @@ class UserModel extends Authenticatable
      */
     public function getAllPermissions(?int $studioId = null, ?string $portal = null): Collection
     {
+        $cacheKey = implode(':', [
+            $this->getKey(),
+            $portal ?? 'all',
+            $studioId ?? 'all',
+        ]);
+
+        if (isset(self::$permissionCache[$cacheKey])) {
+            return self::$permissionCache[$cacheKey];
+        }
+
         $permissions = collect();
 
         $roles = $this->activeRoles($portal, $studioId)->with(['permissions' => function ($query) use ($portal) {
@@ -491,7 +507,9 @@ class UserModel extends Authenticatable
             );
         }
 
-        return $permissions->unique('id');
+        self::$permissionCache[$cacheKey] = $permissions->unique('id')->values();
+
+        return self::$permissionCache[$cacheKey];
     }
 
     /**

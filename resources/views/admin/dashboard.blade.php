@@ -132,3 +132,8 @@
             </div>
         </div>
 @endsection
+
+@section('scripts')
+    <script src="{{ asset('assets/plugins/chartjs/chart.umd.js') }}"></script>
+    <script src="{{ asset('assets/js/pages/dashboard.js') }}"></script>
+@endsection
