@@ -249,7 +249,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/payroll-settings/{id}',                     [\App\Http\Controllers\StudioOwner\PayrollSettingsController::class, 'destroy'])->middleware('permission:owner.payroll.manage')->name('owner.payroll-settings.destroy');
 
         // Manage Chatbot
-        Route::prefix('chatbot')->middleware('permission:owner.chatbot.manage')->name('chatbot.')->group(function () {
+        Route::prefix('chatbot')->middleware('permission:owner.chatbot.manage')->name('owner.chatbot.')->group(function () {
             Route::get('/config',                                   [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'index'])->name('config');
             Route::get('/config/data',                              [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'getConfig'])->name('config.get');
             Route::post('/config/save',                             [\App\Http\Controllers\StudioOwner\ChatbotConfigController::class, 'saveConfig'])->name('config.save');

@@ -451,9 +451,9 @@
             {{-- Inquiries & Chatbot --}}
             @php
                 $inquiriesRoutes      = Route::is('owner.inquiries.index');
-                $chatbotConfigRoutes  = Route::is('chatbot.config') || Route::is('chatbot.config.get') || Route::is('chatbot.config.save') || Route::is('chatbot.config.toggle');
-                $chatbotIntentsRoutes = Route::is('chatbot.intents.get') || Route::is('chatbot.intents.store') || Route::is('chatbot.intents.show') || Route::is('chatbot.intents.update') || Route::is('chatbot.intents.delete') || Route::is('chatbot.intents.toggle');
-                $chatbotConversationsRoutes = Route::is('chatbot.conversations') || Route::is('chatbot.conversations.details');
+                $chatbotConfigRoutes  = Route::is('owner.chatbot.config') || Route::is('owner.chatbot.config.get') || Route::is('owner.chatbot.config.save') || Route::is('owner.chatbot.config.toggle');
+                $chatbotIntentsRoutes = Route::is('owner.chatbot.intents.get') || Route::is('owner.chatbot.intents.store') || Route::is('owner.chatbot.intents.show') || Route::is('owner.chatbot.intents.update') || Route::is('owner.chatbot.intents.delete') || Route::is('owner.chatbot.intents.toggle');
+                $chatbotConversationsRoutes = Route::is('owner.chatbot.conversations') || Route::is('owner.chatbot.conversations.details');
                 
                 $isChatbotActive = $chatbotConfigRoutes || $chatbotIntentsRoutes || $chatbotConversationsRoutes;
             @endphp
@@ -479,21 +479,21 @@
                         {{-- Chatbot Configuration --}}
                         @if ($canManageChatbot)
                         <li class="side-nav-item">
-                            <a href="{{ route('chatbot.config') }}" class="side-nav-link {{ $chatbotConfigRoutes ? 'active' : '' }}">
+                            <a href="{{ route('owner.chatbot.config') }}" class="side-nav-link {{ $chatbotConfigRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="chatbot-config">Chatbot Settings</span>
                             </a>
                         </li>
                         
                         {{-- Manage Intents --}}
                         <li class="side-nav-item">
-                            <a href="{{ route('chatbot.config') }}#manage_intents" class="side-nav-link {{ $chatbotIntentsRoutes ? 'active' : '' }}">
+                            <a href="{{ route('owner.chatbot.config') }}#manage_intents" class="side-nav-link {{ $chatbotIntentsRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="manage-intents">Manage Intents</span>
                             </a>
                         </li>
                         
                         {{-- Conversation History --}}
                         <li class="side-nav-item">
-                            <a href="{{ route('chatbot.conversations') }}" class="side-nav-link {{ $chatbotConversationsRoutes ? 'active' : '' }}">
+                            <a href="{{ route('owner.chatbot.conversations') }}" class="side-nav-link {{ $chatbotConversationsRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="conversation-history">Chat History</span>
                             </a>
                         </li>

@@ -434,7 +434,7 @@
             // Load chatbot config
             function loadChatbotConfig() {
                 $.ajax({
-                    url: '{{ route("chatbot.config.get") }}',
+                    url: '{{ route("owner.chatbot.config.get") }}',
                     type: 'GET',
                     success: function(response) {
                         if (response.success) {
@@ -480,7 +480,7 @@
                 $('#saveConfigBtn').prop('disabled', true).html('<i class="ti ti-loader spinner me-1"></i> Saving...');
                 
                 $.ajax({
-                    url: '{{ route("chatbot.config.save") }}',
+                    url: '{{ route("owner.chatbot.config.save") }}',
                     type: 'POST',
                     data: formData,
                     headers: {
@@ -514,7 +514,7 @@
                 const isActive = $(this).is(':checked');
                 
                 $.ajax({
-                    url: '{{ route("chatbot.config.toggle") }}',
+                    url: '{{ route("owner.chatbot.config.toggle") }}',
                     type: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}'
@@ -558,7 +558,7 @@
                 `);
                 
                 $.ajax({
-                    url: '{{ route("chatbot.intents.get") }}',
+                    url: '{{ route("owner.chatbot.intents.get") }}',
                     type: 'GET',
                     success: function(response) {
                         if (response.success) {
@@ -570,7 +570,7 @@
                                             <i class="ti ti-settings-off fs-1 text-warning d-block mb-2"></i>
                                             <h5>No Chatbot Configuration Found</h5>
                                             <p class="text-muted">Please go to <strong>Chatbot Settings</strong> tab and save your configuration first.</p>
-                                            <a href="{{ route('chatbot.config') }}" class="btn btn-primary mt-2">
+                                            <a href="{{ route('owner.chatbot.config') }}" class="btn btn-primary mt-2">
                                                 <i class="ti ti-settings me-1"></i> Go to Settings
                                             </a>
                                         </td>
@@ -749,7 +749,7 @@
             $('#addIntentBtn').on('click', function() {
                 // First check if config exists
                 $.ajax({
-                    url: '{{ route("chatbot.config.get") }}',
+                    url: '{{ route("owner.chatbot.config.get") }}',
                     type: 'GET',
                     success: function(response) {
                         if (response.success) {
@@ -776,7 +776,7 @@
                                     cancelButtonText: 'Cancel'
                                 }).then((result) => {
                                     if (result.isConfirmed) {
-                                        window.location.href = '{{ route("chatbot.config") }}';
+                                        window.location.href = '{{ route("owner.chatbot.config") }}';
                                     }
                                 });
                             }
@@ -799,7 +799,7 @@
                         if (response.success) {
                             // Get current config ID
                             $.ajax({
-                                url: '{{ route("chatbot.config.get") }}',
+                                url: '{{ route("owner.chatbot.config.get") }}',
                                 type: 'GET',
                                 success: function(configResponse) {
                                     if (configResponse.success && configResponse.config) {
@@ -930,7 +930,7 @@
                 
                 const url = intentId 
                     ? `/owner/chatbot/intents/${intentId}`
-                    : '{{ route("chatbot.intents.store") }}';
+                    : '{{ route("owner.chatbot.intents.store") }}';
                 const method = intentId ? 'PUT' : 'POST';
                 
                 // Collect form data
@@ -1209,7 +1209,7 @@
                 `);
                 
                 $.ajax({
-                    url: '{{ route("chatbot.conversations") }}',
+                    url: '{{ route("owner.chatbot.conversations") }}',
                     type: 'GET',
                     data: { page: page },
                     success: function(response) {
