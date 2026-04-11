@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             ProductPackagesSeeder::class,
             PetPackagesSeeder::class,
             FashionPackagesSeeder::class,
+            ChatbotDefaultConfigSeeder::class,
         ]);
     }
 }

@@ -28,19 +28,6 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Display the chat interface
-     *
-     * @param Request $request
-     * @return \Illuminate\View\View
-     */
-    public function index(Request $request)
-    {
-        $ownerId = $request->query('owner_id');
-        
-        return view('client.chatbot', compact('ownerId'));
-    }
-
-    /**
      * Get chatbot config for frontend
      *
      * @param Request $request

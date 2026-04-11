@@ -567,7 +567,6 @@ Route::middleware(['auth'])->group(function () {
 
         // Chatbot
         Route::prefix('chatbot')->name('chatbot.')->group(function () {
-            Route::get('/',                                     [\App\Http\Controllers\Client\ChatbotController::class, 'index'])->name('index');
             Route::get('/config',                               [\App\Http\Controllers\Client\ChatbotController::class, 'getConfig'])->name('config');
             Route::post('/start',                               [\App\Http\Controllers\Client\ChatbotController::class, 'startChat'])->name('start');
             Route::post('/message',                             [\App\Http\Controllers\Client\ChatbotController::class, 'sendMessage'])->name('message');

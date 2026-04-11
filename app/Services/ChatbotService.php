@@ -2,15 +2,16 @@
 
 namespace App\Services;
 
+use App\Models\StudioOwner\PackagesModel;
+use App\Models\StudioOwner\StudiosModel;
 use BotMan\BotMan\BotMan;
 use BotMan\BotMan\BotManFactory;
 use BotMan\BotMan\Drivers\DriverManager;
+use Database\Seeders\ChatbotDefaultConfigSeeder;
 use App\Models\Chatbot\ChatbotConfigModel;
 use App\Models\Chatbot\ChatbotIntentModel;
 use App\Models\Chatbot\ChatbotConversationModel;
 use App\Models\Chatbot\ChatbotMessageModel;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class ChatbotService
 {
@@ -60,25 +61,14 @@ class ChatbotService
      */
     public function forOwner(int $ownerId)
     {
-        // Get active config for this owner
+        $this->bootstrapOwnerConfig($ownerId);
+
         $this->activeConfig = ChatbotConfigModel::byOwner($ownerId)
             ->active()
             ->with(['activeIntents' => function($query) {
                 $query->with('activeQuickReplies')->byPriority();
             }])
             ->first();
-
-        if (!$this->activeConfig) {
-            // Create default config if none exists
-            $this->activeConfig = ChatbotConfigModel::create([
-                'owner_id' => $ownerId,
-                'config_name' => 'Default Configuration',
-                'welcome_message' => 'Hello! How can I assist you today?',
-                'fallback_message' => 'I apologize, but I don\'t understand. Please contact our support team for assistance.',
-                'is_active' => true,
-                'bot_name' => 'Support Assistant',
-            ]);
-        }
 
         return $this;
     }
@@ -160,53 +150,74 @@ class ChatbotService
             throw new \Exception('No active conversation. Call startConversation() or continueConversation() first.');
         }
 
-        // Save user message
         $userMessage = $this->saveUserMessage($message);
-
-        // Find matching intent
-        $matchedIntent = $this->findMatchingIntent($message);
+        $normalizedMessage = $this->normalizeMessage($message);
+        $moderationResult = $this->evaluateMessage($normalizedMessage);
 
         $response = null;
         $quickReplies = [];
+        $metadata = [];
 
-        if ($matchedIntent) {
-            // Increment match count
-            $matchedIntent->incrementMatchCount();
-
-            // Get response based on intent
-            $response = $matchedIntent->response_text;
-            
-            // Get quick replies if any
-            if ($matchedIntent->response_type === 'quick_reply') {
-                $quickReplies = $matchedIntent->activeQuickReplies->map(function($reply) {
-                    return [
-                        'text' => $reply->reply_text,
-                        'action' => $reply->action_value,
-                        'action_type' => $reply->action_type,
-                    ];
-                })->toArray();
-            }
-
-            // Save bot message
-            $botMessage = $this->saveBotMessage($response, $matchedIntent->id);
-
-            // Prepare metadata
+        if ($moderationResult !== null) {
+            $response = $moderationResult['message'];
+            $quickReplies = $this->defaultQuickReplies();
             $metadata = [
-                'intent_id' => $matchedIntent->id,
-                'intent_name' => $matchedIntent->intent_name,
+                'moderation' => $moderationResult['metadata'],
+                'quick_replies' => $quickReplies,
             ];
 
-            if (!empty($quickReplies)) {
-                $metadata['quick_replies'] = $quickReplies;
-            }
+            $this->saveBotMessage($response);
+            $this->appendMessageMetadata($userMessage, [
+                'normalized_message' => $normalizedMessage,
+                'moderation' => $moderationResult['metadata'],
+            ]);
         } else {
-            // Use fallback message
-            $response = $this->activeConfig->fallback_message;
-            $botMessage = $this->saveBotMessage($response);
-            $metadata = ['is_fallback' => true];
+            $this->appendMessageMetadata($userMessage, [
+                'normalized_message' => $normalizedMessage,
+            ]);
+
+            $matchedIntent = $this->findMatchingIntent($normalizedMessage);
+
+            if ($matchedIntent) {
+                $matchedIntent->incrementMatchCount();
+                $response = $this->resolveIntentResponse($matchedIntent);
+                $dynamicMetadata = $this->buildIntentMetadata($matchedIntent);
+
+                if ($matchedIntent->response_type === 'quick_reply') {
+                    $quickReplies = $matchedIntent->activeQuickReplies->map(function($reply) {
+                        return [
+                            'text' => $reply->reply_text,
+                            'action' => $reply->action_value,
+                            'action_type' => $reply->action_type,
+                        ];
+                    })->toArray();
+                }
+
+                $this->saveBotMessage($response, $matchedIntent->id);
+
+                $metadata = [
+                    'intent_id' => $matchedIntent->id,
+                    'intent_name' => $matchedIntent->intent_name,
+                ];
+
+                if (!empty($dynamicMetadata)) {
+                    $metadata = array_merge($metadata, $dynamicMetadata);
+                }
+
+                if (!empty($quickReplies)) {
+                    $metadata['quick_replies'] = $quickReplies;
+                }
+            } else {
+                $response = $this->activeConfig->fallback_message;
+                $quickReplies = $this->defaultQuickReplies();
+                $this->saveBotMessage($response);
+                $metadata = [
+                    'is_fallback' => true,
+                    'quick_replies' => $quickReplies,
+                ];
+            }
         }
 
-        // Update conversation metadata
         $this->updateConversationMetadata();
 
         return [
@@ -228,42 +239,404 @@ class ChatbotService
      */
     protected function findMatchingIntent(string $message)
     {
-        if (!$this->activeConfig || !$this->activeConfig->intents) {
+        $intents = $this->getActiveIntents();
+
+        if (!$this->activeConfig || $intents->isEmpty()) {
             return null;
         }
 
-        $message = strtolower(trim($message));
+        $directIntentMatch = $this->findDirectIntentMatch($message, $intents);
+        if ($directIntentMatch) {
+            return $directIntentMatch;
+        }
+
         $bestMatch = null;
         $highestScore = 0;
 
-        foreach ($this->activeConfig->intents as $intent) {
+        foreach ($intents as $intent) {
             $keywords = $intent->trigger_keywords ?? [];
             
             foreach ($keywords as $keyword) {
                 $keyword = strtolower(trim($keyword));
-                
-                // Check for exact match or contains
-                if (strpos($message, $keyword) !== false) {
-                    // Calculate score based on keyword length and position
+
+                if ($keyword === '' || !$this->messageMatchesKeyword($message, $keyword)) {
+                    continue;
+                }
+
                     $score = strlen($keyword) * 10;
-                    
-                    // Boost score if keyword is at start of message
-                    if (strpos($message, $keyword) === 0) {
+
+                    if ($this->messageStartsWithKeyword($message, $keyword)) {
                         $score *= 2;
                     }
-                    
-                    // Add priority bonus
+
                     $score += $intent->priority * 5;
-                    
+
                     if ($score > $highestScore) {
                         $highestScore = $score;
                         $bestMatch = $intent;
                     }
-                }
             }
         }
 
         return $bestMatch;
+    }
+
+    /**
+     * Resolve direct intent triggers before fuzzy keyword matching.
+     */
+    protected function findDirectIntentMatch(string $message, $intents): ?ChatbotIntentModel
+    {
+        $normalizedTarget = strtolower(trim($message));
+
+        if ($normalizedTarget === '') {
+            return null;
+        }
+
+        foreach ($intents as $intent) {
+            if (strtolower(trim($intent->intent_name)) === $normalizedTarget) {
+                return $intent;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve the final response text for a matched intent.
+     */
+    protected function resolveIntentResponse(ChatbotIntentModel $matchedIntent): string
+    {
+        if ($this->isPackagePricingIntent($matchedIntent)) {
+            return $this->buildStudioPackagesResponse() ?? $matchedIntent->response_text;
+        }
+
+        return $matchedIntent->response_text;
+    }
+
+    /**
+     * Determine whether the matched intent should show dynamic package data.
+     */
+    protected function isPackagePricingIntent(ChatbotIntentModel $matchedIntent): bool
+    {
+        return strtolower($matchedIntent->intent_name) === 'package pricing';
+    }
+
+    /**
+     * Build extra response metadata for intents that need structured frontend rendering.
+     *
+     * @return array<string, mixed>
+     */
+    protected function buildIntentMetadata(ChatbotIntentModel $matchedIntent): array
+    {
+        if ($this->isPackagePricingIntent($matchedIntent)) {
+            return [
+                'packages' => $this->getStudioPackagePayload(),
+            ];
+        }
+
+        return [];
+    }
+
+    /**
+     * Build a package response from the owner's active studio packages.
+     */
+    protected function buildStudioPackagesResponse(): ?string
+    {
+        $packages = $this->getStudioPackages();
+
+        if ($packages === null) {
+            return null;
+        }
+
+        if ($packages->isEmpty()) {
+            return 'No package details are available right now. Please try again later or ask our team for assistance.';
+        }
+
+        $lines = [
+            'Here are our available studio packages:',
+        ];
+
+        foreach ($packages as $index => $package) {
+            $lines[] = '';
+            $lines[] = ($index + 1) . '. ' . $package->package_name;
+            $lines[] = 'Price: PHP ' . number_format((float) $package->package_price, 2);
+
+            if ($package->category?->category_name) {
+                $lines[] = 'Category: ' . $package->category->category_name;
+            }
+
+            if (!empty($package->package_description)) {
+                $lines[] = 'Details: ' . trim($package->package_description);
+            }
+
+            $inclusions = array_slice((array) $package->package_inclusions, 0, 3);
+            if (!empty($inclusions)) {
+                $lines[] = 'Includes: ' . implode(', ', array_map('trim', $inclusions));
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Get active studio packages for the current owner.
+     */
+    protected function getStudioPackages()
+    {
+        if (!$this->activeConfig) {
+            return null;
+        }
+
+        $studio = StudiosModel::query()
+            ->where('user_id', $this->activeConfig->owner_id)
+            ->first();
+
+        if (!$studio) {
+            return collect();
+        }
+
+        return PackagesModel::query()
+            ->where('studio_id', $studio->id)
+            ->where('status', 'active')
+            ->with('category')
+            ->orderBy('category_id')
+            ->orderBy('package_name')
+            ->get();
+    }
+
+    /**
+     * Build structured package metadata for client-side rendering.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function getStudioPackagePayload(): array
+    {
+        $packages = $this->getStudioPackages();
+
+        if ($packages === null || $packages->isEmpty()) {
+            return [];
+        }
+
+        return $packages->map(function ($package) {
+            return [
+                'name' => $package->package_name,
+                'price' => 'PHP ' . number_format((float) $package->package_price, 2),
+                'category' => $package->category?->category_name,
+                'description' => $package->package_description,
+                'inclusions' => array_values(array_slice((array) $package->package_inclusions, 0, 3)),
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Determine whether the message matches a keyword as a word or phrase.
+     */
+    protected function messageMatchesKeyword(string $message, string $keyword): bool
+    {
+        $pattern = '/(?<![a-z0-9])' . preg_quote($keyword, '/') . '(?![a-z0-9])/u';
+
+        return preg_match($pattern, $message) === 1;
+    }
+
+    /**
+     * Determine whether the message starts with the matched keyword or phrase.
+     */
+    protected function messageStartsWithKeyword(string $message, string $keyword): bool
+    {
+        $pattern = '/^' . preg_quote($keyword, '/') . '(?![a-z0-9])/u';
+
+        return preg_match($pattern, $message) === 1;
+    }
+
+    /**
+     * Bootstrap the chatbot configuration for an owner when missing.
+     */
+    protected function bootstrapOwnerConfig(int $ownerId): void
+    {
+        if (ChatbotConfigModel::byOwner($ownerId)->exists()) {
+            return;
+        }
+
+        app(ChatbotDefaultConfigSeeder::class)->seedOwnerDefaults($ownerId);
+    }
+
+    /**
+     * Get the active intents collection for the current configuration.
+     *
+     * @return \Illuminate\Support\Collection<int, ChatbotIntentModel>
+     */
+    protected function getActiveIntents()
+    {
+        if (!$this->activeConfig) {
+            return collect();
+        }
+
+        if ($this->activeConfig->relationLoaded('activeIntents')) {
+            return $this->activeConfig->activeIntents;
+        }
+
+        return $this->activeConfig->activeIntents()
+            ->with('activeQuickReplies')
+            ->byPriority()
+            ->get();
+    }
+
+    /**
+     * Normalize a user message before moderation and intent matching.
+     */
+    protected function normalizeMessage(string $message): string
+    {
+        $normalizedMessage = strtolower(trim($message));
+        $normalizedMessage = preg_replace('/\s+/', ' ', $normalizedMessage) ?? $normalizedMessage;
+
+        return $normalizedMessage;
+    }
+
+    /**
+     * Evaluate whether a message should be moderated before intent matching.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function evaluateMessage(string $normalizedMessage): ?array
+    {
+        $moderationSettings = $this->getModerationSettings();
+        $blockedWords = $moderationSettings['blocked_words'] ?? [];
+
+        foreach ($blockedWords as $blockedWord) {
+            $pattern = '/\b' . preg_quote(strtolower($blockedWord), '/') . '\b/u';
+
+            if (preg_match($pattern, $normalizedMessage) === 1) {
+                return [
+                    'message' => $moderationSettings['blocked_response'],
+                    'metadata' => [
+                        'type' => 'blocked_language',
+                        'matched_value' => $blockedWord,
+                    ],
+                ];
+            }
+        }
+
+        if ($this->isSpamMessage($normalizedMessage, $moderationSettings)) {
+            return [
+                'message' => $moderationSettings['spam_response'],
+                'metadata' => [
+                    'type' => 'spam_or_repetition',
+                ],
+            ];
+        }
+
+        if ($this->isNoiseMessage($normalizedMessage, $moderationSettings)) {
+            return [
+                'message' => $moderationSettings['noise_response'],
+                'metadata' => [
+                    'type' => 'noise_or_unnecessary',
+                ],
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Determine if the message looks spammy.
+     */
+    protected function isSpamMessage(string $normalizedMessage, array $moderationSettings): bool
+    {
+        if ($normalizedMessage === '') {
+            return true;
+        }
+
+        $maxRepeatedCharacterCount = (int) ($moderationSettings['max_repeated_character_count'] ?? 5);
+        if (preg_match('/(.)\1{' . $maxRepeatedCharacterCount . ',}/u', $normalizedMessage) === 1) {
+            return true;
+        }
+
+        $words = preg_split('/\s+/', $normalizedMessage, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $wordCounts = array_count_values($words);
+        $maxDuplicateWordCount = (int) ($moderationSettings['max_duplicate_word_count'] ?? 4);
+
+        return !empty($wordCounts) && max($wordCounts) >= $maxDuplicateWordCount;
+    }
+
+    /**
+     * Determine if the message is too noisy or unclear.
+     */
+    protected function isNoiseMessage(string $normalizedMessage, array $moderationSettings): bool
+    {
+        $minimumMeaningfulLength = (int) ($moderationSettings['minimum_meaningful_length'] ?? 2);
+        $plainText = preg_replace('/[^a-z0-9\s]/u', '', $normalizedMessage) ?? '';
+
+        if (strlen(trim($plainText)) < $minimumMeaningfulLength) {
+            return true;
+        }
+
+        $noisePhrases = array_map('strtolower', $moderationSettings['noise_phrases'] ?? []);
+        if (in_array($normalizedMessage, $noisePhrases, true)) {
+            return true;
+        }
+
+        return preg_match('/^[^a-z0-9]+$/u', $normalizedMessage) === 1;
+    }
+
+    /**
+     * Get moderation settings from the active config with defaults applied.
+     *
+     * @return array<string, mixed>
+     */
+    protected function getModerationSettings(): array
+    {
+        $defaultModerationSettings = ChatbotDefaultConfigSeeder::defaultSettings()['moderation'];
+        $activeSettings = (array) ($this->activeConfig->settings ?? []);
+
+        return array_replace_recursive(
+            $defaultModerationSettings,
+            (array) ($activeSettings['moderation'] ?? [])
+        );
+    }
+
+    /**
+     * Get the default quick replies to show when fallback or moderation is triggered.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    protected function defaultQuickReplies(): array
+    {
+        $labels = ChatbotDefaultConfigSeeder::defaultSettings()['quick_reply_defaults'];
+
+        return [
+            [
+                'text' => $labels[0] ?? 'Booking Process',
+                'action' => 'Booking Information',
+                'action_type' => 'trigger_intent',
+            ],
+            [
+                'text' => $labels[1] ?? 'Package Rates',
+                'action' => 'Package Pricing',
+                'action_type' => 'trigger_intent',
+            ],
+            [
+                'text' => $labels[2] ?? 'Available Services',
+                'action' => 'Service Information',
+                'action_type' => 'trigger_intent',
+            ],
+            [
+                'text' => $labels[3] ?? 'Talk to Our Team',
+                'action' => 'Availability and Contact',
+                'action_type' => 'trigger_intent',
+            ],
+        ];
+    }
+
+    /**
+     * Append metadata to a saved chat message.
+     *
+     * @param array<string, mixed> $metadata
+     */
+    protected function appendMessageMetadata(ChatbotMessageModel $messageModel, array $metadata): void
+    {
+        $messageModel->update([
+            'metadata' => array_replace_recursive((array) $messageModel->metadata, $metadata),
+        ]);
     }
 
     /**

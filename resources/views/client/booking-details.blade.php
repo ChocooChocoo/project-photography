@@ -1248,7 +1248,7 @@
                             
                             if (response.success) {
                                 // Add bot response
-                                addModalBotMessage(response.message);
+                                addModalBotMessage(response.message, response.metadata || {});
                                 
                                 // Add quick replies if any
                                 if (response.quick_replies && response.quick_replies.length > 0) {
@@ -1281,12 +1281,13 @@
                     scrollModalToBottom();
                 }
                 
-                function addModalBotMessage(message) {
+                function addModalBotMessage(message, metadata = {}) {
+                    const contentHtml = renderModalBotMessageContent(message, metadata);
                     const messageHtml = `
                         <div class="d-flex justify-content-start mb-3">
                             <div class="bg-light p-2 rounded" style="max-width: 70%;">
                                 <small><i class="ti ti-robot me-1"></i>${escapeHtml(modalBotName)}</small>
-                                <p class="mb-0">${escapeHtml(message)}</p>
+                                <div class="mb-0">${contentHtml}</div>
                                 <small class="text-muted">${new Date().toLocaleTimeString()}</small>
                             </div>
                         </div>
@@ -1342,8 +1343,8 @@
                     if (actionType === 'open_url' && action) {
                         window.open(action, '_blank');
                     } else {
-                        // Send as message
-                        $('#modalMessageInput').val(text);
+                        const messageToSend = actionType === 'trigger_intent' && action ? action : text;
+                        $('#modalMessageInput').val(messageToSend);
                         $('#modalChatForm').submit();
                     }
                 });
@@ -1370,6 +1371,55 @@
                     div.textContent = text;
                     return div.innerHTML;
                 }
+
+                function formatModalBotMessage(text) {
+                    return escapeHtml(text).replace(/\n/g, '<br>');
+                }
+
+                function renderModalBotMessageContent(message, metadata = {}) {
+                    if (Array.isArray(metadata.packages) && metadata.packages.length > 0) {
+                        return renderModalPackageMessage(metadata.packages);
+                    }
+
+                    return `<p class="mb-0">${formatModalBotMessage(message)}</p>`;
+                }
+
+                function renderModalPackageMessage(packages) {
+                    let html = `
+                        <div class="mb-2">
+                            <p class="mb-2 fw-semibold">Here are our available studio packages:</p>
+                        </div>
+                    `;
+
+                    packages.forEach((pkg, index) => {
+                        const inclusionsHtml = Array.isArray(pkg.inclusions) && pkg.inclusions.length > 0
+                            ? `
+                                <ul class="mb-0 ps-3 small">
+                                    ${pkg.inclusions.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+                                </ul>
+                            `
+                            : '<p class="mb-0 small text-muted">No listed inclusions.</p>';
+
+                        html += `
+                            <div class="border rounded p-2 mb-2">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                                    <div>
+                                        <div class="fw-semibold">${index + 1}. ${escapeHtml(pkg.name || 'Package')}</div>
+                                        ${pkg.category ? `<div class="small text-muted">${escapeHtml(pkg.category)}</div>` : ''}
+                                    </div>
+                                    <span class="badge badge-soft-success">${escapeHtml(pkg.price || 'PHP 0.00')}</span>
+                                </div>
+                                ${pkg.description ? `<p class="mb-2 small">${escapeHtml(pkg.description)}</p>` : ''}
+                                <div>
+                                    <div class="small fw-semibold mb-1">Includes:</div>
+                                    ${inclusionsHtml}
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    return html;
+                }
                 
                 // Load message history if returning to same session (optional)
                 function loadModalHistory() {
@@ -1387,7 +1437,7 @@
                                     if (msg.sender_type === 'user') {
                                         addModalUserMessage(msg.message);
                                     } else {
-                                        addModalBotMessage(msg.message);
+                                        addModalBotMessage(msg.message, msg.metadata || {});
                                     }
                                 });
                                 
