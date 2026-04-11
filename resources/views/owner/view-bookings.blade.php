@@ -272,6 +272,7 @@
             let currentBookingId = null;
             let selectedPhotographers = [];
             let currentBookingData = null;
+            let currentAssignmentInfo = null;
             
             // Initialize Bootstrap modal instances
             const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
@@ -1062,9 +1063,11 @@
                             </div>
                         `);
                         selectedPhotographers = [];
+                        currentAssignmentInfo = null;
                     },
                     success: function(response) {
                         if (response.success) {
+                            currentAssignmentInfo = response.assignment_info || null;
                             renderAvailablePhotographers(response);
                         } else {
                             $('#photographerListContainer').html(`
@@ -1091,6 +1094,10 @@
                 const booking = data.booking;
                 const photographers = data.photographers;
                 const assignmentInfo = data.assignment_info;
+                const availablePhotographers = photographers.filter(photographer => photographer.is_available === true);
+                const maxSelectable = assignmentInfo.is_initial_assignment
+                    ? assignmentInfo.required_photographers
+                    : assignmentInfo.remaining_needed;
 
                 // Update booking info
                 $('#assignBookingInfo').text(`${booking.reference} - ${booking.category}`);
@@ -1126,7 +1133,7 @@
                     $('#photographerListContainer').html(requirementInfoHtml + `
                         <div class="text-center py-4">
                             <i data-lucide="users" class="fs-20 text-muted mb-2"></i>
-                            <p class="mb-2">No available photographers for this booking date.</p>
+                            <p class="mb-2">No photographers found for this studio.</p>
                             <small class="text-muted">Please check back later or add more photographers to your studio.</small>
                         </div>
                     `);
@@ -1134,16 +1141,40 @@
                     return;
                 }
 
-                let photographersHtml = requirementInfoHtml + '<div class="photographer-list">';
+                let availabilitySummaryHtml = '';
+                if (availablePhotographers.length === 0) {
+                    availabilitySummaryHtml = `
+                        <div class="alert alert-danger mb-3">
+                            <i data-lucide="alert-circle" class="me-1"></i>
+                            No photographers are currently assignable for this booking. Review the conflict reasons below.
+                        </div>
+                    `;
+                } else if (availablePhotographers.length < maxSelectable) {
+                    availabilitySummaryHtml = `
+                        <div class="alert alert-warning mb-3">
+                            <i data-lucide="alert-triangle" class="me-1"></i>
+                            Only ${availablePhotographers.length} photographer(s) are currently available, but this booking still needs ${maxSelectable}.
+                        </div>
+                    `;
+                }
+
+                let photographersHtml = '<div class="photographer-list">';
                 photographers.forEach(photographer => {
                     const initials = photographer.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase();
-                    // Determine max selectable based on remaining needed
-                    const maxSelectable = assignmentInfo.is_initial_assignment ? assignmentInfo.required_photographers : assignmentInfo.remaining_needed;
-                    // Disable if already selected max and not this one
-                    const isDisabled = selectedPhotographers.length >= maxSelectable && !selectedPhotographers.includes(photographer.id.toString());
+                    const photographerId = photographer.id.toString();
+                    const isSelected = selectedPhotographers.includes(photographerId);
+                    const hasReachedSelectionLimit = selectedPhotographers.length >= maxSelectable && !isSelected;
+                    const isUnavailable = photographer.is_available !== true;
+                    const isDisabled = isUnavailable || hasReachedSelectionLimit;
+                    const conflictDetails = Array.isArray(photographer.availability_conflicts)
+                        ? photographer.availability_conflicts
+                        : [];
+                    const availabilityDetails = conflictDetails.length > 0
+                        ? conflictDetails.map(conflict => `<div class="small text-muted">${conflict.message || photographer.availability_reason}</div>`).join('')
+                        : `<div class="small text-muted">${photographer.availability_reason || 'Available for assignment.'}</div>`;
                     
                     photographersHtml += `
-                        <div class="card border mb-2 photographer-card ${selectedPhotographers.includes(photographer.id.toString()) ? 'selected border-primary' : ''}" data-photographer-id="${photographer.id}">
+                        <div class="card border mb-2 photographer-card ${isSelected ? 'selected border-primary' : ''} ${isUnavailable ? 'bg-light-subtle border-danger-subtle' : ''}" data-photographer-id="${photographer.id}" data-is-available="${photographer.is_available ? '1' : '0'}">
                             <div class="card-body p-0">
                                 <div class="row align-items-center">
                                     <div class="col-auto px-4">
@@ -1152,7 +1183,7 @@
                                                 type="checkbox" 
                                                 id="photographer_${photographer.id}" 
                                                 value="${photographer.id}"
-                                                ${selectedPhotographers.includes(photographer.id.toString()) ? 'checked' : ''}
+                                                ${isSelected ? 'checked' : ''}
                                                 ${isDisabled ? 'disabled' : ''}>
                                             <label class="form-check-label visually-hidden" for="photographer_${photographer.id}">Assign ${photographer.name}</label>
                                         </div>
@@ -1173,6 +1204,10 @@
                                                     <span class="badge badge-soft-success text-success small mb-1">${photographer.status}</span>
                                                     <small class="text-muted ms-2">${photographer.years_experience} years experience</small>
                                                 </div>
+                                                <div class="mt-2">
+                                                    <span class="${getAvailabilityBadgeClass(photographer.availability_status)} small mb-1">${getAvailabilityLabel(photographer.availability_status)}</span>
+                                                    ${availabilityDetails}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1183,7 +1218,7 @@
                 });
                 photographersHtml += '</div>';
 
-                $('#photographerListContainer').html(photographersHtml);
+                $('#photographerListContainer').html(requirementInfoHtml + availabilitySummaryHtml + photographersHtml);
                 
                 // Update confirm button text based on requirement
                 updateConfirmButtonState(assignmentInfo);
@@ -1192,9 +1227,21 @@
 
             // Add new helper function
             function updateConfirmButtonState(assignmentInfo) {
+                if (!assignmentInfo) {
+                    $('#confirmAssignment').prop('disabled', true).text('Confirm Assignment');
+                    return;
+                }
+
                 const requiredCount = assignmentInfo.is_initial_assignment 
                     ? assignmentInfo.required_photographers 
                     : assignmentInfo.remaining_needed;
+                const assignableCount = assignmentInfo.assignable_photographers || 0;
+
+                if (assignableCount < requiredCount) {
+                    $('#confirmAssignment').prop('disabled', true).text('Confirm Assignment');
+                    $('#selectionWarning').remove();
+                    return;
+                }
                 
                 if (selectedPhotographers.length === requiredCount) {
                     $('#confirmAssignment').prop('disabled', false);
@@ -1237,12 +1284,10 @@
             // Photographer checkbox change
             $(document).on('change', '.photographer-checkbox', function() {
                 const photographerId = $(this).val();
-                
-                // Get assignment info from the data attribute or parse from the alert
-                const isInitialAssignment = $('.alert-warning').length > 0 || $('.alert-info').text().includes('Initial Assignment');
-                const requiredText = $('.alert-info, .alert-warning').text();
-                const requiredMatch = requiredText.match(/(\d+)/g);
-                const requiredCount = requiredMatch ? parseInt(requiredMatch[requiredMatch.length - 1]) : 1;
+                const assignmentInfo = currentAssignmentInfo;
+                const requiredCount = assignmentInfo
+                    ? (assignmentInfo.is_initial_assignment ? assignmentInfo.required_photographers : assignmentInfo.remaining_needed)
+                    : 1;
                 
                 if ($(this).is(':checked')) {
                     if (!selectedPhotographers.includes(photographerId) && selectedPhotographers.length < requiredCount) {
@@ -1274,11 +1319,6 @@
                 });
                 
                 // Update confirm button state with current assignment info
-                const assignmentInfo = {
-                    is_initial_assignment: isInitialAssignment,
-                    required_photographers: requiredCount,
-                    remaining_needed: requiredCount - selectedPhotographers.length
-                };
                 updateConfirmButtonState(assignmentInfo);
             });
 
@@ -1343,6 +1383,7 @@
                                 // Reset form
                                 $('#assignmentNotes').val('');
                                 selectedPhotographers = [];
+                                currentAssignmentInfo = null;
                             });
                         } else {
                             Swal.fire({
@@ -1354,11 +1395,17 @@
                         }
                     },
                     error: function(xhr) {
+                        const conflictMessage = buildPhotographerConflictMessage(xhr.responseJSON?.photographer_conflicts || []);
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Failed to assign photographers. Please try again.',
+                            html: `
+                                <div>${xhr.responseJSON?.message || 'Failed to assign photographers. Please try again.'}</div>
+                                ${conflictMessage}
+                            `,
                             confirmButtonColor: '#3475db'
+                        }).then(() => {
+                            loadAvailablePhotographers(currentBookingId);
                         });
                     },
                     complete: function() {
@@ -1368,6 +1415,51 @@
             }
 
             // Helper functions
+            function getAvailabilityBadgeClass(status) {
+                const badgeClasses = {
+                    'available': 'badge badge-soft-success text-success',
+                    'on_leave': 'badge badge-soft-danger text-danger',
+                    'in_progress_conflict': 'badge badge-soft-warning text-warning',
+                    'reserved_conflict': 'badge badge-soft-info text-info',
+                    'already_assigned': 'badge badge-soft-secondary text-secondary'
+                };
+
+                return badgeClasses[status] || 'badge badge-soft-secondary text-secondary';
+            }
+
+            function getAvailabilityLabel(status) {
+                const labels = {
+                    'available': 'Available',
+                    'on_leave': 'On Approved Leave',
+                    'in_progress_conflict': 'In Progress',
+                    'reserved_conflict': 'Reserved',
+                    'already_assigned': 'Already Assigned'
+                };
+
+                return labels[status] || 'Unavailable';
+            }
+
+            function buildPhotographerConflictMessage(conflicts) {
+                if (!Array.isArray(conflicts) || conflicts.length === 0) {
+                    return '';
+                }
+
+                const items = conflicts.map(conflict => {
+                    const details = Array.isArray(conflict.availability_conflicts)
+                        ? conflict.availability_conflicts.map(detail => `<div class="small text-muted">${detail.message || ''}</div>`).join('')
+                        : '';
+
+                    return `
+                        <div class="text-start border rounded p-2 mt-2">
+                            <div class="fw-semibold">${conflict.availability_reason || 'Unavailable photographer'}</div>
+                            ${details}
+                        </div>
+                    `;
+                }).join('');
+
+                return `<div class="mt-3">${items}</div>`;
+            }
+
             function getStatusBadgeClass(status) {
                 const badgeClasses = {
                     'assigned': 'badge-soft-info',

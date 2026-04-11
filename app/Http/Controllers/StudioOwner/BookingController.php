@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\StudioOwner;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\BookingModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\StudioOwner\StudioPhotographersModel;
@@ -12,12 +11,22 @@ use App\Models\UserModel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Traits\Notifiable;
+use App\Http\Requests\StudioOwner\AssignBookingPhotographersRequest;
 use App\Http\Requests\StudioOwner\UpdateBookingStatusRequest;
+use App\Services\PhotographerAvailabilityService;
 
 class BookingController extends Controller
 {
-
     use Notifiable;
+
+    /**
+     * Create a new controller instance.
+     *
+     * @param PhotographerAvailabilityService $photographerAvailabilityService
+     */
+    public function __construct(private PhotographerAvailabilityService $photographerAvailabilityService)
+    {
+    }
 
     public function index()
     {
@@ -313,26 +322,61 @@ class BookingController extends Controller
                 ->where('status', 'active')
                 ->with(['photographer:id,first_name,last_name'])
                 ->get();
-            
-            // Get already assigned photographer IDs for this booking
+
             $assignedPhotographerIds = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
                 ->pluck('photographer_id')
+                ->map(fn ($photographerId) => (int) $photographerId)
                 ->toArray();
-            
-            // Filter out already assigned photographers
+
+            $availabilityMap = $this->photographerAvailabilityService->getAvailabilityMapForBooking(
+                $booking,
+                $studioPhotographers->pluck('photographer_id')->map(fn ($photographerId) => (int) $photographerId)->toArray()
+            );
+
             $availablePhotographers = [];
-            foreach ($studioPhotographers as $sp) {
-                if (!in_array($sp->photographer_id, $assignedPhotographerIds)) {
-                    $availablePhotographers[] = [
-                        'id' => $sp->photographer_id,
-                        'name' => $sp->photographer->first_name . ' ' . $sp->photographer->last_name,
-                        'position' => $sp->position,
-                        'status' => $sp->status,
-                        'years_experience' => $sp->years_of_experience,
-                        'specialization' => $sp->specialization
+            foreach ($studioPhotographers as $studioPhotographer) {
+                $photographerId = (int) $studioPhotographer->photographer_id;
+                $availability = $availabilityMap[$photographerId] ?? [
+                    'is_available' => true,
+                    'availability_status' => 'available',
+                    'availability_reason' => 'Available for assignment.',
+                    'availability_conflicts' => [],
+                ];
+
+                if (in_array($photographerId, $assignedPhotographerIds, true)) {
+                    $availability = [
+                        'is_available' => false,
+                        'availability_status' => 'already_assigned',
+                        'availability_reason' => 'Already assigned to this booking.',
+                        'availability_conflicts' => [
+                            [
+                                'type' => 'already_assigned',
+                                'status' => 'already_assigned',
+                                'message' => 'Already assigned to this booking.',
+                                'booking_id' => $booking->id,
+                                'booking_reference' => $booking->booking_reference,
+                            ],
+                        ],
                     ];
                 }
+
+                $availablePhotographers[] = [
+                    'id' => $photographerId,
+                    'name' => $studioPhotographer->photographer->first_name . ' ' . $studioPhotographer->photographer->last_name,
+                    'position' => $studioPhotographer->position,
+                    'status' => $studioPhotographer->status,
+                    'years_experience' => $studioPhotographer->years_of_experience,
+                    'specialization' => $studioPhotographer->specialization,
+                    'is_available' => $availability['is_available'],
+                    'availability_status' => $availability['availability_status'],
+                    'availability_reason' => $availability['availability_reason'],
+                    'availability_conflicts' => $availability['availability_conflicts'],
+                ];
             }
+
+            $assignablePhotographerCount = collect($availablePhotographers)
+                ->where('is_available', true)
+                ->count();
             
             return response()->json([
                 'success' => true,
@@ -348,6 +392,7 @@ class BookingController extends Controller
                     'current_assigned' => $currentAssignedCount,
                     'remaining_needed' => $remainingNeeded,
                     'is_initial_assignment' => ($currentAssignedCount === 0),
+                    'assignable_photographers' => $assignablePhotographerCount,
                     'package_name' => $packageName,
                     'package_details' => $packageDetails ? [
                         'photographer_count' => $packageDetails->photographer_count,
@@ -368,15 +413,9 @@ class BookingController extends Controller
     /**
      * Assign photographers to booking
      */
-    public function assignPhotographers(Request $request, $bookingId)
+    public function assignPhotographers(AssignBookingPhotographersRequest $request, $bookingId)
     {
         try {
-            $request->validate([
-                'photographer_ids' => 'required|array|min:1',
-                'photographer_ids.*' => 'exists:tbl_users,id',
-                'assignment_notes' => 'nullable|string|max:500'
-            ]);
-            
             $userId = Auth::id();
             
             // Get ALL studios owned by this user
@@ -410,47 +449,133 @@ class BookingController extends Controller
             // Get required photographer count from package
             $requiredPhotographers = $this->getMaxPhotographersFromPackage($booking);
             $currentAssignedCount = BookingAssignedPhotographerModel::where('booking_id', $bookingId)->count();
+            $requestedPhotographerIds = collect($request->input('photographer_ids', []))
+                ->map(fn ($photographerId) => (int) $photographerId)
+                ->unique()
+                ->values()
+                ->all();
             
             // Check if we're doing initial assignment or adding more
             if ($currentAssignedCount === 0) {
                 // Initial assignment - must assign EXACTLY the required number
-                if (count($request->photographer_ids) != $requiredPhotographers) {
+                if (count($requestedPhotographerIds) != $requiredPhotographers) {
                     return response()->json([
                         'success' => false,
                         'message' => "This package requires exactly {$requiredPhotographers} photographer(s). Please select {$requiredPhotographers} photographers."
-                    ]);
+                    ], 422);
                 }
             } else {
                 // Adding more photographers - check if total will equal required number
-                $totalAfterAssignment = $currentAssignedCount + count($request->photographer_ids);
+                $totalAfterAssignment = $currentAssignedCount + count($requestedPhotographerIds);
                 
                 if ($totalAfterAssignment > $requiredPhotographers) {
                     return response()->json([
                         'success' => false,
                         'message' => "This package requires a total of {$requiredPhotographers} photographer(s). You currently have {$currentAssignedCount} assigned. You can only add " . ($requiredPhotographers - $currentAssignedCount) . " more."
-                    ]);
+                    ], 422);
                 }
                 
                 if ($totalAfterAssignment < $requiredPhotographers) {
                     return response()->json([
                         'success' => false,
                         'message' => "This package requires a total of {$requiredPhotographers} photographer(s). You currently have {$currentAssignedCount} assigned. You need to add " . ($requiredPhotographers - $currentAssignedCount) . " more to complete the required count."
-                    ]);
+                    ], 422);
                 }
             }
+
+            $alreadyAssignedPhotographerIds = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
+                ->pluck('photographer_id')
+                ->map(fn ($photographerId) => (int) $photographerId)
+                ->toArray();
+
+            $duplicateSelections = array_values(array_intersect($requestedPhotographerIds, $alreadyAssignedPhotographerIds));
+
+            if (!empty($duplicateSelections)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'One or more selected photographers are already assigned to this booking.',
+                    'photographer_conflicts' => collect($duplicateSelections)->map(function ($photographerId) use ($booking) {
+                        return [
+                            'photographer_id' => $photographerId,
+                            'availability_status' => 'already_assigned',
+                            'availability_reason' => 'Already assigned to this booking.',
+                            'availability_conflicts' => [
+                                [
+                                    'type' => 'already_assigned',
+                                    'status' => 'already_assigned',
+                                    'message' => 'Already assigned to this booking.',
+                                    'booking_id' => $booking->id,
+                                    'booking_reference' => $booking->booking_reference,
+                                ],
+                            ],
+                        ];
+                    })->values()->all(),
+                ], 409);
+            }
+
+            $availabilityMap = $this->photographerAvailabilityService->getAvailabilityMapForBooking($booking, $requestedPhotographerIds);
+            $unavailableSelections = collect($availabilityMap)
+                ->filter(fn ($availability) => !$availability['is_available'])
+                ->values();
+
+            if ($unavailableSelections->isNotEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $unavailableSelections->first()['availability_reason'] ?? 'One or more selected photographers are unavailable.',
+                    'photographer_conflicts' => $unavailableSelections->all(),
+                ], 409);
+            }
             
-            DB::beginTransaction();
-            
-            $assignedCount = 0;
-            $createdAssignments = []; // Track created assignments for notifications
-            
-            foreach ($request->photographer_ids as $photographerId) {
-                // Check if already assigned
-                $exists = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
-                    ->where('photographer_id', $photographerId)
-                    ->exists();
-                
-                if (!$exists) {
+            [$assignedCount, $createdAssignments] = DB::transaction(function () use (
+                $requestedPhotographerIds,
+                $booking,
+                $bookingId,
+                $studio,
+                $userId,
+                $request
+            ) {
+                $freshAvailabilityMap = $this->photographerAvailabilityService->getAvailabilityMapForBooking($booking, $requestedPhotographerIds);
+                $freshUnavailableSelections = collect($freshAvailabilityMap)
+                    ->filter(fn ($availability) => !$availability['is_available'])
+                    ->values();
+
+                if ($freshUnavailableSelections->isNotEmpty()) {
+                    throw new \RuntimeException(json_encode([
+                        'message' => $freshUnavailableSelections->first()['availability_reason'] ?? 'One or more selected photographers are unavailable.',
+                        'photographer_conflicts' => $freshUnavailableSelections->all(),
+                    ], JSON_THROW_ON_ERROR));
+                }
+
+                $assignedCount = 0;
+                $createdAssignments = [];
+
+                foreach ($requestedPhotographerIds as $photographerId) {
+                    $exists = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
+                        ->where('photographer_id', $photographerId)
+                        ->exists();
+
+                    if ($exists) {
+                        throw new \RuntimeException(json_encode([
+                            'message' => 'One or more selected photographers are already assigned to this booking.',
+                            'photographer_conflicts' => [
+                                [
+                                    'photographer_id' => $photographerId,
+                                    'availability_status' => 'already_assigned',
+                                    'availability_reason' => 'Already assigned to this booking.',
+                                    'availability_conflicts' => [
+                                        [
+                                            'type' => 'already_assigned',
+                                            'status' => 'already_assigned',
+                                            'message' => 'Already assigned to this booking.',
+                                            'booking_id' => $booking->id,
+                                            'booking_reference' => $booking->booking_reference,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ], JSON_THROW_ON_ERROR));
+                    }
+
                     $assignment = BookingAssignedPhotographerModel::create([
                         'booking_id' => $bookingId,
                         'studio_id' => $studio->id,
@@ -458,14 +583,15 @@ class BookingController extends Controller
                         'assigned_by' => $userId,
                         'status' => 'assigned',
                         'assignment_notes' => $request->assignment_notes,
-                        'assigned_at' => now()
+                        'assigned_at' => now(),
                     ]);
+
                     $assignedCount++;
-                    $createdAssignments[] = $assignment; // Store for notifications
+                    $createdAssignments[] = $assignment;
                 }
-            }
-            
-            DB::commit();
+
+                return [$assignedCount, $createdAssignments];
+            });
             
             // Calculate new totals AFTER successful assignment
             $newTotal = $currentAssignedCount + $assignedCount;
@@ -576,7 +702,7 @@ class BookingController extends Controller
                     'event_time' => $booking->start_time . ' - ' . $booking->end_time,
                     'package_name' => $packageName,
                     'assigned_photographers' => $photographerNames,
-                    'assigned_photographer_ids' => $request->photographer_ids,
+                    'assigned_photographer_ids' => $requestedPhotographerIds,
                     'assigned_count' => $assignedCount,
                     'assignment_notes' => $request->assignment_notes,
                     'route' => route('owner.booking.details', ['id' => $booking->id], false),
@@ -634,8 +760,22 @@ class BookingController extends Controller
                 ]
             ]);
             
+        } catch (\RuntimeException $e) {
+            $payload = json_decode($e->getMessage(), true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($payload)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $payload['message'] ?? 'One or more selected photographers are unavailable.',
+                    'photographer_conflicts' => $payload['photographer_conflicts'] ?? [],
+                ], 409);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error assigning photographers: ' . $e->getMessage(),
+            ], 500);
         } catch (\Exception $e) {
-            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error assigning photographers: ' . $e->getMessage()
