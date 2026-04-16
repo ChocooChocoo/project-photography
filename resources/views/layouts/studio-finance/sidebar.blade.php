@@ -39,6 +39,10 @@
                     || ($financeUser?->hasPermission('studio-finance.payroll.approve') ?? false)
                     || ($financeUser?->hasPermission('studio-finance.payroll.reject') ?? false)
                     || ($financeUser?->hasPermission('studio-finance.payroll.manage') ?? false);
+                $canViewProcurement = $financeUser?->hasPermission('studio-finance.procurement.view') ?? false;
+                $canReviewProcurement = $financeUser?->hasPermission('studio-finance.procurement.review') ?? false;
+                $canOrderProcurement = $financeUser?->hasPermission('studio-finance.procurement.order') ?? false;
+                $canPayProcurement = $financeUser?->hasPermission('studio-finance.procurement.payment') ?? false;
             @endphp
             
             @if($canViewDashboard)
@@ -117,6 +121,20 @@
                     <a href="{{ route('studio-finance.payroll-approvals.index') }}" class="side-nav-link {{ $isPayrollApprovalActive ? 'active' : '' }}">
                         <span class="menu-icon"><i class="ti ti-receipt-2"></i></span>
                         <span class="menu-text" data-lang="payroll-approvals">Payroll Approvals</span>
+                    </a>
+                </li>
+            @endif
+
+            {{-- Procurement --}}
+            @php
+                $isProcurementActive = Route::is('studio-finance.procurement.*');
+            @endphp
+
+            @if($canViewProcurement || $canReviewProcurement || $canOrderProcurement || $canPayProcurement)
+                <li class="side-nav-item {{ $isProcurementActive ? 'active' : '' }}">
+                    <a href="{{ route('studio-finance.procurement.index') }}" class="side-nav-link {{ $isProcurementActive ? 'active' : '' }}">
+                        <span class="menu-icon"><i class="ti ti-package-import"></i></span>
+                        <span class="menu-text" data-lang="procurement">Procurement</span>
                     </a>
                 </li>
             @endif

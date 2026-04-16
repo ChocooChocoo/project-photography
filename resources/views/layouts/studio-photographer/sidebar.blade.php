@@ -38,6 +38,7 @@
                 $canViewStudio = $photographerUser?->hasPermission('studio-photographer.studio.view') ?? false;
                 $canViewBookings = $photographerUser?->hasPermission('studio-photographer.bookings.view') ?? false;
                 $canViewOnlineGallery = $photographerUser?->hasPermission('studio-photographer.online_gallery.view') ?? false;
+                $canManageProcurement = $photographerUser?->hasPermission('studio-photographer.procurement.manage') ?? false;
             @endphp
             
             @if($canViewDashboard)
@@ -51,10 +52,12 @@
 
             {{-- Request --}}
             @php
-                $requestRoutes = Route::is('studio-photographer.leave-requests.*') || Route::is('studio-photographer.overtime-requests.*');
+                $requestRoutes = Route::is('studio-photographer.leave-requests.*')
+                    || Route::is('studio-photographer.overtime-requests.*')
+                    || Route::is('studio-photographer.procurement.*');
             @endphp
 
-            @if($canManageLeaveRequests || $canManageOvertimeRequests)
+            @if($canManageLeaveRequests || $canManageOvertimeRequests || $canManageProcurement)
             <li class="side-nav-item {{ $requestRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarPhotographerRequest" aria-expanded="{{ $requestRoutes ? 'true' : 'false' }}" aria-controls="sidebarPhotographerRequest" class="side-nav-link {{ $requestRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-file-text"></i></span>
@@ -84,6 +87,18 @@
                         <li class="side-nav-item">
                             <a href="{{ route('studio-photographer.overtime-requests.index') }}" class="side-nav-link {{ Route::is('studio-photographer.overtime-requests.index') ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="view-requested-overtime">View Requested Overtime</span>
+                            </a>
+                        </li>
+                        @endif
+                        @if($canManageProcurement)
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-photographer.procurement.create') }}" class="side-nav-link {{ Route::is('studio-photographer.procurement.create') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="request-procurement">Request Procurement</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-photographer.procurement.index') }}" class="side-nav-link {{ Route::is('studio-photographer.procurement.index') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="view-procurement">View Procurement</span>
                             </a>
                         </li>
                         @endif

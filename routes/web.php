@@ -216,6 +216,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/hr-overtime-requests/{id}',                    [\App\Http\Controllers\StudioOwner\OvertimeRequestController::class, 'show'])->middleware('permission:owner.overtime-requests.manage')->name('owner.hr-overtime-requests.show');
         Route::post('/hr-overtime-requests/{id}/{action}',          [\App\Http\Controllers\StudioOwner\OvertimeRequestController::class, 'process'])->middleware('permission:owner.overtime-requests.manage')->name('owner.hr-overtime-requests.process');
 
+        // Procurement
+        Route::get('/procurement',                                  [\App\Http\Controllers\StudioOwner\ProcurementApprovalController::class, 'index'])->middleware('permission:owner.procurement.view,owner.procurement.approve,owner.procurement.report')->name('owner.procurement.index');
+        Route::get('/procurement/{id}',                             [\App\Http\Controllers\StudioOwner\ProcurementApprovalController::class, 'show'])->middleware('permission:owner.procurement.view,owner.procurement.approve,owner.procurement.report')->name('owner.procurement.show');
+        Route::post('/procurement/{id}/{action}',                   [\App\Http\Controllers\StudioOwner\ProcurementApprovalController::class, 'process'])->middleware('permission:owner.procurement.approve')->name('owner.procurement.process');
+
         // Manage Roles
         Route::get('/view/roles',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'index'])->middleware('permission:owner.roles.manage')->name('owner.role.index');
         Route::get('/roles/data',                                   [\App\Http\Controllers\StudioOwner\RoleController::class, 'getRoles'])->middleware('permission:owner.roles.manage')->name('owner.role.data');
@@ -342,6 +347,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/attendance/history',                           [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceHistory'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.history');
         Route::get('/attendance/stats',                             [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceStats'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.stats');
         Route::get('/attendance/{id}/details',                      [\App\Http\Controllers\StudioHR\EmployeeAttendanceController::class, 'getAttendanceDetails'])->middleware('permission:studio-hr.attendance.view')->name('studio-hr.attendance.details');
+
+        // Procurement
+        Route::get('/procurement/create',                           [\App\Http\Controllers\StudioHR\ProcurementRequestController::class, 'create'])->middleware('permission:studio-hr.procurement.manage')->name('studio-hr.procurement.create');
+        Route::get('/procurement',                                  [\App\Http\Controllers\StudioHR\ProcurementRequestController::class, 'index'])->middleware('permission:studio-hr.procurement.manage')->name('studio-hr.procurement.index');
+        Route::post('/procurement',                                 [\App\Http\Controllers\StudioHR\ProcurementRequestController::class, 'store'])->middleware('permission:studio-hr.procurement.manage')->name('studio-hr.procurement.store');
+        Route::get('/procurement/{id}/edit',                        [\App\Http\Controllers\StudioHR\ProcurementRequestController::class, 'edit'])->middleware('permission:studio-hr.procurement.manage')->name('studio-hr.procurement.edit');
+        Route::get('/procurement/{id}',                             [\App\Http\Controllers\StudioHR\ProcurementRequestController::class, 'show'])->middleware('permission:studio-hr.procurement.manage')->name('studio-hr.procurement.show');
+        Route::put('/procurement/{id}',                             [\App\Http\Controllers\StudioHR\ProcurementRequestController::class, 'update'])->middleware('permission:studio-hr.procurement.manage')->name('studio-hr.procurement.update');
+        Route::post('/procurement/{id}/cancel',                     [\App\Http\Controllers\StudioHR\ProcurementRequestController::class, 'cancel'])->middleware('permission:studio-hr.procurement.manage')->name('studio-hr.procurement.cancel');
+        Route::post('/procurement/{id}/confirm-receipt',            [\App\Http\Controllers\StudioHR\ProcurementRequestController::class, 'confirmReceipt'])->middleware('permission:studio-hr.procurement.manage')->name('studio-hr.procurement.confirm-receipt');
     });
 
     // Studio Finance Routes ===============================================================================================================================================
@@ -386,6 +401,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/payroll-approvals',                            [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'index'])->middleware('permission:studio-finance.payroll.view,studio-finance.payroll.approve,studio-finance.payroll.reject,studio-finance.payroll.manage')->name('studio-finance.payroll-approvals.index');
         Route::get('/payroll-approvals/{id}',                       [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'show'])->middleware('permission:studio-finance.payroll.view,studio-finance.payroll.approve,studio-finance.payroll.reject,studio-finance.payroll.manage')->name('studio-finance.payroll-approvals.show');
         Route::post('/payroll-approvals/{id}/{action}',             [\App\Http\Controllers\Finance\PayrollApprovalController::class, 'update'])->middleware('permission:studio-finance.payroll.approve,studio-finance.payroll.reject,studio-finance.payroll.manage')->name('studio-finance.payroll-approvals.update');
+
+        // Procurement
+        Route::get('/procurement',                                  [\App\Http\Controllers\Finance\ProcurementController::class, 'index'])->middleware('permission:studio-finance.procurement.view,studio-finance.procurement.review,studio-finance.procurement.order,studio-finance.procurement.payment')->name('studio-finance.procurement.index');
+        Route::get('/procurement/{id}',                             [\App\Http\Controllers\Finance\ProcurementController::class, 'show'])->middleware('permission:studio-finance.procurement.view,studio-finance.procurement.review,studio-finance.procurement.order,studio-finance.procurement.payment')->name('studio-finance.procurement.show');
+        Route::post('/procurement/{id}/review',                     [\App\Http\Controllers\Finance\ProcurementController::class, 'review'])->middleware('permission:studio-finance.procurement.review')->name('studio-finance.procurement.review');
+        Route::post('/procurement/{id}/purchase-order',             [\App\Http\Controllers\Finance\ProcurementController::class, 'storePurchaseOrder'])->middleware('permission:studio-finance.procurement.order')->name('studio-finance.procurement.purchase-order');
+        Route::post('/procurement/{id}/delivery',                   [\App\Http\Controllers\Finance\ProcurementController::class, 'recordDelivery'])->middleware('permission:studio-finance.procurement.order')->name('studio-finance.procurement.delivery');
+        Route::post('/procurement/{id}/payment',                    [\App\Http\Controllers\Finance\ProcurementController::class, 'recordPayment'])->middleware('permission:studio-finance.procurement.payment')->name('studio-finance.procurement.payment');
+        Route::post('/procurement/{id}/complete',                   [\App\Http\Controllers\Finance\ProcurementController::class, 'complete'])->middleware('permission:studio-finance.procurement.payment')->name('studio-finance.procurement.complete');
     });
 
     // Freelancer Routes ===================================================================================================================================================
@@ -495,6 +519,16 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/online-gallery/{galleryId}/image',  [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'deleteImage'])->middleware('permission:studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.delete-image');
         Route::delete('/online-gallery/{galleryId}',        [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'deleteGallery'])->middleware('permission:studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.delete');
         Route::put('/online-gallery/{galleryId}',           [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'updateGallery'])->middleware('permission:studio-photographer.online_gallery.update')->name('studio-photographer.online-gallery.update');
+
+        // Procurement
+        Route::get('/procurement/create',                   [\App\Http\Controllers\StudioPhotographer\ProcurementRequestController::class, 'create'])->middleware('permission:studio-photographer.procurement.manage')->name('studio-photographer.procurement.create');
+        Route::get('/procurement',                          [\App\Http\Controllers\StudioPhotographer\ProcurementRequestController::class, 'index'])->middleware('permission:studio-photographer.procurement.manage')->name('studio-photographer.procurement.index');
+        Route::post('/procurement',                         [\App\Http\Controllers\StudioPhotographer\ProcurementRequestController::class, 'store'])->middleware('permission:studio-photographer.procurement.manage')->name('studio-photographer.procurement.store');
+        Route::get('/procurement/{id}/edit',                [\App\Http\Controllers\StudioPhotographer\ProcurementRequestController::class, 'edit'])->middleware('permission:studio-photographer.procurement.manage')->name('studio-photographer.procurement.edit');
+        Route::get('/procurement/{id}',                     [\App\Http\Controllers\StudioPhotographer\ProcurementRequestController::class, 'show'])->middleware('permission:studio-photographer.procurement.manage')->name('studio-photographer.procurement.show');
+        Route::put('/procurement/{id}',                     [\App\Http\Controllers\StudioPhotographer\ProcurementRequestController::class, 'update'])->middleware('permission:studio-photographer.procurement.manage')->name('studio-photographer.procurement.update');
+        Route::post('/procurement/{id}/cancel',             [\App\Http\Controllers\StudioPhotographer\ProcurementRequestController::class, 'cancel'])->middleware('permission:studio-photographer.procurement.manage')->name('studio-photographer.procurement.cancel');
+        Route::post('/procurement/{id}/confirm-receipt',    [\App\Http\Controllers\StudioPhotographer\ProcurementRequestController::class, 'confirmReceipt'])->middleware('permission:studio-photographer.procurement.manage')->name('studio-photographer.procurement.confirm-receipt');
 
     });
 

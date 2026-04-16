@@ -34,6 +34,9 @@ class StudioOwnerPermissionsSeeder extends Seeder
             ['portal' => 'owner', 'permission_string' => 'owner.subscription.manage', 'resource' => 'subscription', 'action' => 'manage', 'description' => 'Manage subscriptions in the owner portal.'],
             ['portal' => 'owner', 'permission_string' => 'owner.inquiries.manage', 'resource' => 'inquiries', 'action' => 'manage', 'description' => 'Manage inquiries in the owner portal.'],
             ['portal' => 'owner', 'permission_string' => 'owner.chatbot.manage', 'resource' => 'chatbot', 'action' => 'manage', 'description' => 'Manage chatbot configuration and conversations in the owner portal.'],
+            ['portal' => 'owner', 'permission_string' => 'owner.procurement.view', 'resource' => 'procurement', 'action' => 'view', 'description' => 'View procurement oversight records in the owner portal.'],
+            ['portal' => 'owner', 'permission_string' => 'owner.procurement.approve', 'resource' => 'procurement', 'action' => 'approve', 'description' => 'Approve, reject, or return procurement requests in the owner portal.'],
+            ['portal' => 'owner', 'permission_string' => 'owner.procurement.report', 'resource' => 'procurement', 'action' => 'report', 'description' => 'View procurement oversight summaries and reports in the owner portal.'],
             ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.dashboard.view', 'resource' => 'dashboard', 'action' => 'view', 'description' => 'View the HR dashboard.'],
             ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.employees.view', 'resource' => 'employees', 'action' => 'view', 'description' => 'View employee records and employee lists.'],
             ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.employee.create', 'resource' => 'employee', 'action' => 'create', 'description' => 'Create and onboard new employees.'],
@@ -50,6 +53,7 @@ class StudioOwnerPermissionsSeeder extends Seeder
             ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.payroll.delete', 'resource' => 'payroll', 'action' => 'delete', 'description' => 'Delete payroll settings.'],
             ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.payroll.manage', 'resource' => 'payroll', 'action' => 'manage', 'description' => 'Full payroll management access across payroll actions.'],
             ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.generate-payroll.manage', 'resource' => 'generate-payroll', 'action' => 'manage', 'description' => 'Generate and review payroll runs in the HR portal.'],
+            ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.procurement.manage', 'resource' => 'procurement', 'action' => 'manage', 'description' => 'Create and manage procurement requests in the HR portal.'],
             ['portal' => 'studio-finance', 'permission_string' => 'studio-finance.dashboard.view', 'resource' => 'dashboard', 'action' => 'view', 'description' => 'View the finance dashboard.'],
             ['portal' => 'studio-finance', 'permission_string' => 'studio-finance.leave-requests.manage', 'resource' => 'leave-requests', 'action' => 'manage', 'description' => 'Manage finance leave request screens.'],
             ['portal' => 'studio-finance', 'permission_string' => 'studio-finance.overtime-requests.manage', 'resource' => 'overtime-requests', 'action' => 'manage', 'description' => 'Manage finance overtime request screens.'],
@@ -62,6 +66,11 @@ class StudioOwnerPermissionsSeeder extends Seeder
             ['portal' => 'studio-finance', 'permission_string' => 'studio-finance.payroll.approve', 'resource' => 'payroll', 'action' => 'approve', 'description' => 'Approve payroll submissions.'],
             ['portal' => 'studio-finance', 'permission_string' => 'studio-finance.payroll.reject', 'resource' => 'payroll', 'action' => 'reject', 'description' => 'Reject payroll submissions.'],
             ['portal' => 'studio-finance', 'permission_string' => 'studio-finance.payroll.manage', 'resource' => 'payroll', 'action' => 'manage', 'description' => 'Full payroll approval management access.'],
+            ['portal' => 'studio-finance', 'permission_string' => 'studio-finance.procurement.view', 'resource' => 'procurement', 'action' => 'view', 'description' => 'View procurement queues in the finance portal.'],
+            ['portal' => 'studio-finance', 'permission_string' => 'studio-finance.procurement.review', 'resource' => 'procurement', 'action' => 'review', 'description' => 'Review procurement requests in the finance portal.'],
+            ['portal' => 'studio-finance', 'permission_string' => 'studio-finance.procurement.order', 'resource' => 'procurement', 'action' => 'order', 'description' => 'Generate purchase orders and record deliveries in the finance portal.'],
+            ['portal' => 'studio-finance', 'permission_string' => 'studio-finance.procurement.payment', 'resource' => 'procurement', 'action' => 'payment', 'description' => 'Process procurement payments in the finance portal.'],
+            ['portal' => 'studio-finance', 'permission_string' => 'studio-finance.inventory.manage', 'resource' => 'inventory', 'action' => 'manage', 'description' => 'Manage inventory records created through procurement.'],
             ['portal' => 'studio-photographer', 'permission_string' => 'studio-photographer.dashboard.view', 'resource' => 'dashboard', 'action' => 'view', 'description' => 'View the studio photographer dashboard.'],
             ['portal' => 'studio-photographer', 'permission_string' => 'studio-photographer.leave-requests.manage', 'resource' => 'leave-requests', 'action' => 'manage', 'description' => 'Manage photographer leave request screens.'],
             ['portal' => 'studio-photographer', 'permission_string' => 'studio-photographer.overtime-requests.manage', 'resource' => 'overtime-requests', 'action' => 'manage', 'description' => 'Manage photographer overtime request screens.'],
@@ -73,6 +82,7 @@ class StudioOwnerPermissionsSeeder extends Seeder
             ['portal' => 'studio-photographer', 'permission_string' => 'studio-photographer.online_gallery.create', 'resource' => 'online_gallery', 'action' => 'create', 'description' => 'Create or upload images to online galleries.'],
             ['portal' => 'studio-photographer', 'permission_string' => 'studio-photographer.online_gallery.update', 'resource' => 'online_gallery', 'action' => 'update', 'description' => 'Update online gallery information.'],
             ['portal' => 'studio-photographer', 'permission_string' => 'studio-photographer.online_gallery.delete', 'resource' => 'online_gallery', 'action' => 'delete', 'description' => 'Delete online galleries or gallery images.'],
+            ['portal' => 'studio-photographer', 'permission_string' => 'studio-photographer.procurement.manage', 'resource' => 'procurement', 'action' => 'manage', 'description' => 'Create and manage procurement requests in the photographer portal.'],
         ];
 
         foreach ($permissions as $permission) {

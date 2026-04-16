@@ -48,6 +48,9 @@
                 $canManageSubscription = $ownerUser?->hasPermission('owner.subscription.manage') ?? false;
                 $canManageInquiries = $ownerUser?->hasPermission('owner.inquiries.manage') ?? false;
                 $canManageChatbot = $ownerUser?->hasPermission('owner.chatbot.manage') ?? false;
+                $canViewProcurement = $ownerUser?->hasPermission('owner.procurement.view') ?? false;
+                $canApproveProcurement = $ownerUser?->hasPermission('owner.procurement.approve') ?? false;
+                $canReportProcurement = $ownerUser?->hasPermission('owner.procurement.report') ?? false;
             @endphp
             
             <li class="side-nav-item {{ $isDashboardActive ? 'active' : '' }}">
@@ -283,6 +286,20 @@
                         @endif
                     </ul>
                 </div>
+            </li>
+            @endif
+
+            {{-- Procurement --}}
+            @php
+                $procurementRoutes = Route::is('owner.procurement.*');
+            @endphp
+
+            @if ($canViewProcurement || $canApproveProcurement || $canReportProcurement)
+            <li class="side-nav-item {{ $procurementRoutes ? 'active' : '' }}">
+                <a href="{{ route('owner.procurement.index') }}" class="side-nav-link {{ $procurementRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-package-export"></i></span>
+                    <span class="menu-text" data-lang="procurement">Procurement</span>
+                </a>
             </li>
             @endif
 

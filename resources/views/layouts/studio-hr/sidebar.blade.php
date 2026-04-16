@@ -40,6 +40,7 @@
                 $canCreatePayroll = $hrUser?->hasPermission('studio-hr.payroll.create') ?? false;
                 $canGeneratePayroll = $hrUser?->hasPermission('studio-hr.generate-payroll.manage') ?? false;
                 $canViewAttendance = $hrUser?->hasPermission('studio-hr.attendance.view') ?? false;
+                $canManageProcurement = $hrUser?->hasPermission('studio-hr.procurement.manage') ?? false;
             @endphp
             
             @if($canViewDashboard)
@@ -56,10 +57,11 @@
                 $requestRoutes = Route::is('studio-hr.leave-requests.*')
                     || Route::is('studio-hr.employees-leave-requests.*')
                     || Route::is('studio-hr.overtime-requests.*')
-                    || Route::is('studio-hr.employees-overtime-requests.*');
+                    || Route::is('studio-hr.employees-overtime-requests.*')
+                    || Route::is('studio-hr.procurement.*');
             @endphp
 
-            @if($canManageLeaveRequests || $canManageOvertimeRequests)
+            @if($canManageLeaveRequests || $canManageOvertimeRequests || $canManageProcurement)
             <li class="side-nav-item {{ $requestRoutes ? 'active' : '' }}">
                 <a data-bs-toggle="collapse" href="#sidebarHrRequest" aria-expanded="{{ $requestRoutes ? 'true' : 'false' }}" aria-controls="sidebarHrRequest" class="side-nav-link {{ $requestRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-file-text"></i></span>
@@ -99,6 +101,18 @@
                         <li class="side-nav-item">
                             <a href="{{ route('studio-hr.employees-overtime-requests.index') }}" class="side-nav-link {{ Route::is('studio-hr.employees-overtime-requests.index') ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="employees-overtime-requests">Employees Overtime Requests</span>
+                            </a>
+                        </li>
+                        @endif
+                        @if($canManageProcurement)
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-hr.procurement.create') }}" class="side-nav-link {{ Route::is('studio-hr.procurement.create') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="request-procurement">Request Procurement</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('studio-hr.procurement.index') }}" class="side-nav-link {{ Route::is('studio-hr.procurement.index') ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="view-procurement">View Procurement</span>
                             </a>
                         </li>
                         @endif

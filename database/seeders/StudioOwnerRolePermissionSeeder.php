@@ -35,6 +35,9 @@ class StudioOwnerRolePermissionSeeder extends Seeder
                 'owner.subscription.manage',
                 'owner.inquiries.manage',
                 'owner.chatbot.manage',
+                'owner.procurement.view',
+                'owner.procurement.approve',
+                'owner.procurement.report',
             ],
             'studio-hr-manager' => [
                 'studio-hr.dashboard.view',
@@ -53,6 +56,7 @@ class StudioOwnerRolePermissionSeeder extends Seeder
                 'studio-hr.payroll.delete',
                 'studio-hr.payroll.manage',
                 'studio-hr.generate-payroll.manage',
+                'studio-hr.procurement.manage',
             ],
             'studio-hr-staff' => [
                 'studio-hr.dashboard.view',
@@ -68,6 +72,7 @@ class StudioOwnerRolePermissionSeeder extends Seeder
                 'studio-hr.payroll.edit',
                 'studio-hr.payroll.update',
                 'studio-hr.generate-payroll.manage',
+                'studio-hr.procurement.manage',
             ],
             'studio-finance-manager' => [
                 'studio-finance.dashboard.view',
@@ -82,6 +87,11 @@ class StudioOwnerRolePermissionSeeder extends Seeder
                 'studio-finance.payroll.approve',
                 'studio-finance.payroll.reject',
                 'studio-finance.payroll.manage',
+                'studio-finance.procurement.view',
+                'studio-finance.procurement.review',
+                'studio-finance.procurement.order',
+                'studio-finance.procurement.payment',
+                'studio-finance.inventory.manage',
             ],
             'studio-finance-staff' => [
                 'studio-finance.dashboard.view',
@@ -92,6 +102,9 @@ class StudioOwnerRolePermissionSeeder extends Seeder
                 'studio-finance.payroll.create',
                 'studio-finance.payroll.edit',
                 'studio-finance.payroll.update',
+                'studio-finance.procurement.view',
+                'studio-finance.procurement.review',
+                'studio-finance.procurement.order',
             ],
             'studio-photographer' => [
                 'studio-photographer.dashboard.view',
@@ -105,6 +118,7 @@ class StudioOwnerRolePermissionSeeder extends Seeder
                 'studio-photographer.online_gallery.create',
                 'studio-photographer.online_gallery.update',
                 'studio-photographer.online_gallery.delete',
+                'studio-photographer.procurement.manage',
             ],
         ];
 
