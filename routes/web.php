@@ -476,7 +476,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('studio-photographer')->middleware([StudioPhotographerMiddleware::class])->group(function () {
 
         // Profile
-        Route::get('/profile',                                  [\App\Http\Controllers\GeneralProfileController::class, 'studio-photographer'])->name('studio-photographer.profile');
+        Route::get('/profile',                                  [\App\Http\Controllers\GeneralProfileController::class, 'studioPhotographer'])->name('studio-photographer.profile');
 
         // Dashboard
         Route::get('/dashboard',                        [\App\Http\Controllers\StudioPhotographer\DashboardController::class, 'index'])->middleware('permission:studio-photographer.dashboard.view')->name('studio-photographer.dashboard');
