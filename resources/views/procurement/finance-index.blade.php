@@ -10,23 +10,38 @@
                 </div>
             </div>
 
-            @foreach ([
-                ['label' => 'Pending Review', 'value' => $requestSummary['pending_review'] ?? 0, 'class' => 'warning'],
-                ['label' => 'Approved', 'value' => $requestSummary['approved'] ?? 0, 'class' => 'info'],
-                ['label' => 'Ordered', 'value' => $requestSummary['ordered'] ?? 0, 'class' => 'primary'],
-                ['label' => 'Delivered', 'value' => $requestSummary['delivered'] ?? 0, 'class' => 'secondary'],
-                ['label' => 'Received', 'value' => $requestSummary['received'] ?? 0, 'class' => 'success'],
-                ['label' => 'Payment Processing', 'value' => $requestSummary['payment_processing'] ?? 0, 'class' => 'dark'],
-            ] as $summaryCard)
-                <div class="col-sm-6 col-xl-2">
-                    <div class="card">
-                        <div class="card-body">
-                            <span class="badge badge-soft-{{ $summaryCard['class'] }} mb-2">{{ $summaryCard['label'] }}</span>
-                            <h3 class="mb-0">{{ $summaryCard['value'] }}</h3>
+            <div class="col-12">
+                <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1 g-3 align-items-center mb-1">
+                    @foreach ($requestWidgets as $summaryCard)
+                        <div class="col">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="avatar avatar-lg flex-shrink-0">
+                                            <span class="avatar-title bg-{{ $summaryCard['class'] }}-subtle text-{{ $summaryCard['class'] }} rounded fs-24">
+                                                <i class="{{ $summaryCard['icon'] }}"></i>
+                                            </span>
+                                        </div>
+                                        <div class="text-end">
+                                            <h4 class="mb-0">{{ $summaryCard['value'] }}</h4>
+                                            <p class="mb-0 text-muted">{{ $summaryCard['label'] }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="text-muted fs-xs fw-semibold">{{ $summaryCard['progress_label'] }}</span>
+                                            <span class="text-muted">{{ $summaryCard['progress'] }}%</span>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-{{ $summaryCard['class'] }}" style="width: {{ $summaryCard['progress'] }}%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    @endforeach
                 </div>
-            @endforeach
+            </div>
 
             <div class="col-12">
                 <div class="card">
@@ -55,7 +70,7 @@
                                             </td>
                                             <td>{{ $procurementRequest->requester->full_name ?? 'N/A' }}</td>
                                             <td>{{ $procurementRequest->studio->studio_name ?? 'N/A' }}</td>
-                                            <td><span class="badge badge-soft-primary">{{ $procurementRequest->status_label }}</span></td>
+                                            <td><span class="badge badge-soft-{{ $procurementRequest->status_badge_class }}">{{ $procurementRequest->status_label }}</span></td>
                                             <td>PHP {{ number_format((float) $procurementRequest->estimated_total, 2) }}</td>
                                             <td class="text-end">
                                                 <div class="dropdown">
@@ -127,7 +142,7 @@
                         <div class="col-md-12"><label class="form-label">Notes</label><textarea class="form-control" name="notes" rows="3"></textarea></div>
                     </div>
                     <div class="text-end mt-4">
-                        <button type="submit" class="btn btn-primary">Generate PO</button>
+                        <button type="submit" class="btn btn-primary" id="purchaseOrderSubmitBtn">Generate PO</button>
                     </div>
                 </form>
             </div>
@@ -149,7 +164,7 @@
                     <div class="mb-3"><label class="form-label">Delivery Note</label><textarea class="form-control" name="delivery_note" rows="3"></textarea></div>
                     <div class="mb-3"><label class="form-label">Delivery Receipt Files</label><input type="file" class="form-control" name="delivery_receipt_files[]" multiple required></div>
                     <div class="text-end">
-                        <button type="submit" class="btn btn-primary">Save Delivery</button>
+                        <button type="submit" class="btn btn-primary" id="deliverySubmitBtn">Save Delivery</button>
                     </div>
                 </form>
             </div>
@@ -158,7 +173,7 @@
 </div>
 
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Record Payment</h5>
@@ -167,17 +182,139 @@
             <div class="modal-body">
                 <form id="paymentForm" enctype="multipart/form-data">
                     @csrf
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label">Invoice Reference</label><input type="text" class="form-control" name="invoice_reference" required></div>
-                        <div class="col-md-6"><label class="form-label">Invoice Amount</label><input type="number" step="0.01" class="form-control" name="invoice_amount" required></div>
-                        <div class="col-md-6"><label class="form-label">Invoice Date</label><input type="date" class="form-control" name="invoice_date" value="{{ now()->toDateString() }}" required></div>
-                        <div class="col-md-6"><label class="form-label">Payment Reference</label><input type="text" class="form-control" name="payment_reference"></div>
-                        <div class="col-md-6"><label class="form-label">Supplier Invoice Files</label><input type="file" class="form-control" name="supplier_invoice_files[]" multiple required></div>
-                        <div class="col-md-6"><label class="form-label">Payment Proof Files</label><input type="file" class="form-control" name="payment_proof_files[]" multiple required></div>
-                        <div class="col-md-12"><label class="form-label">Payment Note</label><textarea class="form-control" name="payment_note" rows="3"></textarea></div>
+                    <div class="row g-4">
+                        <div class="col-lg-7">
+                            <div class="card border shadow-none h-100 mb-0">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+                                        <div>
+                                            <span class="badge badge-soft-success mb-2">Procurement Payment Statement</span>
+                                            <h4 class="mb-1" id="paymentStatementReference">Procurement Request</h4>
+                                            <p class="text-muted mb-0" id="paymentStatementSupplier">Supplier information will appear here.</p>
+                                        </div>
+                                        <div class="avatar avatar-lg flex-shrink-0">
+                                            <span class="avatar-title bg-success-subtle text-success rounded fs-24">
+                                                <i class="ti ti-file-invoice"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div id="paymentStatementSummary"></div>
+
+                                    <div class="row g-3 mt-1">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Invoice Reference</label>
+                                            <input type="text" class="form-control" name="invoice_reference" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Invoice Date</label>
+                                            <input type="date" class="form-control" name="invoice_date" value="{{ now()->toDateString() }}" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Invoice Amount</label>
+                                            <input type="number" step="0.01" class="form-control" name="invoice_amount" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Payment Reference</label>
+                                            <input type="text" class="form-control" name="payment_reference">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Payment Note</label>
+                                            <textarea class="form-control" name="payment_note" rows="4" placeholder="Add reconciliation notes, release details, or payment remarks"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-5">
+                            <div class="card border shadow-none mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-3">Supplier & PO Snapshot</h5>
+                                    <div id="paymentStatementMeta"></div>
+                                </div>
+                            </div>
+                            <div class="card border shadow-none mb-0">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-3">Supporting Documents</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Supplier Invoice Files</label>
+                                        <input type="file" class="form-control" name="supplier_invoice_files[]" multiple required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Payment Proof Files</label>
+                                        <input type="file" class="form-control" name="payment_proof_files[]" multiple required>
+                                    </div>
+                                    <div id="paymentStatementDocuments" class="small text-muted"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="text-end mt-4">
-                        <button type="submit" class="btn btn-primary">Start Payment Processing</button>
+                        <button type="submit" class="btn btn-primary" id="paymentSubmitBtn">Start Payment Processing</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="processReturnModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Process Defect Return</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="processReturnForm" enctype="multipart/form-data">
+                    @csrf
+                    <div id="processReturnItems" class="mb-3"></div>
+                    <div class="mb-3">
+                        <label class="form-label">Finance Note</label>
+                        <textarea class="form-control" name="finance_note" rows="3" placeholder="Explain the return handling or supplier coordination" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Return Support Files</label>
+                        <input type="file" class="form-control" name="return_support_files[]" multiple>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Return Receipt Files</label>
+                        <input type="file" class="form-control" name="return_receipt_files[]" multiple>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-warning" id="processReturnSubmitBtn">Start Return Processing</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="replacementDeliveryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Record Replacement Delivery</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="replacementDeliveryForm" enctype="multipart/form-data">
+                    @csrf
+                    <div id="replacementDeliveryItems" class="mb-3"></div>
+                    <div class="mb-3">
+                        <label class="form-label">Delivered At</label>
+                        <input type="date" class="form-control" name="delivered_at" value="{{ now()->toDateString() }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Delivery Note</label>
+                        <textarea class="form-control" name="delivery_note" rows="3" placeholder="Optional replacement delivery note"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Replacement Delivery Receipt Files</label>
+                        <input type="file" class="form-control" name="replacement_delivery_receipt_files[]" multiple required>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-danger" id="replacementDeliverySubmitBtn">Save Replacement Delivery</button>
                     </div>
                 </form>
             </div>
@@ -233,6 +370,162 @@
             });
         }
 
+        function setButtonLoading($button, loadingText) {
+            if (!$button || !$button.length) {
+                return;
+            }
+
+            if (!$button.data('original-html')) {
+                $button.data('original-html', $button.html());
+            }
+
+            $button.prop('disabled', true).html(`
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${loadingText}
+            `);
+        }
+
+        function resetButtonLoading($button) {
+            if (!$button || !$button.length) {
+                return;
+            }
+
+            $button.prop('disabled', false);
+
+            if ($button.data('original-html')) {
+                $button.html($button.data('original-html'));
+            }
+        }
+
+        function buildTimeline(auditTrails) {
+            if (!auditTrails || !auditTrails.length) {
+                return '<p class="text-muted mb-0">No audit trail available.</p>';
+            }
+
+            return `
+                <div class="timeline timeline-icon-based">
+                    ${auditTrails.map((audit) => `
+                        <div class="timeline-item d-flex align-items-stretch">
+                            <div class="timeline-time pe-3 text-muted">${audit.created_at_display || audit.created_at}</div>
+                            <div class="timeline-dot ${audit.dot_class}">
+                                <i class="${audit.icon} fs-xl ${audit.icon_class}"></i>
+                            </div>
+                            <div class="timeline-content ps-3 ${audit === auditTrails[auditTrails.length - 1] ? '' : 'pb-4'}">
+                                <h5 class="mb-1">${audit.title}</h5>
+                                <p class="mb-1 text-muted">${audit.description || 'No remarks provided.'}</p>
+                                <span class="text-primary fw-semibold">By ${audit.actor_name}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function buildPaymentStatement(data) {
+            const paymentSummary = data.payment_summary || {};
+            const purchaseOrder = data.purchase_order || {};
+            const documentEntries = Object.entries(data.documents || {}).filter(([type]) => ['purchase_order_attachment', 'delivery_receipt', 'supplier_invoice', 'payment_proof'].includes(type));
+            const documentsHtml = documentEntries.length
+                ? documentEntries.map(([type, files]) => `
+                    <div class="d-flex justify-content-between align-items-center border rounded px-3 py-2 mb-2">
+                        <div>
+                            <div class="fw-semibold">${type.replaceAll('_', ' ')}</div>
+                            <small>${files.length} file(s)</small>
+                        </div>
+                        <i class="ti ti-paperclip text-muted"></i>
+                    </div>
+                `).join('')
+                : '<p class="mb-0">No supporting documents uploaded yet.</p>';
+
+            $('#paymentStatementReference').text(`${paymentSummary.request_reference || data.request_reference} Payment Statement`);
+            $('#paymentStatementSupplier').text(paymentSummary.supplier_name
+                ? `${paymentSummary.supplier_name}${paymentSummary.supplier_email ? ' • ' + paymentSummary.supplier_email : ''}`
+                : 'Supplier information will appear here.');
+
+            $('#paymentStatementSummary').html(`
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="avatar flex-shrink-0">
+                                <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-20">
+                                    <i class="ti ti-receipt-2"></i>
+                                </span>
+                            </div>
+                            <div class="ms-3">
+                                <label class="text-muted small mb-1">Purchase Order</label>
+                                <p class="mb-0 fw-semibold">${paymentSummary.po_number || 'Pending PO'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="avatar flex-shrink-0">
+                                <span class="avatar-title bg-success-subtle text-success rounded-circle fs-20">
+                                    <i class="ti ti-cash-banknote"></i>
+                                </span>
+                            </div>
+                            <div class="ms-3">
+                                <label class="text-muted small mb-1">Approved Total</label>
+                                <p class="mb-0 fw-semibold">PHP ${paymentSummary.approved_total || data.approved_total}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="avatar flex-shrink-0">
+                                <span class="avatar-title bg-info-subtle text-info rounded-circle fs-20">
+                                    <i class="ti ti-calendar-event"></i>
+                                </span>
+                            </div>
+                            <div class="ms-3">
+                                <label class="text-muted small mb-1">Invoice Date</label>
+                                <p class="mb-0 fw-semibold">${paymentSummary.invoice_date_display || data.required_date_display || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="avatar flex-shrink-0">
+                                <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-20">
+                                    <i class="ti ti-building-bank"></i>
+                                </span>
+                            </div>
+                            <div class="ms-3">
+                                <label class="text-muted small mb-1">Payment Terms</label>
+                                <p class="mb-0 fw-semibold">${paymentSummary.payment_terms || purchaseOrder.payment_terms || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            $('#paymentStatementMeta').html(`
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="text-muted small mb-1">Studio</label>
+                        <p class="mb-0 fw-semibold">${data.studio_name}</p>
+                    </div>
+                    <div class="col-12">
+                        <label class="text-muted small mb-1">Requester</label>
+                        <p class="mb-0 fw-semibold">${data.requester_name}</p>
+                    </div>
+                    <div class="col-12">
+                        <label class="text-muted small mb-1">Supplier Contact</label>
+                        <p class="mb-0 fw-semibold">${paymentSummary.supplier_contact_number || purchaseOrder.supplier_contact_number || 'N/A'}</p>
+                    </div>
+                    <div class="col-12">
+                        <label class="text-muted small mb-1">Delivery Address</label>
+                        <p class="mb-0 fw-semibold">${paymentSummary.delivery_address || purchaseOrder.delivery_address || 'N/A'}</p>
+                    </div>
+                    <div class="col-12">
+                        <label class="text-muted small mb-1">PO Note</label>
+                        <p class="mb-0 fw-semibold">${purchaseOrder.notes || 'No purchase order note provided.'}</p>
+                    </div>
+                </div>
+            `);
+
+            $('#paymentStatementDocuments').html(documentsHtml);
+        }
+
         function renderDetails(data) {
             const itemsHtml = data.items.map((item) => `
                 <tr>
@@ -253,7 +546,7 @@
                                     <h5 class="mb-1">${data.request_reference}</h5>
                                     <p class="text-muted mb-0">${data.requester_name} - ${data.studio_name}</p>
                                 </div>
-                                <span class="badge badge-soft-primary align-self-start">${data.status_display}</span>
+                                <span class="badge badge-soft-${data.status_badge_class} align-self-start">${data.status_display}</span>
                             </div>
                             <p>${data.purpose || 'No purpose provided.'}</p>
                             <div class="table-responsive">
@@ -281,6 +574,34 @@
                             <p class="mb-1"><strong>Finance Note:</strong> ${data.finance_review_note || 'None'}</p>
                             <p class="mb-0"><strong>Owner Note:</strong> ${data.owner_review_note || 'None'}</p>
                         </div>
+                        ${data.open_defect_returns && data.open_defect_returns.length ? `
+                            <div class="border rounded p-3">
+                                <h6 class="mb-3">Open Defect Returns</h6>
+                                ${data.open_defect_returns.map((defectReturn) => `
+                                    <div class="border rounded p-3 mb-2">
+                                        <h6 class="mb-1">${defectReturn.item_name}</h6>
+                                        <p class="mb-1"><strong>Reason:</strong> ${defectReturn.reason_label}</p>
+                                        <p class="mb-1"><strong>Requester Note:</strong> ${defectReturn.requester_note || 'None'}</p>
+                                        <p class="mb-0"><strong>Status:</strong> ${defectReturn.status_display}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        ${data.purchase_order ? `
+                            <div class="border rounded p-3">
+                                <h6 class="mb-3">Purchase Order Snapshot</h6>
+                                <p class="mb-1"><strong>PO Number:</strong> ${data.purchase_order.po_number || 'Pending'}</p>
+                                <p class="mb-1"><strong>Supplier:</strong> ${data.purchase_order.supplier_name || 'N/A'}</p>
+                                <p class="mb-1"><strong>Terms:</strong> ${data.purchase_order.payment_terms || 'N/A'}</p>
+                                <p class="mb-0"><strong>Order Date:</strong> ${data.purchase_order.order_date_display || 'N/A'}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="col-12">
+                        <div class="border rounded p-3">
+                            <h6 class="mb-3">Workflow Timeline</h6>
+                            ${buildTimeline(data.audit_trails)}
+                        </div>
                     </div>
                 </div>
             `);
@@ -299,6 +620,14 @@
 
             if (data.permissions.can_record_delivery) {
                 footerButtons += '<button type="button" class="btn btn-info" id="openDeliveryModalBtn">Record Delivery</button>';
+            }
+
+            if (data.permissions.can_process_returns) {
+                footerButtons += '<button type="button" class="btn btn-warning" id="openProcessReturnModalBtn">Process Return</button>';
+            }
+
+            if (data.permissions.can_record_replacement_delivery) {
+                footerButtons += '<button type="button" class="btn btn-danger" id="openReplacementDeliveryModalBtn">Replacement Delivery</button>';
             }
 
             if (data.permissions.can_record_payment) {
@@ -323,6 +652,23 @@
             pendingFinanceActionModal = null;
             reopenFinanceDetailsFromActionModal = false;
             financeActionSubmitting = false;
+        }
+
+        function renderDefectReturnItems(targetSelector) {
+            const defectReturns = selectedRequestData.open_defect_returns || [];
+
+            $(targetSelector).html(defectReturns.map((defectReturn) => `
+                <div class="border rounded p-3 mb-2">
+                    <div class="d-flex justify-content-between gap-3">
+                        <div>
+                            <h6 class="mb-1">${defectReturn.item_name}</h6>
+                            <p class="mb-1 text-muted">${defectReturn.reason_label}</p>
+                            <small class="text-muted">${defectReturn.requester_note || 'No requester note provided.'}</small>
+                        </div>
+                        <span class="badge badge-soft-${defectReturn.status_badge_class} align-self-start">${defectReturn.status_display}</span>
+                    </div>
+                </div>
+            `).join(''));
         }
 
         function loadDetails(id) {
@@ -355,6 +701,7 @@
 
         $('#financeReviewForm').on('submit', function (event) {
             event.preventDefault();
+            const $submitButton = $('#financeReviewSubmitBtn');
 
             const note = ($('#financeReviewNote').val() || '').trim();
             const requiresNote = financeReviewAction !== 'approve';
@@ -370,6 +717,7 @@
 
             financeReviewSubmitting = true;
             reopenFinanceDetailsModal = false;
+            setButtonLoading($submitButton, financeReviewAction === 'approve' ? 'Approving...' : financeReviewAction === 'return' ? 'Returning...' : 'Rejecting...');
 
             $.post(`${@json($reviewRouteBase)}/${selectedRequestId}/review`, {
                 _token: '{{ csrf_token() }}',
@@ -388,6 +736,7 @@
             }).fail(function (xhr) {
                 financeReviewSubmitting = false;
                 reopenFinanceDetailsModal = true;
+                resetButtonLoading($submitButton);
                 showError(xhr, 'Finance Review Failed');
             });
         });
@@ -433,6 +782,8 @@
 
         $('#purchaseOrderForm').on('submit', function (event) {
             event.preventDefault();
+            const $submitButton = $('#purchaseOrderSubmitBtn');
+            setButtonLoading($submitButton, 'Generating...');
 
             const formData = new FormData(this);
 
@@ -456,7 +807,10 @@
                         timer: 1500
                     }).then(() => window.location.reload());
                 },
-                error: function (xhr) { showError(xhr, 'Purchase Order Failed'); }
+                error: function (xhr) {
+                    resetButtonLoading($submitButton);
+                    showError(xhr, 'Purchase Order Failed');
+                }
             });
         });
 
@@ -464,8 +818,20 @@
             openFinanceActionModal('#deliveryModal');
         });
 
+        $(document).on('click', '#openProcessReturnModalBtn', function () {
+            renderDefectReturnItems('#processReturnItems');
+            openFinanceActionModal('#processReturnModal');
+        });
+
+        $(document).on('click', '#openReplacementDeliveryModalBtn', function () {
+            renderDefectReturnItems('#replacementDeliveryItems');
+            openFinanceActionModal('#replacementDeliveryModal');
+        });
+
         $('#deliveryForm').on('submit', function (event) {
             event.preventDefault();
+            const $submitButton = $('#deliverySubmitBtn');
+            setButtonLoading($submitButton, 'Saving...');
             const formData = new FormData(this);
 
             $.ajax({
@@ -488,20 +854,33 @@
                         timer: 1500
                     }).then(() => window.location.reload());
                 },
-                error: function (xhr) { showError(xhr, 'Delivery Failed'); }
+                error: function (xhr) {
+                    resetButtonLoading($submitButton);
+                    showError(xhr, 'Delivery Failed');
+                }
             });
         });
 
         $(document).on('click', '#openPaymentModalBtn', function () {
-            if (selectedRequestData.purchase_order) {
-                $('#paymentForm [name="invoice_amount"]').val(selectedRequestData.purchase_order.total_amount.replace(/,/g, ''));
-            }
+            buildPaymentStatement(selectedRequestData);
+
+            $('#paymentForm [name="invoice_reference"]').val(selectedRequestData.payment_summary?.invoice_reference || '');
+            $('#paymentForm [name="invoice_date"]').val(selectedRequestData.payment_summary?.invoice_date || '{{ now()->toDateString() }}');
+            $('#paymentForm [name="payment_reference"]').val(selectedRequestData.payment_summary?.payment_reference || '');
+            $('#paymentForm [name="payment_note"]').val(selectedRequestData.payment_summary?.payment_note || '');
+            $('#paymentForm [name="invoice_amount"]').val(
+                (selectedRequestData.payment_summary?.invoice_amount || selectedRequestData.purchase_order?.total_amount || '')
+                    .toString()
+                    .replace(/,/g, '')
+            );
 
             openFinanceActionModal('#paymentModal');
         });
 
         $('#paymentForm').on('submit', function (event) {
             event.preventDefault();
+            const $submitButton = $('#paymentSubmitBtn');
+            setButtonLoading($submitButton, 'Submitting...');
             const formData = new FormData(this);
 
             $.ajax({
@@ -524,11 +903,80 @@
                         timer: 1500
                     }).then(() => window.location.reload());
                 },
-                error: function (xhr) { showError(xhr, 'Payment Failed'); }
+                error: function (xhr) {
+                    resetButtonLoading($submitButton);
+                    showError(xhr, 'Payment Failed');
+                }
             });
         });
 
-        $('#purchaseOrderModal, #deliveryModal, #paymentModal').on('hidden.bs.modal', function () {
+        $('#processReturnForm').on('submit', function (event) {
+            event.preventDefault();
+            const $submitButton = $('#processReturnSubmitBtn');
+            setButtonLoading($submitButton, 'Submitting...');
+            const formData = new FormData(this);
+
+            $.ajax({
+                url: `${@json($processReturnRouteBase)}/${selectedRequestId}/process-return`,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: { 'Accept': 'application/json' },
+                success: function (response) {
+                    financeActionSubmitting = true;
+                    reopenFinanceDetailsFromActionModal = false;
+                    $('#processReturnModal').modal('hide');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Return Processing Started',
+                        text: response.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => window.location.reload());
+                },
+                error: function (xhr) {
+                    resetButtonLoading($submitButton);
+                    showError(xhr, 'Return Processing Failed');
+                }
+            });
+        });
+
+        $('#replacementDeliveryForm').on('submit', function (event) {
+            event.preventDefault();
+            const $submitButton = $('#replacementDeliverySubmitBtn');
+            setButtonLoading($submitButton, 'Saving...');
+            const formData = new FormData(this);
+
+            $.ajax({
+                url: `${@json($replacementDeliveryRouteBase)}/${selectedRequestId}/replacement-delivery`,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: { 'Accept': 'application/json' },
+                success: function (response) {
+                    financeActionSubmitting = true;
+                    reopenFinanceDetailsFromActionModal = false;
+                    $('#replacementDeliveryModal').modal('hide');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Replacement Delivery Saved',
+                        text: response.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => window.location.reload());
+                },
+                error: function (xhr) {
+                    resetButtonLoading($submitButton);
+                    showError(xhr, 'Replacement Delivery Failed');
+                }
+            });
+        });
+
+        $('#purchaseOrderModal, #deliveryModal, #paymentModal, #processReturnModal, #replacementDeliveryModal').on('hidden.bs.modal', function () {
             if (reopenFinanceDetailsFromActionModal && !financeActionSubmitting) {
                 reopenFinanceDetailsFromActionModal = false;
                 pendingFinanceActionModal = null;

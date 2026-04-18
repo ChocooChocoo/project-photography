@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Finance\ProcessProcurementReturnRequest;
 use App\Http\Requests\Finance\ReviewProcurementRequest;
 use App\Http\Requests\Finance\StoreProcurementDeliveryRequest;
 use App\Http\Requests\Finance\StoreProcurementPaymentRequest;
 use App\Http\Requests\Finance\StorePurchaseOrderRequest;
+use App\Http\Requests\Finance\StoreProcurementReplacementDeliveryRequest;
 use App\Models\Procurement\ProcurementRequestModel;
 use App\Models\UserModel;
 use App\Services\ProcurementWorkflowService;
@@ -39,9 +41,12 @@ class ProcurementController extends Controller
                 'approved' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_APPROVED)->count(),
                 'ordered' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_ORDERED)->count(),
                 'delivered' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_DELIVERED)->count(),
+                'defect_reported' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_DEFECT_REPORTED)->count(),
+                'return_in_progress' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_RETURN_IN_PROGRESS)->count(),
                 'received' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_RECEIVED)->count(),
                 'payment_processing' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_PAYMENT_PROCESSING)->count(),
             ],
+            'requestWidgets' => $this->buildFinanceWidgets($procurementRequests),
         ]);
     }
 
@@ -109,6 +114,40 @@ class ProcurementController extends Controller
         ]);
     }
 
+    public function processReturn(ProcessProcurementReturnRequest $request, string $id): JsonResponse
+    {
+        $financeUser = $this->getAuthenticatedFinanceUser();
+        $procurementRequest = $this->getManagedRequest($id, $financeUser);
+        $updatedRequest = $this->procurementWorkflowService->processDefectReturn($procurementRequest, $financeUser, $request->validated());
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Defective item return processing started successfully.',
+            'data' => [
+                'id' => $updatedRequest->id,
+                'status' => $updatedRequest->status,
+                'status_display' => $updatedRequest->status_label,
+            ],
+        ]);
+    }
+
+    public function recordReplacementDelivery(StoreProcurementReplacementDeliveryRequest $request, string $id): JsonResponse
+    {
+        $financeUser = $this->getAuthenticatedFinanceUser();
+        $procurementRequest = $this->getManagedRequest($id, $financeUser);
+        $updatedRequest = $this->procurementWorkflowService->recordReplacementDelivery($procurementRequest, $financeUser, $request->validated());
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Replacement delivery recorded successfully.',
+            'data' => [
+                'id' => $updatedRequest->id,
+                'status' => $updatedRequest->status,
+                'status_display' => $updatedRequest->status_label,
+            ],
+        ]);
+    }
+
     public function recordPayment(StoreProcurementPaymentRequest $request, string $id): JsonResponse
     {
         $financeUser = $this->getAuthenticatedFinanceUser();
@@ -162,5 +201,60 @@ class ProcurementController extends Controller
         $studioIds = $this->procurementWorkflowService->getAssignedStudioIds($financeUser, 'studio-finance');
 
         return ProcurementRequestModel::whereIn('studio_id', $studioIds)->findOrFail($id);
+    }
+
+    private function buildFinanceWidgets($procurementRequests): array
+    {
+        $counts = [
+            'pending_review' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_PENDING_FINANCE_REVIEW)->count(),
+            'approved' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_APPROVED)->count(),
+            'ordered_delivery' => $procurementRequests->whereIn('status', [
+                ProcurementRequestModel::STATUS_ORDERED,
+                ProcurementRequestModel::STATUS_DELIVERED,
+            ])->count(),
+            'payment_defect' => $procurementRequests->whereIn('status', [
+                ProcurementRequestModel::STATUS_DEFECT_REPORTED,
+                ProcurementRequestModel::STATUS_RETURN_IN_PROGRESS,
+                ProcurementRequestModel::STATUS_RECEIVED,
+                ProcurementRequestModel::STATUS_PAYMENT_PROCESSING,
+            ])->count(),
+        ];
+
+        $total = max(1, $procurementRequests->count());
+
+        return [
+            [
+                'label' => 'Pending Review',
+                'value' => $counts['pending_review'],
+                'class' => 'warning',
+                'icon' => 'ti ti-clipboard-search',
+                'progress_label' => 'REVIEW LOAD',
+                'progress' => (int) round(($counts['pending_review'] / $total) * 100),
+            ],
+            [
+                'label' => 'Approved to Order',
+                'value' => $counts['approved'],
+                'class' => 'success',
+                'icon' => 'ti ti-checklist',
+                'progress_label' => 'READY TO BUY',
+                'progress' => (int) round(($counts['approved'] / $total) * 100),
+            ],
+            [
+                'label' => 'Order & Delivery',
+                'value' => $counts['ordered_delivery'],
+                'class' => 'info',
+                'icon' => 'ti ti-truck-delivery',
+                'progress_label' => 'SUPPLIER STAGE',
+                'progress' => (int) round(($counts['ordered_delivery'] / $total) * 100),
+            ],
+            [
+                'label' => 'Payment & Returns',
+                'value' => $counts['payment_defect'],
+                'class' => 'warning',
+                'icon' => 'ti ti-file-invoice',
+                'progress_label' => 'CLOSEOUT LOAD',
+                'progress' => (int) round(($counts['payment_defect'] / $total) * 100),
+            ],
+        ];
     }
 }

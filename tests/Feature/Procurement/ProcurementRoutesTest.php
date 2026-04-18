@@ -17,6 +17,8 @@ class ProcurementRoutesTest extends TestCase
         $this->assertTrue(Route::has('studio-photographer.procurement.index'));
         $this->assertTrue(Route::has('studio-finance.procurement.index'));
         $this->assertTrue(Route::has('owner.procurement.index'));
+        $this->assertTrue(Route::has('studio-finance.procurement.process-return'));
+        $this->assertTrue(Route::has('studio-finance.procurement.replacement-delivery'));
     }
 
     /**

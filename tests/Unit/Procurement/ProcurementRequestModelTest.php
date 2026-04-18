@@ -3,6 +3,7 @@
 namespace Tests\Unit\Procurement;
 
 use App\Models\Procurement\ProcurementRequestModel;
+use App\Services\ProcurementWorkflowService;
 use Tests\TestCase;
 
 class ProcurementRequestModelTest extends TestCase
@@ -31,6 +32,9 @@ class ProcurementRequestModelTest extends TestCase
         ]);
 
         $this->assertSame('Pending Owner Approval', $procurementRequest->status_label);
+
+        $procurementRequest->status = ProcurementRequestModel::STATUS_DEFECT_REPORTED;
+        $this->assertSame('Defect Reported', $procurementRequest->status_label);
     }
 
     /**
@@ -43,5 +47,14 @@ class ProcurementRequestModelTest extends TestCase
 
         $this->assertTrue($pendingRequest->canBeCancelledByRequester());
         $this->assertFalse($completedRequest->canBeCancelledByRequester());
+    }
+
+    /**
+     * It exposes the fixed defect reason list, including Other.
+     */
+    public function test_defect_reason_options_include_other(): void
+    {
+        $this->assertArrayHasKey('other', ProcurementWorkflowService::DEFECT_REASON_OPTIONS);
+        $this->assertSame('Other', ProcurementWorkflowService::DEFECT_REASON_OPTIONS['other']);
     }
 }

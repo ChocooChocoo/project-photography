@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Procurement\ProcurementAssetModel;
 use App\Models\Procurement\ProcurementAuditTrailModel;
+use App\Models\Procurement\ProcurementDefectReturnModel;
 use App\Models\Procurement\ProcurementDocumentModel;
 use App\Models\Procurement\ProcurementInventoryStockModel;
 use App\Models\Procurement\ProcurementPurchaseOrderModel;
@@ -31,6 +32,15 @@ class ProcurementWorkflowService
     public const HIGH_VALUE_THRESHOLD = 50000;
     public const DUPLICATE_LOOKBACK_DAYS = 7;
     public const OVERDUE_HOURS = 48;
+    public const DEFECT_REASON_OPTIONS = [
+        'damaged_on_arrival' => 'Damaged on Arrival',
+        'wrong_item_received' => 'Wrong Item Received',
+        'missing_parts_or_accessories' => 'Missing Parts or Accessories',
+        'not_working' => 'Not Working',
+        'quality_issue' => 'Quality Issue',
+        'expired_or_contaminated' => 'Expired or Contaminated',
+        'other' => 'Other',
+    ];
 
     /**
      * Get assigned studio IDs for the supplied user and portal.
@@ -76,7 +86,7 @@ class ProcurementWorkflowService
         return ProcurementRequestModel::with(['studio', 'purchaseOrder'])
             ->where('requester_id', $user->id)
             ->whereIn('studio_id', $studioIds)
-            ->orderByRaw("CASE WHEN status = 'returned_for_revision' THEN 0 WHEN status = 'draft' THEN 1 WHEN status = 'pending_finance_review' THEN 2 WHEN status = 'delivered' THEN 3 ELSE 4 END")
+            ->orderByRaw("CASE WHEN status = 'delivered' THEN 0 WHEN status = 'defect_reported' THEN 1 WHEN status = 'return_in_progress' THEN 2 WHEN status = 'returned_for_revision' THEN 3 WHEN status = 'draft' THEN 4 WHEN status = 'pending_finance_review' THEN 5 ELSE 6 END")
             ->orderByDesc('updated_at')
             ->get();
     }
@@ -90,7 +100,7 @@ class ProcurementWorkflowService
 
         return ProcurementRequestModel::with(['studio', 'requester', 'purchaseOrder'])
             ->whereIn('studio_id', $studioIds)
-            ->orderByRaw("CASE WHEN status = 'pending_finance_review' THEN 0 WHEN status = 'approved' THEN 1 WHEN status = 'ordered' THEN 2 WHEN status = 'delivered' THEN 3 WHEN status = 'received' THEN 4 WHEN status = 'payment_processing' THEN 5 ELSE 6 END")
+            ->orderByRaw("CASE WHEN status = 'pending_finance_review' THEN 0 WHEN status = 'defect_reported' THEN 1 WHEN status = 'return_in_progress' THEN 2 WHEN status = 'approved' THEN 3 WHEN status = 'ordered' THEN 4 WHEN status = 'delivered' THEN 5 WHEN status = 'received' THEN 6 WHEN status = 'payment_processing' THEN 7 ELSE 8 END")
             ->orderByDesc('updated_at')
             ->get();
     }
@@ -565,14 +575,41 @@ class ProcurementWorkflowService
             ]);
         }
 
-        $itemsById = $procurementRequest->items()->get()->keyBy('id');
+        $itemsById = $procurementRequest->items()->with(['defectReturns' => function ($query) {
+            $query->orderByDesc('id');
+        }])->get()->keyBy('id');
         $receiptItems = collect($validated['items'] ?? []);
+        $openDefectReturns = $procurementRequest->defectReturns()
+            ->whereIn('status', [
+                ProcurementDefectReturnModel::STATUS_REPORTED,
+                ProcurementDefectReturnModel::STATUS_RETURN_IN_PROGRESS,
+                ProcurementDefectReturnModel::STATUS_REPLACEMENT_DELIVERED,
+            ])
+            ->get()
+            ->keyBy('procurement_request_item_id');
+        $expectedItemIds = $openDefectReturns->isNotEmpty()
+            ? $openDefectReturns->keys()->map(fn ($id) => (int) $id)->values()
+            : $itemsById->keys()->map(fn ($id) => (int) $id)->values();
+        $submittedItemIds = $receiptItems->pluck('procurement_request_item_id')->map(fn ($id) => (int) $id)->values();
 
-        return DB::transaction(function () use ($procurementRequest, $requesterUser, $itemsById, $receiptItems, $validated) {
+        if ($submittedItemIds->sort()->values()->all() !== $expectedItemIds->sort()->values()->all()) {
+            throw ValidationException::withMessages([
+                'items' => [$openDefectReturns->isNotEmpty()
+                    ? 'Only replacement items awaiting confirmation can be submitted at this stage.'
+                    : 'All delivered procurement items must be reviewed during receipt confirmation.'
+                ],
+            ]);
+        }
+
+        return DB::transaction(function () use ($procurementRequest, $requesterUser, $itemsById, $receiptItems, $validated, $openDefectReturns) {
+            $hasNewDefects = false;
+
             foreach ($receiptItems as $receiptItem) {
                 $itemId = (int) $receiptItem['procurement_request_item_id'];
                 /** @var \App\Models\Procurement\ProcurementRequestItemModel|null $requestItem */
                 $requestItem = $itemsById->get($itemId);
+                /** @var \App\Models\Procurement\ProcurementDefectReturnModel|null $openDefectReturn */
+                $openDefectReturn = $openDefectReturns->get($itemId);
 
                 if (!$requestItem) {
                     throw ValidationException::withMessages([
@@ -580,18 +617,71 @@ class ProcurementWorkflowService
                     ]);
                 }
 
+                $receiptAction = $receiptItem['receipt_action'] ?? 'accepted';
                 $receivedQuantity = (float) $receiptItem['received_quantity'];
+                $expectedQuantity = $openDefectReturn
+                    ? (float) $openDefectReturn->reported_quantity
+                    : (float) $requestItem->quantity;
 
-                if (round($receivedQuantity, 2) !== round((float) $requestItem->quantity, 2)) {
+                if (round($receivedQuantity, 2) !== round($expectedQuantity, 2)) {
                     throw ValidationException::withMessages([
                         'items' => ['Partial deliveries are not supported in this workflow. Received quantities must match ordered quantities.'],
                     ]);
+                }
+
+                if ($receiptAction === 'defective' && $openDefectReturn) {
+                    throw ValidationException::withMessages([
+                        'items' => ['Repeated defect reporting for replacement items is not supported in this workflow.'],
+                    ]);
+                }
+
+                if ($receiptAction === 'defective') {
+                    $reasonCode = (string) ($receiptItem['defect_reason_code'] ?? '');
+
+                    if (!array_key_exists($reasonCode, self::DEFECT_REASON_OPTIONS)) {
+                        throw ValidationException::withMessages([
+                            'items' => ['A valid defect reason is required for defective items.'],
+                        ]);
+                    }
+
+                    if ($reasonCode === 'other' && blank($receiptItem['defect_reason_other'] ?? null)) {
+                        throw ValidationException::withMessages([
+                            'items' => ['A manual defect reason is required when Other is selected.'],
+                        ]);
+                    }
+
+                    $requestItem->update([
+                        'received_quantity' => 0,
+                        'condition_notes' => $receiptItem['condition_notes'] ?? null,
+                    ]);
+
+                    ProcurementDefectReturnModel::create([
+                        'procurement_request_id' => $procurementRequest->id,
+                        'procurement_request_item_id' => $requestItem->id,
+                        'reported_by' => $requesterUser->id,
+                        'reported_quantity' => $receivedQuantity,
+                        'reason_code' => $reasonCode,
+                        'reason_other' => $reasonCode === 'other' ? ($receiptItem['defect_reason_other'] ?? null) : null,
+                        'requester_note' => $receiptItem['defect_note'] ?? null,
+                        'status' => ProcurementDefectReturnModel::STATUS_REPORTED,
+                        'reported_at' => now(),
+                    ]);
+
+                    $hasNewDefects = true;
+                    continue;
                 }
 
                 $requestItem->update([
                     'received_quantity' => $receivedQuantity,
                     'condition_notes' => $receiptItem['condition_notes'] ?? null,
                 ]);
+
+                if ($openDefectReturn) {
+                    $openDefectReturn->update([
+                        'status' => ProcurementDefectReturnModel::STATUS_RESOLVED,
+                        'resolved_at' => now(),
+                    ]);
+                }
 
                 if ($requestItem->isEquipment()) {
                     if (
@@ -654,21 +744,160 @@ class ProcurementWorkflowService
             }
 
             $previousStatus = $procurementRequest->status;
+            $nextStatus = $hasNewDefects
+                ? ProcurementRequestModel::STATUS_DEFECT_REPORTED
+                : ProcurementRequestModel::STATUS_RECEIVED;
 
             $procurementRequest->update([
-                'status' => ProcurementRequestModel::STATUS_RECEIVED,
-                'receipt_confirmed_by' => $requesterUser->id,
-                'receipt_confirmed_at' => now(),
+                'status' => $nextStatus,
+                'receipt_confirmed_by' => $nextStatus === ProcurementRequestModel::STATUS_RECEIVED ? $requesterUser->id : null,
+                'receipt_confirmed_at' => $nextStatus === ProcurementRequestModel::STATUS_RECEIVED ? now() : null,
             ]);
 
             $this->recordAudit(
                 $procurementRequest,
                 $requesterUser,
-                'receipt_confirmed',
+                $hasNewDefects ? 'defect_reported' : 'receipt_confirmed',
                 $previousStatus,
-                ProcurementRequestModel::STATUS_RECEIVED,
+                $nextStatus,
                 $validated['receipt_note'] ?? null
             );
+
+            if ($hasNewDefects) {
+                $this->notifyFinanceOfDefectReport($procurementRequest->fresh(['studio', 'requester']));
+            } elseif ($openDefectReturns->isNotEmpty()) {
+                $this->notifyDefectResolution($procurementRequest->fresh(['studio', 'requester']));
+            }
+
+            return $this->refreshRequest($procurementRequest);
+        });
+    }
+
+    /**
+     * Process supplier return handling for defective items.
+     */
+    public function processDefectReturn(ProcurementRequestModel $procurementRequest, UserModel $financeUser, array $validated): ProcurementRequestModel
+    {
+        if ($procurementRequest->status !== ProcurementRequestModel::STATUS_DEFECT_REPORTED) {
+            throw ValidationException::withMessages([
+                'status' => ['Only requests with reported defects can be moved into return processing.'],
+            ]);
+        }
+
+        return DB::transaction(function () use ($procurementRequest, $financeUser, $validated) {
+            $previousStatus = $procurementRequest->status;
+            $purchaseOrder = $procurementRequest->purchaseOrder;
+            $openDefectReturns = $procurementRequest->defectReturns()
+                ->where('status', ProcurementDefectReturnModel::STATUS_REPORTED)
+                ->get();
+
+            if ($openDefectReturns->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'items' => ['No reported defective items were found for this procurement request.'],
+                ]);
+            }
+
+            foreach ($openDefectReturns as $defectReturn) {
+                $defectReturn->update([
+                    'processed_by' => $financeUser->id,
+                    'finance_note' => $validated['finance_note'],
+                    'status' => ProcurementDefectReturnModel::STATUS_RETURN_IN_PROGRESS,
+                    'processed_at' => now(),
+                ]);
+            }
+
+            $procurementRequest->update([
+                'status' => ProcurementRequestModel::STATUS_RETURN_IN_PROGRESS,
+            ]);
+
+            $this->storeDocuments(
+                $procurementRequest,
+                $purchaseOrder,
+                $validated['return_support_files'] ?? [],
+                'return_support',
+                $financeUser,
+                ['finance_note' => $validated['finance_note']]
+            );
+
+            $this->storeDocuments(
+                $procurementRequest,
+                $purchaseOrder,
+                $validated['return_receipt_files'] ?? [],
+                'return_receipt',
+                $financeUser,
+                ['finance_note' => $validated['finance_note']]
+            );
+
+            $this->recordAudit(
+                $procurementRequest,
+                $financeUser,
+                'return_processed',
+                $previousStatus,
+                ProcurementRequestModel::STATUS_RETURN_IN_PROGRESS,
+                $validated['finance_note']
+            );
+
+            return $this->refreshRequest($procurementRequest);
+        });
+    }
+
+    /**
+     * Record replacement delivery for defective returned items.
+     */
+    public function recordReplacementDelivery(ProcurementRequestModel $procurementRequest, UserModel $financeUser, array $validated): ProcurementRequestModel
+    {
+        if ($procurementRequest->status !== ProcurementRequestModel::STATUS_RETURN_IN_PROGRESS) {
+            throw ValidationException::withMessages([
+                'status' => ['Only requests in return processing can record replacement delivery.'],
+            ]);
+        }
+
+        return DB::transaction(function () use ($procurementRequest, $financeUser, $validated) {
+            $previousStatus = $procurementRequest->status;
+            $purchaseOrder = $procurementRequest->purchaseOrder;
+            $openDefectReturns = $procurementRequest->defectReturns()
+                ->where('status', ProcurementDefectReturnModel::STATUS_RETURN_IN_PROGRESS)
+                ->get();
+
+            if ($openDefectReturns->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'items' => ['No return items are awaiting replacement delivery.'],
+                ]);
+            }
+
+            foreach ($openDefectReturns as $defectReturn) {
+                $defectReturn->update([
+                    'status' => ProcurementDefectReturnModel::STATUS_REPLACEMENT_DELIVERED,
+                    'replacement_delivered_at' => $validated['delivered_at'],
+                ]);
+            }
+
+            $procurementRequest->update([
+                'status' => ProcurementRequestModel::STATUS_DELIVERED,
+                'delivered_at' => $validated['delivered_at'],
+                'receipt_confirmed_by' => null,
+                'receipt_confirmed_at' => null,
+            ]);
+
+            $this->storeDocuments(
+                $procurementRequest,
+                $purchaseOrder,
+                $validated['replacement_delivery_receipt_files'] ?? [],
+                'replacement_delivery_receipt',
+                $financeUser,
+                ['delivery_note' => $validated['delivery_note'] ?? null]
+            );
+
+            $this->recordAudit(
+                $procurementRequest,
+                $financeUser,
+                'replacement_delivered',
+                $previousStatus,
+                ProcurementRequestModel::STATUS_DELIVERED,
+                $validated['delivery_note'] ?? null
+            );
+
+            $this->notifyRequesterOfReplacementDelivery($procurementRequest->fresh(['studio', 'requester']));
 
             return $this->refreshRequest($procurementRequest);
         });
@@ -777,14 +1006,22 @@ class ProcurementWorkflowService
             'studio',
             'requester',
             'items.assets',
+            'items.defectReturns',
             'items.inventoryStocks',
             'purchaseOrder.items',
             'documents.uploader',
             'auditTrails.actor',
+            'defectReturns.procurementRequestItem',
+            'defectReturns.reporter',
+            'defectReturns.processor',
             'financeReviewer',
             'ownerReviewer',
             'receiptConfirmer',
         ]);
+
+        $openDefectReturns = $procurementRequest->defectReturns
+            ->filter(fn (ProcurementDefectReturnModel $defectReturn) => $defectReturn->isOpen())
+            ->values();
 
         $documentsByType = $procurementRequest->documents
             ->groupBy('document_type')
@@ -806,6 +1043,7 @@ class ProcurementWorkflowService
             'request_reference' => $procurementRequest->request_reference,
             'status' => $procurementRequest->status,
             'status_display' => $procurementRequest->status_label,
+            'status_badge_class' => $procurementRequest->status_badge_class,
             'studio_name' => $procurementRequest->studio->studio_name ?? 'N/A',
             'requester_name' => $procurementRequest->requester->full_name ?? 'N/A',
             'requester_email' => $procurementRequest->requester->email ?? 'N/A',
@@ -829,7 +1067,16 @@ class ProcurementWorkflowService
             'invoice_reference' => $procurementRequest->invoice_reference,
             'invoice_amount' => $procurementRequest->invoice_amount ? number_format((float) $procurementRequest->invoice_amount, 2) : null,
             'payment_reference' => $procurementRequest->payment_reference,
+            'defect_reason_options' => collect(self::DEFECT_REASON_OPTIONS)->map(function (string $label, string $code): array {
+                return [
+                    'code' => $code,
+                    'label' => $label,
+                ];
+            })->values(),
             'items' => $procurementRequest->items->map(function (ProcurementRequestItemModel $item): array {
+                $openDefectReturn = $item->defectReturns
+                    ->first(fn (ProcurementDefectReturnModel $defectReturn) => $defectReturn->isOpen());
+
                 return [
                     'id' => $item->id,
                     'item_name' => $item->item_name,
@@ -845,14 +1092,22 @@ class ProcurementWorkflowService
                     'received_quantity' => (float) $item->received_quantity,
                     'condition_notes' => $item->condition_notes,
                     'preferred_supplier' => $item->preferred_supplier,
+                    'has_open_return' => $openDefectReturn !== null,
+                    'open_return_status' => $openDefectReturn?->status,
+                    'open_return_reported_quantity' => $openDefectReturn ? (float) $openDefectReturn->reported_quantity : null,
                 ];
             })->values(),
             'purchase_order' => $procurementRequest->purchaseOrder ? [
                 'po_number' => $procurementRequest->purchaseOrder->po_number,
                 'supplier_name' => $procurementRequest->purchaseOrder->supplier_name,
+                'supplier_email' => $procurementRequest->purchaseOrder->supplier_email,
+                'supplier_contact_number' => $procurementRequest->purchaseOrder->supplier_contact_number,
+                'supplier_address' => $procurementRequest->purchaseOrder->supplier_address,
                 'delivery_address' => $procurementRequest->purchaseOrder->delivery_address,
                 'payment_terms' => $procurementRequest->purchaseOrder->payment_terms,
                 'order_date' => $procurementRequest->purchaseOrder->order_date?->format('Y-m-d'),
+                'order_date_display' => $procurementRequest->purchaseOrder->order_date?->format('M d, Y'),
+                'notes' => $procurementRequest->purchaseOrder->notes,
                 'total_amount' => number_format((float) $procurementRequest->purchaseOrder->total_amount, 2),
                 'items' => $procurementRequest->purchaseOrder->items->map(function (ProcurementPurchaseOrderItemModel $item): array {
                     return [
@@ -865,19 +1120,63 @@ class ProcurementWorkflowService
                 })->values(),
             ] : null,
             'documents' => $documentsByType,
+            'open_defect_returns' => $openDefectReturns->map(function (ProcurementDefectReturnModel $defectReturn): array {
+                return [
+                    'id' => $defectReturn->id,
+                    'procurement_request_item_id' => $defectReturn->procurement_request_item_id,
+                    'item_name' => $defectReturn->procurementRequestItem?->item_name ?? 'N/A',
+                    'reported_quantity' => (float) $defectReturn->reported_quantity,
+                    'reason_code' => $defectReturn->reason_code,
+                    'reason_label' => self::DEFECT_REASON_OPTIONS[$defectReturn->reason_code] ?? str($defectReturn->reason_code)->replace('_', ' ')->title()->toString(),
+                    'reason_other' => $defectReturn->reason_other,
+                    'requester_note' => $defectReturn->requester_note,
+                    'finance_note' => $defectReturn->finance_note,
+                    'status' => $defectReturn->status,
+                    'status_display' => $defectReturn->status_label,
+                    'status_badge_class' => $defectReturn->status_badge_class,
+                    'reported_at' => $defectReturn->reported_at?->format('F d, Y h:i A'),
+                    'processed_at' => $defectReturn->processed_at?->format('F d, Y h:i A'),
+                    'replacement_delivered_at' => $defectReturn->replacement_delivered_at?->format('F d, Y h:i A'),
+                ];
+            })->values(),
             'audit_trails' => $procurementRequest->auditTrails
                 ->sortByDesc('created_at')
                 ->values()
                 ->map(function (ProcurementAuditTrailModel $audit): array {
+                    $timelineDisplay = $this->getTimelineDisplay($audit->action);
+
                     return [
                         'action' => str($audit->action)->replace('_', ' ')->title()->toString(),
+                        'title' => $timelineDisplay['title'],
+                        'description' => $audit->note ?: $timelineDisplay['description'],
+                        'icon' => $timelineDisplay['icon'],
+                        'dot_class' => $timelineDisplay['dot_class'],
+                        'icon_class' => $timelineDisplay['icon_class'],
                         'from_status' => $audit->from_status,
                         'to_status' => $audit->to_status,
                         'note' => $audit->note,
                         'actor_name' => $audit->actor->full_name ?? 'System',
                         'created_at' => $audit->created_at?->format('F d, Y h:i A'),
+                        'created_at_display' => $audit->created_at?->diffForHumans(),
                     ];
                 }),
+            'payment_summary' => [
+                'request_reference' => $procurementRequest->request_reference,
+                'po_number' => $procurementRequest->purchaseOrder?->po_number,
+                'supplier_name' => $procurementRequest->purchaseOrder?->supplier_name,
+                'supplier_contact_number' => $procurementRequest->purchaseOrder?->supplier_contact_number,
+                'supplier_email' => $procurementRequest->purchaseOrder?->supplier_email,
+                'invoice_reference' => $procurementRequest->invoice_reference,
+                'invoice_amount' => $procurementRequest->invoice_amount ? number_format((float) $procurementRequest->invoice_amount, 2) : number_format((float) ($procurementRequest->purchaseOrder?->total_amount ?? 0), 2),
+                'invoice_date' => $procurementRequest->invoice_date?->format('Y-m-d'),
+                'invoice_date_display' => $procurementRequest->invoice_date?->format('M d, Y'),
+                'approved_total' => number_format((float) $procurementRequest->approved_total, 2),
+                'estimated_total' => number_format((float) $procurementRequest->estimated_total, 2),
+                'payment_reference' => $procurementRequest->payment_reference,
+                'payment_terms' => $procurementRequest->purchaseOrder?->payment_terms,
+                'delivery_address' => $procurementRequest->purchaseOrder?->delivery_address,
+                'payment_note' => $procurementRequest->payment_note,
+            ],
             'permissions' => [
                 'can_edit' => $procurementRequest->requester_id === $viewer->id && $procurementRequest->canBeEditedByRequester(),
                 'can_cancel' => $procurementRequest->requester_id === $viewer->id && $procurementRequest->canBeCancelledByRequester(),
@@ -888,6 +1187,8 @@ class ProcurementWorkflowService
                     ProcurementRequestModel::STATUS_ORDERED,
                 ], true),
                 'can_record_delivery' => $viewer->role === 'studio-finance' && $procurementRequest->status === ProcurementRequestModel::STATUS_ORDERED,
+                'can_process_returns' => $viewer->role === 'studio-finance' && $procurementRequest->status === ProcurementRequestModel::STATUS_DEFECT_REPORTED,
+                'can_record_replacement_delivery' => $viewer->role === 'studio-finance' && $procurementRequest->status === ProcurementRequestModel::STATUS_RETURN_IN_PROGRESS,
                 'can_record_payment' => $viewer->role === 'studio-finance' && $procurementRequest->status === ProcurementRequestModel::STATUS_RECEIVED,
                 'can_complete_payment' => $viewer->role === 'studio-finance' && $procurementRequest->status === ProcurementRequestModel::STATUS_PAYMENT_PROCESSING,
                 'can_owner_review' => $viewer->role === 'owner' && $procurementRequest->status === ProcurementRequestModel::STATUS_PENDING_OWNER_APPROVAL,
@@ -1156,11 +1457,17 @@ class ProcurementWorkflowService
      */
     private function assertThreeWayMatchRequirements(ProcurementRequestModel $procurementRequest, float $invoiceAmount): void
     {
-        $procurementRequest->loadMissing(['purchaseOrder.items.procurementRequestItem', 'documents', 'items']);
+        $procurementRequest->loadMissing(['purchaseOrder.items.procurementRequestItem', 'documents', 'items', 'defectReturns']);
 
         if (!$procurementRequest->purchaseOrder) {
             throw ValidationException::withMessages([
                 'purchase_order' => ['A purchase order is required before payment processing.'],
+            ]);
+        }
+
+        if ($procurementRequest->defectReturns->contains(fn (ProcurementDefectReturnModel $defectReturn) => $defectReturn->isOpen())) {
+            throw ValidationException::withMessages([
+                'items' => ['All defect-return items must be resolved before payment processing can begin.'],
             ]);
         }
 
@@ -1188,6 +1495,115 @@ class ProcurementWorkflowService
                 ]);
             }
         }
+    }
+
+    /**
+     * Get timeline UI metadata for an audit action.
+     *
+     * @return array<string, string>
+     */
+    private function getTimelineDisplay(string $action): array
+    {
+        return match ($action) {
+            'draft_saved', 'draft_updated' => [
+                'title' => 'Draft Saved',
+                'description' => 'A procurement draft was saved for later completion.',
+                'icon' => 'ti ti-edit-circle',
+                'dot_class' => 'bg-secondary-subtle',
+                'icon_class' => 'text-secondary',
+            ],
+            'request_submitted', 'request_resubmitted' => [
+                'title' => 'Request Submitted',
+                'description' => 'The procurement request was submitted into the approval workflow.',
+                'icon' => 'ti ti-send',
+                'dot_class' => 'bg-warning-subtle',
+                'icon_class' => 'text-warning',
+            ],
+            'finance_approve' => [
+                'title' => 'Finance Approved',
+                'description' => 'Finance cleared the request for owner approval.',
+                'icon' => 'ti ti-checklist',
+                'dot_class' => 'bg-success-subtle',
+                'icon_class' => 'text-success',
+            ],
+            'finance_return', 'owner_return' => [
+                'title' => 'Returned for Revision',
+                'description' => 'The request was returned for updates before it can continue.',
+                'icon' => 'ti ti-arrow-back-up',
+                'dot_class' => 'bg-info-subtle',
+                'icon_class' => 'text-info',
+            ],
+            'finance_reject', 'owner_reject', 'request_cancelled' => [
+                'title' => 'Request Closed',
+                'description' => 'The request was rejected or cancelled before completion.',
+                'icon' => 'ti ti-circle-x',
+                'dot_class' => 'bg-danger-subtle',
+                'icon_class' => 'text-danger',
+            ],
+            'owner_approve' => [
+                'title' => 'Owner Approved',
+                'description' => 'Owner approval was completed and purchasing may proceed.',
+                'icon' => 'ti ti-rosette-discount-check',
+                'dot_class' => 'bg-success-subtle',
+                'icon_class' => 'text-success',
+            ],
+            'purchase_order_created' => [
+                'title' => 'Purchase Order Generated',
+                'description' => 'Finance issued a purchase order for the approved request.',
+                'icon' => 'ti ti-file-invoice',
+                'dot_class' => 'bg-primary-subtle',
+                'icon_class' => 'text-primary',
+            ],
+            'delivery_recorded', 'replacement_delivered' => [
+                'title' => 'Delivery Recorded',
+                'description' => 'Delivered items were logged and are awaiting requester confirmation.',
+                'icon' => 'ti ti-truck-delivery',
+                'dot_class' => 'bg-info-subtle',
+                'icon_class' => 'text-info',
+            ],
+            'receipt_confirmed' => [
+                'title' => 'Receipt Confirmed',
+                'description' => 'The requester accepted the delivered items.',
+                'icon' => 'ti ti-package-export',
+                'dot_class' => 'bg-success-subtle',
+                'icon_class' => 'text-success',
+            ],
+            'defect_reported' => [
+                'title' => 'Defect Reported',
+                'description' => 'One or more delivered items were marked defective.',
+                'icon' => 'ti ti-alert-triangle',
+                'dot_class' => 'bg-warning-subtle',
+                'icon_class' => 'text-warning',
+            ],
+            'return_processed' => [
+                'title' => 'Return Processing Started',
+                'description' => 'Finance started the supplier return workflow for defective items.',
+                'icon' => 'ti ti-refresh',
+                'dot_class' => 'bg-warning-subtle',
+                'icon_class' => 'text-warning',
+            ],
+            'payment_processing_started' => [
+                'title' => 'Payment Processing Started',
+                'description' => 'Invoice and payment processing were initiated for the procurement.',
+                'icon' => 'ti ti-credit-card-pay',
+                'dot_class' => 'bg-warning-subtle',
+                'icon_class' => 'text-warning',
+            ],
+            'payment_completed' => [
+                'title' => 'Procurement Completed',
+                'description' => 'The procurement was fully paid and completed.',
+                'icon' => 'ti ti-cash-banknote',
+                'dot_class' => 'bg-success-subtle',
+                'icon_class' => 'text-success',
+            ],
+            default => [
+                'title' => str($action)->replace('_', ' ')->title()->toString(),
+                'description' => 'A procurement workflow update was recorded.',
+                'icon' => 'ti ti-history',
+                'dot_class' => 'bg-secondary-subtle',
+                'icon_class' => 'text-secondary',
+            ],
+        };
     }
 
     /**
@@ -1326,6 +1742,84 @@ class ProcurementWorkflowService
     }
 
     /**
+     * Notify finance that a requester reported defective items.
+     */
+    private function notifyFinanceOfDefectReport(ProcurementRequestModel $procurementRequest): void
+    {
+        foreach ($this->getUsersByStudioRole($procurementRequest->studio_id, 'studio-finance') as $financeUser) {
+            $this->createNotification(
+                $financeUser->id,
+                'procurement_defect_reported',
+                'Defective Procurement Items Reported',
+                "{$procurementRequest->request_reference} has defective delivered items that need return handling.",
+                [
+                    'procurement_request_id' => $procurementRequest->id,
+                    'request_reference' => $procurementRequest->request_reference,
+                    'route' => route('studio-finance.procurement.index', [], false),
+                ],
+                'alert-triangle',
+                'warning'
+            );
+        }
+    }
+
+    /**
+     * Notify the requester that replacement items were delivered.
+     */
+    private function notifyRequesterOfReplacementDelivery(ProcurementRequestModel $procurementRequest): void
+    {
+        $this->createNotification(
+            $procurementRequest->requester_id,
+            'procurement_replacement_delivered',
+            'Replacement Delivery Recorded',
+            "{$procurementRequest->request_reference} replacement items were delivered. Please confirm receipt again.",
+            [
+                'procurement_request_id' => $procurementRequest->id,
+                'request_reference' => $procurementRequest->request_reference,
+                'route' => route($this->getRequesterIndexRoute($procurementRequest->requester_role), [], false),
+            ],
+            'refresh',
+            'info'
+        );
+    }
+
+    /**
+     * Notify requester and finance that the defect case is resolved.
+     */
+    private function notifyDefectResolution(ProcurementRequestModel $procurementRequest): void
+    {
+        $this->createNotification(
+            $procurementRequest->requester_id,
+            'procurement_defect_resolved',
+            'Defect Return Resolved',
+            "{$procurementRequest->request_reference} defect return items were accepted and the request can continue to payment.",
+            [
+                'procurement_request_id' => $procurementRequest->id,
+                'request_reference' => $procurementRequest->request_reference,
+                'route' => route($this->getRequesterIndexRoute($procurementRequest->requester_role), [], false),
+            ],
+            'circle-check',
+            'success'
+        );
+
+        foreach ($this->getUsersByStudioRole($procurementRequest->studio_id, 'studio-finance') as $financeUser) {
+            $this->createNotification(
+                $financeUser->id,
+                'procurement_defect_resolved',
+                'Defect Return Resolved',
+                "{$procurementRequest->request_reference} defect return items were accepted and payment can continue.",
+                [
+                    'procurement_request_id' => $procurementRequest->id,
+                    'request_reference' => $procurementRequest->request_reference,
+                    'route' => route('studio-finance.procurement.index', [], false),
+                ],
+                'circle-check',
+                'success'
+            );
+        }
+    }
+
+    /**
      * Notify requester and owner after payment completion.
      */
     private function notifyPaymentCompletion(ProcurementRequestModel $procurementRequest): void
@@ -1406,10 +1900,11 @@ class ProcurementWorkflowService
         return $procurementRequest->fresh([
             'studio',
             'requester',
-            'items',
+            'items.defectReturns',
             'purchaseOrder.items',
             'documents',
             'auditTrails.actor',
+            'defectReturns.procurementRequestItem',
         ]);
     }
 }

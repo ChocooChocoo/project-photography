@@ -245,9 +245,37 @@
             });
         }
 
+        function setButtonLoading($button, loadingText) {
+            if (!$button || !$button.length) {
+                return;
+            }
+
+            if (!$button.data('original-html')) {
+                $button.data('original-html', $button.html());
+            }
+
+            $button.prop('disabled', true).html(`
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${loadingText}
+            `);
+        }
+
+        function resetButtonLoading($button) {
+            if (!$button || !$button.length) {
+                return;
+            }
+
+            $button.prop('disabled', false);
+
+            if ($button.data('original-html')) {
+                $button.html($button.data('original-html'));
+            }
+        }
+
         function submitForm(actionValue) {
             nextAction = actionValue;
             $('#procurementAction').val(actionValue);
+            const $activeButton = actionValue === 'submit' ? $('#submitRequestBtn') : $('#saveDraftBtn');
+            const $inactiveButton = actionValue === 'submit' ? $('#saveDraftBtn') : $('#submitRequestBtn');
 
             const formElement = document.getElementById('procurementRequestForm');
             const formData = new FormData(formElement);
@@ -256,6 +284,9 @@
             if (isEdit) {
                 formData.append('_method', 'PUT');
             }
+
+            setButtonLoading($activeButton, actionValue === 'submit' ? 'Submitting...' : 'Saving...');
+            $inactiveButton.prop('disabled', true);
 
             $.ajax({
                 url: isEdit ? `{{ route($updateRoute, ['id' => '__id__']) }}`.replace('__id__', existingRequest.id) : '{{ route($storeRoute) }}',
@@ -279,7 +310,11 @@
                         }
                     });
                 },
-                error: showAjaxError
+                error: function (xhr) {
+                    resetButtonLoading($activeButton);
+                    $inactiveButton.prop('disabled', false);
+                    showAjaxError(xhr);
+                }
             });
         }
 

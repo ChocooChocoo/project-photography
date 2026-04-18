@@ -1297,6 +1297,37 @@ CREATE TABLE IF NOT EXISTS `tbl_procurement_inventory_stocks` (
   CONSTRAINT `tbl_procurement_inventory_stocks_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_procurement_inventory_stocks_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `tbl_users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `tbl_procurement_defect_returns` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `procurement_request_id` bigint unsigned NOT NULL,
+  `procurement_request_item_id` bigint unsigned NOT NULL,
+  `reported_by` bigint unsigned DEFAULT NULL,
+  `processed_by` bigint unsigned DEFAULT NULL,
+  `reported_quantity` decimal(10,2) NOT NULL,
+  `reason_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reason_other` text COLLATE utf8mb4_unicode_ci,
+  `requester_note` text COLLATE utf8mb4_unicode_ci,
+  `finance_note` text COLLATE utf8mb4_unicode_ci,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'reported',
+  `reported_at` timestamp NULL DEFAULT NULL,
+  `processed_at` timestamp NULL DEFAULT NULL,
+  `replacement_delivered_at` timestamp NULL DEFAULT NULL,
+  `resolved_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tbl_procurement_defect_returns_procurement_request_id_foreign` (`procurement_request_id`),
+  KEY `tbl_procurement_defect_returns_procurement_request_item_id_foreign` (`procurement_request_item_id`),
+  KEY `tbl_procurement_defect_returns_reported_by_foreign` (`reported_by`),
+  KEY `tbl_procurement_defect_returns_processed_by_foreign` (`processed_by`),
+  KEY `tbl_proc_def_returns_request_status_idx` (`procurement_request_id`,`status`),
+  KEY `tbl_proc_def_returns_item_status_idx` (`procurement_request_item_id`,`status`),
+  CONSTRAINT `tbl_procurement_defect_returns_procurement_request_id_foreign` FOREIGN KEY (`procurement_request_id`) REFERENCES `tbl_procurement_requests` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_procurement_defect_returns_procurement_request_item_id_foreign` FOREIGN KEY (`procurement_request_item_id`) REFERENCES `tbl_procurement_request_items` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_procurement_defect_returns_reported_by_foreign` FOREIGN KEY (`reported_by`) REFERENCES `tbl_users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tbl_procurement_defect_returns_processed_by_foreign` FOREIGN KEY (`processed_by`) REFERENCES `tbl_users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;

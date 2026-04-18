@@ -7,6 +7,8 @@
         'reviewRouteBase' => url('/studio-finance/procurement'),
         'purchaseOrderRouteBase' => url('/studio-finance/procurement'),
         'deliveryRouteBase' => url('/studio-finance/procurement'),
+        'processReturnRouteBase' => url('/studio-finance/procurement'),
+        'replacementDeliveryRouteBase' => url('/studio-finance/procurement'),
         'paymentRouteBase' => url('/studio-finance/procurement'),
         'completeRouteBase' => url('/studio-finance/procurement'),
     ])

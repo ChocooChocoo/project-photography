@@ -24,6 +24,7 @@ class ConfirmProcurementReceiptRequest extends FormRequest
             'receipt_note' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.procurement_request_item_id' => ['required', 'integer'],
+            'items.*.receipt_action' => ['required', 'in:accepted,defective'],
             'items.*.received_quantity' => ['required', 'numeric', 'gt:0'],
             'items.*.condition_notes' => ['nullable', 'string', 'max:1000'],
             'items.*.serial_number' => ['nullable', 'string', 'max:100'],
@@ -31,6 +32,9 @@ class ConfirmProcurementReceiptRequest extends FormRequest
             'items.*.acquisition_cost' => ['nullable', 'numeric', 'min:0'],
             'items.*.asset_location' => ['nullable', 'string', 'max:255'],
             'items.*.reorder_threshold' => ['nullable', 'numeric', 'min:0'],
+            'items.*.defect_reason_code' => ['nullable', 'string', 'max:50'],
+            'items.*.defect_reason_other' => ['nullable', 'string', 'max:1000'],
+            'items.*.defect_note' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

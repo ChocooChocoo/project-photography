@@ -21,6 +21,8 @@ class ProcurementRequestModel extends Model
     public const STATUS_APPROVED = 'approved';
     public const STATUS_ORDERED = 'ordered';
     public const STATUS_DELIVERED = 'delivered';
+    public const STATUS_DEFECT_REPORTED = 'defect_reported';
+    public const STATUS_RETURN_IN_PROGRESS = 'return_in_progress';
     public const STATUS_RECEIVED = 'received';
     public const STATUS_PAYMENT_PROCESSING = 'payment_processing';
     public const STATUS_COMPLETED = 'completed';
@@ -153,6 +155,14 @@ class ProcurementRequestModel extends Model
     }
 
     /**
+     * Get defect-return entries.
+     */
+    public function defectReturns(): HasMany
+    {
+        return $this->hasMany(ProcurementDefectReturnModel::class, 'procurement_request_id');
+    }
+
+    /**
      * Get the CAPEX assets.
      */
     public function assets(): HasMany
@@ -224,8 +234,33 @@ class ProcurementRequestModel extends Model
             self::STATUS_PENDING_FINANCE_REVIEW => 'Pending Finance Review',
             self::STATUS_RETURNED_FOR_REVISION => 'Returned for Revision',
             self::STATUS_PENDING_OWNER_APPROVAL => 'Pending Owner Approval',
+            self::STATUS_DEFECT_REPORTED => 'Defect Reported',
+            self::STATUS_RETURN_IN_PROGRESS => 'Return In Progress',
             self::STATUS_PAYMENT_PROCESSING => 'Payment Processing',
             default => str($this->status)->replace('_', ' ')->title()->toString(),
+        };
+    }
+
+    /**
+     * Get the badge class used for the current status.
+     */
+    public function getStatusBadgeClassAttribute(): string
+    {
+        return match ($this->status) {
+            self::STATUS_PENDING_FINANCE_REVIEW,
+            self::STATUS_PENDING_OWNER_APPROVAL,
+            self::STATUS_RETURNED_FOR_REVISION,
+            self::STATUS_DELIVERED,
+            self::STATUS_DEFECT_REPORTED,
+            self::STATUS_RETURN_IN_PROGRESS,
+            self::STATUS_PAYMENT_PROCESSING => 'warning',
+            self::STATUS_APPROVED,
+            self::STATUS_RECEIVED,
+            self::STATUS_COMPLETED => 'success',
+            self::STATUS_REJECTED,
+            self::STATUS_CANCELLED => 'danger',
+            self::STATUS_ORDERED => 'info',
+            default => 'secondary',
         };
     }
 }

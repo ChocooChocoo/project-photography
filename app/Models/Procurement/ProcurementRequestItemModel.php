@@ -73,6 +73,14 @@ class ProcurementRequestItemModel extends Model
     }
 
     /**
+     * Get defect-return records for this item.
+     */
+    public function defectReturns(): HasMany
+    {
+        return $this->hasMany(ProcurementDefectReturnModel::class, 'procurement_request_item_id');
+    }
+
+    /**
      * Determine whether the item is equipment.
      */
     public function isEquipment(): bool

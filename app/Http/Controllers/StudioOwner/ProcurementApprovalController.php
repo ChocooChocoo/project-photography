@@ -36,6 +36,7 @@ class ProcurementApprovalController extends Controller
                 'ordered' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_ORDERED)->count(),
                 'completed' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_COMPLETED)->count(),
             ],
+            'requestWidgets' => $this->buildOwnerWidgets($procurementRequests),
         ]);
     }
 
@@ -78,5 +79,52 @@ class ProcurementApprovalController extends Controller
         $studioIds = $this->procurementWorkflowService->getAssignedStudioIds($ownerUser, 'owner');
 
         return ProcurementRequestModel::whereIn('studio_id', $studioIds)->findOrFail($id);
+    }
+
+    private function buildOwnerWidgets($procurementRequests): array
+    {
+        $counts = [
+            'pending_owner' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_PENDING_OWNER_APPROVAL)->count(),
+            'approved' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_APPROVED)->count(),
+            'ordered' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_ORDERED)->count(),
+            'completed' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_COMPLETED)->count(),
+        ];
+
+        $total = max(1, $procurementRequests->count());
+
+        return [
+            [
+                'label' => 'Pending Approval',
+                'value' => $counts['pending_owner'],
+                'class' => 'warning',
+                'icon' => 'ti ti-scale',
+                'progress_label' => 'OWNER ACTION',
+                'progress' => (int) round(($counts['pending_owner'] / $total) * 100),
+            ],
+            [
+                'label' => 'Approved',
+                'value' => $counts['approved'],
+                'class' => 'success',
+                'icon' => 'ti ti-circle-check',
+                'progress_label' => 'CLEARED',
+                'progress' => (int) round(($counts['approved'] / $total) * 100),
+            ],
+            [
+                'label' => 'Ordered',
+                'value' => $counts['ordered'],
+                'class' => 'info',
+                'icon' => 'ti ti-package-export',
+                'progress_label' => 'IN FULFILLMENT',
+                'progress' => (int) round(($counts['ordered'] / $total) * 100),
+            ],
+            [
+                'label' => 'Completed',
+                'value' => $counts['completed'],
+                'class' => 'success',
+                'icon' => 'ti ti-cash-banknote',
+                'progress_label' => 'CLOSED',
+                'progress' => (int) round(($counts['completed'] / $total) * 100),
+            ],
+        ];
     }
 }

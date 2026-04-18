@@ -13,21 +13,38 @@
                 </div>
             </div>
 
-            @foreach ([
-                ['label' => 'Draft', 'value' => $requestSummary['draft'] ?? 0, 'class' => 'secondary'],
-                ['label' => 'Pending Finance', 'value' => $requestSummary['pending'] ?? 0, 'class' => 'warning'],
-                ['label' => 'Returned', 'value' => $requestSummary['returned'] ?? 0, 'class' => 'info'],
-                ['label' => 'Completed', 'value' => $requestSummary['completed'] ?? 0, 'class' => 'success'],
-            ] as $summaryCard)
-                <div class="col-sm-6 col-xl-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <span class="badge badge-soft-{{ $summaryCard['class'] }} mb-3">{{ $summaryCard['label'] }}</span>
-                            <h3 class="mb-0">{{ $summaryCard['value'] }}</h3>
+            <div class="col-12">
+                <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1 g-3 align-items-center mb-1">
+                    @foreach ($requestWidgets as $summaryCard)
+                        <div class="col">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="avatar avatar-lg flex-shrink-0">
+                                            <span class="avatar-title bg-{{ $summaryCard['class'] }}-subtle text-{{ $summaryCard['class'] }} rounded fs-24">
+                                                <i class="{{ $summaryCard['icon'] }}"></i>
+                                            </span>
+                                        </div>
+                                        <div class="text-end">
+                                            <h4 class="mb-0">{{ $summaryCard['value'] }}</h4>
+                                            <p class="mb-0 text-muted">{{ $summaryCard['label'] }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="text-muted fs-xs fw-semibold">{{ $summaryCard['progress_label'] }}</span>
+                                            <span class="text-muted">{{ $summaryCard['progress'] }}%</span>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-{{ $summaryCard['class'] }}" style="width: {{ $summaryCard['progress'] }}%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    @endforeach
                 </div>
-            @endforeach
+            </div>
 
             <div class="col-12">
                 <div class="card">
@@ -57,7 +74,7 @@
                                             <td>{{ \Illuminate\Support\Str::limit($procurementRequest->purpose, 70) }}</td>
                                             <td>{{ $procurementRequest->required_date?->format('M d, Y') ?? 'N/A' }}</td>
                                             <td>PHP {{ number_format((float) $procurementRequest->estimated_total, 2) }}</td>
-                                            <td><span class="badge badge-soft-primary">{{ $procurementRequest->status_label }}</span></td>
+                                            <td><span class="badge badge-soft-{{ $procurementRequest->status_badge_class }}">{{ $procurementRequest->status_label }}</span></td>
                                             <td class="text-end">
                                                 <div class="dropdown">
                                                     <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -133,7 +150,7 @@
                         <textarea class="form-control" name="receipt_note" rows="3" placeholder="Optional receipt notes"></textarea>
                     </div>
                     <div class="text-end mt-4">
-                        <button type="submit" class="btn btn-success">Confirm Receipt</button>
+                        <button type="submit" class="btn btn-success" id="confirmReceiptSubmitBtn">Confirm Receipt</button>
                     </div>
                 </form>
             </div>
@@ -168,18 +185,76 @@
                 return '<p class="text-muted mb-0">No audit trail available.</p>';
             }
 
-            return auditTrails.map((audit) => `
-                <div class="border rounded p-3 mb-2">
-                    <div class="d-flex justify-content-between gap-3">
-                        <div>
-                            <h6 class="mb-1">${audit.action}</h6>
-                            <p class="mb-1 text-muted">${audit.note || 'No remarks provided.'}</p>
-                            <small class="text-muted">${audit.actor_name}</small>
+            return `
+                <div class="timeline timeline-icon-based">
+                    ${auditTrails.map((audit) => `
+                        <div class="timeline-item d-flex align-items-stretch">
+                            <div class="timeline-time pe-3 text-muted">${audit.created_at_display || audit.created_at}</div>
+                            <div class="timeline-dot ${audit.dot_class}">
+                                <i class="${audit.icon} fs-xl ${audit.icon_class}"></i>
+                            </div>
+                            <div class="timeline-content ps-3 ${audit === auditTrails[auditTrails.length - 1] ? '' : 'pb-4'}">
+                                <h5 class="mb-1">${audit.title}</h5>
+                                <p class="mb-1 text-muted">${audit.description || 'No remarks provided.'}</p>
+                                <span class="text-primary fw-semibold">By ${audit.actor_name}</span>
+                            </div>
                         </div>
-                        <small class="text-muted text-nowrap">${audit.created_at}</small>
-                    </div>
+                    `).join('')}
                 </div>
-            `).join('');
+            `;
+        }
+
+        function buildDefectReturns(defectReturns) {
+            if (!defectReturns || !defectReturns.length) {
+                return '';
+            }
+
+            return `
+                <div class="border rounded p-3">
+                    <h6 class="mb-3">Defect Return Tracking</h6>
+                    ${defectReturns.map((defectReturn) => `
+                        <div class="border rounded p-3 mb-2">
+                            <div class="d-flex justify-content-between gap-3 mb-2">
+                                <div>
+                                    <h6 class="mb-1">${defectReturn.item_name}</h6>
+                                    <small class="text-muted">${defectReturn.reason_label}</small>
+                                </div>
+                                <span class="badge badge-soft-${defectReturn.status_badge_class} align-self-start">${defectReturn.status_display}</span>
+                            </div>
+                            <p class="mb-1"><strong>Qty:</strong> ${defectReturn.reported_quantity}</p>
+                            <p class="mb-1"><strong>Requester Note:</strong> ${defectReturn.requester_note || 'None'}</p>
+                            <p class="mb-1"><strong>Finance Note:</strong> ${defectReturn.finance_note || 'None'}</p>
+                            <p class="mb-0"><strong>Replacement Delivered:</strong> ${defectReturn.replacement_delivered_at || 'Pending'}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function setButtonLoading($button, loadingText) {
+            if (!$button || !$button.length) {
+                return;
+            }
+
+            if (!$button.data('original-html')) {
+                $button.data('original-html', $button.html());
+            }
+
+            $button.prop('disabled', true).html(`
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${loadingText}
+            `);
+        }
+
+        function resetButtonLoading($button) {
+            if (!$button || !$button.length) {
+                return;
+            }
+
+            $button.prop('disabled', false);
+
+            if ($button.data('original-html')) {
+                $button.html($button.data('original-html'));
+            }
         }
 
         function loadRequestDetails(id, callback) {
@@ -206,7 +281,7 @@
                                         <h5 class="mb-1">${data.request_reference}</h5>
                                         <p class="text-muted mb-0">${data.purpose || 'No purpose provided.'}</p>
                                     </div>
-                                    <span class="badge badge-soft-primary align-self-start">${data.status_display}</span>
+                                    <span class="badge badge-soft-${data.status_badge_class} align-self-start">${data.status_display}</span>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="table table-sm table-centered mb-0">
@@ -237,6 +312,11 @@
                                 ${buildDocuments(data.documents)}
                             </div>
                         </div>
+                        ${data.open_defect_returns && data.open_defect_returns.length ? `
+                            <div class="col-12">
+                                ${buildDefectReturns(data.open_defect_returns)}
+                            </div>
+                        ` : ''}
                         <div class="col-12">
                             <div class="border rounded p-3">
                                 <h6 class="mb-3">Timeline</h6>
@@ -301,17 +381,29 @@
 
             loadRequestDetails(id, function (data) {
                 let html = '';
+                const defectReasonOptions = data.defect_reason_options || [];
+                const itemsForConfirmation = data.open_defect_returns && data.open_defect_returns.length
+                    ? data.items.filter((item) => item.has_open_return)
+                    : data.items;
 
-                data.items.forEach((item, index) => {
+                itemsForConfirmation.forEach((item, index) => {
+                    const canMarkDefective = !item.has_open_return;
+                    const reasonOptionsHtml = defectReasonOptions.map((option) => `
+                        <option value="${option.code}">${option.label}</option>
+                    `).join('');
                     const equipmentFields = item.category === 'equipment'
                         ? `
-                            <div class="col-md-6"><label class="form-label">Serial Number</label><input type="text" class="form-control" name="items[${index}][serial_number]"></div>
-                            <div class="col-md-6"><label class="form-label">Acquisition Cost</label><input type="number" step="0.01" class="form-control" name="items[${index}][acquisition_cost]" value="${item.approved_unit_cost || item.estimated_unit_cost}"></div>
-                            <div class="col-md-6"><label class="form-label">Asset Location</label><input type="text" class="form-control" name="items[${index}][asset_location]"></div>
-                            <div class="col-md-6"><label class="form-label">Warranty Expiry</label><input type="date" class="form-control" name="items[${index}][warranty_expires_at]"></div>
+                            <div class="receipt-accept-fields row g-3">
+                                <div class="col-md-6"><label class="form-label">Serial Number</label><input type="text" class="form-control" name="items[${index}][serial_number]"></div>
+                                <div class="col-md-6"><label class="form-label">Acquisition Cost</label><input type="number" step="0.01" class="form-control" name="items[${index}][acquisition_cost]" value="${item.approved_unit_cost || item.estimated_unit_cost}"></div>
+                                <div class="col-md-6"><label class="form-label">Asset Location</label><input type="text" class="form-control" name="items[${index}][asset_location]"></div>
+                                <div class="col-md-6"><label class="form-label">Warranty Expiry</label><input type="date" class="form-control" name="items[${index}][warranty_expires_at]"></div>
+                            </div>
                         `
                         : `
-                            <div class="col-md-6"><label class="form-label">Reorder Threshold</label><input type="number" step="0.01" class="form-control" name="items[${index}][reorder_threshold]" value="1"></div>
+                            <div class="receipt-accept-fields row g-3">
+                                <div class="col-md-6"><label class="form-label">Reorder Threshold</label><input type="number" step="0.01" class="form-control" name="items[${index}][reorder_threshold]" value="1"></div>
+                            </div>
                         `;
 
                     html += `
@@ -320,17 +412,49 @@
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
                                     <h6 class="mb-1">${item.item_name}</h6>
-                                    <small class="text-muted">${item.category} - ${item.quantity} ${item.unit_of_measure}</small>
+                                    <small class="text-muted">${item.category} - ${(item.open_return_reported_quantity || item.quantity)} ${item.unit_of_measure}</small>
                                 </div>
                             </div>
                             <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label d-block">Receipt Decision</label>
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input receipt-action-toggle" type="radio" name="items[${index}][receipt_action]" id="items_${index}_accepted" value="accepted" checked data-index="${index}">
+                                            <label class="form-check-label" for="items_${index}_accepted">Accept</label>
+                                        </div>
+                                        ${canMarkDefective ? `
+                                            <div class="form-check">
+                                                <input class="form-check-input receipt-action-toggle" type="radio" name="items[${index}][receipt_action]" id="items_${index}_defective" value="defective" data-index="${index}">
+                                                <label class="form-check-label" for="items_${index}_defective">Defective</label>
+                                            </div>
+                                        ` : '<span class="badge badge-soft-info">Replacement item awaiting acceptance</span>'}
+                                    </div>
+                                </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Received Quantity</label>
-                                    <input type="number" step="0.01" class="form-control" name="items[${index}][received_quantity]" value="${item.quantity}">
+                                    <input type="number" step="0.01" class="form-control" name="items[${index}][received_quantity]" value="${item.open_return_reported_quantity || item.quantity}">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Condition Notes</label>
                                     <input type="text" class="form-control" name="items[${index}][condition_notes]" placeholder="Optional condition notes">
+                                </div>
+                                <div class="defect-fields row g-3 d-none" data-index="${index}">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Defect Reason</label>
+                                        <select class="form-select defect-reason-select" name="items[${index}][defect_reason_code]" data-index="${index}">
+                                            <option value="">Select a defect reason</option>
+                                            ${reasonOptionsHtml}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 defect-other-reason d-none" data-index="${index}">
+                                        <label class="form-label">Manual Defect Reason</label>
+                                        <input type="text" class="form-control" name="items[${index}][defect_reason_other]" placeholder="Provide the manual defect reason">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Defect Note</label>
+                                        <textarea class="form-control" name="items[${index}][defect_note]" rows="2" placeholder="Describe the issue found on delivery"></textarea>
+                                    </div>
                                 </div>
                                 ${equipmentFields}
                             </div>
@@ -343,8 +467,33 @@
             });
         });
 
+        $(document).on('change', '.receipt-action-toggle', function () {
+            const index = $(this).data('index');
+            const action = $(this).val();
+            const $card = $(this).closest('.border.rounded.p-3.mb-3');
+
+            if (action === 'defective') {
+                $card.find('.defect-fields[data-index="' + index + '"]').removeClass('d-none');
+                $card.find('.receipt-accept-fields').addClass('d-none');
+                return;
+            }
+
+            $card.find('.defect-fields[data-index="' + index + '"]').addClass('d-none');
+            $card.find('.receipt-accept-fields').removeClass('d-none');
+            $card.find('.defect-other-reason[data-index="' + index + '"]').addClass('d-none');
+        });
+
+        $(document).on('change', '.defect-reason-select', function () {
+            const index = $(this).data('index');
+            const isOther = $(this).val() === 'other';
+
+            $('.defect-other-reason[data-index="' + index + '"]').toggleClass('d-none', !isOther);
+        });
+
         $('#confirmReceiptForm').on('submit', function (event) {
             event.preventDefault();
+            const $submitButton = $('#confirmReceiptSubmitBtn');
+            setButtonLoading($submitButton, 'Submitting...');
 
             $.ajax({
                 url: `${@json($confirmReceiptRouteBase)}/${selectedRequestId}/confirm-receipt`,
@@ -363,6 +512,7 @@
                     }).then(() => window.location.reload());
                 },
                 error: function (xhr) {
+                    resetButtonLoading($submitButton);
                     const errors = xhr.responseJSON?.errors ? Object.values(xhr.responseJSON.errors).flat().join('\n') : (xhr.responseJSON?.message || 'Receipt confirmation failed.');
 
                     Swal.fire({

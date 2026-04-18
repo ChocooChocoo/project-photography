@@ -20,21 +20,38 @@
                 </div>
             </div>
 
-            @foreach ([
-                ['label' => 'Pending Approval', 'value' => $requestSummary['pending_owner'] ?? 0, 'class' => 'warning'],
-                ['label' => 'Approved', 'value' => $requestSummary['approved'] ?? 0, 'class' => 'info'],
-                ['label' => 'Ordered', 'value' => $requestSummary['ordered'] ?? 0, 'class' => 'primary'],
-                ['label' => 'Completed', 'value' => $requestSummary['completed'] ?? 0, 'class' => 'success'],
-            ] as $summaryCard)
-                <div class="col-sm-6 col-xl-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <span class="badge badge-soft-{{ $summaryCard['class'] }} mb-3">{{ $summaryCard['label'] }}</span>
-                            <h3 class="mb-0">{{ $summaryCard['value'] }}</h3>
+            <div class="col-12">
+                <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1 g-3 align-items-center mb-1">
+                    @foreach ($requestWidgets as $summaryCard)
+                        <div class="col">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="avatar avatar-lg flex-shrink-0">
+                                            <span class="avatar-title bg-{{ $summaryCard['class'] }}-subtle text-{{ $summaryCard['class'] }} rounded fs-24">
+                                                <i class="{{ $summaryCard['icon'] }}"></i>
+                                            </span>
+                                        </div>
+                                        <div class="text-end">
+                                            <h4 class="mb-0">{{ $summaryCard['value'] }}</h4>
+                                            <p class="mb-0 text-muted">{{ $summaryCard['label'] }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="text-muted fs-xs fw-semibold">{{ $summaryCard['progress_label'] }}</span>
+                                            <span class="text-muted">{{ $summaryCard['progress'] }}%</span>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-{{ $summaryCard['class'] }}" style="width: {{ $summaryCard['progress'] }}%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    @endforeach
                 </div>
-            @endforeach
+            </div>
 
             <div class="col-12">
                 <div class="card">
@@ -67,7 +84,7 @@
                                             <td>{{ $procurementRequest->requester->full_name ?? 'N/A' }}</td>
                                             <td>{{ $procurementRequest->studio->studio_name ?? 'N/A' }}</td>
                                             <td>
-                                                <span class="badge badge-soft-primary">{{ $procurementRequest->status_label }}</span>
+                                                <span class="badge badge-soft-{{ $procurementRequest->status_badge_class }}">{{ $procurementRequest->status_label }}</span>
                                                 @if ($procurementRequest->is_high_value)
                                                     <span class="badge badge-soft-warning ms-1">High Value</span>
                                                 @endif
@@ -164,6 +181,32 @@
             });
         }
 
+        function setButtonLoading($button, loadingText) {
+            if (!$button || !$button.length) {
+                return;
+            }
+
+            if (!$button.data('original-html')) {
+                $button.data('original-html', $button.html());
+            }
+
+            $button.prop('disabled', true).html(`
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${loadingText}
+            `);
+        }
+
+        function resetButtonLoading($button) {
+            if (!$button || !$button.length) {
+                return;
+            }
+
+            $button.prop('disabled', false);
+
+            if ($button.data('original-html')) {
+                $button.html($button.data('original-html'));
+            }
+        }
+
         function buildDocuments(documents) {
             if (!documents || Object.keys(documents).length === 0) {
                 return '<p class="text-muted mb-0">No documents uploaded yet.</p>';
@@ -186,18 +229,23 @@
                 return '<p class="text-muted mb-0">No audit trail available.</p>';
             }
 
-            return auditTrails.map((audit) => `
-                <div class="border rounded p-3 mb-2">
-                    <div class="d-flex justify-content-between gap-3">
-                        <div>
-                            <h6 class="mb-1">${audit.action}</h6>
-                            <p class="mb-1 text-muted">${audit.note || 'No remarks provided.'}</p>
-                            <small class="text-muted">${audit.actor_name}</small>
+            return `
+                <div class="timeline timeline-icon-based">
+                    ${auditTrails.map((audit) => `
+                        <div class="timeline-item d-flex align-items-stretch">
+                            <div class="timeline-time pe-3 text-muted">${audit.created_at_display || audit.created_at}</div>
+                            <div class="timeline-dot ${audit.dot_class}">
+                                <i class="${audit.icon} fs-xl ${audit.icon_class}"></i>
+                            </div>
+                            <div class="timeline-content ps-3 ${audit === auditTrails[auditTrails.length - 1] ? '' : 'pb-4'}">
+                                <h5 class="mb-1">${audit.title}</h5>
+                                <p class="mb-1 text-muted">${audit.description || 'No remarks provided.'}</p>
+                                <span class="text-primary fw-semibold">By ${audit.actor_name}</span>
+                            </div>
                         </div>
-                        <small class="text-muted text-nowrap">${audit.created_at}</small>
-                    </div>
+                    `).join('')}
                 </div>
-            `).join('');
+            `;
         }
 
         function renderDetails(data) {
@@ -220,7 +268,7 @@
                                     <h5 class="mb-1">${data.request_reference}</h5>
                                     <p class="text-muted mb-0">${data.requester_name} - ${data.studio_name}</p>
                                 </div>
-                                <span class="badge badge-soft-primary align-self-start">${data.status_display}</span>
+                                <span class="badge badge-soft-${data.status_badge_class} align-self-start">${data.status_display}</span>
                             </div>
                             <p>${data.purpose || 'No purpose provided.'}</p>
                             <div class="table-responsive">
@@ -322,6 +370,7 @@
 
         $('#ownerReviewForm').on('submit', function (event) {
             event.preventDefault();
+            const $submitButton = $('#ownerReviewSubmitBtn');
 
             const note = ($('#ownerReviewNote').val() || '').trim();
             const requiresNote = ownerReviewAction !== 'approve';
@@ -337,6 +386,7 @@
 
             ownerReviewSubmitting = true;
             reopenOwnerDetailsModal = false;
+            setButtonLoading($submitButton, ownerReviewAction === 'approve' ? 'Approving...' : ownerReviewAction === 'return' ? 'Returning...' : 'Rejecting...');
 
             $.post(`${@json($processRouteBase)}/${selectedRequestId}/process`, {
                 _token: '{{ csrf_token() }}',
@@ -356,6 +406,7 @@
             }).fail(function (xhr) {
                 ownerReviewSubmitting = false;
                 reopenOwnerDetailsModal = true;
+                resetButtonLoading($submitButton);
                 showError(xhr, 'Owner Action Failed');
             });
         });

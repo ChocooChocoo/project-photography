@@ -72,6 +72,7 @@ class ProcurementRequestController extends Controller
                 'returned' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_RETURNED_FOR_REVISION)->count(),
                 'completed' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_COMPLETED)->count(),
             ],
+            'requestWidgets' => $this->buildRequesterWidgets($procurementRequests),
         ]);
     }
 
@@ -158,7 +159,9 @@ class ProcurementRequestController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Procurement receipt confirmed successfully.',
+            'message' => $receivedRequest->status === ProcurementRequestModel::STATUS_DEFECT_REPORTED
+                ? 'Defective items were reported successfully. Finance has been notified.'
+                : 'Procurement receipt confirmed successfully.',
             'data' => [
                 'id' => $receivedRequest->id,
                 'status' => $receivedRequest->status,
@@ -179,5 +182,52 @@ class ProcurementRequestController extends Controller
         return ProcurementRequestModel::where('requester_id', $user->id)
             ->whereIn('studio_id', $studioIds)
             ->findOrFail($id);
+    }
+
+    private function buildRequesterWidgets($procurementRequests): array
+    {
+        $counts = [
+            'draft' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_DRAFT)->count(),
+            'pending' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_PENDING_FINANCE_REVIEW)->count(),
+            'returned' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_RETURNED_FOR_REVISION)->count(),
+            'completed' => $procurementRequests->where('status', ProcurementRequestModel::STATUS_COMPLETED)->count(),
+        ];
+
+        $total = max(1, array_sum($counts));
+
+        return [
+            [
+                'label' => 'Draft Requests',
+                'value' => $counts['draft'],
+                'class' => 'secondary',
+                'icon' => 'ti ti-edit-circle',
+                'progress_label' => 'QUEUE SHARE',
+                'progress' => (int) round(($counts['draft'] / $total) * 100),
+            ],
+            [
+                'label' => 'Pending Review',
+                'value' => $counts['pending'],
+                'class' => 'warning',
+                'icon' => 'ti ti-hourglass-empty',
+                'progress_label' => 'IN REVIEW',
+                'progress' => (int) round(($counts['pending'] / $total) * 100),
+            ],
+            [
+                'label' => 'Returned Items',
+                'value' => $counts['returned'],
+                'class' => 'info',
+                'icon' => 'ti ti-arrow-back-up',
+                'progress_label' => 'NEEDS ACTION',
+                'progress' => (int) round(($counts['returned'] / $total) * 100),
+            ],
+            [
+                'label' => 'Completed',
+                'value' => $counts['completed'],
+                'class' => 'success',
+                'icon' => 'ti ti-rosette-discount-check',
+                'progress_label' => 'FULFILLED',
+                'progress' => (int) round(($counts['completed'] / $total) * 100),
+            ],
+        ];
     }
 }
