@@ -53,6 +53,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Dashboard
         Route::get('/dashboard',                    [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/dashboard/filter',             [\App\Http\Controllers\Admin\DashboardController::class, 'filter'])->name('admin.dashboard.filter');
+        Route::get('/dashboard/export',             [\App\Http\Controllers\Admin\DashboardController::class, 'export'])->name('admin.dashboard.export');
 
         // Manage Users         
         Route::get('/view/users',                   [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.user.index');
@@ -109,6 +111,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Dashboard
         Route::get('/dashboard',                                [\App\Http\Controllers\StudioOwner\DashboardController::class, 'index'])->name('owner.dashboard');
+        Route::get('/dashboard/filter',                         [\App\Http\Controllers\StudioOwner\DashboardController::class, 'filter'])->name('owner.dashboard.filter');
+        Route::get('/dashboard/export',                         [\App\Http\Controllers\StudioOwner\DashboardController::class, 'export'])->name('owner.dashboard.export');
 
         // Manage Studio - Limit
         Route::middleware(['check.studio.limit'])->group(function () {
@@ -283,6 +287,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Dashboard
         Route::get('/dashboard',                                    [\App\Http\Controllers\StudioHR\DashboardController::class, 'index'])->middleware('permission:studio-hr.dashboard.view')->name('studio-hr.dashboard');
+        Route::get('/dashboard/filter',                             [\App\Http\Controllers\StudioHR\DashboardController::class, 'filter'])->middleware('permission:studio-hr.dashboard.view')->name('studio-hr.dashboard.filter');
+        Route::get('/dashboard/export',                             [\App\Http\Controllers\StudioHR\DashboardController::class, 'export'])->middleware('permission:studio-hr.dashboard.view')->name('studio-hr.dashboard.export');
 
         // Leave Requests
         Route::get('/leave-requests/create',                        [\App\Http\Controllers\StudioHR\LeaveRequestController::class, 'create'])->middleware('permission:studio-hr.leave-requests.manage')->name('studio-hr.leave-requests.create');
@@ -372,6 +378,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Dashboard
         Route::get('/dashboard',                                    [\App\Http\Controllers\Finance\DashboardController::class, 'index'])->middleware('permission:studio-finance.dashboard.view')->name('studio-finance.dashboard');
+        Route::get('/dashboard/filter',                             [\App\Http\Controllers\Finance\DashboardController::class, 'filter'])->middleware('permission:studio-finance.dashboard.view')->name('studio-finance.dashboard.filter');
+        Route::get('/dashboard/export',                             [\App\Http\Controllers\Finance\DashboardController::class, 'export'])->middleware('permission:studio-finance.dashboard.view')->name('studio-finance.dashboard.export');
 
         // Leave Requests
         Route::get('/leave-requests/create',                        [\App\Http\Controllers\Finance\LeaveRequestController::class, 'create'])->middleware('permission:studio-finance.leave-requests.manage')->name('studio-finance.leave-requests.create');
@@ -480,6 +488,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Dashboard
         Route::get('/dashboard',                        [\App\Http\Controllers\StudioPhotographer\DashboardController::class, 'index'])->middleware('permission:studio-photographer.dashboard.view')->name('studio-photographer.dashboard');
+        Route::get('/dashboard/filter',                 [\App\Http\Controllers\StudioPhotographer\DashboardController::class, 'filter'])->middleware('permission:studio-photographer.dashboard.view')->name('studio-photographer.dashboard.filter');
+        Route::get('/dashboard/export',                 [\App\Http\Controllers\StudioPhotographer\DashboardController::class, 'export'])->middleware('permission:studio-photographer.dashboard.view')->name('studio-photographer.dashboard.export');
 
         // Leave Requests
         Route::get('/leave-requests/create',            [\App\Http\Controllers\StudioPhotographer\LeaveRequestController::class, 'create'])->middleware('permission:studio-photographer.leave-requests.manage')->name('studio-photographer.leave-requests.create');

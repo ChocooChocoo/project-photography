@@ -1,16 +1,15 @@
 @extends('layouts.studio-photographer.app')
-@section('title', 'Studio Photographer Panel')
-@section('content')
-        <div class="content-page">
-            <div class="container-fluid">              
-                <div class="page-title-head d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h4 class="fs-xl fw-bold m-0">Dashboard</h4>
-                    </div>
-                </div>          
+@section('title', 'Studio Photographer Dashboard')
 
-                <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1">
-                </div>
-            </div>
-        </div>
+@section('content')
+    @include('partials.dashboard-page', ['dashboard' => $dashboard, 'dashboardConfig' => $dashboardConfig])
+@endsection
+
+@section('scripts')
+    <script src="{{ asset('assets/plugins/apexcharts/apexcharts.min.js') }}"></script>
+    <script>
+        window.dashboardPageConfig = @json($dashboardConfig);
+        window.dashboardInitialData = @json($dashboard);
+    </script>
+    <script src="{{ asset('assets/js/pages/role-dashboard.js') }}"></script>
 @endsection

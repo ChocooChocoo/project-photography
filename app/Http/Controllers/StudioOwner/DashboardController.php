@@ -3,73 +3,55 @@
 namespace App\Http\Controllers\StudioOwner;
 
 use App\Http\Controllers\Controller;
+use App\Services\Dashboard\DashboardCsvExporter;
+use App\Services\Dashboard\OwnerDashboardService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\BookingModel;
-use App\Models\StudioOwner\StudiosModel;
-use App\Models\StudioOwner\StudioPhotographersModel;
-use App\Models\PaymentModel;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
 {
     /**
-     * Display the studio owner dashboard with real statistics.
-     *
-     * @return \Illuminate\View\View
+     * Display the studio owner dashboard.
      */
-    public function index()
+    public function index(Request $request, OwnerDashboardService $dashboardService)
     {
-        // Get the authenticated user
-        $user = Auth::user();
-        
-        // Get the studio owned by this user
-        $studio = StudiosModel::where('user_id', $user->id)->first();
-        
-        // If no studio found, return view with zero values
-        if (!$studio) {
-            return view('owner.dashboard', [
-                'totalEarnings' => 0,
-                'totalBookings' => 0,
-                'completedBookings' => 0,
-                'totalPhotographers' => 0,
-                'studio' => null
-            ]);
-        }
-        
-        // Get total earnings from completed bookings with successful payments
-        $totalEarnings = BookingModel::where('provider_id', $studio->id)
-            ->where('booking_type', 'studio')
-            ->where('status', BookingModel::STATUS_COMPLETED)
-            ->where('payment_status', BookingModel::PAYMENT_PAID)
-            ->sum('total_amount');
-        
-        // Get total bookings (pending + confirmed + in_progress)
-        $totalBookings = BookingModel::where('provider_id', $studio->id)
-            ->where('booking_type', 'studio')
-            ->whereIn('status', [
-                BookingModel::STATUS_PENDING,
-                BookingModel::STATUS_CONFIRMED,
-                BookingModel::STATUS_IN_PROGRESS
-            ])
-            ->count();
-        
-        // Get completed bookings
-        $completedBookings = BookingModel::where('provider_id', $studio->id)
-            ->where('booking_type', 'studio')
-            ->where('status', BookingModel::STATUS_COMPLETED)
-            ->count();
-        
-        // Get total active studio photographers
-        $totalPhotographers = StudioPhotographersModel::where('studio_id', $studio->id)
-            ->where('status', 'active')
-            ->count();
-        
-        return view('owner.dashboard', compact(
-            'totalEarnings',
-            'totalBookings',
-            'completedBookings',
-            'totalPhotographers',
-            'studio'
-        ));
+        $dashboard = $dashboardService->build($request->user(), $request->all());
+
+        return view('owner.dashboard', [
+            'dashboard' => $dashboard,
+            'dashboardConfig' => [
+                'title' => 'Studio Owner Dashboard',
+                'subtitle' => 'Business performance for your linked studio.',
+                'filterRoute' => route('owner.dashboard.filter'),
+                'exportRoute' => route('owner.dashboard.export'),
+            ],
+        ]);
+    }
+
+    /**
+     * Refresh owner dashboard data.
+     */
+    public function filter(Request $request, OwnerDashboardService $dashboardService): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Studio owner dashboard data loaded successfully.',
+            'data' => $dashboardService->build($request->user(), $request->all()),
+        ]);
+    }
+
+    /**
+     * Export owner dashboard data as CSV.
+     */
+    public function export(
+        Request $request,
+        OwnerDashboardService $dashboardService,
+        DashboardCsvExporter $dashboardCsvExporter
+    ): StreamedResponse {
+        return $dashboardCsvExporter->download(
+            'owner-dashboard-' . now()->format('Ymd-His') . '.csv',
+            $dashboardService->build($request->user(), $request->all())
+        );
     }
 }

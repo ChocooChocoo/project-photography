@@ -592,7 +592,18 @@
                                             <div class="flex-grow-1 ms-3">
                                                 <label class="text-muted small mb-1">Service Coverage Area</label>
                                                 <div class="d-flex flex-wrap gap-1">
-                                                    @foreach(json_decode($studio->service_coverage_area, true) as $area)
+                                                    @php
+                                                        $coverageAreas = $studio->service_coverage_area;
+
+                                                        if (is_string($coverageAreas)) {
+                                                            $decodedCoverageAreas = json_decode($coverageAreas, true);
+                                                            $coverageAreas = is_array($decodedCoverageAreas) ? $decodedCoverageAreas : [$coverageAreas];
+                                                        }
+
+                                                        $coverageAreas = is_array($coverageAreas) ? $coverageAreas : [];
+                                                    @endphp
+
+                                                    @foreach($coverageAreas as $area)
                                                     <span class="badge badge-soft-secondary fs-6 p-1 fw-medium">{{ $area }}</span>
                                                     @endforeach
                                                 </div>
@@ -618,10 +629,17 @@
                                                 <label class="text-muted small mb-1">Operating Days</label>
                                                 <p class="mb-0 fw-medium">
                                                     @php
-                                                        $days = json_decode($studio->operating_days, true);
+                                                        $days = $studio->operating_days;
+
+                                                        if (is_string($days)) {
+                                                            $decodedDays = json_decode($days, true);
+                                                            $days = is_array($decodedDays) ? $decodedDays : [$days];
+                                                        }
+
+                                                        $days = is_array($days) ? $days : [];
                                                         $dayNames = array_map('ucfirst', $days);
-                                                        echo implode(', ', $dayNames);
                                                     @endphp
+                                                    {{ implode(', ', $dayNames) }}
                                                 </p>
                                             </div>
                                         </div>
