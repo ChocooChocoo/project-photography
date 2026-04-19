@@ -457,7 +457,7 @@
                                             <div class="flex-grow-1 ms-3">
                                                 <label class="text-muted small mb-1">Service Coverage Area</label>
                                                 <div class="d-flex flex-wrap gap-1">
-                                                    @foreach(json_decode($studio->service_coverage_area, true) as $area)
+                                                    @foreach(is_array($studio->service_coverage_area) ? $studio->service_coverage_area : (json_decode($studio->service_coverage_area, true) ?? []) as $area)
                                                     <span class="badge badge-soft-secondary fs-6 p-1 fw-medium">{{ $area }}</span>
                                                     @endforeach
                                                 </div>
@@ -500,7 +500,9 @@
                                                 <label class="text-muted small mb-1">Operating Days</label>
                                                 <p class="mb-0 fw-medium">
                                                     @php
-                                                        $days = json_decode($studio->operating_days, true);
+                                                        $days = is_array($studio->operating_days)
+                                                            ? $studio->operating_days
+                                                            : (json_decode($studio->operating_days, true) ?? []);
                                                         $dayNames = array_map('ucfirst', $days);
                                                         echo implode(', ', $dayNames);
                                                     @endphp

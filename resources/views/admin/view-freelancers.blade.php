@@ -119,7 +119,9 @@
             // Prepare operating days
             $operatingDays = [];
             if ($profile && $profile->schedule && $profile->schedule->operating_days) {
-                $days = json_decode($profile->schedule->operating_days, true);
+                $days = is_array($profile->schedule->operating_days)
+                    ? $profile->schedule->operating_days
+                    : (json_decode($profile->schedule->operating_days, true) ?? []);
                 $dayNames = [
                     'monday' => 'Monday',
                     'tuesday' => 'Tuesday',
