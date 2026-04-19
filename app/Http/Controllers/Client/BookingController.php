@@ -360,6 +360,13 @@ class BookingController extends Controller
                 $packageValidation = $this->validatePackage($request);
                 if ($packageValidation['valid']) {
                     $package = $packageValidation['package'];
+                    if (!$this->packageAllowsMultipleLocations($package, $request->type)) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Multiple locations are not allowed for this package.',
+                        ], 400);
+                    }
+
                     $maxLocations = $package->max_locations ?? 1;
                     
                     if (count($request->locations) > $maxLocations) {
@@ -430,6 +437,14 @@ class BookingController extends Controller
 
             // 3. Get package details after validation
             $package = $packageValidation['package'];
+
+            if (!$this->isLocationTypeAllowedForPackage($package, $request->type, $request->location_type)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected location type is not available for this package.',
+                    'location_type_error' => true,
+                ], 400);
+            }
 
             // 4. Calculate amounts based on deposit policy
             $totalAmount = $package->package_price;
@@ -538,10 +553,10 @@ class BookingController extends Controller
                 }
             } else {
                 // For in-studio bookings, location fields are optional
-                $bookingData['venue_name'] = $request->venue_name ?? null;
-                $bookingData['street'] = $request->street ?? null;
-                $bookingData['barangay'] = $request->barangay ?? null; // Will be null if not provided
-                $bookingData['city'] = $request->city ?? null;
+                $bookingData['venue_name'] = null;
+                $bookingData['street'] = null;
+                $bookingData['barangay'] = null;
+                $bookingData['city'] = null;
                 $bookingData['province'] = 'Cavite';
                 $bookingData['multiple_locations'] = null;
             }
@@ -827,6 +842,62 @@ class BookingController extends Controller
                 'message' => 'Error validating package.'
             ];
         }
+    }
+
+    /**
+     * Check if the requested booking location type is supported by the selected package.
+     */
+    private function isLocationTypeAllowedForPackage($package, string $type, string $locationType): bool
+    {
+        if ($type === 'freelancer') {
+            return $locationType === 'on-location';
+        }
+
+        $packageLocations = $this->normalizePackageLocations($package->package_location ?? []);
+        $requestedLocation = $locationType === 'in-studio' ? 'In-Studio' : 'On-Location';
+
+        return in_array($requestedLocation, $packageLocations, true);
+    }
+
+    /**
+     * Check if the selected package supports multiple event locations.
+     */
+    private function packageAllowsMultipleLocations($package, string $type): bool
+    {
+        if (!(bool) ($package->allow_multiple_locations ?? false) || (int) ($package->max_locations ?? 1) <= 1) {
+            return false;
+        }
+
+        if ($type === 'freelancer') {
+            return true;
+        }
+
+        return in_array('On-Location', $this->normalizePackageLocations($package->package_location ?? []), true);
+    }
+
+    /**
+     * Normalize package location values from JSON/string/array storage into known labels.
+     */
+    private function normalizePackageLocations($packageLocation): array
+    {
+        if (is_string($packageLocation)) {
+            $decodedLocation = json_decode($packageLocation, true);
+            $packageLocation = is_array($decodedLocation) ? $decodedLocation : [$packageLocation];
+        }
+
+        if (!is_array($packageLocation)) {
+            $packageLocation = $packageLocation ? [$packageLocation] : [];
+        }
+
+        return collect($packageLocation)
+            ->map(function ($location) {
+                return trim((string) $location, "\"' ");
+            })
+            ->filter(function ($location) {
+                return in_array($location, ['In-Studio', 'On-Location'], true);
+            })
+            ->values()
+            ->all();
     }
 
     /**

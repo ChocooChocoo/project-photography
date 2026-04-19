@@ -768,8 +768,7 @@
             // Load packages when category is selected
             $('#serviceCategory').on('change', function() {
                 // Reset location type when category changes
-                $('#locationType').val('').prop('disabled', false);
-                $('#locationType').closest('.col-12').find('.badge.bg-info').remove();
+                resetLocationUI();
                 
                 const categoryId = $(this).val();
                 const type = $('#bookingType').val();
@@ -1228,7 +1227,7 @@
                     
                     // Add visual indicator
                     $('#locationType').closest('.col-12').find('.form-label').append(
-                        '<span class="badge badge-soft-info ms-2" style="font-size: 0.65rem;">' +
+                        '<span class="badge badge-soft-info ms-2 location-auto-set-badge" style="font-size: 0.65rem;">' +
                         '<i class="ti ti-info-circle me-1"></i>On-Location only for freelancers</span>'
                     );
                     
@@ -1355,7 +1354,9 @@
                                 currentPackageLocationFlexibility.is_flexible;
                 
                 // Remove any existing auto-set badges when user changes location
-                $('.location-auto-set-badge').remove();
+                if (!$(this).prop('disabled')) {
+                    $('.location-auto-set-badge').remove();
+                }
                 
                 if (locationValue === 'on-location') {
                     // Check if we have package settings and if multiple locations are allowed
@@ -1380,10 +1381,9 @@
                     $('#multipleLocationsContainer').hide();
                     
                     // Clear any location data
-                    $('#venueName').val('');
-                    $('#city').val('').trigger('change');
-                    $('#barangay').prop('disabled', true).html('<option value="">Select Barangay</option>');
-                    $('#street').val('');
+                    clearSingleLocationFields();
+                    clearMultipleLocationFields();
+                    setSingleLocationRequired(false);
                     
                     // If from flexible selection, add visual indicator
                     if (isFlexible) {
@@ -2723,7 +2723,13 @@
              */
             function handlePackageLocationFlexibility(packageData) {
                 // Store current package flexibility data
-                currentPackageLocationFlexibility = packageData.location_flexibility;
+                const packageLocations = normalizePackageLocations(packageData.package_location);
+                currentPackageLocationFlexibility = packageData.location_flexibility || {
+                    options: packageLocations,
+                    count: packageLocations.length,
+                    is_flexible: packageLocations.length > 1,
+                    single_option: packageLocations.length === 1 ? packageLocations[0] : null
+                };
                 
                 // Get the location container elements
                 const locationTypeSelect = $('#locationType');
@@ -2738,9 +2744,9 @@
                     return;
                 }
                 
-                const options = currentPackageLocationFlexibility.options || [];
-                const isFlexible = currentPackageLocationFlexibility.is_flexible;
-                const singleOption = currentPackageLocationFlexibility.single_option;
+                const options = normalizePackageLocations(currentPackageLocationFlexibility.options || packageLocations);
+                const isFlexible = options.includes('In-Studio') && options.includes('On-Location');
+                const singleOption = options.length === 1 ? options[0] : null;
                 
                 console.log('Package location flexibility:', {
                     options: options,
@@ -2755,6 +2761,8 @@
                     locationTypeSelect.show();
                     locationTypeSelect.prop('disabled', false);
                     locationTypeSelect.val(''); // Clear any previous value
+                    locationTypeSelect.find('option[value="in-studio"]').prop('disabled', false);
+                    locationTypeSelect.find('option[value="on-location"]').prop('disabled', false);
                     
                     // Add info badge
                     locationTypeSelect.closest('.col-12').find('.form-label').append(
@@ -2765,6 +2773,9 @@
                     // Hide location details until selection is made
                     $('#singleLocationDetails').hide();
                     $('#multipleLocationsContainer').hide();
+                    clearSingleLocationFields();
+                    clearMultipleLocationFields();
+                    setSingleLocationRequired(false);
                     
                 } else if (singleOption) {
                     // === CASE: Single option only ["In-Studio"] or ["On-Location"] - Auto-set ===
@@ -2787,6 +2798,8 @@
                     
                     // Set the value
                     locationTypeSelect.val(formValue);
+                    locationTypeSelect.find('option[value="in-studio"]').prop('disabled', formValue !== 'in-studio');
+                    locationTypeSelect.find('option[value="on-location"]').prop('disabled', formValue !== 'on-location');
                     
                     // Add visual indicator
                     locationTypeSelect.closest('.col-12').find('.form-label').append(
@@ -2797,6 +2810,58 @@
                     // Trigger change to show/hide location details
                     locationTypeSelect.trigger('change');
                 }
+            }
+
+            /**
+             * Normalize package location values to the display strings used by package data.
+             */
+            function normalizePackageLocations(locations) {
+                if (typeof locations === 'string') {
+                    try {
+                        locations = JSON.parse(locations);
+                    } catch (e) {
+                        locations = [locations];
+                    }
+                }
+
+                if (!Array.isArray(locations)) {
+                    locations = locations ? [locations] : [];
+                }
+
+                return locations
+                    .map(function(location) {
+                        return String(location).replace(/["']/g, '').trim();
+                    })
+                    .filter(function(location) {
+                        return location === 'In-Studio' || location === 'On-Location';
+                    });
+            }
+
+            /**
+             * Toggle browser validation on the single-location fields.
+             */
+            function setSingleLocationRequired(isRequired) {
+                $('#city').prop('required', isRequired);
+                $('#barangay').prop('required', isRequired);
+            }
+
+            /**
+             * Clear single-location field values.
+             */
+            function clearSingleLocationFields() {
+                $('#venueName').val('');
+                $('#street').val('');
+                $('#city').val('');
+                $('#barangay').val('').prop('disabled', true).html('<option value="">Select Barangay</option>');
+            }
+
+            /**
+             * Clear multiple-location entries.
+             */
+            function clearMultipleLocationFields() {
+                $('#locationsList').empty();
+                locationCount = 0;
+                updateLocationCounter();
             }
 
             /**
@@ -2813,6 +2878,8 @@
                 locationCount = 0;
                 currentMaxLocations = 1;
                 allowMultipleLocations = false;
+                currentPackageLocationFlexibility = null;
+                window.currentPackageSettings = null;
                 
                 // Clear locations list
                 locationsList.empty();
@@ -2827,19 +2894,28 @@
                 $('.location-auto-set-badge').remove();
                 
                 // Reset location type select
-                locationTypeSelect.prop('disabled', false);
+                locationTypeSelect.val('').prop('disabled', false);
+                locationTypeSelect.find('option').prop('disabled', false);
                 $('.flexible-location-ui').remove();
+                clearSingleLocationFields();
+                setSingleLocationRequired(false);
             }
 
             /**
              * Initialize multiple location UI
              */
             function initMultipleLocationUI(packageData) {
-                resetLocationUI();
+                const locationTypeSelect = $('#locationType');
+                const selectedLocationType = locationTypeSelect.val() || 'on-location';
+                const locationTypeIsDisabled = locationTypeSelect.prop('disabled');
                 
                 // Get package location settings
-                allowMultipleLocations = packageData.allow_multiple_locations === true || packageData.allow_multiple_locations === '1' || packageData.allow_multiple_locations === 1;
-                currentMaxLocations = parseInt(packageData.max_locations) || 1;
+                allowMultipleLocations = packageData.allow_multiple_locations === true ||
+                    packageData.allow_multiple_locations === '1' ||
+                    packageData.allow_multiple_locations === 1 ||
+                    packageData.allowMultipleLocations === true;
+
+                currentMaxLocations = parseInt(packageData.max_locations || packageData.maxLocations) || 1;
                 
                 console.log('Initializing multiple location UI:', {
                     allowMultiple: allowMultipleLocations,
@@ -2852,9 +2928,18 @@
                 
                 // Hide single location UI
                 $('#singleLocationDetails').hide();
+                clearSingleLocationFields();
+                setSingleLocationRequired(false);
                 
                 // Show multiple location container
+                clearMultipleLocationFields();
                 $('#multipleLocationsContainer').show();
+                locationTypeSelect.val(selectedLocationType).prop('disabled', locationTypeIsDisabled);
+
+                if (locationTypeIsDisabled) {
+                    locationTypeSelect.find('option[value="in-studio"]').prop('disabled', selectedLocationType !== 'in-studio');
+                    locationTypeSelect.find('option[value="on-location"]').prop('disabled', selectedLocationType !== 'on-location');
+                }
                 
                 // Add first location by default
                 addLocation();
@@ -2896,12 +2981,11 @@
                 
                 singleLocationDiv.show();
                 multipleLocationsDiv.hide();
+                clearMultipleLocationFields();
+                setSingleLocationRequired(true);
                 
                 // Reset single location fields
-                $('#venueName').val('');
-                $('#street').val('');
-                $('#barangay').val('').prop('disabled', true);
-                $('#city').val('').trigger('change');
+                clearSingleLocationFields();
             }
 
             /**
