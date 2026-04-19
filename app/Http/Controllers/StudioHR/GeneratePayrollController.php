@@ -896,8 +896,8 @@ class GeneratePayrollController extends Controller
     private function hasPayrollPermission(UserModel $user, string $action): bool
     {
         $permissionMap = [
-            'view' => ['view_payroll', 'manage_payroll'],
-            'create' => ['create_payroll', 'manage_payroll'],
+            'view' => ['studio-hr.payroll.view', 'studio-hr.payroll.manage', 'studio-hr.generate-payroll.manage'],
+            'create' => ['studio-hr.payroll.create', 'studio-hr.payroll.manage', 'studio-hr.generate-payroll.manage'],
         ];
 
         foreach ($permissionMap[$action] ?? [] as $permissionName) {

@@ -214,9 +214,9 @@ class EmployeePayrollRequest extends FormRequest
     private function hasPayrollPermission(UserModel $user, string $action): bool
     {
         $permissionMap = [
-            'view' => ['view_payroll', 'manage_payroll'],
-            'create' => ['create_payroll', 'manage_payroll'],
-            'update' => ['edit_payroll', 'update_payroll', 'manage_payroll'],
+            'view' => ['studio-hr.payroll.view', 'studio-hr.payroll.manage'],
+            'create' => ['studio-hr.payroll.create', 'studio-hr.payroll.manage'],
+            'update' => ['studio-hr.payroll.edit', 'studio-hr.payroll.update', 'studio-hr.payroll.manage'],
         ];
 
         foreach ($permissionMap[$action] ?? [] as $permissionName) {

@@ -36,9 +36,13 @@
                 $canManageOvertimeRequests = $hrUser?->hasPermission('studio-hr.overtime-requests.manage') ?? false;
                 $canViewEmployees = $hrUser?->hasPermission('studio-hr.employees.view') ?? false;
                 $canCreateEmployees = $hrUser?->hasPermission('studio-hr.employee.create') ?? false;
-                $canViewPayroll = $hrUser?->hasPermission('studio-hr.payroll.view') ?? false;
-                $canCreatePayroll = $hrUser?->hasPermission('studio-hr.payroll.create') ?? false;
-                $canGeneratePayroll = $hrUser?->hasPermission('studio-hr.generate-payroll.manage') ?? false;
+                $canViewPayroll = ($hrUser?->hasPermission('studio-hr.payroll.view') ?? false)
+                    || ($hrUser?->hasPermission('studio-hr.payroll.manage') ?? false);
+                $canCreatePayroll = ($hrUser?->hasPermission('studio-hr.payroll.create') ?? false)
+                    || ($hrUser?->hasPermission('studio-hr.payroll.manage') ?? false);
+                $canGeneratePayroll = ($hrUser?->hasPermission('studio-hr.generate-payroll.manage') ?? false)
+                    || ($hrUser?->hasPermission('studio-hr.payroll.manage') ?? false)
+                    || ($hrUser?->hasPermission('studio-hr.payroll.create') ?? false);
                 $canViewAttendance = $hrUser?->hasPermission('studio-hr.attendance.view') ?? false;
                 $canManageProcurement = $hrUser?->hasPermission('studio-hr.procurement.manage') ?? false;
             @endphp
