@@ -10,7 +10,9 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RbacSeeder::class,
+            FreelancerMarketplaceBundleSeeder::class,
             StudioEmployeesSeeder::class,
+            MultiStudioBundleSeeder::class,
             StudioEmployeePayrollSeeder::class,
             StudioEmployeeAttendanceSeeder::class,
             StudioPhotographerAttendanceSeeder::class,
@@ -22,6 +24,9 @@ class DatabaseSeeder extends Seeder
             ProductPackagesSeeder::class,
             PetPackagesSeeder::class,
             FashionPackagesSeeder::class,
+            PrismPineStudioDataSyncSeeder::class,
+            SnapshotNormalizationRepairSeeder::class,
+            BookingDataIntegrityRepairSeeder::class,
             ChatbotDefaultConfigSeeder::class,
             ProcurementWorkflowSeeder::class,
         ]);

@@ -22,6 +22,7 @@ class StudioEmployeesSeeder extends Seeder
     {
         $staffStudios = StudiosModel::query()
             ->whereIn('status', ['verified', 'active'])
+            ->whereNotIn('studio_name', MultiStudioBundleSeeder::STUDIO_NAMES)
             ->orderBy('id')
             ->get();
 

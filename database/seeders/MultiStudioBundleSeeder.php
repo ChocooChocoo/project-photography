@@ -6,6 +6,7 @@ use App\Models\StudioOwner\EmployeeScheduleModel;
 use App\Models\StudioOwner\PackagesModel;
 use App\Models\StudioOwner\ServicesModel;
 use App\Models\StudioOwner\StudioPhotographersModel;
+use App\Models\StudioOwner\StudioScheduleModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
 use Illuminate\Database\Seeder;
@@ -16,6 +17,17 @@ use Illuminate\Support\Str;
 
 class MultiStudioBundleSeeder extends Seeder
 {
+    /**
+     * Seeded bundled studio names.
+     *
+     * @var array<int, string>
+     */
+    public const STUDIO_NAMES = [
+        'Aurora Wedding House',
+        'North Frame Collective',
+        'Golden Lens House',
+    ];
+
     /**
      * Default seeded password.
      */
@@ -77,6 +89,7 @@ class MultiStudioBundleSeeder extends Seeder
             $owner = $this->upsertUser($definition['owner']);
             $studio = $this->upsertStudio($definition, $owner->id);
 
+            $this->removeLegacyStudioEmployeeAssignments($studio->id);
             $this->syncUserRole($owner->id, (int) $roleIds['owner-super-admin'], $studio->id, $now);
 
             $resolvedCategories = [];
@@ -112,6 +125,7 @@ class MultiStudioBundleSeeder extends Seeder
             }
 
             $serviceMap = $this->seedServices($studio->id, $resolvedCategories, $now);
+            $this->seedStudioSchedule($studio, $definition);
             $this->seedEmployees($definition['code'], $studioIndex, $studio->id, $owner->id, $roleIds->all(), $serviceMap, $definition['operating_days'], $definition['start_time'], $definition['end_time'], $now);
             $this->seedPackages($studio->id, $resolvedCategories, $now);
 
@@ -410,6 +424,71 @@ class MultiStudioBundleSeeder extends Seeder
         }
 
         return $serviceMap;
+    }
+
+    /**
+     * Seed one studio-level operating schedule.
+     *
+     * @param array<string, mixed> $definition
+     */
+    private function seedStudioSchedule(StudiosModel $studio, array $definition): void
+    {
+        StudioScheduleModel::updateOrCreate(
+            [
+                'studio_id' => $studio->id,
+                'location_id' => $definition['location_id'],
+            ],
+            [
+                'operating_days' => $definition['operating_days'],
+                'opening_time' => $definition['start_time'],
+                'closing_time' => $definition['end_time'],
+                'booking_limit' => $definition['max_clients_per_day'],
+                'advance_booking' => $definition['advance_booking_days'],
+            ]
+        );
+    }
+
+    /**
+     * Remove generic legacy seed users that were previously attached to bundled studios.
+     */
+    private function removeLegacyStudioEmployeeAssignments(int $studioId): void
+    {
+        $legacySeedUserIds = DB::table('tbl_user_roles as user_roles')
+            ->join('tbl_users as users', 'users.id', '=', 'user_roles.user_id')
+            ->where('user_roles.studio_id', $studioId)
+            ->where('users.email', 'like', 'seed.studio-%@lumora.test')
+            ->pluck('users.id')
+            ->unique()
+            ->values();
+
+        if ($legacySeedUserIds->isEmpty()) {
+            return;
+        }
+
+        DB::table('tbl_employee_attendance')
+            ->where('studio_id', $studioId)
+            ->whereIn('user_id', $legacySeedUserIds)
+            ->delete();
+
+        DB::table('tbl_employee_payroll')
+            ->where('studio_id', $studioId)
+            ->whereIn('user_id', $legacySeedUserIds)
+            ->delete();
+
+        DB::table('tbl_studio_photographers')
+            ->where('studio_id', $studioId)
+            ->whereIn('photographer_id', $legacySeedUserIds)
+            ->delete();
+
+        DB::table('tbl_studio_employee_schedule')
+            ->where('studio_id', $studioId)
+            ->whereIn('user_id', $legacySeedUserIds)
+            ->delete();
+
+        DB::table('tbl_user_roles')
+            ->where('studio_id', $studioId)
+            ->whereIn('user_id', $legacySeedUserIds)
+            ->delete();
     }
 
     /**

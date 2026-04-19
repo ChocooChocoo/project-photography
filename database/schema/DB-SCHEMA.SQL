@@ -779,6 +779,9 @@ CREATE TABLE IF NOT EXISTS `tbl_studios` (
   `location_id` bigint unsigned DEFAULT NULL,
   `street` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `barangay` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `attendance_latitude` decimal(10,7) DEFAULT NULL,
+  `attendance_longitude` decimal(10,7) DEFAULT NULL,
+  `attendance_radius_meters` int unsigned NOT NULL DEFAULT '100',
   `contact_number` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `studio_email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `facebook_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -1070,12 +1073,16 @@ CREATE TABLE IF NOT EXISTS `tbl_user_roles` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint unsigned NOT NULL,
   `role_id` bigint unsigned NOT NULL,
+  `studio_id` bigint unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `tbl_user_roles_user_id_role_id_unique` (`user_id`,`role_id`),
-  KEY `tbl_user_roles_role_id_foreign` (`role_id`),
+  UNIQUE KEY `tbl_user_roles_user_id_role_id_studio_id_unique` (`user_id`,`role_id`,`studio_id`),
+  KEY `tbl_user_roles_user_id_index` (`user_id`),
+  KEY `tbl_user_roles_role_id_index` (`role_id`),
+  KEY `tbl_user_roles_studio_id_index` (`studio_id`),
   CONSTRAINT `tbl_user_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `tbl_roles` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_user_roles_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_user_roles_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

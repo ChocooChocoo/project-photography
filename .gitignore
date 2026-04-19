@@ -14,28 +14,30 @@ Thumbs.db
 # Laravel build & runtime
 /public/hot
 /public/build
-/bootstrap/cache/*.php
-/storage/framework/cache/*
-/storage/framework/sessions/*
-/storage/framework/testing/*
-/storage/framework/views/*.php
-/storage/logs/*
-/storage/*.key
 
-# Keep these (public disk, often symlinked)
+# Storage
+/storage/*
+!/storage/app
+/storage/app/*
 !/storage/app/public
-!/storage
+
+/storage/framework/*
+!/storage/framework/.gitignore
+
+/storage/logs/*
+
+# Cache
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
 
 # Testing
 .phpunit.result.cache
 /.phpunit.cache/
 coverage/
 
-# Lockfiles (commit composer.lock, ignore others or adjust)
-# composer.lock
+# Lockfiles
+composer.lock
 package-lock.json
-yarn.lock
-pnpm-lock.yaml
 
 # Editors & IDEs
 /.vscode
@@ -44,11 +46,11 @@ pnpm-lock.yaml
 /.nova
 /.zed
 
-# Homestead (older local env)
+# Homestead
 Homestead.json
 Homestead.yaml
 
-# Extra common ignores
+# Extra
 *.bak
 *~
 telescope-*.sqlite*

@@ -3,14 +3,18 @@
 namespace Database\Seeders;
 
 use App\Models\BookingModel;
+use App\Models\BookingPackageModel;
+use App\Models\PaymentModel;
 use App\Models\StudioHR\EmployeeAttendanceModel;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
 use App\Models\StudioOwner\EmployeeScheduleModel;
+use App\Models\StudioOwner\PackagesModel;
 use App\Models\StudioOwner\StudioPhotographersModel;
 use App\Models\UserModel;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -263,6 +267,7 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
             foreach ($bookingIndexes as $sequence => $workingDayIndex) {
                 $bookingDate = $workingDates[$workingDayIndex];
                 $booking = $this->upsertCompletedBooking($assignment, $client, $bookingDate, $sequence + 1);
+                $package = $this->resolveStudioPackageForSeededBooking($assignment, $booking);
 
                 BookingAssignedPhotographerModel::updateOrCreate(
                     [
@@ -271,6 +276,15 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
                     ],
                     $this->buildCompletedAssignmentPayload($assignment, $bookingDate, $sequence + 1)
                 );
+
+                if ($package) {
+                    $this->syncBookingPackageSnapshot($booking, $package, $bookingDate);
+                }
+
+                $this->syncCompletedPayment($booking, $bookingDate);
+                $booking->updatePaymentStatus();
+                $booking->status = BookingModel::STATUS_COMPLETED;
+                $booking->saveQuietly();
             }
 
             $this->command?->info("Seeded April completed bookings: {$photographer->email}");
@@ -359,6 +373,94 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
     }
 
     /**
+     * Pick a valid studio package for the seeded April booking.
+     */
+    private function resolveStudioPackageForSeededBooking(StudioPhotographersModel $assignment, BookingModel $booking): ?PackagesModel
+    {
+        $specializationService = DB::table('tbl_services')
+            ->where('id', $assignment->specialization)
+            ->first(['category_id']);
+
+        $candidateCategoryIds = collect([
+            $specializationService->category_id ?? null,
+            $booking->category_id,
+        ])->filter()->unique()->values();
+
+        foreach ($candidateCategoryIds as $categoryId) {
+            $package = PackagesModel::query()
+                ->where('studio_id', $assignment->studio_id)
+                ->where('category_id', $categoryId)
+                ->where('status', 'active')
+                ->orderByRaw('ABS(package_price - ?) ASC', [(float) $booking->total_amount])
+                ->orderBy('id')
+                ->first();
+
+            if ($package) {
+                return $package;
+            }
+        }
+
+        return PackagesModel::query()
+            ->where('studio_id', $assignment->studio_id)
+            ->where('status', 'active')
+            ->orderByRaw('ABS(package_price - ?) ASC', [(float) $booking->total_amount])
+            ->orderBy('id')
+            ->first();
+    }
+
+    /**
+     * Create or refresh the booking package snapshot row.
+     */
+    private function syncBookingPackageSnapshot(BookingModel $booking, PackagesModel $package, Carbon $bookingDate): void
+    {
+        BookingPackageModel::updateOrCreate(
+            [
+                'booking_id' => $booking->id,
+                'package_id' => $package->id,
+            ],
+            [
+                'package_type' => 'studio',
+                'package_name' => $package->package_name,
+                'package_price' => $booking->total_amount,
+                'package_inclusions' => $package->package_inclusions,
+                'duration' => $package->duration,
+                'maximum_edited_photos' => $package->maximum_edited_photos,
+                'coverage_scope' => $this->normalizeCoverageScope($package->coverage_scope),
+                'created_at' => $bookingDate->copy()->subDays(8)->setTime(11, 0)->toDateTimeString(),
+                'updated_at' => $bookingDate->copy()->subDays(8)->setTime(11, 5)->toDateTimeString(),
+            ]
+        );
+    }
+
+    /**
+     * Create or refresh the completed payment row for one seeded April booking.
+     */
+    private function syncCompletedPayment(BookingModel $booking, Carbon $bookingDate): void
+    {
+        PaymentModel::updateOrCreate(
+            [
+                'booking_id' => $booking->id,
+                'payment_reference' => 'SEED-PAY-' . $booking->booking_reference,
+            ],
+            [
+                'stripe_payment_intent_id' => null,
+                'stripe_session_id' => null,
+                'amount' => $booking->total_amount,
+                'payment_method' => 'manual',
+                'status' => 'succeeded',
+                'payment_details' => [
+                    'type' => 'seeded_april_completed_payment',
+                    'notes' => 'Seeded full payment record for completed April booking.',
+                    'is_balance_payment' => false,
+                ],
+                'paid_at' => $bookingDate->copy()->subDays(6)->setTime(15, 0)->toDateTimeString(),
+                'created_at' => $bookingDate->copy()->subDays(6)->setTime(15, 0)->toDateTimeString(),
+                'updated_at' => $bookingDate->copy()->subDays(6)->setTime(15, 5)->toDateTimeString(),
+            ]
+        );
+    }
+
+    /**
      * Build the completed booking-assignment payload.
      *
      * @return array<string, mixed>
@@ -406,5 +508,21 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
         }
 
         return $fallback;
+    }
+
+    /**
+     * Normalize package coverage scope payloads into a string.
+     */
+    private function normalizeCoverageScope(mixed $coverageScope): ?string
+    {
+        if (is_array($coverageScope)) {
+            return json_encode($coverageScope, JSON_THROW_ON_ERROR);
+        }
+
+        if (is_string($coverageScope) && trim($coverageScope) !== '') {
+            return $coverageScope;
+        }
+
+        return null;
     }
 }
