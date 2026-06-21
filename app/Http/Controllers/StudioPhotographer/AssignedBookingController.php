@@ -75,6 +75,7 @@ class AssignedBookingController extends Controller
             $hasUploadedGalleryContent = $booking->hasUploadedGalleryContent();
             $completionBlockReason = $booking->getGalleryCompletionBlockReason();
             // ========== End of payment calculation ==========
+            $requiresLocationConfirmation = $booking->requiresLocationConfirmation();
             
             return response()->json([
                 'success' => true,
@@ -92,7 +93,8 @@ class AssignedBookingController extends Controller
                 ],
                 'requires_online_gallery' => $requiresOnlineGallery,
                 'has_uploaded_gallery_content' => $hasUploadedGalleryContent,
-                'completion_block_reason' => $completionBlockReason
+                'completion_block_reason' => $completionBlockReason,
+                'requires_location_confirmation' => $requiresLocationConfirmation
                 // ========== End of payment info ==========
             ]);
             
@@ -115,10 +117,14 @@ class AssignedBookingController extends Controller
             $assignment = BookingAssignedPhotographerModel::where('id', $assignmentId)
                 ->where('photographer_id', $userId)
                 ->firstOrFail();
+
+            $booking = BookingModel::with(['packages.studioPackage', 'studioOnlineGallery'])
+                ->findOrFail($assignment->booking_id);
+
+            $requiresLocationConfirmation = $booking->requiresLocationConfirmation();
             
             // ========== NEW: Check payment status before allowing completion ==========
             if ($request->status === 'completed') {
-                $booking = BookingModel::with(['packages.studioPackage', 'studioOnlineGallery'])->find($assignment->booking_id);
                 $totalPaid = $booking->payments()->where('status', 'succeeded')->sum('amount');
                 
                 if ($totalPaid < $booking->total_amount) {
@@ -164,7 +170,6 @@ class AssignedBookingController extends Controller
                     $updateData['confirmed_at'] = now();
                     
                     // When photographer accepts, update main booking status to in_progress
-                    $booking = BookingModel::find($assignment->booking_id);
                     if (in_array($booking->status, ['pending', 'confirmed'])) {
                         $booking->status = 'in_progress';
                         $booking->save();
@@ -173,6 +178,13 @@ class AssignedBookingController extends Controller
                 
                 // On-site status
                 case 'on_site':
+                    if (!$requiresLocationConfirmation) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'On-site confirmation is only required for on-location bookings.'
+                        ], 403);
+                    }
+
                     // Check if photographer has confirmed first
                     if ($assignment->status !== 'confirmed') {
                         return response()->json([
@@ -188,26 +200,32 @@ class AssignedBookingController extends Controller
                     break;
                     
                 case 'in_progress':
-                    // Check if client has confirmed on-site presence
-                    if (!$assignment->on_site_at) {
+                    if ($requiresLocationConfirmation) {
+                        // Check if client has confirmed on-site presence
+                        if (!$assignment->on_site_at) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'You must mark as on-site first before starting work.'
+                            ]);
+                        }
+
+                        // Check if client has confirmed
+                        if (!$assignment->client_confirmed_at) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Waiting for client to confirm your on-site presence. Please ask the client to confirm via their dashboard before starting work.'
+                            ]);
+                        }
+                    } elseif ($assignment->status !== 'confirmed') {
                         return response()->json([
                             'success' => false,
-                            'message' => 'You must mark as on-site first before starting work.'
-                        ]);
-                    }
-                    
-                    // Check if client has confirmed
-                    if (!$assignment->client_confirmed_at) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Waiting for client to confirm your on-site presence. Please ask the client to confirm via their dashboard before starting work.'
+                            'message' => 'You must confirm the assignment first before starting work.'
                         ]);
                     }
                     
                     $updateData['started_at'] = now();
                     
                     // Make sure booking is in_progress
-                    $booking = BookingModel::find($assignment->booking_id);
                     if ($booking->status !== 'in_progress') {
                         $booking->status = 'in_progress';
                         $booking->save();
@@ -216,7 +234,7 @@ class AssignedBookingController extends Controller
                     
                 case 'completed':
                     // Check if client has confirmed
-                    if (!$assignment->client_confirmed_at) {
+                    if ($requiresLocationConfirmation && !$assignment->client_confirmed_at) {
                         return response()->json([
                             'success' => false,
                             'message' => 'Client must confirm your on-site presence before you can mark as completed.'

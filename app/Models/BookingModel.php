@@ -220,6 +220,14 @@ class BookingModel extends Model
     }
 
     /**
+     * Check if this booking requires photographer arrival confirmation.
+     */
+    public function requiresLocationConfirmation(): bool
+    {
+        return $this->location_type === 'on-location';
+    }
+
+    /**
     * Check if all photographers have completed their assignments
     */
     public function allPhotographersCompleted(): bool

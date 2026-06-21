@@ -419,6 +419,13 @@ class MyBookingsController extends Controller
                 ], 403);
             }
 
+            if (!$assignment->booking->requiresLocationConfirmation()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Arrival confirmation is only required for on-location bookings.',
+                ], 403);
+            }
+
             if (!$assignment->on_site_at) {
                 return response()->json([
                     'success' => false,
@@ -467,12 +474,13 @@ class MyBookingsController extends Controller
 
             $pendingConfirmations = BookingAssignedPhotographerModel::whereHas('booking', function ($query) use ($userId) {
                 $query->where('client_id', $userId)
+                    ->where('location_type', 'on-location')
                     ->whereIn('status', ['confirmed', 'in_progress']);
             })
                 ->whereNotNull('on_site_at')
                 ->whereNull('client_confirmed_at')
                 ->with([
-                    'booking:id,booking_reference,event_name,event_date,start_time,end_time',
+                    'booking:id,booking_reference,event_name,event_date,start_time,end_time,location_type',
                     'photographer:id,first_name,last_name,profile_photo',
                     'studio:id,studio_name',
                 ])

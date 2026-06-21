@@ -280,6 +280,8 @@
                 const hasUploadedGalleryContent = data.has_uploaded_gallery_content || false;
                 const completionBlockReason = data.completion_block_reason || '';
                 const galleryUploadMissing = (requiresOnlineGallery && !hasUploadedGalleryContent) || !!completionBlockReason;
+                const requiresLocationConfirmation = data.requires_location_confirmation === true ||
+                    booking.location_type === 'on-location';
                 // ========== End of payment info ==========
                 
                 if (!booking) {
@@ -294,6 +296,7 @@
                     client_confirmed_at: assignment.client_confirmed_at,
                     has_on_site: !!assignment.on_site_at,
                     has_client_confirmed: !!assignment.client_confirmed_at,
+                    requires_location_confirmation: requiresLocationConfirmation,
                     is_fully_paid: paymentInfo.is_fully_paid,
                     requires_online_gallery: requiresOnlineGallery,
                     has_uploaded_gallery_content: hasUploadedGalleryContent
@@ -350,10 +353,23 @@
                         current_status: assignment.status,
                         hasOnSite, 
                         hasClientConfirmed,
-                        cancelAllowed
+                        cancelAllowed,
+                        requiresLocationConfirmation
                     });
                     
-                    if (!hasOnSite) {
+                    if (!requiresLocationConfirmation) {
+                        // In-studio bookings can start directly after photographer acceptance.
+                        statusActions = `
+                            ${cancelAllowed && assignment.status === 'confirmed' ?
+                                `<button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
+                                    <i data-lucide="x" class="me-1"></i> Cancel Assignment
+                                </button>` : ''
+                            }
+                            <button class="btn btn-primary" id="startAssignmentBtn">
+                                <i data-lucide="play" class="me-1"></i> Mark as In Progress
+                            </button>
+                        `;
+                    } else if (!hasOnSite) {
                         // Not marked on-site yet - cancel still allowed (status is 'confirmed')
                         statusActions = `
                             ${cancelAllowed ? 
@@ -472,7 +488,7 @@
                 
                 // On-site status HTML
                 let onSiteStatusHtml = '';
-                if (assignment.on_site_at) {
+                if (requiresLocationConfirmation && assignment.on_site_at) {
                     const onSiteDate = new Date(assignment.on_site_at);
                     const formattedOnSite = onSiteDate.toLocaleDateString('en-US', { 
                         year: 'numeric', 
