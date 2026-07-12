@@ -167,6 +167,31 @@ trait Notifiable
     }
 
     /**
+     * Create a payment failed notification.
+     *
+     * @param object $payment
+     * @param object $user
+     * @return NotificationModel|null
+     */
+    public function notifyPaymentFailed($payment, $user)
+    {
+        return $this->createNotification(
+            $user->id,
+            'payment_failed',
+            'Payment Failed',
+            "Your payment of ₱" . number_format($payment->amount, 2) . " could not be processed. Please try again.",
+            [
+                'payment_id' => $payment->id,
+                'payment_reference' => $payment->payment_reference,
+                'amount' => $payment->amount,
+                'route' => route('client.my-bookings.index', [], false)
+            ],
+            'credit-card-off',
+            'danger'
+        );
+    }
+
+    /**
      * Create a reminder notification.
      *
      * @param object $booking

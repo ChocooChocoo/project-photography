@@ -26,6 +26,8 @@ class PaymentModel extends Model
         'payment_reference',
         'stripe_session_id',
         'stripe_payment_intent_id',
+        'paymongo_payment_id',
+        'paymongo_source_id',
         'amount',
         'payment_method',
         'status',

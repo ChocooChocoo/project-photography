@@ -1269,6 +1269,26 @@ class BookingController extends Controller
                     $paymentIntent = $event->data->object;
                     Log::info('Payment intent succeeded', ['intent_id' => $paymentIntent->id]);
                     break;
+
+                case 'payment_intent.payment_failed':
+                    $paymentIntent = $event->data->object;
+
+                    $payment = PaymentModel::where('stripe_payment_intent_id', $paymentIntent->id)->first();
+
+                    if ($payment && $payment->status !== 'failed') {
+                        $payment->update(['status' => 'failed']);
+
+                        $booking = $payment->booking;
+                        if ($booking && $booking->client) {
+                            $this->notifyPaymentFailed($payment, $booking->client);
+                        }
+
+                        Log::info('Payment marked failed via Stripe webhook', [
+                            'payment_id' => $payment->id,
+                            'intent_id' => $paymentIntent->id,
+                        ]);
+                    }
+                    break;
             }
             
             return response()->json(['success' => true]);
@@ -1828,10 +1848,51 @@ class BookingController extends Controller
     }
 
     /**
+     * Verify the Paymongo-Signature header against the raw payload.
+     * Header format: t=<timestamp>,te=<test signature>,li=<live signature>
+     */
+    private function verifyPaymongoSignature(string $rawPayload, ?string $signatureHeader, string $secret): bool
+    {
+        if (!$signatureHeader || !$secret) {
+            return false;
+        }
+
+        $parts = [];
+        foreach (explode(',', $signatureHeader) as $pair) {
+            [$key, $value] = array_pad(explode('=', $pair, 2), 2, null);
+            if ($key !== null) {
+                $parts[trim($key)] = trim((string) $value);
+            }
+        }
+
+        $timestamp = $parts['t'] ?? null;
+        $expectedSignature = $this->paymongoService->isTestMode ? ($parts['te'] ?? null) : ($parts['li'] ?? null);
+
+        if (!$timestamp || !$expectedSignature) {
+            return false;
+        }
+
+        $computedSignature = hash_hmac('sha256', $timestamp . '.' . $rawPayload, $secret);
+
+        return hash_equals($expectedSignature, $computedSignature);
+    }
+
+    /**
      * Handle Paymongo webhook for checkout session updates
      */
     public function handleWebhook(Request $request)
     {
+        $webhookSecret = config('services.paymongo.webhook_secret');
+
+        if (!$this->verifyPaymongoSignature(
+            $request->getContent(),
+            $request->header('Paymongo-Signature'),
+            (string) $webhookSecret
+        )) {
+            Log::error('Paymongo webhook verification failed');
+            return response()->json(['error' => 'Invalid signature'], 400);
+        }
+
         $payload = $request->all();
         $eventType = $payload['data']['attributes']['type'] ?? null;
 
@@ -1841,18 +1902,18 @@ class BookingController extends Controller
             $sessionData = $payload['data'];
             $sessionId = $sessionData['id'];
             $status = $sessionData['attributes']['status'] ?? null;
-            
+
             if ($status === 'paid') {
                 // Find payment by session ID
                 $payment = PaymentModel::where('paymongo_source_id', $sessionId)->first();
-                
+
                 if ($payment && $payment->status !== 'succeeded') {
                     $payment->update([
                         'status' => 'succeeded',
                         'paid_at' => now(),
                         'payment_method' => $sessionData['attributes']['payment_method_used'] ?? 'card',
                     ]);
-                    
+
                     // Update booking
                     $booking = $payment->booking;
                     if ($booking) {
@@ -1861,19 +1922,40 @@ class BookingController extends Controller
                         } else {
                             $paymentStatus = 'partially_paid';
                         }
-                        
+
                         $booking->update([
                             'payment_status' => $paymentStatus,
                             'status' => 'confirmed',
                         ]);
+
+                        $this->createRevenueRecord($booking, $payment);
                     }
-                    
+
                     Log::info('Payment updated via webhook', [
                         'payment_id' => $payment->id,
                         'booking_id' => $booking->id ?? 'N/A',
                         'status' => $status,
                     ]);
                 }
+            }
+        } elseif ($eventType === 'payment.failed') {
+            $sessionId = $payload['data']['attributes']['data']['attributes']['checkout_session_id']
+                ?? $payload['data']['id']
+                ?? null;
+
+            $payment = $sessionId ? PaymentModel::where('paymongo_source_id', $sessionId)->first() : null;
+
+            if ($payment && $payment->status !== 'failed') {
+                $payment->update(['status' => 'failed']);
+
+                $booking = $payment->booking;
+                if ($booking && $booking->client) {
+                    $this->notifyPaymentFailed($payment, $booking->client);
+                }
+
+                Log::info('Payment marked failed via Paymongo webhook', [
+                    'payment_id' => $payment->id,
+                ]);
             }
         }
 

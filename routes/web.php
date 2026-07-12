@@ -9,6 +9,10 @@ use App\Http\Middleware\StudioPhotographerMiddleware;
 use App\Http\Middleware\StudioHRMiddleware;
 use App\Http\Middleware\StudioFinanceMiddleware;
 
+// Payment Webhook Routes (unauthenticated, CSRF-exempt via bootstrap/app.php) ========================================================================================
+Route::post('/webhook/paymongo', [\App\Http\Controllers\Client\BookingController::class, 'handleWebhook'])->name('webhook.paymongo');
+Route::post('/webhook/stripe',   [\App\Http\Controllers\Client\BookingController::class, 'handleStripeWebhook'])->name('webhook.stripe');
+
 // Auth Routes =========================================================================================================================================================
 Route::prefix('auth')->group(function () {
 
