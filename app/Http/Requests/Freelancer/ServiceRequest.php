@@ -30,6 +30,7 @@ class ServiceRequest extends FormRequest
             ],
             'service_name' => 'required|array|min:1',
             'service_name.*' => 'required|string|max:255',
+            'starting_from' => 'nullable|numeric|min:0',
         ];
     }
 

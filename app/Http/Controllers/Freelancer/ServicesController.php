@@ -78,6 +78,7 @@ class ServicesController extends Controller
                 'user_id' => auth()->id(),
                 'category_id' => $request->category_id,
                 'services_name' => $request->service_name,
+                'starting_from' => $request->starting_from,
             ]);
 
             // No longer need to store in pivot table since category_id is in main table
@@ -189,6 +190,7 @@ class ServicesController extends Controller
             $service->update([
                 'category_id' => $request->category_id,
                 'services_name' => $request->service_name,
+                'starting_from' => $request->starting_from,
             ]);
 
             DB::commit();

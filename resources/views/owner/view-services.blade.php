@@ -159,6 +159,11 @@
                                     Please enter at least one service name.
                                 </div>
                             </div>
+
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Starting Price (₱)</label>
+                                <input type="number" class="form-control" name="starting_from" id="edit_starting_from" min="0" step="0.01" placeholder="Optional — shown to clients as 'from ₱X'">
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -217,6 +222,7 @@
                             $('#edit_studio_id').val(service.studio_id);
                             $('#edit_category_id').val(service.category_id);
                             $('#edit_service_name').val(service.service_name);
+                            $('#edit_starting_from').val(service.starting_from);
                             // Removed: service_description and status fields
                             
                             $('#updateServiceBtn').prop('disabled', false).text('Update Service');
@@ -406,7 +412,8 @@
                         $('#edit_service_id').val(service.id);
                         $('#edit_studio_id').val(service.studio_id);
                         $('#edit_category_id').val(service.category_id);
-                        
+                        $('#edit_starting_from').val(service.starting_from);
+
                         // Clear and populate service names container
                         $('#editServiceNamesContainer').empty();
                         

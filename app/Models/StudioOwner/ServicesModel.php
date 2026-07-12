@@ -25,6 +25,7 @@ class ServicesModel extends Model
         'studio_id',
         'category_id',
         'service_name', // This will now store JSON
+        'starting_from',
     ];
 
     /**
@@ -34,6 +35,7 @@ class ServicesModel extends Model
      */
     protected $casts = [
         'service_name' => 'array', // Cast JSON to array
+        'starting_from' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

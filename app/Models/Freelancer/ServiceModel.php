@@ -25,6 +25,7 @@ class ServiceModel extends Model
         'user_id',
         'category_id',
         'services_name',
+        'starting_from',
     ];
 
     /**
@@ -34,6 +35,7 @@ class ServiceModel extends Model
      */
     protected $casts = [
         'services_name' => 'array',
+        'starting_from' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

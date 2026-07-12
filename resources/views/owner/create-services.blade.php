@@ -59,6 +59,11 @@
                                             Please enter at least one service name.
                                         </div>
                                     </div>
+
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label">Starting Price (₱)</label>
+                                        <input type="number" class="form-control" name="starting_from" id="starting_from" min="0" step="0.01" placeholder="Optional — shown to clients as 'from ₱X'">
+                                    </div>
                                 </div>
                                 <button type="submit" class="btn btn-primary" id="submitBtn">
                                     <span id="submitText">Create Services</span>

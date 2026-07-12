@@ -49,6 +49,7 @@ class ServicesController extends Controller
                 'studio_id' => $validated['studio_id'],
                 'category_id' => $validated['category_id'],
                 'service_name' => json_encode($validated['service_name']), // Store as JSON
+                'starting_from' => $validated['starting_from'] ?? null,
             ]);
             
             return response()->json([
@@ -149,6 +150,7 @@ class ServicesController extends Controller
                 'studio_id' => $validated['studio_id'],
                 'category_id' => $validated['category_id'],
                 'service_name' => json_encode($validated['service_name']), // Update as JSON
+                'starting_from' => $validated['starting_from'] ?? null,
             ]);
             
             return response()->json([

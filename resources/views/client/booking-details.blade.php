@@ -115,6 +115,34 @@
                                         </p>
                                     </div>
 
+                                    {{-- SERVICES OFFERED --}}
+                                    @php
+                                        $servicesList = $type === 'studio' ? $studio->services : $freelancer->services;
+                                    @endphp
+                                    @if($servicesList && $servicesList->isNotEmpty())
+                                    <div class="mb-4">
+                                        <h5 class="card-title text-primary mb-3">Services Offered</h5>
+                                        <div class="row g-2">
+                                            @foreach($servicesList as $serviceRow)
+                                                @php
+                                                    $names = $type === 'studio' ? $serviceRow->service_name : $serviceRow->services_name;
+                                                    $names = is_array($names) ? $names : [];
+                                                @endphp
+                                                @foreach($names as $serviceName)
+                                                    <div class="col-md-6 col-xl-4">
+                                                        <div class="d-flex justify-content-between align-items-center border rounded p-2">
+                                                            <span>{{ $serviceName }}</span>
+                                                            <span class="text-success fw-semibold small">
+                                                                {{ $serviceRow->starting_from !== null ? 'from ₱' . number_format($serviceRow->starting_from, 2) : 'Price varies' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    @endif
+
                                     {{-- PACKAGES --}}
                                     <div class="mb-4">
                                         <h5 class="card-title text-primary mb-3">List of Packages</h5>

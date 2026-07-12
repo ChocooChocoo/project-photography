@@ -22,7 +22,7 @@ class BookingDetailsController extends Controller
         if ($type === 'studio') {
             // Fetch studio details with ratings
             $studio = StudiosModel::whereIn('status', ['approved', 'active', 'verified'])
-                ->with(['location', 'category', 'packages', 'schedules', 'user'])
+                ->with(['location', 'category', 'packages', 'schedules', 'user', 'services.category'])
                 ->withCount(['ratings as average_rating' => function($query) {
                     $query->select(DB::raw('coalesce(avg(rating), 0)'));
                 }])
