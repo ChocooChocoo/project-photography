@@ -210,6 +210,9 @@
                                                     min="{{ date('Y-m-d') }}"
                                                     max="{{ date('Y-m-d', strtotime('+60 days')) }}"
                                                     placeholder="Select event date" required>
+                                                <button class="btn btn-outline-secondary" type="button" id="viewCalendarBtn" data-bs-toggle="modal" data-bs-target="#calendarModal">
+                                                    <i class="ti ti-calendar-event me-1"></i> View Calendar
+                                                </button>
                                                 <button class="btn btn-outline-primary" type="button" id="checkDateBtn">
                                                     <i class="ti ti-calendar me-1"></i> Check Availability
                                                 </button>
@@ -245,7 +248,23 @@
                                                         aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <div id="availabilityCalendar"></div>
+                                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="calendarPrevMonth">
+                                                            <i class="ti ti-chevron-left"></i>
+                                                        </button>
+                                                        <h6 class="mb-0" id="calendarMonthLabel">&nbsp;</h6>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="calendarNextMonth">
+                                                            <i class="ti ti-chevron-right"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="d-flex gap-3 mb-2 small">
+                                                        <span><span class="d-inline-block rounded-circle bg-success" style="width:10px;height:10px;"></span> Available</span>
+                                                        <span><span class="d-inline-block rounded-circle bg-danger" style="width:10px;height:10px;"></span> Fully booked</span>
+                                                        <span><span class="d-inline-block rounded-circle bg-secondary" style="width:10px;height:10px;"></span> Closed / Past</span>
+                                                    </div>
+                                                    <div id="availabilityCalendar">
+                                                        <div class="text-center py-4 text-muted" id="calendarLoading">Loading availability...</div>
+                                                    </div>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-default btn-secondary"
@@ -1476,6 +1495,106 @@
                         });
                     }
                 });
+            });
+
+            // ========== AVAILABILITY CALENDAR ==========
+            let calendarViewDate = new Date();
+
+            function loadAvailabilityCalendar() {
+                const type = $('#bookingType').val();
+                const providerId = $('#providerId').val();
+                const year = calendarViewDate.getFullYear();
+                const month = calendarViewDate.getMonth() + 1;
+
+                $('#calendarMonthLabel').text(calendarViewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
+                $('#availabilityCalendar').html('<div class="text-center py-4 text-muted">Loading availability...</div>');
+
+                $.ajax({
+                    url: '{{ route("client.bookings.calendar-availability") }}',
+                    type: 'POST',
+                    data: {
+                        type: type,
+                        provider_id: providerId,
+                        year: year,
+                        month: month,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (!response.success) {
+                            $('#availabilityCalendar').html(`<div class="text-center py-4 text-muted">${response.message || 'No availability data.'}</div>`);
+                            return;
+                        }
+                        renderAvailabilityCalendar(response.availability, year, month);
+                    },
+                    error: function() {
+                        $('#availabilityCalendar').html('<div class="text-center py-4 text-danger">Failed to load availability.</div>');
+                    }
+                });
+            }
+
+            function renderAvailabilityCalendar(availability, year, month) {
+                const firstDay = new Date(year, month - 1, 1);
+                const startOffset = firstDay.getDay();
+                const daysInMonth = new Date(year, month, 0).getDate();
+
+                let html = '<table class="table table-sm text-center mb-0"><thead><tr>';
+                ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(d => html += `<th class="text-muted small">${d}</th>`);
+                html += '</tr></thead><tbody><tr>';
+
+                for (let i = 0; i < startOffset; i++) {
+                    html += '<td></td>';
+                }
+
+                let cellsInRow = startOffset;
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const info = availability[dateString];
+
+                    let cellClass = 'bg-secondary-subtle text-muted';
+                    let clickable = false;
+
+                    if (info) {
+                        if (info.available) {
+                            cellClass = 'bg-success-subtle text-success fw-medium';
+                            clickable = true;
+                        } else if (info.fully_booked) {
+                            cellClass = 'bg-danger-subtle text-danger';
+                        } else {
+                            cellClass = 'bg-secondary-subtle text-muted';
+                        }
+                    }
+
+                    html += `<td class="p-1"><div class="rounded py-1 ${cellClass}" style="cursor:${clickable ? 'pointer' : 'default'};" ${clickable ? `data-date="${dateString}"` : ''}>${day}</div></td>`;
+
+                    cellsInRow++;
+                    if (cellsInRow % 7 === 0 && day !== daysInMonth) {
+                        html += '</tr><tr>';
+                    }
+                }
+
+                html += '</tr></tbody></table>';
+                $('#availabilityCalendar').html(html);
+            }
+
+            $('#calendarModal').on('shown.bs.modal', function() {
+                calendarViewDate = new Date();
+                loadAvailabilityCalendar();
+            });
+
+            $('#calendarPrevMonth').on('click', function() {
+                calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
+                loadAvailabilityCalendar();
+            });
+
+            $('#calendarNextMonth').on('click', function() {
+                calendarViewDate.setMonth(calendarViewDate.getMonth() + 1);
+                loadAvailabilityCalendar();
+            });
+
+            $(document).on('click', '#availabilityCalendar [data-date]', function() {
+                const selectedDate = $(this).data('date');
+                $('#eventDate').val(selectedDate).trigger('change');
+                $('#calendarModal').modal('hide');
             });
 
             // ========== AUTO-CHECK DATE/TIME CHANGES ==========
