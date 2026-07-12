@@ -24,7 +24,7 @@ class UpdateBookingStatusRequest extends FormRequest
     {
         return [
             'status' => ['required', 'string', Rule::in(['confirmed', 'in_progress', 'completed', 'cancelled'])],
-            'cancellation_reason' => ['required_if:status,cancelled', 'nullable', 'string', 'max:500'],
+            'cancellation_reason' => ['required_if:status,cancelled', 'nullable', 'string', 'min:20', 'max:500'],
         ];
     }
 
@@ -39,6 +39,7 @@ class UpdateBookingStatusRequest extends FormRequest
             'status.required' => 'Please select a booking status.',
             'status.in' => 'Invalid booking status selected.',
             'cancellation_reason.required_if' => 'Please provide a reason for cancellation.',
+            'cancellation_reason.min' => 'Please provide a reason of at least 20 characters.',
         ];
     }
 }

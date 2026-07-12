@@ -74,6 +74,8 @@ class BookingModel extends Model
         'payment_type',
         'status',
         'payment_status',
+        'cancellation_reason',
+        'cancelled_by',
     ];
 
     /**

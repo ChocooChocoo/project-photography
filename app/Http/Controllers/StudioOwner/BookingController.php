@@ -878,7 +878,29 @@ class BookingController extends Controller
             }
 
             $booking->status = $newStatus;
+
+            if ($newStatus === BookingModel::STATUS_CANCELLED) {
+                $booking->cancellation_reason = $request->cancellation_reason;
+                $booking->cancelled_by = 'studio';
+
+                // Flag for manual refund review if the client had already paid.
+                // No auto-refund yet — that's a later automation phase.
+                if ($booking->payments->where('status', 'succeeded')->isNotEmpty()) {
+                    $booking->payment_status = 'refund_pending';
+                }
+            }
+
             $booking->save();
+
+            if ($newStatus === BookingModel::STATUS_CANCELLED && $booking->client) {
+                $studio = StudiosModel::find($booking->provider_id);
+                $this->notifyBookingCancelledByStudio(
+                    $booking,
+                    $booking->client,
+                    $studio->studio_name ?? 'the studio',
+                    $request->cancellation_reason
+                );
+            }
 
             return response()->json([
                 'success' => true,

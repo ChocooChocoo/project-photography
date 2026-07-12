@@ -142,6 +142,33 @@ trait Notifiable
     }
 
     /**
+     * Create a booking-cancelled-by-studio notification.
+     *
+     * @param object $booking
+     * @param object $user
+     * @param string $studioName
+     * @param string $reason
+     * @return NotificationModel|null
+     */
+    public function notifyBookingCancelledByStudio($booking, $user, $studioName, $reason)
+    {
+        return $this->createNotification(
+            $user->id,
+            'booking_cancelled_by_studio',
+            'Booking Cancelled',
+            "Your booking #{$booking->booking_reference} has been cancelled by {$studioName}. Reason: {$reason}. Please contact us or re-book.",
+            [
+                'booking_id' => $booking->id,
+                'booking_reference' => $booking->booking_reference,
+                'reason' => $reason,
+                'route' => route('client.my-bookings.index', [], false)
+            ],
+            'calendar-x',
+            'danger'
+        );
+    }
+
+    /**
      * Create a new message notification.
      *
      * @param object $message

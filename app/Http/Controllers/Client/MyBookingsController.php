@@ -271,6 +271,7 @@ class MyBookingsController extends Controller
             $booking->update([
                 'status' => 'cancelled',
                 'payment_status' => 'cancelled',
+                'cancelled_by' => 'client',
             ]);
 
             PaymentModel::where('booking_id', $id)
