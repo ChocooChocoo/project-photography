@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\BookingModel;
 use App\Models\UserModel;
+use Illuminate\Support\Facades\Storage;
 
 class StudioOnlineGalleryModel extends Model
 {
@@ -112,7 +113,13 @@ class StudioOnlineGalleryModel extends Model
      */
     public function getThumbnailAttribute()
     {
-        return $this->images[0] ?? null;
+        $path = $this->images[0] ?? null;
+
+        if (!$path || !Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        return $path;
     }
 
     /**
