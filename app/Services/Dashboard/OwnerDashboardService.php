@@ -7,6 +7,7 @@ use App\Models\PaymentModel;
 use App\Models\StudioOwner\RoleModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\StudioRatingModel;
+use App\Models\SystemRevenueModel;
 use App\Models\UserModel;
 use Illuminate\Support\Facades\DB;
 
@@ -225,11 +226,49 @@ class OwnerDashboardService extends BaseDashboardService
                     $recentBookingRows,
                     'No studio bookings found for the selected range.'
                 ),
+                $this->makeTable(
+                    'income_by_service',
+                    'Income by Service Category',
+                    ['Service Category', 'Bookings', 'Total Revenue', 'Platform Fee', 'Net Income'],
+                    $this->buildIncomeByServiceRows($studio, $startDate, $endDate),
+                    'No revenue recorded for the selected range.'
+                ),
             ],
             [
                 'subtitle' => 'Business performance for ' . $studio->studio_name,
                 'studio_name' => $studio->studio_name,
             ]
         );
+    }
+
+    /**
+     * Build per-service-category income rows from settled revenue records.
+     *
+     * @return array<int, array<int, string>>
+     */
+    private function buildIncomeByServiceRows(StudiosModel $studio, \Carbon\Carbon $startDate, \Carbon\Carbon $endDate): array
+    {
+        $revenues = SystemRevenueModel::query()
+            ->where('provider_type', 'studio')
+            ->where('provider_id', $studio->id)
+            ->where('revenue_type', 'booking')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->with('booking.category')
+            ->get();
+
+        return $revenues
+            ->groupBy(fn (SystemRevenueModel $revenue) => optional(optional($revenue->booking)->category)->category_name ?? 'Uncategorized')
+            ->sortKeys()
+            ->map(function ($group, string $category): array {
+                return [
+                    $category,
+                    (string) $group->count(),
+                    $this->formatCurrency((float) $group->sum('total_amount')),
+                    $this->formatCurrency((float) $group->sum('platform_fee_amount')),
+                    $this->formatCurrency((float) $group->sum('provider_amount')),
+                ];
+            })
+            ->values()
+            ->all();
     }
 }
