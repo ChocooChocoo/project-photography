@@ -405,8 +405,8 @@
                                     <img src="${booking.studio_logo ? '{{ asset("storage/") }}/' + booking.studio_logo : '{{ asset("assets/images/sellers/7.png") }}'}" 
                                          class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;" alt="Studio Logo">
                                 </div>
-                                <div>
-                                    <h6 class="fw-semibold mb-1">${booking.studio_name}</h6>
+                                <div class="text-truncate" style="max-width: 300px;">
+                                    <h6 class="fw-semibold mb-1 text-truncate" title="${booking.studio_name}">${booking.studio_name}</h6>
                                     <p class="text-muted small mb-0">Booking: ${booking.reference}</p>
                                     <p class="text-muted small mb-0">Event Date: ${booking.event_date}</p>
                                 </div>

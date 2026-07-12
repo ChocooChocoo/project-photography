@@ -164,8 +164,8 @@
                                                 class="rounded" alt="{{ $studio->studio_name }}" 
                                                 style="width: 100px; height: 100px; object-fit: cover;">
                                         </div>                                            
-                                        <div class="flex-grow-1 ms-3">
-                                            <h4 class="card-title mb-1">{{ $studio->studio_name }}</h4>
+                                        <div class="flex-grow-1 ms-3" style="min-width: 0;">
+                                            <h4 class="card-title mb-1 text-truncate" title="{{ $studio->studio_name }}">{{ $studio->studio_name }}</h4>
                                             <p class="text-muted mb-1">Studio</p>
                                             <div class="mb-2">
                                                 <span class="text-muted small">
@@ -227,8 +227,8 @@
                                                 class="rounded" alt="{{ $freelancer->brand_name }}" 
                                                 style="width: 100px; height: 100px; object-fit: cover;">
                                         </div>                                            
-                                        <div class="flex-grow-1 ms-3">
-                                            <h4 class="card-title mb-1">{{ $freelancer->brand_name }}</h4>
+                                        <div class="flex-grow-1 ms-3" style="min-width: 0;">
+                                            <h4 class="card-title mb-1 text-truncate" title="{{ $freelancer->brand_name }}">{{ $freelancer->brand_name }}</h4>
                                             <p class="text-muted mb-1">Freelancer</p>
                                             <div class="mb-2">
                                                 <span class="text-muted small">
