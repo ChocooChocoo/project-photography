@@ -573,6 +573,9 @@
                                     </div>
                                 </div>
                                 <span class="badge ${getStatusBadgeClass(assignment.status)}">${assignment.status}</span>
+                                ${assignment.status === 'assigned' && assignment.response_deadline && new Date(assignment.response_deadline) < new Date()
+                                    ? '<span class="badge badge-soft-danger ms-1">Awaiting response &mdash; deadline passed</span>'
+                                    : ''}
                             </div>
                         `;
                     });

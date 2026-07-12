@@ -584,6 +584,7 @@ class BookingController extends Controller
                         'status' => 'assigned',
                         'assignment_notes' => $request->assignment_notes,
                         'assigned_at' => now(),
+                        'response_deadline' => now()->addHours(24),
                     ]);
 
                     $assignedCount++;

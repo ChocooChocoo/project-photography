@@ -37,6 +37,7 @@ class BookingAssignedPhotographerModel extends Model
         'assignment_notes',
         'cancellation_reason',
         'assigned_at',
+        'response_deadline',
         'confirmed_at',
         'on_site_at',                  // NEW
         'client_confirmed_at',         // NEW
@@ -53,6 +54,7 @@ class BookingAssignedPhotographerModel extends Model
      */
     protected $casts = [
         'assigned_at'           => 'datetime',
+        'response_deadline'     => 'datetime',
         'confirmed_at'          => 'datetime',
         'on_site_at'            => 'datetime',
         'client_confirmed_at'   => 'datetime',
@@ -137,6 +139,17 @@ class BookingAssignedPhotographerModel extends Model
     public function isClientConfirmed(): bool
     {
         return !is_null($this->client_confirmed_at);
+    }
+
+    /**
+     * Check if the photographer has missed the response deadline
+     * without accepting or rejecting the assignment.
+     */
+    public function isPastDeadline(): bool
+    {
+        return $this->status === 'assigned'
+            && !is_null($this->response_deadline)
+            && now()->greaterThan($this->response_deadline);
     }
 
     // ────────────────────────────────────────────────

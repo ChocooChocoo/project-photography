@@ -114,6 +114,14 @@
                                             </td>
                                             <td>
                                                 {{ \Carbon\Carbon::parse($assignment->assigned_at)->format('M d, Y') }}
+                                                @if($assignment->status === 'assigned' && $assignment->response_deadline)
+                                                    <br>
+                                                    @if($assignment->isPastDeadline())
+                                                        <span class="badge badge-soft-danger fs-8">Response overdue</span>
+                                                    @else
+                                                        <span class="text-muted small">Respond by {{ $assignment->response_deadline->format('M d, g:i A') }}</span>
+                                                    @endif
+                                                @endif
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
