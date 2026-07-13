@@ -193,6 +193,147 @@ trait Notifiable
     }
 
     /**
+     * Create a booking-completed notification.
+     *
+     * @param object $booking
+     * @param object $user
+     * @return NotificationModel|null
+     */
+    public function notifyBookingCompleted($booking, $user)
+    {
+        return $this->createNotification(
+            $user->id,
+            'booking_completed',
+            'Booking Completed',
+            "Your booking #{$booking->booking_reference} has been marked as completed. Thank you for booking with us!",
+            [
+                'booking_id' => $booking->id,
+                'booking_reference' => $booking->booking_reference,
+                'route' => route('client.my-bookings.index', [], false)
+            ],
+            'circle-check',
+            'success'
+        );
+    }
+
+    /**
+     * Create a photographer-assigned notification for the client.
+     *
+     * @param object $booking
+     * @param object $client
+     * @return NotificationModel|null
+     */
+    public function notifyPhotographerAssigned($booking, $client)
+    {
+        return $this->createNotification(
+            $client->id,
+            'photographer_assigned',
+            'Photographer Assigned',
+            "Your photographer for booking #{$booking->booking_reference} has been assigned.",
+            [
+                'booking_id' => $booking->id,
+                'booking_reference' => $booking->booking_reference,
+                'route' => route('client.my-bookings.index', [], false)
+            ],
+            'user-check',
+            'info'
+        );
+    }
+
+    /**
+     * Create a gallery-published notification for the client.
+     *
+     * @param object $gallery
+     * @param object $client
+     * @return NotificationModel|null
+     */
+    public function notifyGalleryPublished($gallery, $client)
+    {
+        return $this->createNotification(
+            $client->id,
+            'gallery_published',
+            'Gallery Published',
+            "Your photo gallery \"{$gallery->gallery_name}\" is now available to view.",
+            [
+                'gallery_id' => $gallery->id,
+                'route' => route('client.online-gallery.index', [], false)
+            ],
+            'photo',
+            'success'
+        );
+    }
+
+    /**
+     * Create a review-received notification for the provider.
+     *
+     * @param object $rating
+     * @param object $provider
+     * @return NotificationModel|null
+     */
+    public function notifyReviewReceived($rating, $provider)
+    {
+        return $this->createNotification(
+            $provider->id,
+            'review_received',
+            'New Review Received',
+            "You received a new {$rating->rating}-star review.",
+            [
+                'rating_id' => $rating->id,
+                'rating' => $rating->rating,
+            ],
+            'star',
+            'info'
+        );
+    }
+
+    /**
+     * Create an assignment-deadline-warning notification for the photographer.
+     *
+     * @param object $assignment
+     * @param object $photographer
+     * @return NotificationModel|null
+     */
+    public function notifyAssignmentDeadlineWarning($assignment, $photographer)
+    {
+        return $this->createNotification(
+            $photographer->id,
+            'assignment_deadline_warning',
+            'Assignment Response Deadline Approaching',
+            "You have a booking assignment awaiting your response before {$assignment->response_deadline->format('M d, g:i A')}.",
+            [
+                'assignment_id' => $assignment->id,
+                'booking_id' => $assignment->booking_id,
+                'route' => route('assigned.bookings', [], false)
+            ],
+            'clock-exclamation',
+            'warning'
+        );
+    }
+
+    /**
+     * Create a subscription-expiring notification for the owner.
+     *
+     * @param object $studio
+     * @param object $owner
+     * @return NotificationModel|null
+     */
+    public function notifySubscriptionExpiring($studio, $owner)
+    {
+        return $this->createNotification(
+            $owner->id,
+            'subscription_expiring',
+            'Subscription Expiring Soon',
+            "The subscription for \"{$studio->studio_name}\" expires in 7 days. Renew to keep your premium features.",
+            [
+                'studio_id' => $studio->id,
+                'route' => route('owner.subscription.index', [], false)
+            ],
+            'alert-triangle',
+            'warning'
+        );
+    }
+
+    /**
      * Create a new message notification.
      *
      * @param object $message

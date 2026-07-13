@@ -7,11 +7,15 @@ use Illuminate\Http\Request;
 use App\Models\FreelancerRatingModel;
 use App\Models\BookingModel;
 use App\Models\Freelancer\ProfileModel;
+use App\Models\UserModel;
+use App\Traits\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class FreelancerRatingController extends Controller
 {
+    use Notifiable;
+
     /**
      * Display the review form for a freelancer booking.
      */
@@ -133,6 +137,11 @@ class FreelancerRatingController extends Controller
                 'preset_used' => $request->preset_used,
                 'is_recommend' => $request->is_recommend,
             ]);
+
+            $freelancer = UserModel::find($booking->provider_id);
+            if ($freelancer) {
+                $this->notifyReviewReceived($rating, $freelancer);
+            }
 
             return response()->json([
                 'success' => true,

@@ -7,12 +7,15 @@ use Illuminate\Http\Request;
 use App\Models\StudioRatingModel;
 use App\Models\BookingModel;
 use App\Models\StudioOwner\StudiosModel;
+use App\Traits\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class StudioRatingController extends Controller
 {
-    
+    use Notifiable;
+
+
     /**
      * Display the review form for a booking.
      */
@@ -143,6 +146,11 @@ class StudioRatingController extends Controller
 
             // Load relationships for response
             $rating->load(['client', 'studio']);
+
+            $studioOwner = $rating->studio ? $rating->studio->user : null;
+            if ($studioOwner) {
+                $this->notifyReviewReceived($rating, $studioOwner);
+            }
 
             return response()->json([
                 'success' => true,

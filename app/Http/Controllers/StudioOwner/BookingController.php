@@ -746,6 +746,11 @@ class BookingController extends Controller
                 if ($currentAssignedCount > 0 && $assignedCount > 0) {
                     \Log::info('Progress update: Added ' . $assignedCount . ' photographers to existing ' . $currentAssignedCount);
                 }
+
+                // ========== NOTIFICATION 3: Let the client know a photographer was assigned ==========
+                if ($client) {
+                    $this->notifyPhotographerAssigned($booking, $client);
+                }
             }
             // ========== END: ADD NOTIFICATIONS ==========
             
@@ -982,7 +987,11 @@ class BookingController extends Controller
             // Update booking status to completed
             $booking->status = BookingModel::STATUS_COMPLETED;
             $booking->save();
-            
+
+            if ($booking->client) {
+                $this->notifyBookingCompleted($booking, $booking->client);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Booking completed successfully.',
