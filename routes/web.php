@@ -147,6 +147,8 @@ Route::middleware(['auth'])->group(function () {
         // Manage Online Gallery
         Route::get('/view/online-gallery',                          [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'index'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.index');
         Route::get('/online-gallery/completed-bookings',            [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getCompletedBookings'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.completed-bookings');
+        Route::get('/online-gallery/portfolio',                     [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'portfolio'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.portfolio');
+        Route::post('/online-gallery/portfolio',                    [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'storePortfolio'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.portfolio.store');
         Route::get('/online-gallery/{bookingId}/details',           [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getGalleryDetails'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.details');
         Route::post('/online-gallery/{bookingId}/upload',           [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'uploadImages'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.upload');
         Route::delete('/online-gallery/{galleryId}/image',          [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteImage'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.delete-image');
@@ -476,6 +478,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Manage Online Gallery
         Route::get('/view/online-gallery',                  [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'index'])->name('freelancer.online-gallery.index');
+        Route::get('/online-gallery/portfolio',              [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'portfolio'])->name('freelancer.online-gallery.portfolio');
+        Route::post('/online-gallery/portfolio',             [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'storePortfolio'])->name('freelancer.online-gallery.portfolio.store');
         Route::get('/online-gallery/{bookingId}/details',   [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'getGalleryDetails'])->name('freelancer.online-gallery.details');
         Route::post('/online-gallery/{bookingId}/upload',   [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'uploadImages'])->name('freelancer.online-gallery.upload');
         Route::delete('/online-gallery/{galleryId}/image',  [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'deleteImage'])->name('freelancer.online-gallery.delete-image');

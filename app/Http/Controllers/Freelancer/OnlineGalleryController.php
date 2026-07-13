@@ -316,4 +316,71 @@ class OnlineGalleryController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Display portfolio galleries (independent of bookings).
+     */
+    public function portfolio()
+    {
+        $userId = Auth::id();
+
+        $portfolioGalleries = FreelanceOnlineGalleryModel::where('freelancer_id', $userId)
+            ->where('gallery_type', 'portfolio')
+            ->latest()
+            ->get();
+
+        return view('freelancer.view-portfolio-gallery', compact('portfolioGalleries'));
+    }
+
+    /**
+     * Upload images to a portfolio gallery (not tied to a booking).
+     */
+    public function storePortfolio(Request $request)
+    {
+        try {
+            $request->validate([
+                'gallery_name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'images' => 'required|array|min:1',
+                'images.*' => 'image|mimes:jpg,jpeg,png|max:5120',
+            ]);
+
+            $userId = Auth::id();
+
+            DB::beginTransaction();
+
+            $uploadedImages = [];
+            foreach ($request->file('images') as $image) {
+                $uploadedImages[] = $image->store('freelancer-online-galleries/portfolio/' . $userId, 'public');
+            }
+
+            $gallery = FreelanceOnlineGalleryModel::create([
+                'booking_id' => null,
+                'freelancer_id' => $userId,
+                'client_id' => null,
+                'gallery_type' => 'portfolio',
+                'gallery_reference' => FreelanceOnlineGalleryModel::generateGalleryReference(),
+                'gallery_name' => $request->gallery_name,
+                'description' => $request->description,
+                'images' => $uploadedImages,
+                'total_photos' => count($uploadedImages),
+                'status' => 'active',
+                'published_at' => now(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Portfolio gallery created with ' . count($uploadedImages) . ' image(s).',
+                'gallery' => $gallery,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error uploading portfolio images: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

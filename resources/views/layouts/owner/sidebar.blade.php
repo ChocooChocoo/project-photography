@@ -131,6 +131,16 @@
                 </a>
             </li>
 
+            @php
+                $portfolioGalleryRoute = Route::is('owner.online-gallery.portfolio');
+            @endphp
+            <li class="side-nav-item {{ $portfolioGalleryRoute ? 'active' : '' }}">
+                <a href="{{ route('owner.online-gallery.portfolio') }}" class="side-nav-link {{ $portfolioGalleryRoute ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-photo-plus"></i></span>
+                    <span class="menu-text" data-lang="portfolio-gallery">Portfolio Gallery</span>
+                </a>
+            </li>
+
             {{-- Manage Schedules --}}
             @php
                 $manageSchedulesRoutes  = Route::is('owner.studio-schedule.index');

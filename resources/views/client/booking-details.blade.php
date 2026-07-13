@@ -115,6 +115,22 @@
                                         </p>
                                     </div>
 
+                                    {{-- PORTFOLIO --}}
+                                    @if($portfolioGalleries->isNotEmpty())
+                                    <div class="mb-4">
+                                        <h5 class="card-title text-primary mb-3">Portfolio</h5>
+                                        <div class="row g-2">
+                                            @foreach($portfolioGalleries as $gallery)
+                                                @foreach(($gallery->images ?? []) as $image)
+                                                    <div class="col-md-4 col-6">
+                                                        <img src="{{ asset('storage/' . $image) }}" class="rounded w-100" style="height: 140px; object-fit: cover;" alt="{{ $gallery->gallery_name }}">
+                                                    </div>
+                                                @endforeach
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    @endif
+
                                     {{-- SERVICES OFFERED --}}
                                     @php
                                         $servicesList = $type === 'studio' ? $studio->services : $freelancer->services;

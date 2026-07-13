@@ -107,6 +107,16 @@
                 </a>
             </li>
 
+            @php
+                $portfolioGalleryRoute = Route::is('freelancer.online-gallery.portfolio');
+            @endphp
+            <li class="side-nav-item {{ $portfolioGalleryRoute ? 'active' : '' }}">
+                <a href="{{ route('freelancer.online-gallery.portfolio') }}" class="side-nav-link {{ $portfolioGalleryRoute ? 'active' : '' }}">
+                    <span class="menu-icon"><i data-lucide="image-plus"></i></span>
+                    <span class="menu-text" data-lang="portfolio-gallery">Portfolio Gallery</span>
+                </a>
+            </li>
+
             {{-- Member Invitations --}}
             @php
                 $memberInvitationRoutes = Route::is('freelancer.invitation.index');

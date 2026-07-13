@@ -55,13 +55,20 @@ class BookingDetailsController extends Controller
                 ->orderBy('category_name', 'asc')
                 ->get();
 
+            $portfolioGalleries = \App\Models\StudioOwner\StudioOnlineGalleryModel::where('studio_id', $id)
+                ->where('gallery_type', 'portfolio')
+                ->where('status', 'active')
+                ->latest()
+                ->get();
+
             return view('client.booking-details', compact(
-                'studio', 
-                'categories', 
-                'studioPackages', 
+                'studio',
+                'categories',
+                'studioPackages',
                 'type',
                 'recentRatings',
-                'ratingDistribution'
+                'ratingDistribution',
+                'portfolioGalleries'
             ));
         }
 
@@ -103,13 +110,20 @@ class BookingDetailsController extends Controller
             ->orderBy('category_name', 'asc')
             ->get();
 
+        $portfolioGalleries = \App\Models\Freelancer\FreelanceOnlineGalleryModel::where('freelancer_id', $freelancer->user_id)
+            ->where('gallery_type', 'portfolio')
+            ->where('status', 'active')
+            ->latest()
+            ->get();
+
         return view('client.booking-details', compact(
-            'freelancer', 
-            'categories', 
-            'freelancerPackages', 
+            'freelancer',
+            'categories',
+            'freelancerPackages',
             'type',
             'recentRatings',
-            'ratingDistribution'
+            'ratingDistribution',
+            'portfolioGalleries'
         ));
         
         abort(404, 'Invalid type');

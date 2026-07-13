@@ -35,6 +35,7 @@ class FreelanceOnlineGalleryModel extends Model
         'booking_id',
         'freelancer_id',
         'client_id',
+        'gallery_type',
         'gallery_reference',
         'gallery_name',
         'description',

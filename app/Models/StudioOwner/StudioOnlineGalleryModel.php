@@ -35,6 +35,7 @@ class StudioOnlineGalleryModel extends Model
         'booking_id',
         'studio_id',
         'client_id',
+        'gallery_type',
         'gallery_reference',
         'gallery_name',
         'description',
