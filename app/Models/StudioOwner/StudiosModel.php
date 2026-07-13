@@ -144,6 +144,7 @@ class StudiosModel extends Model
             'advance_booking_days' => 'required|integer|min:1|max:30',
             'business_permit' => 'required|file|mimes:pdf,jpg,jpeg,png|max:3072',
             'owner_id_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:3072',
+            'owner_profile_photo' => 'required|image|mimes:jpg,jpeg,png|max:3072',
         ];
     }
 

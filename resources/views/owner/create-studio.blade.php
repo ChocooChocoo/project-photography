@@ -264,11 +264,11 @@
                                 <div class="row">
                                     <h4 class="card-title text-primary mb-3">Owner Information</h4>
                                     <div class="col-12 mb-3">
-                                        <label class="form-label fw-semibold">Owner Profile Picture</label>
+                                        <label class="form-label fw-semibold">Owner Profile Picture <span class="text-danger">*</span></label>
                                         <div class="input-group">
-                                            <input type="file" class="form-control" id="ownerProfilePhoto" name="owner_profile_photo" accept=".jpg,.jpeg,.png">
+                                            <input type="file" class="form-control" id="ownerProfilePhoto" name="owner_profile_photo" accept=".jpg,.jpeg,.png" required>
                                         </div>
-                                        <div class="form-text">Upload a profile picture for the owner (optional). Max size: 3MB</div>
+                                        <div class="form-text">Upload a profile picture for the owner. Max size: 3MB</div>
                                         <div class="invalid-feedback">
                                             Please upload a valid image file.
                                         </div>
