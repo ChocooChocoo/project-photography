@@ -60,6 +60,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard/filter',             [\App\Http\Controllers\Admin\DashboardController::class, 'filter'])->name('admin.dashboard.filter');
         Route::get('/dashboard/export',             [\App\Http\Controllers\Admin\DashboardController::class, 'export'])->name('admin.dashboard.export');
 
+        // Review Moderation
+        Route::get('/reviews',                      [\App\Http\Controllers\Admin\ReviewModerationController::class, 'index'])->name('admin.reviews.index');
+        Route::post('/reviews/{type}/{id}/flag',     [\App\Http\Controllers\Admin\ReviewModerationController::class, 'flag'])->name('admin.reviews.flag');
+        Route::post('/reviews/{type}/{id}/remove',   [\App\Http\Controllers\Admin\ReviewModerationController::class, 'remove'])->name('admin.reviews.remove');
+        Route::post('/reviews/{type}/{id}/republish', [\App\Http\Controllers\Admin\ReviewModerationController::class, 'republish'])->name('admin.reviews.republish');
+
         // Manage Users         
         Route::get('/view/users',                   [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.user.index');
         Route::get('/users/data',                   [\App\Http\Controllers\Admin\UserController::class, 'getUsers'])->name('admin.user.data');

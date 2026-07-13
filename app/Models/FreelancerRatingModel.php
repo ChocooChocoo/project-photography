@@ -34,6 +34,7 @@ class FreelancerRatingModel extends Model
         'review_type',
         'preset_used',
         'is_recommend',
+        'status',
     ];
 
     /**
@@ -70,6 +71,31 @@ class FreelancerRatingModel extends Model
     public function freelancer()
     {
         return $this->belongsTo(\App\Models\Freelancer\ProfileModel::class, 'freelancer_id', 'user_id');
+    }
+
+    /**
+     * Scope a query to only include published reviews.
+     */
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published');
+    }
+
+    /**
+     * Recompute and store the stored avg_rating/total_reviews for a
+     * freelancer from its published reviews, replacing per-request avg().
+     */
+    public static function updateAggregate(int $freelancerUserId): void
+    {
+        $stats = self::where('freelancer_id', $freelancerUserId)
+            ->published()
+            ->selectRaw('COALESCE(AVG(rating), 0) as avg_rating, COUNT(*) as total_reviews')
+            ->first();
+
+        \App\Models\Freelancer\ProfileModel::where('user_id', $freelancerUserId)->update([
+            'avg_rating' => round($stats->avg_rating, 2),
+            'total_reviews' => $stats->total_reviews,
+        ]);
     }
 
     /**

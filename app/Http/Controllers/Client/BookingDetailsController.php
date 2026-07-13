@@ -23,14 +23,16 @@ class BookingDetailsController extends Controller
             // Fetch studio details with ratings
             $studio = StudiosModel::whereIn('status', ['approved', 'active', 'verified'])
                 ->with(['location', 'category', 'packages', 'schedules', 'user', 'services.category'])
-                ->withCount(['ratings as average_rating' => function($query) {
-                    $query->select(DB::raw('coalesce(avg(rating), 0)'));
-                }])
-                ->withCount('ratings')
                 ->findOrFail($id);
+
+            // Use the stored aggregate (kept in sync by StudioRatingModel::updateAggregate())
+            // instead of recomputing avg()/count() on every request.
+            $studio->average_rating = (float) $studio->avg_rating;
+            $studio->ratings_count = $studio->total_reviews;
 
             // Fetch recent ratings for this studio
             $recentRatings = StudioRatingModel::where('studio_id', $id)
+                ->published()
                 ->with('client:id,first_name,last_name,profile_photo')
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
@@ -77,15 +79,17 @@ class BookingDetailsController extends Controller
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
             })
-            ->withCount(['ratings as average_rating' => function($query) {
-                $query->select(DB::raw('coalesce(avg(rating), 0)'));
-            }])
-            ->withCount('ratings')
             ->where('user_id', $id)
             ->firstOrFail();
 
+        // Use the stored aggregate (kept in sync by FreelancerRatingModel::updateAggregate())
+        // instead of recomputing avg()/count() on every request.
+        $freelancer->average_rating = (float) $freelancer->avg_rating;
+        $freelancer->ratings_count = $freelancer->total_reviews;
+
         // Fetch recent ratings for this freelancer
         $recentRatings = FreelancerRatingModel::where('freelancer_id', $id)
+            ->published()
             ->with('client:id,first_name,last_name,profile_photo')
             ->orderBy('created_at', 'desc')
             ->limit(5)

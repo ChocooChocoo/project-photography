@@ -34,6 +34,7 @@ class StudioRatingModel extends Model
         'review_type',
         'preset_used',
         'is_recommend',
+        'status',
     ];
 
     /**
@@ -70,6 +71,31 @@ class StudioRatingModel extends Model
     public function studio()
     {
         return $this->belongsTo(\App\Models\StudioOwner\StudiosModel::class, 'studio_id');
+    }
+
+    /**
+     * Scope a query to only include published reviews.
+     */
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published');
+    }
+
+    /**
+     * Recompute and store the stored avg_rating/total_reviews for a studio
+     * from its published reviews, replacing per-request avg() calculation.
+     */
+    public static function updateAggregate(int $studioId): void
+    {
+        $stats = self::where('studio_id', $studioId)
+            ->published()
+            ->selectRaw('COALESCE(AVG(rating), 0) as avg_rating, COUNT(*) as total_reviews')
+            ->first();
+
+        \App\Models\StudioOwner\StudiosModel::where('id', $studioId)->update([
+            'avg_rating' => round($stats->avg_rating, 2),
+            'total_reviews' => $stats->total_reviews,
+        ]);
     }
 
     /**

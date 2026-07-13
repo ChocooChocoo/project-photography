@@ -144,6 +144,8 @@ class StudioRatingController extends Controller
                 'is_recommend' => $request->is_recommend,
             ]);
 
+            StudioRatingModel::updateAggregate($booking->provider_id);
+
             // Load relationships for response
             $rating->load(['client', 'studio']);
 
@@ -173,24 +175,24 @@ class StudioRatingController extends Controller
     {
         try {
             $reviews = StudioRatingModel::where('studio_id', $studioId)
+                ->published()
                 ->with(['client:id,first_name,last_name,profile_photo'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
-            // Calculate average rating
-            $averageRating = StudioRatingModel::where('studio_id', $studioId)
-                ->avg('rating');
+            // Read the stored aggregate (kept in sync by StudioRatingModel::updateAggregate())
+            // instead of recomputing avg()/count() on every request.
+            $studio = StudiosModel::find($studioId);
+            $averageRating = $studio->avg_rating ?? 0;
+            $totalReviews = $studio->total_reviews ?? 0;
 
-            $totalReviews = StudioRatingModel::where('studio_id', $studioId)
-                ->count();
-
-            // Rating distribution
+            // Rating distribution (published only)
             $distribution = [
-                5 => StudioRatingModel::where('studio_id', $studioId)->where('rating', 5)->count(),
-                4 => StudioRatingModel::where('studio_id', $studioId)->where('rating', 4)->count(),
-                3 => StudioRatingModel::where('studio_id', $studioId)->where('rating', 3)->count(),
-                2 => StudioRatingModel::where('studio_id', $studioId)->where('rating', 2)->count(),
-                1 => StudioRatingModel::where('studio_id', $studioId)->where('rating', 1)->count(),
+                5 => StudioRatingModel::where('studio_id', $studioId)->published()->where('rating', 5)->count(),
+                4 => StudioRatingModel::where('studio_id', $studioId)->published()->where('rating', 4)->count(),
+                3 => StudioRatingModel::where('studio_id', $studioId)->published()->where('rating', 3)->count(),
+                2 => StudioRatingModel::where('studio_id', $studioId)->published()->where('rating', 2)->count(),
+                1 => StudioRatingModel::where('studio_id', $studioId)->published()->where('rating', 1)->count(),
             ];
 
             return response()->json([

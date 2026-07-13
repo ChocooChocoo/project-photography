@@ -39,6 +39,17 @@
                 </a>
             </li>
 
+            {{-- Review Moderation --}}
+            @php
+                $isReviewModerationActive = Route::is('admin.reviews.index');
+            @endphp
+            <li class="side-nav-item {{ $isReviewModerationActive ? 'active' : '' }}">
+                <a href="{{ route('admin.reviews.index') }}" class="side-nav-link {{ $isReviewModerationActive ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-star"></i></span>
+                    <span class="menu-text" data-lang="review-moderation">Review Moderation</span>
+                </a>
+            </li>
+
             {{-- Manage Users --}}
             @php
                 $manageUsersRoutes  = Route::is('admin.user.index');

@@ -138,6 +138,8 @@ class FreelancerRatingController extends Controller
                 'is_recommend' => $request->is_recommend,
             ]);
 
+            FreelancerRatingModel::updateAggregate($booking->provider_id);
+
             $freelancer = UserModel::find($booking->provider_id);
             if ($freelancer) {
                 $this->notifyReviewReceived($rating, $freelancer);
@@ -165,24 +167,24 @@ class FreelancerRatingController extends Controller
     {
         try {
             $reviews = FreelancerRatingModel::where('freelancer_id', $freelancerId)
+                ->published()
                 ->with(['client:id,first_name,last_name,profile_photo'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
-            // Calculate average rating
-            $averageRating = FreelancerRatingModel::where('freelancer_id', $freelancerId)
-                ->avg('rating');
+            // Read the stored aggregate (kept in sync by FreelancerRatingModel::updateAggregate())
+            // instead of recomputing avg()/count() on every request.
+            $freelancerProfile = ProfileModel::where('user_id', $freelancerId)->first();
+            $averageRating = $freelancerProfile->avg_rating ?? 0;
+            $totalReviews = $freelancerProfile->total_reviews ?? 0;
 
-            $totalReviews = FreelancerRatingModel::where('freelancer_id', $freelancerId)
-                ->count();
-
-            // Rating distribution
+            // Rating distribution (published only)
             $distribution = [
-                5 => FreelancerRatingModel::where('freelancer_id', $freelancerId)->where('rating', 5)->count(),
-                4 => FreelancerRatingModel::where('freelancer_id', $freelancerId)->where('rating', 4)->count(),
-                3 => FreelancerRatingModel::where('freelancer_id', $freelancerId)->where('rating', 3)->count(),
-                2 => FreelancerRatingModel::where('freelancer_id', $freelancerId)->where('rating', 2)->count(),
-                1 => FreelancerRatingModel::where('freelancer_id', $freelancerId)->where('rating', 1)->count(),
+                5 => FreelancerRatingModel::where('freelancer_id', $freelancerId)->published()->where('rating', 5)->count(),
+                4 => FreelancerRatingModel::where('freelancer_id', $freelancerId)->published()->where('rating', 4)->count(),
+                3 => FreelancerRatingModel::where('freelancer_id', $freelancerId)->published()->where('rating', 3)->count(),
+                2 => FreelancerRatingModel::where('freelancer_id', $freelancerId)->published()->where('rating', 2)->count(),
+                1 => FreelancerRatingModel::where('freelancer_id', $freelancerId)->published()->where('rating', 1)->count(),
             ];
 
             return response()->json([
