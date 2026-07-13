@@ -76,6 +76,7 @@ class BookingModel extends Model
         'payment_status',
         'cancellation_reason',
         'cancelled_by',
+        'expires_at',
     ];
 
     /**
@@ -92,6 +93,7 @@ class BookingModel extends Model
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
         'multiple_locations' => 'array',
+        'expires_at' => 'datetime',
     ];
 
     /**

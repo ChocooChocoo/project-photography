@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('procurement:escalate-overdue')->hourly();
+Schedule::command('bookings:expire-pending')->hourly();

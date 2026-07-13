@@ -528,6 +528,7 @@ class BookingController extends Controller
                 'payment_type' => $paymentType,
                 'status' => $bookingStatus,
                 'payment_status' => $paymentStatus,
+                'expires_at' => $bookingStatus === 'pending' ? now()->addHours(48) : null,
             ];
 
             // Handle locations based on location type

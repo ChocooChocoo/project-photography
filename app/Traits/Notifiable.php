@@ -169,6 +169,30 @@ trait Notifiable
     }
 
     /**
+     * Create a booking-expired notification.
+     *
+     * @param object $booking
+     * @param object $user
+     * @return NotificationModel|null
+     */
+    public function notifyBookingExpired($booking, $user, string $routeName = 'client.my-bookings.index')
+    {
+        return $this->createNotification(
+            $user->id,
+            'booking_expired',
+            'Booking Expired',
+            "Booking #{$booking->booking_reference} was not confirmed in time and has expired.",
+            [
+                'booking_id' => $booking->id,
+                'booking_reference' => $booking->booking_reference,
+                'route' => route($routeName, [], false)
+            ],
+            'calendar-x',
+            'warning'
+        );
+    }
+
+    /**
      * Create a new message notification.
      *
      * @param object $message

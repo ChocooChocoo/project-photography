@@ -81,6 +81,15 @@
                                                     ][$booking->status] ?? 'badge-soft-secondary';
                                                 @endphp
                                                 <span class="badge {{ $statusBadge }} fs-8 px-2 w-100 text-uppercase">{{ str_replace('_', ' ', $booking->status) }}</span>
+                                                @if($booking->status === 'pending' && $booking->expires_at)
+                                                    <small class="text-muted d-block mt-1 text-center">
+                                                        @if($booking->expires_at->isPast())
+                                                            Expiring soon
+                                                        @else
+                                                            Expires in {{ $booking->expires_at->diffForHumans(null, true) }}
+                                                        @endif
+                                                    </small>
+                                                @endif
                                             </td>
                                             <td>
                                                 @php
