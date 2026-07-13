@@ -38,6 +38,7 @@ class ClientBudgetModel extends Model
         'minimum_budget',
         'maximum_budget',
         'preferred_budget',
+        'spent_amount',
         'category_id',
         'budget_type',
         'status',
@@ -52,6 +53,7 @@ class ClientBudgetModel extends Model
         'minimum_budget' => 'decimal:2',
         'maximum_budget' => 'decimal:2',
         'preferred_budget' => 'decimal:2',
+        'spent_amount' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -131,6 +133,14 @@ class ClientBudgetModel extends Model
     public function getFormattedPreferredBudgetAttribute(): string
     {
         return $this->preferred_budget ? '₱' . number_format($this->preferred_budget, 2) : '—';
+    }
+
+    /**
+     * Get the formatted spent amount with currency symbol.
+     */
+    public function getFormattedSpentAmountAttribute(): string
+    {
+        return '₱' . number_format($this->spent_amount ?? 0, 2);
     }
 
     /**

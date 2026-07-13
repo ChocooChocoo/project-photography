@@ -1151,6 +1151,7 @@ class BookingController extends Controller
 
                 // Create revenue record for this payment
                 SystemRevenueModel::createForPayment($booking, $payment);
+                $this->updateClientBudgetSpending($booking, $payment);
 
                 return redirect()->route('client.payment.success', ['reference' => $reference]);
 
@@ -1256,8 +1257,9 @@ class BookingController extends Controller
                             
                             // ADD THIS LINE FOR REVENUE SPLIT IN WEBHOOK
                             $this->createRevenueRecord($booking, $payment);
+                            $this->updateClientBudgetSpending($booking, $payment);
                         }
-                        
+
                         Log::info('Payment updated via Stripe webhook', [
                             'payment_id' => $payment->id,
                             'booking_id' => $booking->id ?? 'N/A',
@@ -1511,7 +1513,9 @@ class BookingController extends Controller
             'payment_status' => 'partially_paid',
             'status' => 'confirmed',
         ]);
-        
+
+        $this->updateClientBudgetSpending($payment->booking()->first(), $payment);
+
         \Log::info('Payment marked as successful via callback', [
             'payment_id' => $payment->id,
             'booking_id' => $payment->booking_id,
@@ -1930,6 +1934,7 @@ class BookingController extends Controller
                         ]);
 
                         $this->createRevenueRecord($booking, $payment);
+                        $this->updateClientBudgetSpending($booking, $payment);
                     }
 
                     Log::info('Payment updated via webhook', [
@@ -2187,6 +2192,29 @@ class BookingController extends Controller
     private function createRevenueRecord($booking, $payment)
     {
         return SystemRevenueModel::createForPayment($booking, $payment);
+    }
+
+    /**
+     * Increment the client's active budget for this booking's category by
+     * the confirmed payment amount, and notify if the maximum is exceeded.
+     */
+    private function updateClientBudgetSpending($booking, $payment): void
+    {
+        if (!$booking->category_id) {
+            return;
+        }
+
+        $budget = $this->getClientBudgetForCategory($booking->client_id, $booking->category_id);
+
+        if (!$budget) {
+            return;
+        }
+
+        $budget->increment('spent_amount', $payment->amount);
+
+        if ($budget->maximum_budget !== null && $budget->spent_amount >= $budget->maximum_budget && $booking->client) {
+            $this->notifyBudgetExceeded($budget, $booking->client);
+        }
     }
 
     /**

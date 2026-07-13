@@ -334,6 +334,28 @@ trait Notifiable
     }
 
     /**
+     * Create a budget-exceeded notification.
+     *
+     * @param object $budget
+     * @param object $client
+     * @return NotificationModel|null
+     */
+    public function notifyBudgetExceeded($budget, $client)
+    {
+        return $this->createNotification(
+            $client->id,
+            'budget_exceeded',
+            'Budget Limit Reached',
+            "Your spending on \"{$budget->budget_name}\" has reached your set maximum of ₱" . number_format($budget->maximum_budget, 2) . ".",
+            [
+                'budget_id' => $budget->id,
+            ],
+            'wallet',
+            'warning'
+        );
+    }
+
+    /**
      * Create a new message notification.
      *
      * @param object $message

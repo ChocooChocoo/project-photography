@@ -971,6 +971,20 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <div class="col-12 col-md-6">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="bg-light-warning rounded-circle p-2">
+                                                            <i class="ti ti-wallet fs-20 text-warning"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <label class="text-muted small mb-1">Spent So Far</label>
+                                                        <p class="mb-0 fw-medium">${budget.formatted_spent_amount || '₱0.00'}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div class="row g-2 mb-3">
