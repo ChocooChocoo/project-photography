@@ -1,6 +1,6 @@
 # Capstone B: Implementation Roadmap
 
-> Execution guide derived from `capstone-b-analysis.md`.
+> Execution guide derived from [`../01-ANALYSIS/CAPSTONE B ANALYSIS.md`](../01-ANALYSIS/CAPSTONE%20B%20ANALYSIS.md).
 > Phases are ordered by dependency — each phase must be stable before the next begins.
 > Do not implement phases out of order. Each phase has its own checklist.
 

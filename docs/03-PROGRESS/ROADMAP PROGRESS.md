@@ -1,6 +1,6 @@
 # Capstone B Roadmap — Progress (Phase 1 & Phase 2)
 
-> Tracks completion of `docs/capstone-b-implementation-roadmap.md` Phase 1 ("Stabilize") and Phase 2 ("Complete"), per `prompt/tasks/01.md`. Generated 2026-07-13 on branch `capstone-b/phase-1-2`.
+> Tracks completion of [`../02-PLANNING/CAPSTONE B IMPLEMENTATION ROADMAP.md`](../02-PLANNING/CAPSTONE%20B%20IMPLEMENTATION%20ROADMAP.md) Phase 1 ("Stabilize") and Phase 2 ("Complete"), per `prompt/tasks/01.md` (project repo). Generated 2026-07-13 on branch `capstone-b/phase-1-2`.
 
 Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (verified, no change needed) | ⚠️ Partial — see note
 

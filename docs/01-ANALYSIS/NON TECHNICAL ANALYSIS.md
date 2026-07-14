@@ -1,6 +1,6 @@
 # Plain-Language Analysis — Laravel Studio Platform
 
-> **What this document is:** a non-technical companion to `TECHNICAL_ANALYSIS.md`. It explains what
+> **What this document is:** a non-technical companion to `TECHNICAL ANALYSIS.md`. It explains what
 > the system is, who uses it, and how it works — in everyday language. A glossary at the end translates
 > every technical term.
 > **Phase:** Analysis only. Nothing in the software was changed.

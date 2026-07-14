@@ -7,61 +7,13 @@
 
 ## Part 1 — System Overview
 
-### Main Purpose
-
-A **multi-role photography studio platform** that connects clients with studio owners and freelance photographers in the Philippines (Cavite area). It handles the full service lifecycle: discovery → booking → payment → photography session → photo delivery. It also includes internal studio operations (HR, payroll, procurement, attendance).
-
----
-
-### User Roles & What They Can Do
-
-| Role | Portal | Key Capabilities |
-|---|---|---|
-| **Admin** | `/admin` | Verify studios, manage users, approve/reject freelancers, manage categories/locations/subscription plans, platform metrics dashboard |
-| **Owner (Studio Owner)** | `/owner` | Full studio ops: services, packages, schedules, booking management, photographer assignment, RBAC config, payroll settings, HR approvals, chatbot configuration, procurement approvals, online gallery |
-| **Freelancer** | `/freelancer` | Own profile, services, packages, member invitations, assigned bookings, online gallery |
-| **Client** | `/client` | Browse studios/freelancers, create bookings, pay, confirm photographer on-site, view gallery, leave reviews, budget tracking, chatbot |
-| **Studio Photographer** | `/studio-photographer` | Geolocation check-in/out, assigned bookings, leave/overtime requests, online gallery upload, procurement requests |
-| **Studio HR** | `/hr` | Employee management, leave/OT processing, payroll generation, attendance records, procurement requests |
-| **Studio Finance** | `/finance` | Payroll approval, cost review, purchase orders, delivery/payment recording |
-
----
-
-### Correct System Flow
-
-```
-1. REGISTRATION & VERIFICATION
-   Owner/Freelancer registers → uploads business permit + ID → Admin reviews → approve/reject → active
-
-2. STUDIO SETUP (Owner)
-   Create studio → configure services → create packages (with pricing) → set schedules → configure chatbot
-
-3. CLIENT DISCOVERY
-   Client browses marketplace → filters by category, municipality/barangay, price, rating
-   Client views studio profile → selects package → checks availability
-
-4. BOOKING
-   Client creates booking → selects location type (in-studio / on-location) → sets event date/time
-   Chooses payment type: downpayment or full payment → redirected to PayMongo/Stripe
-
-5. BOOKING MANAGEMENT (Owner)
-   Owner reviews pending bookings → assigns studio photographer(s) → confirms booking
-   Photographer receives assignment → confirms acceptance
-
-6. EVENT DAY
-   For on-location: Photographer marks "on-site" → Client confirms photographer present → work begins
-   Photographer marks assignment complete
-
-7. PHOTO DELIVERY
-   Photographer uploads photos to online gallery (required if package includes gallery)
-   Owner marks booking as complete (only allowed if fully paid + gallery uploaded)
-   Client views gallery via client portal
-
-8. INTERNAL OPS (parallel track)
-   Studio Photographer checks in/out (geofenced to studio coords)
-   HR generates payroll → Finance approves → Owner oversees
-   Procurement: HR requests → Finance reviews/creates PO → delivery recorded → payment closed
-```
+> Superseded by the dedicated analysis documents to avoid duplication. For the full system purpose,
+> user roles/portals, and step-by-step system flow, see:
+> - [`TECHNICAL ANALYSIS.md`](./TECHNICAL%20ANALYSIS.md) — technical detail, architecture, flowcharts
+> - [`NON TECHNICAL ANALYSIS.md`](./NON%20TECHNICAL%20ANALYSIS.md) — plain-language walkthrough + glossary
+>
+> This document (`CAPSTONE B ANALYSIS.md`) focuses on what's unique to it: the revision checklist,
+> automation suggestions, deep-scan findings, and workflow improvement proposals below.
 
 ---
 
