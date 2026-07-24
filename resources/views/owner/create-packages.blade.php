@@ -258,6 +258,13 @@
                                     </div>
 
                                     <div class="col-12 mb-3">
+                                        <label class="form-label">Cover Images <small class="text-muted">(optional, up to 5)</small></label>
+                                        <input type="file" class="form-control" name="cover_images[]" id="coverImages" accept=".jpg,.jpeg,.png,.gif" multiple>
+                                        <div class="form-text">JPG/PNG/GIF, max 5MB each. Shown to clients when choosing this package.</div>
+                                        <div id="coverImagesPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                                    </div>
+
+                                    <div class="col-12 mb-3">
                                         <label class="form-label">Status</label>
                                         <select class="form-select" name="status" required>
                                             <option value="">Select Status</option>
@@ -559,10 +566,29 @@
                 toggleCoverageScope();
             });
 
+            // Cover images: cap at 5 and show a quick preview
+            $('#coverImages').on('change', function() {
+                const files = Array.from(this.files);
+                if (files.length > 5) {
+                    Swal.fire('Too Many Images', 'You can upload up to 5 cover images.', 'warning');
+                    $(this).val('');
+                    $('#coverImagesPreview').empty();
+                    return;
+                }
+
+                $('#coverImagesPreview').empty();
+                files.forEach(file => {
+                    const url = URL.createObjectURL(file);
+                    $('#coverImagesPreview').append(
+                        `<img src="${url}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;">`
+                    );
+                });
+            });
+
             // Handle form submission
             $('#createPackageForm').submit(function(e) {
                 e.preventDefault();
-                
+
                 // Get form data
                 const formData = new FormData(this);
                 

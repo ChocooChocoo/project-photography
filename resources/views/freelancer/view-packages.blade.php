@@ -153,12 +153,7 @@
             // Edit package
             $('.btn-edit').on('click', function() {
                 const packageId = $(this).data('id');
-                Swal.fire({
-                    title: 'Edit Package',
-                    text: 'Edit functionality will be implemented soon.',
-                    icon: 'info',
-                    confirmButtonColor: '#007BFF'
-                });
+                window.location.href = "{{ url('freelancer/packages') }}/" + packageId + "/edit";
             });
             
             // Delete package

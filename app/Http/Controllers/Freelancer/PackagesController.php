@@ -9,6 +9,7 @@ use App\Models\Admin\CategoriesModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PackagesController extends Controller
 {
@@ -115,10 +116,20 @@ class PackagesController extends Controller
                 $validated['max_locations'] = null;
             }
             // ==== END: New multiple locations handling ====
-            
+
+            // Handle cover image uploads (up to 5)
+            unset($validated['cover_images']);
+            if ($request->hasFile('cover_images')) {
+                $coverImages = [];
+                foreach ($request->file('cover_images') as $image) {
+                    $coverImages[] = $image->store('package-covers/freelancer/' . Auth::id(), 'public');
+                }
+                $validated['cover_images'] = $coverImages;
+            }
+
             // Log final data before insert (remove in production)
             \Log::info('Package creation - Final data:', $validated);
-            
+
             // Create package
             $package = PackagesModel::create($validated);
             
@@ -144,6 +155,106 @@ class PackagesController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create package. Please try again.',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Show the form for editing a package.
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function edit($id)
+    {
+        $package = PackagesModel::where('user_id', Auth::id())->findOrFail($id);
+        $categories = CategoriesModel::where('status', 'active')->get();
+
+        return view('freelancer.edit-packages', compact('package', 'categories'));
+    }
+
+    /**
+     * Update the specified package in storage.
+     *
+     * @param  PackageStoreRequest  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(PackageStoreRequest $request, $id)
+    {
+        try {
+            $package = PackagesModel::where('user_id', Auth::id())->findOrFail($id);
+
+            $validated = $request->validated();
+
+            if ($validated['allow_time_customization']) {
+                unset($validated['duration']);
+            } else {
+                if (!$request->has('duration') || empty($request->duration)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Duration is required when time customization is not allowed.'
+                    ], 422);
+                }
+                $validated['duration'] = $request->duration;
+            }
+
+            if ($validated['allow_multiple_locations'] ?? false) {
+                if (!$request->has('max_locations') || empty($request->max_locations)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Maximum locations is required when multiple locations is enabled.'
+                    ], 422);
+                }
+                $validated['max_locations'] = min(max((int) $request->max_locations, 1), 10);
+            } else {
+                $validated['max_locations'] = null;
+            }
+
+            // Handle cover image uploads: keep existing images the client asked to retain,
+            // remove the rest from storage, then append any newly uploaded images.
+            unset($validated['cover_images']);
+            $existingImages = $package->cover_images ?? [];
+            $keepImages = $request->input('keep_cover_images', $existingImages);
+
+            foreach ($existingImages as $image) {
+                if (!in_array($image, $keepImages)) {
+                    Storage::disk('public')->delete($image);
+                }
+            }
+
+            $coverImages = array_values(array_intersect($existingImages, $keepImages));
+
+            if ($request->hasFile('cover_images')) {
+                foreach ($request->file('cover_images') as $image) {
+                    if (count($coverImages) >= 5) {
+                        break;
+                    }
+                    $coverImages[] = $image->store('package-covers/freelancer/' . Auth::id(), 'public');
+                }
+            }
+
+            $validated['cover_images'] = $coverImages;
+
+            $package->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Package updated successfully!',
+                'data' => $package
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update package. Please try again.',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }

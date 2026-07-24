@@ -4,6 +4,7 @@ namespace App\Models\StudioOwner;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class PackagesModel extends Model
 {
@@ -37,7 +38,8 @@ class PackagesModel extends Model
         'allow_time_customization',
         'status',
         'allow_multiple_locations',
-        'max_locations'
+        'max_locations',
+        'cover_images',
     ];
 
     /**
@@ -57,6 +59,7 @@ class PackagesModel extends Model
         'updated_at' => 'datetime',
         'allow_multiple_locations' => 'boolean',
         'max_locations' => 'integer',
+        'cover_images' => 'array',
     ];
 
     /**
@@ -251,5 +254,19 @@ class PackagesModel extends Model
         }
         
         return 'Up to ' . $this->max_locations . ' locations';
+    }
+
+    /**
+     * Get the first cover image as a thumbnail, verifying it still exists on disk.
+     */
+    public function getCoverThumbnailAttribute()
+    {
+        $path = $this->cover_images[0] ?? null;
+
+        if (!$path || !Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        return $path;
     }
 }

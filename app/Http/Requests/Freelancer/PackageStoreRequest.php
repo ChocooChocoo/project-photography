@@ -89,7 +89,9 @@ class PackageStoreRequest extends FormRequest
             'package_price' => 'required|numeric|min:0',
             'online_gallery' => 'required|boolean',
             'status' => 'required|in:active,inactive',
-            
+            'cover_images' => 'nullable|array|max:5',
+            'cover_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+
             // ==== NEW VALIDATION RULES START ====
             'allow_multiple_locations' => 'sometimes|boolean',
             'max_locations' => [

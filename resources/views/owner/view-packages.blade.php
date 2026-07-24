@@ -127,9 +127,9 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <button class="btn btn-sm">
+                                                    <a href="{{ route('owner.packages.edit', $package->id) }}" class="btn btn-sm" title="Edit Package">
                                                         <i class="ti ti-edit fs-lg"></i>
-                                                    </button>
+                                                    </a>
                                                     <button class="btn btn-sm">
                                                         <i class="ti ti-trash fs-lg"></i>
                                                     </button>

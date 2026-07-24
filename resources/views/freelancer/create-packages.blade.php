@@ -178,6 +178,13 @@
                                     </div>
 
                                     <div class="col-12 mb-3">
+                                        <label class="form-label">Cover Images <small class="text-muted">(optional, up to 5)</small></label>
+                                        <input type="file" class="form-control" name="cover_images[]" id="coverImages" accept=".jpg,.jpeg,.png,.gif" multiple>
+                                        <div class="form-text">JPG/PNG/GIF, max 5MB each. Shown to clients when choosing this package.</div>
+                                        <div id="coverImagesPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                                    </div>
+
+                                    <div class="col-12 mb-3">
                                         <label class="form-label">Status</label>
                                         <select class="form-select" name="status" required>
                                             <option value="">Select Status</option>
@@ -464,6 +471,25 @@
                 .appendTo('head');
             // ==== END: Multiple Locations Feature JavaScript ====
             
+            // Cover images: cap at 5 and show a quick preview
+            $('#coverImages').on('change', function() {
+                const files = Array.from(this.files);
+                if (files.length > 5) {
+                    Swal.fire('Too Many Images', 'You can upload up to 5 cover images.', 'warning');
+                    $(this).val('');
+                    $('#coverImagesPreview').empty();
+                    return;
+                }
+
+                $('#coverImagesPreview').empty();
+                files.forEach(file => {
+                    const url = URL.createObjectURL(file);
+                    $('#coverImagesPreview').append(
+                        `<img src="${url}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;">`
+                    );
+                });
+            });
+
             // Form submission with AJAX
             $('#createPackageForm').on('submit', function(e) {
                 e.preventDefault();
@@ -566,12 +592,29 @@
                 const submitBtn = $(this).find('button[type="submit"]');
                 const originalText = submitBtn.html();
                 submitBtn.prop('disabled', true).html('<i class="ti ti-loader me-2"></i>Creating...');
-                
+
+                // Build a multipart FormData so cover image files travel with the request
+                const uploadData = new FormData();
+                Object.keys(formData).forEach(function(key) {
+                    if (key === 'package_inclusions') return;
+                    if (formData[key] !== null && formData[key] !== undefined) {
+                        uploadData.append(key, formData[key]);
+                    }
+                });
+                formData.package_inclusions.forEach(function(inclusion) {
+                    uploadData.append('package_inclusions[]', inclusion);
+                });
+                Array.from($('#coverImages')[0].files).forEach(function(file) {
+                    uploadData.append('cover_images[]', file);
+                });
+
                 // Send AJAX request
                 $.ajax({
                     url: "{{ route('freelancer.packages.store') }}",
                     type: "POST",
-                    data: formData,
+                    data: uploadData,
+                    processData: false,
+                    contentType: false,
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },

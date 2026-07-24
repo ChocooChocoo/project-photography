@@ -9,6 +9,7 @@ use App\Models\StudioOwner\PackagesModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\Admin\CategoriesModel;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PackagesController extends Controller
 {
@@ -78,6 +79,16 @@ class PackagesController extends Controller
             // Cast will handle JSON conversion automatically
             // ==== End: Ensure package_location is stored as JSON ====
 
+            // Handle cover image uploads (up to 5)
+            unset($validatedData['cover_images']);
+            if ($request->hasFile('cover_images')) {
+                $coverImages = [];
+                foreach ($request->file('cover_images') as $image) {
+                    $coverImages[] = $image->store('package-covers/' . $studio->id, 'public');
+                }
+                $validatedData['cover_images'] = $coverImages;
+            }
+
             // Create package with all validated data
             $package = PackagesModel::create($validatedData);
 
@@ -91,6 +102,96 @@ class PackagesController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create package. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Show the form for editing a package.
+     */
+    public function edit($package)
+    {
+        $userId = Auth::id();
+
+        $packageModel = PackagesModel::whereHas('studio', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->findOrFail($package);
+
+        $studios = StudiosModel::where('user_id', $userId)
+            ->where('status', 'verified')
+            ->get();
+
+        $categories = CategoriesModel::where('status', 'active')->get();
+
+        return view('owner.edit-packages', ['package' => $packageModel, 'studios' => $studios, 'categories' => $categories]);
+    }
+
+    /**
+     * Update the specified package in storage.
+     */
+    public function update(PackageStoreRequest $request, $package)
+    {
+        try {
+            $userId = Auth::id();
+
+            $packageModel = PackagesModel::whereHas('studio', function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                })
+                ->findOrFail($package);
+
+            $studio = StudiosModel::where('id', $request->studio_id)
+                ->where('user_id', $userId)
+                ->where('status', 'verified')
+                ->firstOrFail();
+
+            $validatedData = $request->validated();
+
+            if (isset($validatedData['package_inclusions']) && is_string($validatedData['package_inclusions'])) {
+                $decoded = json_decode($validatedData['package_inclusions'], true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $validatedData['package_inclusions'] = $decoded;
+                }
+            }
+
+            // Handle cover image uploads: keep existing images the client asked to retain,
+            // remove the rest from storage, then append any newly uploaded images.
+            unset($validatedData['cover_images']);
+            $existingImages = $packageModel->cover_images ?? [];
+            $keepImages = $request->input('keep_cover_images', $existingImages);
+
+            foreach ($existingImages as $image) {
+                if (!in_array($image, $keepImages)) {
+                    Storage::disk('public')->delete($image);
+                }
+            }
+
+            $coverImages = array_values(array_intersect($existingImages, $keepImages));
+
+            if ($request->hasFile('cover_images')) {
+                foreach ($request->file('cover_images') as $image) {
+                    if (count($coverImages) >= 5) {
+                        break;
+                    }
+                    $coverImages[] = $image->store('package-covers/' . $studio->id, 'public');
+                }
+            }
+
+            $validatedData['cover_images'] = $coverImages;
+
+            $packageModel->update($validatedData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Package updated successfully!',
+                'data' => $packageModel
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update package. Please try again.',
                 'error' => $e->getMessage()
             ], 500);
         }

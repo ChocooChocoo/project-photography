@@ -4,6 +4,7 @@ namespace App\Models\Freelancer;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class PackagesModel extends Model
 {
@@ -34,8 +35,9 @@ class PackagesModel extends Model
         'status',
         // ==== NEW FIELDS START ====
         'allow_multiple_locations',
-        'max_locations'
+        'max_locations',
         // ==== NEW FIELDS END ====
+        'cover_images',
     ];
 
     /**
@@ -52,6 +54,7 @@ class PackagesModel extends Model
         'allow_multiple_locations' => 'boolean',
         'max_locations' => 'integer',
         // ==== NEW CASTS END ====
+        'cover_images' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -180,6 +183,20 @@ class PackagesModel extends Model
         }
         
         return $this->duration ? $this->duration . ' hours' : 'Not specified';
+    }
+
+    /**
+     * Get the first cover image as a thumbnail, verifying it still exists on disk.
+     */
+    public function getCoverThumbnailAttribute()
+    {
+        $path = $this->cover_images[0] ?? null;
+
+        if (!$path || !Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        return $path;
     }
 
     /**

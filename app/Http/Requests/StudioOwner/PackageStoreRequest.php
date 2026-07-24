@@ -99,6 +99,8 @@ class PackageStoreRequest extends FormRequest
             'online_gallery' => 'required|boolean',
             'photographer_count' => 'required|integer|min:0|max:10',
             'status' => 'required|in:active,inactive',
+            'cover_images' => 'nullable|array|max:5',
+            'cover_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ];
     }
 
