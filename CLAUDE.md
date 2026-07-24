@@ -46,9 +46,9 @@ This is a **multi-role photography studio platform** (Laravel 12 + Blade + Tailw
 | `owner` / `owner-super-admin` | `OwnerMiddleware` | `/owner` | `StudioOwner\` | `owner/` |
 | `client` | `ClientMiddleware` | `/client` | `Client\` | `client/` |
 | `freelancer` | `FreelancerMiddleware` | `/freelancer` | `Freelancer\` | `freelancer/` |
-| `studio-hr` / `studio-hr-*` | `StudioHRMiddleware` | `/hr` | `StudioHR\` | `studio-hr/` |
-| `studio-finance` / `studio-finance-*` | `StudioFinanceMiddleware` | `/finance` | `Finance\` | `studio-finance/` |
-| `studio-photographer` | `StudioPhotographerMiddleware` | `/photographer` | `StudioPhotographer\` | `studio-photographer/` |
+| `studio-hr` / `studio-hr-*` | `StudioHRMiddleware` | `/studio-hr` | `StudioHR\` | `studio-hr/` |
+| `studio-finance` / `studio-finance-*` | `StudioFinanceMiddleware` | `/studio-finance` | `Finance\` | `studio-finance/` |
+| `studio-photographer` | `StudioPhotographerMiddleware` | `/studio-photographer` | `StudioPhotographer\` | `studio-photographer/` |
 
 ### RBAC (Studio Owner context)
 

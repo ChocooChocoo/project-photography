@@ -2,6 +2,12 @@
 
 > **This is an exploration and planning document only. No implementation is carried out.**
 > Date: 2026-06-21
+>
+> **Superseded in part.** This is a dated snapshot of the system *before* any implementation. Roadmap
+> Phases 1–3 have since shipped, closing several gaps listed below (notably items 3/40, 7, 11, 32, 33,
+> 41, 47, the payment-webhook gap, the budget/spending gap, and review moderation). Statuses here are
+> **not** updated as work lands — for the current state of any item, see
+> [`../03-PROGRESS/ROADMAP PROGRESS.md`](../03-PROGRESS/ROADMAP%20PROGRESS.md), which takes precedence.
 
 ---
 
@@ -20,6 +26,9 @@
 ## Part 2 — Capstone B Revision Checklist
 
 Legend: ✅ Exists | ⚠️ Partial | ❌ Not Yet Implemented | ❓ Unclear item
+
+> Item numbers run 1–51 but **skip 17** (no such item in the source revision notes), so the list
+> contains **50 items**. Numbers are kept as-is because the roadmap and priority flags reference them.
 
 ---
 
@@ -130,7 +139,7 @@ Legend: ✅ Exists | ⚠️ Partial | ❌ Not Yet Implemented | ❓ Unclear item
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 42 | Multiple accounts under one email | ❌ | Not allowed — email uniqueness enforced (`unique:tbl_users,email`) |
+| 42 | Multiple accounts under one email | ✅ | Handled by design — email uniqueness enforced (`unique:tbl_users,email`), so one email cannot hold multiple accounts. Not a gap; no work required. |
 | 43 | Contact between business/freelancer and platform | ⚠️ | Inquiry system and chatbot exist; no direct email/in-app messaging from provider to platform |
 | 44 | Contact between business/freelancer and client | ⚠️ | Chatbot widget exists for client → studio; no direct messaging channel |
 | 45 | Business verification by admin (permit check) | ✅ | `business_permit` + `owner_id_document` required on registration; admin approve/reject workflow with rejection notes |
@@ -203,7 +212,7 @@ Legend: ✅ Exists | ⚠️ Partial | ❌ Not Yet Implemented | ❓ Unclear item
 | `app/Events/` directory | ❌ | Does not exist. No domain events fired anywhere. |
 | `app/Listeners/` directory | ❌ | Does not exist. All business logic is synchronous in controllers. |
 | `app/Jobs/` directory | ❌ | Does not exist. No queued jobs — emails, notifications, and payroll generation all run synchronously in the request cycle. |
-| Scheduled commands | ⚠️ | One command exists: `EscalateOverdueProcurementRequestsCommand` — but it must be run manually; no scheduler registration confirmed. |
+| Scheduled commands | ✅ | One command exists: `EscalateOverdueProcurementRequestsCommand`, registered hourly in `routes/console.php` (Laravel 12 puts the schedule there, not in `app/Console/Kernel.php`). An earlier draft of this row claimed it was unregistered — that was a scan miss, corrected here. |
 
 ---
 
@@ -239,7 +248,7 @@ Only 6 notification types are defined in the `Notifiable` trait. Large gaps exis
 | Item | Status | Notes |
 |---|---|---|
 | Review moderation | ❌ | Reviews are published immediately with no approval step, no admin panel, no flagging, no soft-delete. Once submitted, a review is permanent. |
-| Rating aggregation stored | ❌ | Average rating is calculated on-the-fly per request (`.avg('rating')`). No cached/stored aggregate on `tbl_studios` or `tbl_freelancer_profile`. Will slow down as reviews grow. |
+| Rating aggregation stored | ❌ | Average rating is calculated on-the-fly per request (`.avg('rating')`). No cached/stored aggregate on `tbl_studios` or `tbl_freelancers`. Will slow down as reviews grow. |
 
 ---
 
@@ -247,7 +256,7 @@ Only 6 notification types are defined in the `Notifiable` trait. Large gaps exis
 
 | Item | Status | Notes |
 |---|---|---|
-| Auto-deduct from bookings | ❌ | `tbl_client_budget.spent_amount` field exists but is never updated by the booking/payment flow. Budget is purely a manual planning tool with no real spending data. |
+| Auto-deduct from bookings | ❌ | `tbl_client_budget` has **no** `spent_amount` column at all — the budget is purely a manual planning tool with no real spending data and nowhere to record it. (An earlier draft of this row said the column existed but went unwritten; the column was in fact absent.) |
 | Budget alert on booking | ❌ | No check whether a booking's total exceeds the client's budget for that category before or after booking. |
 
 ---
@@ -435,8 +444,8 @@ These are two distinct concepts that were conflated in the first scan:
 ## Deliverable Summary
 
 This document covers:
-1. **System Scan** — 7 user roles, full portal breakdown, correct system flow from registration to photo delivery
-2. **Revision Checklist** — 51 items evaluated: **15 ✅ Exist**, **16 ⚠️ Partial**, **17 ❌ Not Yet Implemented**, **3 ❓ Unclear**
+1. **System Scan** — moved out of this file to avoid duplication; the 7 user roles, portal breakdown, and end-to-end system flow now live in [`TECHNICAL ANALYSIS.md`](./TECHNICAL%20ANALYSIS.md) and [`NON TECHNICAL ANALYSIS.md`](./NON%20TECHNICAL%20ANALYSIS.md) (see Part 1 above)
+2. **Revision Checklist** — 50 items evaluated (numbering skips 17): **17 ✅ Exist**, **18 ⚠️ Partial**, **13 ❌ Not Yet Implemented**, **2 ❓ Unclear**
 3. **Automation Suggestions** — 12 manual processes identified with concrete automation paths
 3B. **Deep Scan Findings** — Additional gaps: payment webhooks missing, no Events/Jobs/Policies, notification gaps, no review moderation, budget not connected to spending, test coverage near-zero on core features
 

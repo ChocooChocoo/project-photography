@@ -3,6 +3,10 @@
 > **Phase:** Analysis only. No code was changed to produce this document.
 > **Date of scan:** 2026-06-24
 > **Audience:** Developers, reviewers, technical evaluators.
+>
+> **Currency:** this is a dated snapshot taken before roadmap Phases 1–3 were implemented. Findings
+> since addressed are marked inline with *(resolved in Phase N)*. For current status see
+> [`../03-PROGRESS/ROADMAP PROGRESS.md`](../03-PROGRESS/ROADMAP%20PROGRESS.md).
 
 ---
 
@@ -118,7 +122,8 @@ freelancer user id depending on type (polymorphic-by-convention, not a DB-level 
   `studio_id` pivot column so a role grant is scoped to a specific studio). Roles/permissions carry a
   `portal` tag and a `resource`/`action` decomposition.
 - **HR / payroll:** `tbl_studio_employee_schedule`, `tbl_employee_attendance` (geofence + device
-  metadata), `tbl_photographer_attendance`, `tbl_employee_payroll` (settings: rates, deductions, tax,
+  metadata — covers studio photographers too; there is no separate photographer attendance table),
+  `tbl_employee_payroll` (settings: rates, deductions, tax,
   schedule), `tbl_generated_payrolls` (computed runs), `tbl_leave_requests`, `tbl_overtime_requests`.
 - **Procurement:** `tbl_procurement_requests` + items, `tbl_procurement_purchase_orders` + items,
   `tbl_procurement_documents`, `tbl_procurement_audit_trails`, `tbl_procurement_assets`,
@@ -143,9 +148,9 @@ portal maps to a middleware, a route prefix, a controller namespace, and a view 
 | `owner`, `owner-super-admin` | `OwnerMiddleware` | `/owner` | `StudioOwner\` | `owner/` |
 | `client` | `ClientMiddleware` | `/client` | `Client\` | `client/` |
 | `freelancer` | `FreelancerMiddleware` | `/freelancer` | `Freelancer\` | `freelancer/` |
-| `studio-hr*` | `StudioHRMiddleware` | `/hr` | `StudioHR\` | `studio-hr/` |
-| `studio-finance*` | `StudioFinanceMiddleware` | `/finance` | `Finance\` | `studio-finance/` |
-| `studio-photographer` | `StudioPhotographerMiddleware` | `/photographer` | `StudioPhotographer\` | `studio-photographer/` |
+| `studio-hr*` | `StudioHRMiddleware` | `/studio-hr` | `StudioHR\` | `studio-hr/` |
+| `studio-finance*` | `StudioFinanceMiddleware` | `/studio-finance` | `Finance\` | `studio-finance/` |
+| `studio-photographer` | `StudioPhotographerMiddleware` | `/studio-photographer` | `StudioPhotographer\` | `studio-photographer/` |
 
 All routes live in a single `routes/web.php` (~668 lines, ~400 endpoints). ~60 controllers across the
 portal namespaces, plus shared `GeneralProfileController` and `NotificationController`.
@@ -427,10 +432,10 @@ flowchart TD
 | Auth | — | ~8 | login, register, verify-email, logout |
 | Admin | `/admin` | ~40 | users, studios (approve/reject), freelancers, categories, locations, subscriptions, dashboard+export |
 | Owner | `/owner` | ~120 | studios, bookings (assign/status), employees, schedules, packages, services, payroll settings, roles, permissions, chatbot config, procurement approval, online gallery |
-| Studio HR | `/hr` | ~65 | employees, attendance, leave, overtime, payroll settings, generate payroll, procurement requests |
-| Finance | `/finance` | ~35 | dashboard, attendance, leave/overtime, payroll approval, procurement review/PO/delivery/payment |
-| Freelancer | `/freelancer` | ~25 | profile, services, packages, bookings, member invitations, online gallery |
-| Photographer | `/photographer` | ~40 | attendance, assigned studios/bookings, leave/overtime, online gallery, procurement requests |
+| Studio HR | `/studio-hr` | ~65 | employees, attendance, leave, overtime, payroll settings, generate payroll, procurement requests |
+| Finance | `/studio-finance` | ~35 | dashboard, attendance, leave/overtime, payroll approval, procurement review/PO/delivery/payment |
+| Freelancer | `/freelancer` | ~40 | profile, services, packages, bookings, member invitations, online gallery |
+| Photographer | `/studio-photographer` | ~40 | attendance, assigned studios/bookings, leave/overtime, online gallery, procurement requests |
 | Client | `/client` | ~55 | booking form + payment, my bookings (cancel/pay/confirm), gallery, studio/freelancer ratings, budget, chatbot |
 | Shared (`auth`) | — | ~8 | notifications, profile, home redirect |
 
@@ -471,19 +476,23 @@ flowchart TD
 
 - **No `TODO`/`FIXME`/`HACK` markers** found in `app/` or `resources/` — either clean or tracked externally.
 - **Config asymmetry:** Stripe config lives in `config/services.php`; PayMongo config is read in the
-  service constructor. Inconsistent and harder to discover.
+  service constructor. Inconsistent and harder to discover. *(Resolved in Phase 1.5 — a `paymongo`
+  block was added to `config/services.php`.)*
 - **Dual payment providers** (PayMongo + Stripe) with different capabilities and no explicit
   selection/strategy abstraction.
 - **Hardcoded thresholds:** `ProcurementWorkflowService::HIGH_VALUE_THRESHOLD = 50000` (and
   `OVERDUE_HOURS`, `DUPLICATE_LOOKBACK_DAYS`) are constants, not per-studio/env config.
 - **Mail defaults to `log`** in `.env.example` — risk of shipping without a real mailer.
 - **Single 668-line `routes/web.php`** carrying ~400 routes — large surface, no per-portal route files.
+  *(Still true and growing: 688 lines / ~440 routes after Phases 1–3.)*
 
 ### Test coverage
 
 - Strong: `ChatbotFeatureTest` (~424 lines) + `ChatbotDefaultConfigSeederTest` (~240 lines), good edge cases.
 - Thin: most Dashboard / Procurement / Payroll tests assert **route registration only**, not behavior.
 - Gaps: no PayMongo/Stripe integration tests, no auth-controller tests, no geolocation tests.
+  *(Partly addressed in Phase 1.5 — `tests/Feature/Payment/WebhookTest.php` now covers the webhook
+  handlers. Auth and geolocation remain untested.)*
 
 ### Assumptions made in this analysis
 

@@ -25,7 +25,8 @@ What to do about the findings above.
 
 Tracking execution against the plan.
 
-- [`ROADMAP PROGRESS.md`](./03-PROGRESS/ROADMAP%20PROGRESS.md) — status of roadmap phases as they're completed.
+- [`ROADMAP PROGRESS.md`](./03-PROGRESS/ROADMAP%20PROGRESS.md) — status of roadmap phases as they're completed. Audience: developers/reviewers.
+- [`NON TECHNICAL ROADMAP PROGRESS.md`](./03-PROGRESS/NON%20TECHNICAL%20ROADMAP%20PROGRESS.md) — plain-language companion to the above, same items, same structure. Audience: non-technical stakeholders.
 
 ---
 
@@ -40,5 +41,11 @@ Tracking execution against the plan.
 ```
 
 Start with `NON TECHNICAL ANALYSIS.md` for a plain-language overview, or `TECHNICAL ANALYSIS.md` for
-implementation detail. `REVISION CHECKLIST AND RECOMMENDATIONS.md` is the source of truth for outstanding
-gaps/checklist items; the roadmap and progress tracker follow from it.
+implementation detail. `REVISION CHECKLIST AND RECOMMENDATIONS.md` is the source of truth for the
+*original* gap list; the roadmap follows from it.
+
+**Note on currency:** the 01-ANALYSIS documents are dated snapshots taken before any implementation
+(scan dates 2026-06-21 / 2026-06-24). Roadmap Phases 1–3 have since been implemented, so several gaps
+listed there are now closed. For the current state of any checklist item, read
+[`03-PROGRESS/ROADMAP PROGRESS.md`](./03-PROGRESS/ROADMAP%20PROGRESS.md) — it takes precedence over
+01-ANALYSIS wherever the two disagree.

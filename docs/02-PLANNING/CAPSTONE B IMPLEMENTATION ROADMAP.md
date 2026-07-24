@@ -16,7 +16,7 @@
 | 4 | **Workflow Improvements** | Structural flow fixes | Improves trust and clarity once core is solid |
 | 5 | **Advanced Features** | DDS, equipment, long-term booking | Builds on stable core |
 | 6 | **Automation** | Notifications, triggers, scheduling | Only useful after the flows they automate are correct |
-| 7 | **Authorization & Tests** | Policies, core feature test coverage | Security and confidence layer — after all features are stable |
+| 7 | **Resource Authorization & Test Coverage** | Policies, core feature test coverage | Security and confidence layer — after all features are stable |
 
 ---
 
@@ -103,14 +103,19 @@
 - `routes/web.php` — add webhook routes (outside auth middleware)
 - New: `app/Http/Controllers/Webhook/PaymongoWebhookController.php`
 - New: `app/Http/Controllers/Webhook/StripeWebhookController.php`
+
+> **As built (Phase 1.5):** the handlers were implemented as `handleWebhook()` and
+> `handleStripeWebhook()` on the existing `Client\BookingController` instead of the two dedicated
+> controllers above — they reuse that controller's payment-confirmation helpers. No
+> `app/Http/Controllers/Webhook/` directory exists. Extracting them remains an open cleanup.
 - `app/Models/PaymentModel.php`, `app/Models/BookingModel.php`
-- `app/Http/Middleware/VerifyCsrfToken.php` — exclude webhook routes from CSRF
+- `bootstrap/app.php` — exclude webhook routes from CSRF (Laravel 12 has no `app/Http/Middleware/VerifyCsrfToken.php`; use `$middleware->validateCsrfTokens(except: [...])`)
 
 **Steps:**
 1. Register two unprotected POST routes:
    - `POST /webhook/paymongo` → `PaymongoWebhookController@handle`
    - `POST /webhook/stripe` → `StripeWebhookController@handle`
-2. Exclude both from CSRF in `VerifyCsrfToken::$except`
+2. Exclude both from CSRF via `validateCsrfTokens(except: [...])` in `bootstrap/app.php`
 3. `PaymongoWebhookController`: verify PayMongo signature from header, parse event type (`payment.paid`, `payment.failed`), update `tbl_payments` and `tbl_bookings` accordingly
 4. `StripeWebhookController`: call existing `StripeService::verifyWebhookSignature()`, handle `checkout.session.completed` and `payment_intent.payment_failed` events
 5. On payment confirmed via webhook: set `payment_status = 'paid'`, notify client and owner
@@ -121,17 +126,19 @@
 
 ### 1.6 Register Procurement Escalation in Scheduler
 
-**Problem:** `EscalateOverdueProcurementRequestsCommand` exists but is not registered in the Laravel scheduler — it must be run manually and never fires automatically.
+**Problem:** `EscalateOverdueProcurementRequestsCommand` may not be registered in the Laravel scheduler — verify before assuming work is needed.
 
 **Files to touch:**
-- `app/Console/Kernel.php`
+- `routes/console.php` (Laravel 12 defines the schedule here — there is no `app/Console/Kernel.php`)
 
 **Steps:**
-1. Add `$schedule->command('procurement:escalate-overdue')->dailyAt('08:00')` to `Kernel::schedule()`
+1. Check `routes/console.php` for `Schedule::command('procurement:escalate-overdue')`. If absent, add it with an hourly cadence: `Schedule::command('procurement:escalate-overdue')->hourly();`
 2. Confirm the command's handle method logs output
 3. Ensure `php artisan schedule:run` is in the server crontab (`* * * * * php artisan schedule:run`)
 
-**Done when:** Overdue procurement requests are automatically escalated every morning without manual intervention.
+**Done when:** Overdue procurement requests are escalated automatically on a recurring schedule without manual intervention.
+
+> **Status:** already satisfied — the hourly registration was present before this roadmap was executed. See [`ROADMAP PROGRESS.md`](../03-PROGRESS/ROADMAP%20PROGRESS.md) item 1.6.
 
 ---
 
@@ -228,7 +235,7 @@
 
 **Files to touch:**
 - `app/Http/Controllers/StudioOwner/BookingController.php`
-- `app/Http/Requests/UpdateBookingStatusRequest.php`
+- `app/Http/Requests/StudioOwner/UpdateBookingStatusRequest.php`
 - Notification: new `BookingCancelledByStudioNotification` (or reuse existing notification class)
 - Owner booking management Blade view
 
@@ -279,7 +286,7 @@
 1. Migration: add `expires_at` timestamp (nullable) to `tbl_bookings`
 2. On booking creation, set `expires_at = now() + 48 hours` (configurable per studio later)
 3. Create a scheduled command: query pending bookings where `expires_at < now()`, set status to `cancelled`, notify both client and owner
-4. Register the command in `app/Console/Kernel.php` to run hourly
+4. Register the command in `routes/console.php` to run hourly (Laravel 12 — no `app/Console/Kernel.php`)
 5. Show a countdown to the client on their booking card: "Awaiting confirmation — expires in X hours"
 
 **Done when:** Pending bookings expire automatically; both parties are notified; client sees countdown.
@@ -311,13 +318,15 @@
 
 ### 2.9 Connect Budget to Booking Payments
 
-**Problem:** `tbl_client_budget.spent_amount` exists but is never updated. The budget module is a manual planning tool with no connection to actual spending.
+**Problem:** `tbl_client_budget` has no `spent_amount` column at all. The budget module is a manual planning tool with no connection to actual spending and nowhere to record it.
 
 **Files to touch:**
+- `database/migrations/` — new migration adding `spent_amount` (decimal, default 0) to `tbl_client_budget`
 - `app/Http/Controllers/Client/BookingController.php` — post-payment hook
 - `app/Models/ClientBudgetModel.php`
 
 **Steps:**
+0. Migration: add `spent_amount` decimal(10,2) default 0 to `tbl_client_budget`; add it to the model's fillable
 1. After a payment is confirmed (success redirect + webhook from Phase 1.5), look up whether the client has an active budget for the booking's category
 2. If found: add the payment amount to `spent_amount` on that budget record
 3. If `spent_amount >= maximum_budget`: fire `notifyBudgetExceeded()` notification to client
@@ -332,13 +341,13 @@
 **Problem:** Reviews publish instantly with no moderation. There is no way to remove a bad-faith review. Ratings are not stored as aggregates, causing a per-request recalculation.
 
 **Files to touch:**
-- `database/migrations/` — add `status` enum (`published`, `flagged`, `removed`) to `tbl_studio_ratings` and `tbl_freelancer_ratings`; add `avg_rating` decimal to `tbl_studios` and freelancer profile table
+- `database/migrations/` — add `status` enum (`published`, `flagged`, `removed`) to `tbl_studio_ratings` and `tbl_freelancer_ratings`; add `avg_rating` decimal to `tbl_studios` and `tbl_freelancers`
 - `app/Http/Controllers/Admin/` — new `ReviewModerationController`
 - `app/Models/StudioRatingModel.php`, `FreelancerRatingModel.php`
 
 **Steps:**
 1. Migration: add `status` enum (default `published`) to both rating tables
-2. Migration: add `avg_rating` (decimal 3,2) and `total_reviews` (int) to `tbl_studios` and freelancer profile — update these on every new review
+2. Migration: add `avg_rating` (decimal 3,2) and `total_reviews` (int) to `tbl_studios` and `tbl_freelancers` — update these on every new review
 3. Admin panel: new page listing all reviews with filter by status — admin can flag or remove a review
 4. Client-facing views: only show `status = 'published'` reviews
 5. Replace on-the-fly `.avg('rating')` with the stored `avg_rating` field
@@ -679,7 +688,7 @@ When owner opens a pending booking to assign:
 1. Create `StudioPolicy`: `view`, `update`, `delete` — checks `$studio->user_id === $user->id`
 2. Create `BookingPolicy`: `view`, `cancel`, `complete` — checks booking belongs to the authenticated studio or client
 3. Create `GalleryPolicy`: `upload`, `publish`, `delete` — checks gallery belongs to the authenticated studio/photographer
-4. Register policies in `AuthServiceProvider::$policies`
+4. Register policies explicitly with `Gate::policy(Model::class, Policy::class)` in `AppServiceProvider::boot()` — Laravel 12 ships no `AuthServiceProvider`, and policy auto-discovery will not find these classes because the models use a `*Model` suffix and sit in portal sub-namespaces (`App\Models\StudioOwner\…`)
 5. Add `$this->authorize()` calls in relevant controller methods
 
 **Done when:** Any attempt to access another studio's records via URL manipulation returns a 403.
@@ -758,7 +767,7 @@ Phase 6 — Automation
   6.5  Payroll generation trigger
   6.6  Photographer assignment auto-suggestion
 
-Phase 7 — Authorization & Tests                         ← NEW
+Phase 7 — Resource Authorization & Test Coverage        ← NEW
   7.1  Resource-level policies (Booking, Studio, Gallery)
   7.2  Test coverage for core features (Auth, Booking, Payment, Gallery, Ratings)
 

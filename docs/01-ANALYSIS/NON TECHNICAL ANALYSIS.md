@@ -4,6 +4,9 @@
 > the system is, who uses it, and how it works — in everyday language. A glossary at the end translates
 > every technical term.
 > **Phase:** Analysis only. Nothing in the software was changed.
+> **How current is this:** it describes the system as it stood in June 2026, before the first three
+> rounds of improvement work were carried out. Points since addressed are marked inline. For what has
+> actually been built since, see `../03-PROGRESS/NON TECHNICAL ROADMAP PROGRESS.md`.
 
 ---
 
@@ -215,9 +218,10 @@ called **BotMan**. It is a single, self-contained website — not a collection o
 
 **What's thin or worth noting:**
 - **Limited automated testing** outside the chatbot. Many areas only check that pages exist, not that
-  the logic behind them is correct — so changes carry more risk of unnoticed bugs.
+  the logic behind them is correct — so changes carry more risk of unnoticed bugs. *(Partly improved
+  since: the payment-confirmation path now has its own automated checks.)*
 - **Two payment systems** (PayMongo and Stripe) are wired in slightly inconsistently, which can be
-  confusing to maintain.
+  confusing to maintain. *(Partly improved since: PayMongo's settings were moved alongside Stripe's.)*
 - A few business rules (like the "high-value purchase" amount) are **fixed in the code** rather than
   adjustable in settings.
 - By default, the system is configured to **only log emails** rather than send them — fine for
