@@ -160,7 +160,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/online-gallery/{galleryId}/image',          [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteImage'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.delete-image');
         Route::delete('/online-gallery/{galleryId}',                [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteGallery'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.delete');
         Route::put('/online-gallery/{galleryId}',                   [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'updateGallery'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.update');
-        
+        Route::post('/online-gallery/{galleryId}/publish',          [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'publish'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.publish');
+
         // Manage Studio Schedule                       
         Route::get('/view/schedules',                               [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'index'])->middleware('permission:owner.schedules.manage')->name('owner.studio-schedule.index');
         Route::get('/setup/studio-schedules',                       [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'setupStudioSchedule'])->middleware('permission:owner.schedules.manage')->name('owner.setup-studio-schedules');
@@ -197,6 +198,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/create/packages',                              [\App\Http\Controllers\StudioOwner\PackagesController::class, 'create'])->middleware('permission:owner.packages.manage')->name('owner.packages.create');
         Route::post('/packages',                                    [\App\Http\Controllers\StudioOwner\PackagesController::class, 'store'])->middleware('permission:owner.packages.manage')->name('owner.packages.store');
         Route::get('/packages/lists',                               [\App\Http\Controllers\StudioOwner\PackagesController::class, 'list'])->middleware('permission:owner.packages.manage')->name('owner.packages.list');
+        Route::get('/packages/{package}/edit',                      [\App\Http\Controllers\StudioOwner\PackagesController::class, 'edit'])->middleware('permission:owner.packages.manage')->name('owner.packages.edit');
+        Route::put('/packages/{package}',                           [\App\Http\Controllers\StudioOwner\PackagesController::class, 'update'])->middleware('permission:owner.packages.manage')->name('owner.packages.update');
         Route::get('/packages/{package}',                           [\App\Http\Controllers\StudioOwner\PackagesController::class, 'show'])->middleware('permission:owner.packages.manage')->name('owner.packages.show');
 
         // Manage Subscription  
@@ -466,6 +469,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/packages/lists',                       [\App\Http\Controllers\Freelancer\PackagesController::class, 'list'])->name('freelancer.packages.list');
         Route::get('/packages/data',                        [\App\Http\Controllers\Freelancer\PackagesController::class, 'getPackages'])->name('freelancer.packages.data');
         Route::get('/packages/categories',                  [\App\Http\Controllers\Freelancer\PackagesController::class, 'getCategories'])->name('freelancer.packages.categories');
+        Route::get('/packages/{id}/edit',                   [\App\Http\Controllers\Freelancer\PackagesController::class, 'edit'])->name('freelancer.packages.edit');
+        Route::put('/packages/{id}',                        [\App\Http\Controllers\Freelancer\PackagesController::class, 'update'])->name('freelancer.packages.update');
         Route::delete('/packages/{id}',                     [\App\Http\Controllers\Freelancer\PackagesController::class, 'destroy'])->name('freelancer.packages.destroy');
         Route::get('/packages/{id}',                        [\App\Http\Controllers\Freelancer\PackagesController::class, 'show'])->name('freelancer.packages.show');
         
@@ -580,6 +585,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bookings/{id}/balance-payment',           [\App\Http\Controllers\Client\MyBookingsController::class, 'initializeBalancePayment'])->name('client.booking.balance.payment');
         Route::post('/confirm-photographer/{assignmentId}',     [\App\Http\Controllers\Client\MyBookingsController::class, 'confirmPhotographerOnSite'])->name('client.confirm-photographer');
         Route::get('/pending-confirmations',                    [\App\Http\Controllers\Client\MyBookingsController::class, 'getPendingConfirmations'])->name('client.pending-confirmations');
+        Route::post('/bookings/{id}/request-revision',          [\App\Http\Controllers\Client\MyBookingsController::class, 'requestRevision'])->name('client.booking.request-revision');
 
         // Online Gallery
         Route::get('/view/online-gallery',              [\App\Http\Controllers\Client\OnlineGalleryController::class, 'index'])->name('client.online-gallery.index');
