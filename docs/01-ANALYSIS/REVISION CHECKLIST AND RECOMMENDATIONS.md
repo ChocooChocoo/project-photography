@@ -12,7 +12,7 @@
 > - [`TECHNICAL ANALYSIS.md`](./TECHNICAL%20ANALYSIS.md) — technical detail, architecture, flowcharts
 > - [`NON TECHNICAL ANALYSIS.md`](./NON%20TECHNICAL%20ANALYSIS.md) — plain-language walkthrough + glossary
 >
-> This document (`CAPSTONE B ANALYSIS.md`) focuses on what's unique to it: the revision checklist,
+> This document (`REVISION CHECKLIST AND RECOMMENDATIONS.md`) focuses on what's unique to it: the revision checklist,
 > automation suggestions, deep-scan findings, and workflow improvement proposals below.
 
 ---
