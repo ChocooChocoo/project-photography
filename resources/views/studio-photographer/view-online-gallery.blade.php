@@ -57,9 +57,15 @@
                                             </td>
                                             <td class="text-center">
                                                 @if ($booking->has_gallery)
-                                                    <span class="badge badge-soft-success w-100">
-                                                        <i class="ti ti-photo-check me-1"></i> Gallery Created
-                                                    </span>
+                                                    @if ($booking->gallery->gallery_status === 'published')
+                                                        <span class="badge badge-soft-success w-100">
+                                                            <i class="ti ti-photo-check me-1"></i> Published
+                                                        </span>
+                                                    @else
+                                                        <span class="badge badge-soft-info w-100">
+                                                            <i class="ti ti-clock-hour-4 me-1"></i> Pending Owner Review
+                                                        </span>
+                                                    @endif
                                                 @else
                                                     <span class="badge badge-soft-warning w-100">
                                                         <i class="ti ti-photo-off me-1"></i> No Gallery

@@ -38,6 +38,7 @@ class OnlineGalleryController extends Controller
             if ($booking->booking_type === 'studio') {
                 $gallery = StudioOnlineGalleryModel::where('booking_id', $booking->id)
                     ->where('status', 'active')
+                    ->where('gallery_status', 'published')
                     ->first();
                 
                 if ($gallery) {
@@ -49,6 +50,7 @@ class OnlineGalleryController extends Controller
             elseif ($booking->booking_type === 'freelancer') {
                 $gallery = FreelanceOnlineGalleryModel::where('booking_id', $booking->id)
                     ->where('status', 'active')
+                    ->where('gallery_status', 'published')
                     ->first();
                 
                 if ($gallery) {
@@ -95,15 +97,17 @@ class OnlineGalleryController extends Controller
                 $gallery = StudioOnlineGalleryModel::where('id', $id)
                     ->where('client_id', $clientId)
                     ->where('status', 'active')
+                    ->where('gallery_status', 'published')
                     ->with(['studio', 'booking.client'])
                     ->firstOrFail();
-                
+
                 $providerName = $gallery->studio->studio_name ?? 'Studio';
-            } 
+            }
             elseif ($type === 'freelancer') {
                 $gallery = FreelanceOnlineGalleryModel::where('id', $id)
                     ->where('client_id', $clientId)
                     ->where('status', 'active')
+                    ->where('gallery_status', 'published')
                     ->with(['freelancer', 'booking.client'])
                     ->firstOrFail();
                 

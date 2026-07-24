@@ -170,8 +170,9 @@ class OnlineGalleryController extends Controller
                     'total_photos' => count($uploadedImages),
                     'status' => 'active',
                     'published_at' => now(),
+                    'gallery_status' => 'published',
                 ]);
-                
+
                 $message = 'Gallery created with ' . count($uploadedImages) . ' image(s) successfully.';
             }
 
@@ -366,6 +367,7 @@ class OnlineGalleryController extends Controller
                 'total_photos' => count($uploadedImages),
                 'status' => 'active',
                 'published_at' => now(),
+                'gallery_status' => 'published',
             ]);
 
             DB::commit();

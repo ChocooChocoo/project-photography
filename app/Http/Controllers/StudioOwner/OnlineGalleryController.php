@@ -8,12 +8,15 @@ use App\Models\BookingModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\StudioOwner\StudioOnlineGalleryModel;
 use App\Models\StudioOwner\PackagesModel;
+use App\Traits\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class OnlineGalleryController extends Controller
 {
+    use Notifiable;
+
     /**
      * Display list of in-progress or completed bookings with online gallery feature.
      */
@@ -152,14 +155,21 @@ class OnlineGalleryController extends Controller
                 ], 400);
             }
 
-            DB::beginTransaction();
-
             // Check if gallery already exists
             $gallery = StudioOnlineGalleryModel::where('booking_id', $bookingId)->first();
-            
+
+            if ($gallery && $gallery->gallery_status === 'published') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This gallery is already published to the client. Ask the client to request a revision before uploading new photos.'
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
             // Upload images
             $uploadedImages = [];
-            
+
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     $path = $image->store('studio-online-galleries/' . $bookingId, 'public');
@@ -192,10 +202,10 @@ class OnlineGalleryController extends Controller
                     'images' => $uploadedImages,
                     'total_photos' => count($uploadedImages),
                     'status' => 'active',
-                    'published_at' => now(),
+                    'gallery_status' => 'draft',
                 ]);
-                
-                $message = 'Gallery created with ' . count($uploadedImages) . ' image(s) successfully.';
+
+                $message = 'Gallery created with ' . count($uploadedImages) . ' image(s) successfully. Publish it to make it visible to the client.';
             }
 
             DB::commit();
@@ -371,6 +381,49 @@ class OnlineGalleryController extends Controller
     }
 
     /**
+     * Publish a draft gallery, making it visible to the client.
+     */
+    public function publish($galleryId)
+    {
+        try {
+            $userId = Auth::id();
+            $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
+
+            if (empty($studioIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No studios found'
+                ], 404);
+            }
+
+            $gallery = StudioOnlineGalleryModel::where('id', $galleryId)
+                ->whereIn('studio_id', $studioIds)
+                ->firstOrFail();
+
+            $gallery->update([
+                'gallery_status' => 'published',
+                'published_at' => now(),
+            ]);
+
+            if ($gallery->client) {
+                $this->notifyGalleryPublished($gallery, $gallery->client);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Gallery published to client successfully.',
+                'gallery' => $gallery
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error publishing gallery: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Display portfolio galleries (independent of bookings).
      */
     public function portfolio()
@@ -426,6 +479,7 @@ class OnlineGalleryController extends Controller
                 'total_photos' => count($uploadedImages),
                 'status' => 'active',
                 'published_at' => now(),
+                'gallery_status' => 'published',
             ]);
 
             DB::commit();

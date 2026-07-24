@@ -151,14 +151,21 @@ class OnlineGalleryController extends Controller
                 ], 400);
             }
 
-            DB::beginTransaction();
-
             // Check if gallery already exists
             $gallery = StudioOnlineGalleryModel::where('booking_id', $bookingId)->first();
-            
+
+            if ($gallery && $gallery->gallery_status === 'published') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This gallery is already published to the client. Ask the client to request a revision before uploading new photos.'
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
             // Upload images
             $uploadedImages = [];
-            
+
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     $path = $image->store('studio-online-galleries/' . $bookingId, 'public');
@@ -191,10 +198,10 @@ class OnlineGalleryController extends Controller
                     'images' => $uploadedImages,
                     'total_photos' => count($uploadedImages),
                     'status' => 'active',
-                    'published_at' => now(),
+                    'gallery_status' => 'draft',
                 ]);
-                
-                $message = 'Gallery created with ' . count($uploadedImages) . ' image(s) successfully.';
+
+                $message = 'Gallery created with ' . count($uploadedImages) . ' image(s) successfully. Awaiting owner review before publishing.';
             }
 
             DB::commit();

@@ -43,6 +43,7 @@ class StudioOnlineGalleryModel extends Model
         'status',
         'total_photos',
         'published_at',
+        'gallery_status',
     ];
 
     /**
@@ -145,5 +146,29 @@ class StudioOnlineGalleryModel extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
+    }
+
+    /**
+     * Check if gallery is published to the client.
+     */
+    public function isPublished()
+    {
+        return $this->gallery_status === 'published';
+    }
+
+    /**
+     * Scope to filter published galleries.
+     */
+    public function scopePublished($query)
+    {
+        return $query->where('gallery_status', 'published');
+    }
+
+    /**
+     * Scope to filter draft galleries.
+     */
+    public function scopeDraft($query)
+    {
+        return $query->where('gallery_status', 'draft');
     }
 }
