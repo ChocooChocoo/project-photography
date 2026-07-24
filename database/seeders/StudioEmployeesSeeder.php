@@ -8,6 +8,7 @@ use App\Models\StudioOwner\ServicesModel;
 use App\Models\StudioOwner\StudioPhotographersModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
+use Database\Seeders\Concerns\SeedSupport;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,21 @@ use Illuminate\Support\Str;
 
 class StudioEmployeesSeeder extends Seeder
 {
+    use SeedSupport;
+
+    /**
+     * Emails of every account this seeder creates.
+     *
+     * MultiStudioBundleSeeder uses this to detach these generic employees from
+     * the bundled studios, which get their own dedicated roster.
+     *
+     * @return array<int, string>
+     */
+    public static function seededEmails(): array
+    {
+        return array_column((new self)->buildSeedDefinitions(), 'email');
+    }
+
     /**
      * Run the database seeds.
      */
@@ -28,6 +44,7 @@ class StudioEmployeesSeeder extends Seeder
 
         if ($staffStudios->isEmpty()) {
             $this->command?->warn('No verified or active studios found. Studio employees seeder skipped.');
+
             return;
         }
 
@@ -58,8 +75,9 @@ class StudioEmployeesSeeder extends Seeder
         ];
 
         foreach ($requiredRoles as $requiredRole) {
-            if (!$roles->has($requiredRole)) {
+            if (! $roles->has($requiredRole)) {
                 $this->command?->error("Missing required role: {$requiredRole}. Run the RBAC seeders first.");
+
                 return;
             }
         }
@@ -75,6 +93,7 @@ class StudioEmployeesSeeder extends Seeder
 
             if ($studioPool->isEmpty()) {
                 $this->command?->warn("Skipped {$definition['email']} because no eligible studio was available.");
+
                 continue;
             }
 
@@ -101,7 +120,7 @@ class StudioEmployeesSeeder extends Seeder
                     'last_name' => $definition['last_name'],
                     'user_type' => $userType,
                     'mobile_number' => $definition['mobile_number'],
-                    'password' => Hash::make($definition['password']),
+                    'password' => Hash::make(self::SEED_PASSWORD),
                     'status' => 'active',
                     'email_verified' => true,
                     'verification_token' => null,
@@ -132,8 +151,9 @@ class StudioEmployeesSeeder extends Seeder
             if ($isPhotographer) {
                 $service = $this->pickStudioService($studio->id, $serviceIndexes);
 
-                if (!$service) {
+                if (! $service) {
                     $this->command?->warn("Skipped photographer profile for {$definition['email']} because studio {$studio->studio_name} has no service.");
+
                     continue;
                 }
 
@@ -164,26 +184,26 @@ class StudioEmployeesSeeder extends Seeder
     private function buildSeedDefinitions(): array
     {
         return [
-            $this->makeEmployee('studio-hr-manager', 'Ariana', 'Mae', 'Lopez', 1, 'password'),
-            $this->makeEmployee('studio-hr-staff', 'Bianca', 'Joy', 'Reyes', 1, 'password'),
-            $this->makeEmployee('studio-hr-staff', 'Camille', 'Rose', 'Torres', 2, 'password'),
-            $this->makeEmployee('studio-hr-staff', 'Danica', 'Faith', 'Mendoza', 3, 'password'),
-            $this->makeEmployee('studio-hr-staff', 'Elise', 'Anne', 'Garcia', 4, 'password'),
-            $this->makeEmployee('studio-finance-manager', 'Felix', 'James', 'Santos', 1, 'password'),
-            $this->makeEmployee('studio-finance-staff', 'Gavin', 'Lee', 'Flores', 1, 'password'),
-            $this->makeEmployee('studio-finance-staff', 'Hannah', 'Grace', 'Rivera', 2, 'password'),
-            $this->makeEmployee('studio-finance-staff', 'Ian', 'Paul', 'Navarro', 3, 'password'),
-            $this->makeEmployee('studio-finance-staff', 'Jessa', 'Marie', 'Aquino', 4, 'password'),
-            $this->makePhotographer('Kyla', 'May', 'Valdez', 1, 'Lead Photographer', 6, 'password'),
-            $this->makePhotographer('Liam', 'Cruz', 'Padilla', 2, 'Senior Photographer', 8, 'password'),
-            $this->makePhotographer('Mia', 'Nicole', 'Ramos', 3, 'Event Photographer', 5, 'password'),
-            $this->makePhotographer('Noah', 'Dean', 'Castro', 4, 'Portrait Photographer', 7, 'password'),
-            $this->makePhotographer('Olivia', 'Jane', 'Morales', 5, 'Lighting Photographer', 4, 'password'),
-            $this->makePhotographer('Paolo', 'Luis', 'Gutierrez', 6, 'Creative Photographer', 9, 'password'),
-            $this->makePhotographer('Queenie', 'Anne', 'Delos Santos', 7, 'Studio Photographer', 3, 'password'),
-            $this->makePhotographer('Rafael', 'Miguel', 'Herrera', 8, 'Product Photographer', 10, 'password'),
-            $this->makePhotographer('Sofia', 'Claire', 'Domingo', 9, 'Fashion Photographer', 6, 'password'),
-            $this->makePhotographer('Theo', 'Marc', 'Salazar', 10, 'Assistant Photographer', 2, 'password'),
+            $this->makeEmployee('studio-hr-manager', 'Ariana', 'Mae', 'Lopez', 1),
+            $this->makeEmployee('studio-hr-staff', 'Bianca', 'Joy', 'Reyes', 1),
+            $this->makeEmployee('studio-hr-staff', 'Camille', 'Rose', 'Torres', 2),
+            $this->makeEmployee('studio-hr-staff', 'Danica', 'Faith', 'Mendoza', 3),
+            $this->makeEmployee('studio-hr-staff', 'Elise', 'Anne', 'Garcia', 4),
+            $this->makeEmployee('studio-finance-manager', 'Felix', 'James', 'Santos', 1),
+            $this->makeEmployee('studio-finance-staff', 'Gavin', 'Lee', 'Flores', 1),
+            $this->makeEmployee('studio-finance-staff', 'Hannah', 'Grace', 'Rivera', 2),
+            $this->makeEmployee('studio-finance-staff', 'Ian', 'Paul', 'Navarro', 3),
+            $this->makeEmployee('studio-finance-staff', 'Jessa', 'Marie', 'Aquino', 4),
+            $this->makePhotographer('Kyla', 'May', 'Valdez', 1, 'Lead Photographer', 6),
+            $this->makePhotographer('Liam', 'Cruz', 'Padilla', 2, 'Senior Photographer', 8),
+            $this->makePhotographer('Mia', 'Nicole', 'Ramos', 3, 'Event Photographer', 5),
+            $this->makePhotographer('Noah', 'Dean', 'Castro', 4, 'Portrait Photographer', 7),
+            $this->makePhotographer('Olivia', 'Jane', 'Morales', 5, 'Lighting Photographer', 4),
+            $this->makePhotographer('Paolo', 'Luis', 'Gutierrez', 6, 'Creative Photographer', 9),
+            $this->makePhotographer('Queenie', 'Anne', 'Delos Santos', 7, 'Studio Photographer', 3),
+            $this->makePhotographer('Rafael', 'Miguel', 'Herrera', 8, 'Product Photographer', 10),
+            $this->makePhotographer('Sofia', 'Claire', 'Domingo', 9, 'Fashion Photographer', 6),
+            $this->makePhotographer('Theo', 'Marc', 'Salazar', 10, 'Assistant Photographer', 2),
         ];
     }
 
@@ -197,17 +217,15 @@ class StudioEmployeesSeeder extends Seeder
         string $firstName,
         string $middleName,
         string $lastName,
-        int $sequence,
-        string $password
+        int $sequence
     ): array {
         return [
             'role_name' => $roleName,
             'first_name' => $firstName,
             'middle_name' => $middleName,
             'last_name' => $lastName,
-            'email' => "seed.{$roleName}.{$sequence}@lumora.test",
+            'email' => $this->gmail($firstName, $lastName),
             'mobile_number' => $this->makeMobileNumber($sequence),
-            'password' => $password,
         ];
     }
 
@@ -222,17 +240,15 @@ class StudioEmployeesSeeder extends Seeder
         string $lastName,
         int $sequence,
         string $position,
-        int $yearsOfExperience,
-        string $password
+        int $yearsOfExperience
     ): array {
         return [
             'role_name' => 'studio-photographer',
             'first_name' => $firstName,
             'middle_name' => $middleName,
             'last_name' => $lastName,
-            'email' => "seed.studio-photographer.{$sequence}@lumora.test",
+            'email' => $this->gmail($firstName, $lastName),
             'mobile_number' => $this->makeMobileNumber(100 + $sequence),
-            'password' => $password,
             'position' => $position,
             'years_of_experience' => $yearsOfExperience,
         ];
@@ -250,7 +266,7 @@ class StudioEmployeesSeeder extends Seeder
         }
 
         $segments = explode('-', $roleName);
-        $baseRole = $segments[0] . '-' . $segments[1];
+        $baseRole = $segments[0].'-'.$segments[1];
         $userType = ucfirst($segments[2] ?? 'Staff');
 
         return [$baseRole, $userType];
@@ -259,7 +275,7 @@ class StudioEmployeesSeeder extends Seeder
     /**
      * Normalize studio operating days for the employee schedule table.
      *
-     * @param mixed $operatingDays
+     * @param  mixed  $operatingDays
      * @return array<int, string>
      */
     private function normalizeOperatingDays($operatingDays): array
@@ -272,7 +288,7 @@ class StudioEmployeesSeeder extends Seeder
             $operatingDays = $decoded;
         }
 
-        if (!is_array($operatingDays) || empty($operatingDays)) {
+        if (! is_array($operatingDays) || empty($operatingDays)) {
             return ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
         }
 
@@ -305,6 +321,6 @@ class StudioEmployeesSeeder extends Seeder
      */
     private function makeMobileNumber(int $sequence): string
     {
-        return '+63917' . str_pad((string) (500000 + $sequence), 6, '0', STR_PAD_LEFT);
+        return '+63917'.str_pad((string) (500000 + $sequence), 6, '0', STR_PAD_LEFT);
     }
 }

@@ -19,6 +19,7 @@ class ProcurementWorkflowSeeder extends Seeder
 
         if ($studioContexts->isEmpty()) {
             $this->command?->warn('No studio with owner, HR, finance, and photographer users was found. Procurement seeder skipped.');
+
             return;
         }
 
@@ -60,7 +61,7 @@ class ProcurementWorkflowSeeder extends Seeder
                 $hrUser = $this->resolveStudioPortalUser($studioId, 'studio-hr', 'studio-hr');
                 $photographerUser = $this->resolveStudioPortalUser($studioId, 'studio-photographer', 'studio-photographer');
 
-                if (!$financeUser || !$hrUser || !$photographerUser) {
+                if (! $financeUser || ! $hrUser || ! $photographerUser) {
                     return null;
                 }
 
@@ -69,7 +70,7 @@ class ProcurementWorkflowSeeder extends Seeder
                     'studio_name' => $studio->studio_name,
                     'owner' => [
                         'id' => (int) $studio->owner_id,
-                        'name' => trim($studio->owner_first_name . ' ' . $studio->owner_last_name),
+                        'name' => trim($studio->owner_first_name.' '.$studio->owner_last_name),
                     ],
                     'finance' => $financeUser,
                     'hr' => $hrUser,
@@ -105,7 +106,7 @@ class ProcurementWorkflowSeeder extends Seeder
             ->orderBy('users.id')
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             $user = DB::table('tbl_studio_employee_schedule as schedules')
                 ->join('tbl_users as users', 'users.id', '=', 'schedules.user_id')
                 ->select('users.id', 'users.first_name', 'users.last_name', 'users.role')
@@ -116,7 +117,7 @@ class ProcurementWorkflowSeeder extends Seeder
                 ->first();
         }
 
-        if (!$user && $portal === 'studio-photographer') {
+        if (! $user && $portal === 'studio-photographer') {
             $user = DB::table('tbl_studio_photographers as photographers')
                 ->join('tbl_users as users', 'users.id', '=', 'photographers.photographer_id')
                 ->select('users.id', 'users.first_name', 'users.last_name', 'users.role')
@@ -126,21 +127,21 @@ class ProcurementWorkflowSeeder extends Seeder
                 ->first();
         }
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
         return [
             'id' => (int) $user->id,
             'role' => $user->role,
-            'name' => trim($user->first_name . ' ' . $user->last_name),
+            'name' => trim($user->first_name.' '.$user->last_name),
         ];
     }
 
     /**
      * Build realistic linked procurement seed payloads.
      *
-     * @param \Illuminate\Support\Collection<int, array<string, mixed>> $studioContexts
+     * @param  \Illuminate\Support\Collection<int, array<string, mixed>>  $studioContexts
      * @return array<int, array<string, mixed>>
      */
     private function buildSeedPayloads(Collection $studioContexts): array
@@ -166,7 +167,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Create a draft request payload.
      *
-     * @param array<string, mixed> $studioContext
+     * @param  array<string, mixed>  $studioContext
      * @return array<string, mixed>
      */
     private function makeDraftRequest(array $studioContext, Carbon $baseDate): array
@@ -213,7 +214,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Create a pending finance review payload.
      *
-     * @param array<string, mixed> $studioContext
+     * @param  array<string, mixed>  $studioContext
      * @return array<string, mixed>
      */
     private function makePendingFinanceRequest(array $studioContext, Carbon $baseDate): array
@@ -264,7 +265,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Create a returned-for-revision payload.
      *
-     * @param array<string, mixed> $studioContext
+     * @param  array<string, mixed>  $studioContext
      * @return array<string, mixed>
      */
     private function makeReturnedRequest(array $studioContext, Carbon $baseDate): array
@@ -317,7 +318,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Create a pending owner approval payload.
      *
-     * @param array<string, mixed> $studioContext
+     * @param  array<string, mixed>  $studioContext
      * @return array<string, mixed>
      */
     private function makePendingOwnerRequest(array $studioContext, Carbon $baseDate): array
@@ -371,7 +372,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Create an ordered request payload.
      *
-     * @param array<string, mixed> $studioContext
+     * @param  array<string, mixed>  $studioContext
      * @return array<string, mixed>
      */
     private function makeOrderedRequest(array $studioContext, Carbon $baseDate): array
@@ -412,10 +413,10 @@ class ProcurementWorkflowSeeder extends Seeder
             'purchase_order' => [
                 'po_number' => 'PO-20260416-2005',
                 'supplier_name' => 'Lumicraft Pro Solutions',
-                'supplier_email' => 'orders@lumicraftpro.test',
+                'supplier_email' => 'lumicraftpro@gmail.com',
                 'supplier_contact_number' => '+63 917 555 2005',
                 'supplier_address' => '24 Aurora Boulevard, Quezon City, Metro Manila',
-                'delivery_address' => $studioContext['studio_name'] . ' Receiving Area',
+                'delivery_address' => $studioContext['studio_name'].' Receiving Area',
                 'payment_terms' => '50% downpayment, balance in 15 days after delivery',
                 'order_date' => $baseDate->copy()->addDay()->toDateString(),
                 'total_amount' => 25860.00,
@@ -451,7 +452,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Create a delivered request payload.
      *
-     * @param array<string, mixed> $studioContext
+     * @param  array<string, mixed>  $studioContext
      * @return array<string, mixed>
      */
     private function makeDeliveredRequest(array $studioContext, Carbon $baseDate): array
@@ -493,10 +494,10 @@ class ProcurementWorkflowSeeder extends Seeder
             'purchase_order' => [
                 'po_number' => 'PO-20260416-2006',
                 'supplier_name' => 'Flashline Imaging Supply',
-                'supplier_email' => 'sales@flashline.test',
+                'supplier_email' => 'flashlinesupply@gmail.com',
                 'supplier_contact_number' => '+63 908 555 2006',
                 'supplier_address' => '188 Rizal Avenue, Makati City, Metro Manila',
-                'delivery_address' => $studioContext['studio_name'] . ' Dispatch Counter',
+                'delivery_address' => $studioContext['studio_name'].' Dispatch Counter',
                 'payment_terms' => 'Net 15 days',
                 'order_date' => $baseDate->copy()->addDay()->toDateString(),
                 'total_amount' => 12600.00,
@@ -536,7 +537,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Create a received request payload with CAPEX and OPEX inventory records.
      *
-     * @param array<string, mixed> $studioContext
+     * @param  array<string, mixed>  $studioContext
      * @return array<string, mixed>
      */
     private function makeReceivedRequest(array $studioContext, Carbon $baseDate): array
@@ -582,10 +583,10 @@ class ProcurementWorkflowSeeder extends Seeder
             'purchase_order' => [
                 'po_number' => 'PO-20260416-2007',
                 'supplier_name' => 'RigWorks Camera Store',
-                'supplier_email' => 'ops@rigworks.test',
+                'supplier_email' => 'rigworkssupply@gmail.com',
                 'supplier_contact_number' => '+63 905 555 2007',
                 'supplier_address' => '32 Shaw Boulevard, Mandaluyong City, Metro Manila',
-                'delivery_address' => $studioContext['studio_name'] . ' Equipment Room',
+                'delivery_address' => $studioContext['studio_name'].' Equipment Room',
                 'payment_terms' => 'Net 30 days',
                 'order_date' => $baseDate->copy()->addDay()->toDateString(),
                 'total_amount' => 8510.00,
@@ -626,7 +627,7 @@ class ProcurementWorkflowSeeder extends Seeder
                     'serial_number' => 'TRIPOD-RW-260416-01',
                     'warranty_expires_at' => $baseDate->copy()->addYear()->addDays(4)->toDateString(),
                     'acquisition_cost' => 6950.00,
-                    'location' => $studioContext['studio_name'] . ' Interview Corner',
+                    'location' => $studioContext['studio_name'].' Interview Corner',
                     'recorded_by' => $studioContext['photographer']['id'],
                     'status' => 'active',
                     'created_at' => $baseDate->copy()->addDays(4)->addHour(),
@@ -656,7 +657,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Create a completed request payload with final payment documents.
      *
-     * @param array<string, mixed> $studioContext
+     * @param  array<string, mixed>  $studioContext
      * @return array<string, mixed>
      */
     private function makeCompletedRequest(array $studioContext, Carbon $baseDate): array
@@ -711,10 +712,10 @@ class ProcurementWorkflowSeeder extends Seeder
             'purchase_order' => [
                 'po_number' => 'PO-20260416-2008',
                 'supplier_name' => 'PixelForge Equipment Hub',
-                'supplier_email' => 'enterprise@pixelforge.test',
+                'supplier_email' => 'pixelforgesupply@gmail.com',
                 'supplier_contact_number' => '+63 917 555 2008',
                 'supplier_address' => '402 Ortigas Avenue, Pasig City, Metro Manila',
-                'delivery_address' => $studioContext['studio_name'] . ' Production Room',
+                'delivery_address' => $studioContext['studio_name'].' Production Room',
                 'payment_terms' => '30% downpayment, 70% after delivery',
                 'order_date' => $baseDate->copy()->addDay()->toDateString(),
                 'total_amount' => 97850.00,
@@ -767,7 +768,7 @@ class ProcurementWorkflowSeeder extends Seeder
                     'serial_number' => 'CAM-PF-260416-08',
                     'warranty_expires_at' => $baseDate->copy()->addYears(2)->addDays(7)->toDateString(),
                     'acquisition_cost' => 89900.00,
-                    'location' => $studioContext['studio_name'] . ' Main Camera Locker',
+                    'location' => $studioContext['studio_name'].' Main Camera Locker',
                     'recorded_by' => $studioContext['hr']['id'],
                     'status' => 'active',
                     'created_at' => $baseDate->copy()->addDays(5)->addHours(2),
@@ -797,7 +798,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Remove previously seeded procurement dataset.
      *
-     * @param array<int, string> $requestReferences
+     * @param  array<int, string>  $requestReferences
      */
     private function purgeExistingSeedData(array $requestReferences): void
     {
@@ -813,7 +814,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Persist one procurement workflow payload.
      *
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     private function seedProcurementRequest(array $payload): void
     {
@@ -903,10 +904,10 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Build a procurement request row.
      *
-     * @param array<string, mixed> $studioContext
-     * @param array<string, mixed> $requester
-     * @param array<int, array<string, mixed>> $items
-     * @param array<string, mixed> $overrides
+     * @param  array<string, mixed>  $studioContext
+     * @param  array<string, mixed>  $requester
+     * @param  array<int, array<string, mixed>>  $items
+     * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
     private function buildRequestRecord(
@@ -963,7 +964,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Build a procurement item row.
      *
-     * @param array<string, mixed> $overrides
+     * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
     private function buildItem(
@@ -1022,7 +1023,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Build a procurement document row.
      *
-     * @param array<string, mixed> $metadata
+     * @param  array<string, mixed>  $metadata
      * @return array<string, mixed>
      */
     private function buildDocument(
@@ -1055,7 +1056,7 @@ class ProcurementWorkflowSeeder extends Seeder
     /**
      * Build a procurement audit trail row.
      *
-     * @param array<string, mixed> $metadata
+     * @param  array<string, mixed>  $metadata
      * @return array<string, mixed>
      */
     private function buildAudit(

@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Admin\CategoriesModel;
-use App\Models\Admin\LocationModel;
 use App\Models\BookingModel;
 use App\Models\Chatbot\ChatbotConfigModel;
 use App\Models\Chatbot\ChatbotConversationModel;
@@ -14,6 +13,7 @@ use App\Models\Freelancer\FreelanceOnlineGalleryModel;
 use App\Models\FreelancerPlanModel;
 use App\Models\FreelancerRatingModel;
 use App\Models\NotificationModel;
+use App\Models\PaymentModel;
 use App\Models\Procurement\ProcurementDefectReturnModel;
 use App\Models\Procurement\ProcurementRequestModel;
 use App\Models\StudioHR\GeneratedPayrollModel;
@@ -24,7 +24,9 @@ use App\Models\StudioOwner\StudiosModel;
 use App\Models\StudioPlanModel;
 use App\Models\StudioRatingModel;
 use App\Models\SubscriptionPlanModel;
+use App\Models\SystemRevenueModel;
 use App\Models\UserModel;
+use Database\Seeders\Concerns\SeedSupport;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -40,10 +42,11 @@ use Illuminate\Support\Str;
  */
 class CoverageGapsAndAdminSeeder extends Seeder
 {
+    use SeedSupport;
+
     public function run(): void
     {
         $this->seedAdmin();
-        $this->seedLocations();
         $this->seedSubscriptionPlansAndSubscriptions();
         $this->seedClientBudget();
         $this->seedGalleriesAndRatings();
@@ -52,12 +55,49 @@ class CoverageGapsAndAdminSeeder extends Seeder
         $this->seedProcurementDefectReturn();
         $this->seedNotifications();
         $this->seedChatbotConversation();
+        $this->seedSystemRevenue();
+    }
+
+    /**
+     * Record platform revenue for the settled payments and paid subscriptions,
+     * using the same factory methods the checkout controllers call.
+     */
+    private function seedSystemRevenue(): void
+    {
+        $payments = PaymentModel::where('status', 'succeeded')
+            ->whereNotIn('booking_id', SystemRevenueModel::whereNotNull('booking_id')->pluck('booking_id'))
+            ->with('booking')
+            ->orderBy('id')
+            ->get();
+
+        $count = 0;
+        foreach ($payments as $payment) {
+            if ($payment->booking && SystemRevenueModel::createForPayment($payment->booking, $payment)) {
+                $count++;
+            }
+        }
+
+        $subscriptions = StudioPlanModel::where('payment_status', 'paid')
+            ->where('amount_paid', '>', 0)
+            ->whereNotIn('id', SystemRevenueModel::whereNotNull('subscription_id')->pluck('subscription_id'))
+            ->with('studio')
+            ->get();
+
+        foreach ($subscriptions as $subscription) {
+            if ($subscription->studio && SystemRevenueModel::createForSubscription($subscription, $subscription->studio)) {
+                $count++;
+            }
+        }
+
+        $this->command?->info("Seeded {$count} system revenue records.");
     }
 
     private function seedAdmin(): void
     {
+        $email = $this->gmail('Platform', 'Administrator');
+
         UserModel::updateOrCreate(
-            ['email' => 'admin@lumora.test'],
+            ['email' => $email],
             [
                 'uuid' => (string) Str::uuid(),
                 'role' => 'admin',
@@ -66,7 +106,7 @@ class CoverageGapsAndAdminSeeder extends Seeder
                 'middle_name' => null,
                 'last_name' => 'Administrator',
                 'mobile_number' => '+639170000000',
-                'password' => Hash::make('password'),
+                'password' => Hash::make(self::SEED_PASSWORD),
                 'status' => 'active',
                 'email_verified' => true,
                 'verification_token' => null,
@@ -74,56 +114,7 @@ class CoverageGapsAndAdminSeeder extends Seeder
             ]
         );
 
-        $this->command?->info('Seeded platform admin: admin@lumora.test');
-    }
-
-    private function seedLocations(): void
-    {
-        $locations = [
-            [
-                'province' => 'Cavite',
-                'municipality' => 'Dasmariñas',
-                'barangay' => ['Burol', 'Salawag', 'Zone I', 'Zone II', 'San Agustin'],
-                'zip_code' => '4114',
-            ],
-            [
-                'province' => 'Cavite',
-                'municipality' => 'Imus',
-                'barangay' => ['Anabu I-A', 'Bucandala I', 'Malagasang I-A', 'Tanzang Luma'],
-                'zip_code' => '4103',
-            ],
-            [
-                'province' => 'Cavite',
-                'municipality' => 'Bacoor',
-                'barangay' => ['Molino I', 'Molino II', 'Niog I', 'Zapote I'],
-                'zip_code' => '4102',
-            ],
-            [
-                'province' => 'Metro Manila',
-                'municipality' => 'Makati',
-                'barangay' => ['Bel-Air', 'Poblacion', 'San Lorenzo', 'Urdaneta'],
-                'zip_code' => '1200',
-            ],
-            [
-                'province' => 'Metro Manila',
-                'municipality' => 'Quezon City',
-                'barangay' => ['Diliman', 'Cubao', 'Fairview', 'Novaliches'],
-                'zip_code' => '1100',
-            ],
-        ];
-
-        foreach ($locations as $location) {
-            LocationModel::updateOrCreate(
-                ['province' => $location['province'], 'municipality' => $location['municipality']],
-                [
-                    'barangay' => $location['barangay'],
-                    'zip_code' => $location['zip_code'],
-                    'status' => 'active',
-                ]
-            );
-        }
-
-        $this->command?->info('Seeded ' . count($locations) . ' reference locations.');
+        $this->command?->info("Seeded platform admin: {$email}");
     }
 
     private function seedSubscriptionPlansAndSubscriptions(): void
@@ -214,7 +205,7 @@ class CoverageGapsAndAdminSeeder extends Seeder
             );
         }
 
-        $this->command?->info('Seeded ' . count($plans) . ' subscription plans.');
+        $this->command?->info('Seeded '.count($plans).' subscription plans.');
 
         // Subscribe one studio to the trial-enabled Premium plan, one to Basic.
         $studios = StudiosModel::whereIn('status', ['verified', 'active'])->orderBy('id')->take(2)->get();
@@ -286,8 +277,9 @@ class CoverageGapsAndAdminSeeder extends Seeder
         $client = UserModel::where('role', 'client')->orderBy('id')->first();
         $category = CategoriesModel::where('status', 'active')->orderBy('id')->first();
 
-        if (!$client || !$category) {
+        if (! $client || ! $category) {
             $this->command?->warn('Skipped client budget: no client or category found.');
+
             return;
         }
 
@@ -305,7 +297,7 @@ class CoverageGapsAndAdminSeeder extends Seeder
             ]
         );
 
-        $this->command?->info('Seeded client budget for ' . $client->email);
+        $this->command?->info('Seeded client budget for '.$client->email);
     }
 
     private function seedGalleriesAndRatings(): void
@@ -319,12 +311,12 @@ class CoverageGapsAndAdminSeeder extends Seeder
 
         $galleryIndex = 0;
         foreach ($studioBookings as $booking) {
-            if (!$booking->client) {
+            if (! $booking->client) {
                 continue;
             }
 
             $existingGallery = StudioOnlineGalleryModel::where('booking_id', $booking->id)->first();
-            if (!$existingGallery) {
+            if (! $existingGallery) {
                 $isPublished = $galleryIndex !== 1; // seed one draft gallery to show the review step
                 $existingGallery = StudioOnlineGalleryModel::create([
                     'booking_id' => $booking->id,
@@ -332,8 +324,8 @@ class CoverageGapsAndAdminSeeder extends Seeder
                     'client_id' => $booking->client_id,
                     'gallery_type' => 'booking',
                     'gallery_reference' => StudioOnlineGalleryModel::generateGalleryReference(),
-                    'gallery_name' => $booking->event_name . ' Gallery',
-                    'description' => 'Photos from ' . $booking->event_name . '.',
+                    'gallery_name' => $booking->event_name.' Gallery',
+                    'description' => 'Photos from '.$booking->event_name.'.',
                     'images' => ['studio-online-galleries/seed/sample-1.jpg', 'studio-online-galleries/seed/sample-2.jpg'],
                     'status' => 'active',
                     'total_photos' => 2,
@@ -342,7 +334,7 @@ class CoverageGapsAndAdminSeeder extends Seeder
                 ]);
             }
 
-            if (!StudioRatingModel::where('booking_id', $booking->id)->exists()) {
+            if (! StudioRatingModel::where('booking_id', $booking->id)->exists()) {
                 $rating = StudioRatingModel::create([
                     'booking_id' => $booking->id,
                     'client_id' => $booking->client_id,
@@ -369,19 +361,19 @@ class CoverageGapsAndAdminSeeder extends Seeder
             ->get();
 
         foreach ($freelancerBookings as $booking) {
-            if (!$booking->client) {
+            if (! $booking->client) {
                 continue;
             }
 
-            if (!FreelanceOnlineGalleryModel::where('booking_id', $booking->id)->exists()) {
+            if (! FreelanceOnlineGalleryModel::where('booking_id', $booking->id)->exists()) {
                 FreelanceOnlineGalleryModel::create([
                     'booking_id' => $booking->id,
                     'freelancer_id' => $booking->provider_id,
                     'client_id' => $booking->client_id,
                     'gallery_type' => 'booking',
                     'gallery_reference' => FreelanceOnlineGalleryModel::generateGalleryReference(),
-                    'gallery_name' => $booking->event_name . ' Gallery',
-                    'description' => 'Photos from ' . $booking->event_name . '.',
+                    'gallery_name' => $booking->event_name.' Gallery',
+                    'description' => 'Photos from '.$booking->event_name.'.',
                     'images' => ['freelancer-online-galleries/seed/sample-1.jpg'],
                     'status' => 'active',
                     'total_photos' => 1,
@@ -390,7 +382,7 @@ class CoverageGapsAndAdminSeeder extends Seeder
                 ]);
             }
 
-            if (!FreelancerRatingModel::where('booking_id', $booking->id)->exists()) {
+            if (! FreelancerRatingModel::where('booking_id', $booking->id)->exists()) {
                 FreelancerRatingModel::create([
                     'booking_id' => $booking->id,
                     'client_id' => $booking->client_id,
@@ -415,8 +407,9 @@ class CoverageGapsAndAdminSeeder extends Seeder
         $studio = StudiosModel::whereIn('status', ['verified', 'active'])->orderBy('id')->first();
         $freelancer = UserModel::where('role', 'freelancer')->orderBy('id')->first();
 
-        if (!$studio || !$freelancer) {
+        if (! $studio || ! $freelancer) {
             $this->command?->warn('Skipped studio membership: no studio or freelancer found.');
+
             return;
         }
 
@@ -439,8 +432,9 @@ class CoverageGapsAndAdminSeeder extends Seeder
     {
         $payrollSetting = EmployeePayrollModel::where('is_active', true)->orderBy('id')->first();
 
-        if (!$payrollSetting) {
+        if (! $payrollSetting) {
             $this->command?->warn('Skipped generated payroll: no payroll setting found.');
+
             return;
         }
 
@@ -463,10 +457,10 @@ class CoverageGapsAndAdminSeeder extends Seeder
                 'period_end' => $periodEnd->toDateString(),
             ],
             [
-                'payroll_reference' => 'PR-' . strtoupper(Str::random(8)),
+                'payroll_reference' => 'PR-'.strtoupper(Str::random(8)),
                 'payroll_setting_id' => $payrollSetting->id,
                 'generated_by' => $hrUser->id ?? $payrollSetting->created_by,
-                'employee_type' => 'staff',
+                'employee_type' => 'regular_employee',
                 'payroll_basis' => $payrollSetting->payroll_basis,
                 'employee_role' => 'studio-hr-staff',
                 'attendance_days_present' => 20,
@@ -482,7 +476,7 @@ class CoverageGapsAndAdminSeeder extends Seeder
                 'deduction_breakdown' => ['sss' => (float) $payrollSetting->sss_deduction, 'phic' => (float) $payrollSetting->phic_deduction],
                 'computation_summary' => ['note' => 'Seeded payroll run for verification.'],
                 'notes' => 'Seeded generated payroll for the current period.',
-                'status' => $financeUser ? 'approved' : 'pending_review',
+                'status' => $financeUser ? 'approved' : 'pending',
                 'reviewed_by' => $financeUser->id ?? null,
                 'reviewed_at' => $financeUser ? now() : null,
                 'generated_at' => now(),
@@ -496,8 +490,9 @@ class CoverageGapsAndAdminSeeder extends Seeder
     {
         $request = ProcurementRequestModel::with('items')->orderBy('id')->first();
 
-        if (!$request || $request->items->isEmpty()) {
+        if (! $request || $request->items->isEmpty()) {
             $this->command?->warn('Skipped procurement defect return: no procurement request/items found.');
+
             return;
         }
 
@@ -559,8 +554,9 @@ class CoverageGapsAndAdminSeeder extends Seeder
         $config = ChatbotConfigModel::where('is_active', true)->orderBy('id')->first();
         $client = UserModel::where('role', 'client')->orderBy('id')->first();
 
-        if (!$config || !$client) {
+        if (! $config || ! $client) {
             $this->command?->warn('Skipped chatbot conversation: no active chatbot config or client found.');
+
             return;
         }
 
@@ -578,7 +574,7 @@ class CoverageGapsAndAdminSeeder extends Seeder
 
         $intent = ChatbotIntentModel::where('config_id', $config->id)->orderBy('id')->first();
 
-        if (!ChatbotMessageModel::where('conversation_id', $conversation->id)->exists()) {
+        if (! ChatbotMessageModel::where('conversation_id', $conversation->id)->exists()) {
             ChatbotMessageModel::create([
                 'conversation_id' => $conversation->id,
                 'sender_type' => 'user',

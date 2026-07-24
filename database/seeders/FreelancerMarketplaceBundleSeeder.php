@@ -10,6 +10,7 @@ use App\Models\Freelancer\ProfileModel;
 use App\Models\Freelancer\ServiceModel;
 use App\Models\PaymentModel;
 use App\Models\UserModel;
+use Database\Seeders\Concerns\SeedSupport;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ use Illuminate\Support\Str;
 
 class FreelancerMarketplaceBundleSeeder extends Seeder
 {
-    private const DEFAULT_PASSWORD = 'password';
+    use SeedSupport;
 
     /**
      * Run the database seeds.
@@ -39,8 +40,9 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
             ->pluck('id', 'category_name');
 
         foreach ($requiredCategoryNames as $categoryName) {
-            if (!$categoryIds->has($categoryName)) {
+            if (! $categoryIds->has($categoryName)) {
                 $this->command?->error("Missing required freelancer category [{$categoryName}].");
+
                 return;
             }
         }
@@ -92,12 +94,12 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
     {
         return [
             [
-                'email' => 'seed.freelancer.everlight@lumora.test',
+                'email' => $this->gmail('Elena', 'Mendoza'),
                 'mobile_number' => '+639188200001',
                 'first_name' => 'Elena',
                 'middle_name' => 'Joy',
                 'last_name' => 'Mendoza',
-                'location_id' => 6,
+                'location_id' => $this->locationId('Imus'),
                 'brand_name' => 'Everlight Stories',
                 'tagline' => 'Warm portraits for milestone celebrations',
                 'bio' => 'Elena specializes in wedding and family portrait sessions with a bright, timeless editing style that balances guided posing and candid storytelling.',
@@ -150,12 +152,12 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
                 ],
             ],
             [
-                'email' => 'seed.freelancer.streetframe@lumora.test',
+                'email' => $this->gmail('Marco', 'Castillo'),
                 'mobile_number' => '+639188200002',
                 'first_name' => 'Marco',
                 'middle_name' => 'Luis',
                 'last_name' => 'Castillo',
-                'location_id' => 2,
+                'location_id' => $this->locationId('General Trias'),
                 'brand_name' => 'Streetframe Works',
                 'tagline' => 'Fast, candid coverage for live events and brands',
                 'bio' => 'Marco focuses on event and street-inspired brand coverage, delivering high-energy documentary style imagery for launches, activations, and celebrations.',
@@ -208,12 +210,12 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
                 ],
             ],
             [
-                'email' => 'seed.freelancer.modestudio@lumora.test',
+                'email' => $this->gmail('Sofia', 'Reyes'),
                 'mobile_number' => '+639188200003',
                 'first_name' => 'Sofia',
                 'middle_name' => 'Anne',
                 'last_name' => 'Reyes',
-                'location_id' => 7,
+                'location_id' => $this->locationId('Silang'),
                 'brand_name' => 'Mode Studio Social',
                 'tagline' => 'Editorial fashion and campaign imagery',
                 'bio' => 'Sofia works with designers, small labels, and personal brands to produce sharp editorial visuals and lookbook-ready sets with clean, premium retouching.',
@@ -266,12 +268,12 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
                 ],
             ],
             [
-                'email' => 'seed.freelancer.homelight@lumora.test',
+                'email' => $this->gmail('Paolo', 'Dizon'),
                 'mobile_number' => '+639188200004',
                 'first_name' => 'Paolo',
                 'middle_name' => 'Miguel',
                 'last_name' => 'Dizon',
-                'location_id' => 18,
+                'location_id' => $this->locationId('Carmona'),
                 'brand_name' => 'HomeLight Portrait Co.',
                 'tagline' => 'Comfort-first portraits for families and pets',
                 'bio' => 'Paolo creates relaxed portrait sessions for families, kids, and pets, with an emphasis on natural expressions, gentle pacing, and polished delivery sets.',
@@ -324,12 +326,12 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
                 ],
             ],
             [
-                'email' => 'seed.freelancer.lensandland@lumora.test',
+                'email' => $this->gmail('Tessa', 'Morales'),
                 'mobile_number' => '+639188200005',
                 'first_name' => 'Tessa',
                 'middle_name' => 'Claire',
                 'last_name' => 'Morales',
-                'location_id' => 21,
+                'location_id' => $this->locationId('Kawit'),
                 'brand_name' => 'Lens & Land Creative',
                 'tagline' => 'Places, products, and polished campaign frames',
                 'bio' => 'Tessa delivers structured commercial sessions for property, product, and food clients who need consistent image sets for catalogs, listings, and promotional campaigns.',
@@ -387,7 +389,7 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
     /**
      * Create or update the freelancer user.
      *
-     * @param array<string, mixed> $definition
+     * @param  array<string, mixed>  $definition
      */
     private function upsertFreelancerUser(array $definition): UserModel
     {
@@ -405,7 +407,7 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
                 'middle_name' => $definition['middle_name'],
                 'last_name' => $definition['last_name'],
                 'mobile_number' => $definition['mobile_number'],
-                'password' => Hash::make(self::DEFAULT_PASSWORD),
+                'password' => Hash::make(self::SEED_PASSWORD),
                 'location_id' => $definition['location_id'],
                 'status' => 'active',
                 'email_verified' => true,
@@ -418,7 +420,7 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
     /**
      * Create or update the freelancer profile.
      *
-     * @param array<string, mixed> $definition
+     * @param  array<string, mixed>  $definition
      */
     private function upsertFreelancerProfile(int $userId, array $definition): ProfileModel
     {
@@ -450,7 +452,7 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
     /**
      * Create or update the freelancer schedule.
      *
-     * @param array<string, mixed> $scheduleDefinition
+     * @param  array<string, mixed>  $scheduleDefinition
      */
     private function upsertSchedule(int $userId, array $scheduleDefinition): void
     {
@@ -469,7 +471,7 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
     /**
      * Seed freelancer services and 6 tiered packages.
      *
-     * @param array<int, array<string, mixed>> $categories
+     * @param  array<int, array<string, mixed>>  $categories
      * @return array<int, FreelancerPackagesModel>
      */
     private function seedServicesAndPackages(int $userId, array $categories, Carbon $now): array
@@ -524,7 +526,7 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
             $basePrice = 3500 + ($index * 1500);
 
             foreach ($tierDefinitions as $tierDefinition) {
-                $packageName = $category['service_family'] . ' - ' . $tierDefinition['tier'];
+                $packageName = $category['service_family'].' - '.$tierDefinition['tier'];
 
                 $packages[] = FreelancerPackagesModel::updateOrCreate(
                     [
@@ -557,8 +559,8 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
     /**
      * Seed three completed bookings and payments per freelancer.
      *
-     * @param array<string, mixed> $scheduleDefinition
-     * @param array<int, FreelancerPackagesModel> $packages
+     * @param  array<string, mixed>  $scheduleDefinition
+     * @param  array<int, FreelancerPackagesModel>  $packages
      */
     private function seedBookingsAndPayments(
         UserModel $freelancer,
@@ -585,7 +587,7 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
             $packageGroup = $packageGroups[$sequence % count($packageGroups)];
             $package = $packageGroup[$sequence % count($packageGroup)];
             $bookingReference = sprintf('SEED-FRL-%d-%s-%d', $freelancer->id, $bookingDate->format('Ymd'), $sequence + 1);
-            $start = Carbon::parse($bookingDate->toDateString() . ' ' . $scheduleDefinition['start_time'], 'Asia/Manila')
+            $start = Carbon::parse($bookingDate->toDateString().' '.$scheduleDefinition['start_time'], 'Asia/Manila')
                 ->addHours($sequence);
 
             $durationHours = $package->duration ?: (3 + $sequence);
@@ -610,14 +612,14 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
                     'start_time' => $start->format('H:i:s'),
                     'end_time' => $end->format('H:i:s'),
                     'location_type' => $sequence === 2 ? 'on-location' : 'in-studio',
-                    'venue_name' => $sequence === 2 ? $profile->brand_name . ' Client Venue Session' : $profile->brand_name,
+                    'venue_name' => $sequence === 2 ? $profile->brand_name.' Client Venue Session' : $profile->brand_name,
                     'street' => $profile->street,
                     'barangay' => $profile->barangay,
                     'city' => optional($profile->location)->municipality ?? 'General Trias',
                     'province' => optional($profile->location)->province ?? 'Cavite',
                     'multiple_locations' => $package->allow_multiple_locations ? [
                         [
-                            'venue_name' => $profile->brand_name . ' Main Location',
+                            'venue_name' => $profile->brand_name.' Main Location',
                             'street' => $profile->street,
                             'barangay' => $profile->barangay,
                             'city' => optional($profile->location)->municipality ?? 'General Trias',
@@ -636,7 +638,7 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
                     'down_payment' => $downPayment,
                     'remaining_balance' => max(0, $totalAmount - $paidAmount),
                     'deposit_policy' => $profile->deposit_policy === 'required'
-                        ? ($profile->deposit_type === 'percentage' ? rtrim(rtrim(number_format((float) $profile->deposit_amount, 2, '.', ''), '0'), '.') . '%' : number_format((float) $profile->deposit_amount, 2, '.', ''))
+                        ? ($profile->deposit_type === 'percentage' ? rtrim(rtrim(number_format((float) $profile->deposit_amount, 2, '.', ''), '0'), '.').'%' : number_format((float) $profile->deposit_amount, 2, '.', ''))
                         : 'full_payment',
                     'payment_type' => $paymentType,
                     'status' => 'completed',
@@ -665,7 +667,7 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
             PaymentModel::updateOrCreate(
                 [
                     'booking_id' => $booking->id,
-                    'payment_reference' => 'SEED-PAY-' . $bookingReference,
+                    'payment_reference' => 'SEED-PAY-'.$bookingReference,
                 ],
                 [
                     'stripe_payment_intent_id' => null,
@@ -694,7 +696,7 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
      */
     private function upsertClient(): UserModel
     {
-        $email = 'seed.freelancer.booking.client@lumora.test';
+        $email = $this->gmail('Freya', 'Bautista');
         $existingUuid = UserModel::query()->where('email', $email)->value('uuid');
 
         return UserModel::updateOrCreate(
@@ -704,15 +706,15 @@ class FreelancerMarketplaceBundleSeeder extends Seeder
                 'role' => 'client',
                 'user_type' => 'Customer',
                 'first_name' => 'Freya',
-                'middle_name' => 'Booking',
-                'last_name' => 'Client',
+                'middle_name' => 'Camille',
+                'last_name' => 'Bautista',
                 'mobile_number' => '+639188299999',
-                'password' => Hash::make(self::DEFAULT_PASSWORD),
+                'password' => Hash::make(self::SEED_PASSWORD),
                 'status' => 'active',
                 'email_verified' => true,
                 'verification_token' => null,
                 'token_expiry' => null,
-                'location_id' => 2,
+                'location_id' => $this->locationId('General Trias'),
             ]
         );
     }

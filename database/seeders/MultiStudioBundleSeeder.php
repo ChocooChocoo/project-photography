@@ -9,6 +9,7 @@ use App\Models\StudioOwner\StudioPhotographersModel;
 use App\Models\StudioOwner\StudioScheduleModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
+use Database\Seeders\Concerns\SeedSupport;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,8 @@ use Illuminate\Support\Str;
 
 class MultiStudioBundleSeeder extends Seeder
 {
+    use SeedSupport;
+
     /**
      * Seeded bundled studio names.
      *
@@ -27,11 +30,6 @@ class MultiStudioBundleSeeder extends Seeder
         'North Frame Collective',
         'Golden Lens House',
     ];
-
-    /**
-     * Default seeded password.
-     */
-    private const DEFAULT_PASSWORD = 'password';
 
     /**
      * Run the database seeds.
@@ -60,8 +58,9 @@ class MultiStudioBundleSeeder extends Seeder
         ];
 
         foreach ($requiredRoles as $roleName) {
-            if (!$roleIds->has($roleName)) {
+            if (! $roleIds->has($roleName)) {
                 $this->command?->error("Missing required RBAC role [{$roleName}]. Run RBAC seeders first.");
+
                 return;
             }
         }
@@ -79,8 +78,9 @@ class MultiStudioBundleSeeder extends Seeder
             ->pluck('id', 'category_name');
 
         foreach ($requiredCategoryNames as $categoryName) {
-            if (!$categoryIds->has($categoryName)) {
+            if (! $categoryIds->has($categoryName)) {
                 $this->command?->error("Missing required category [{$categoryName}].");
+
                 return;
             }
         }
@@ -143,14 +143,14 @@ class MultiStudioBundleSeeder extends Seeder
         return [
             [
                 'code' => 'aurora',
-                'location_id' => 6,
+                'location_id' => $this->locationId('Imus'),
                 'street' => '2F Solis Arcade, Aguinaldo Highway',
                 'barangay' => 'Bucandala III',
                 'attendance_latitude' => 14.4091123,
                 'attendance_longitude' => 120.9402451,
                 'attendance_radius_meters' => 50,
                 'contact_number' => '09172010001',
-                'studio_email' => 'hello@auroraweddinghouse.test',
+                'studio_email' => 'auroraweddinghouse@gmail.com',
                 'facebook_url' => 'https://facebook.com/auroraweddinghouse',
                 'instagram_url' => 'https://instagram.com/auroraweddinghouse',
                 'website_url' => 'https://auroraweddinghouse.test',
@@ -174,9 +174,9 @@ class MultiStudioBundleSeeder extends Seeder
                     'first_name' => 'Althea',
                     'middle_name' => 'Marie',
                     'last_name' => 'Navarro',
-                    'email' => 'seed.owner.aurora@lumora.test',
+                    'email' => $this->gmail('Althea', 'Navarro'),
                     'mobile_number' => '+639188100001',
-                    'location_id' => 6,
+                    'location_id' => $this->locationId('Imus'),
                 ],
                 'categories' => [
                     [
@@ -203,14 +203,14 @@ class MultiStudioBundleSeeder extends Seeder
             ],
             [
                 'code' => 'northframe',
-                'location_id' => 7,
+                'location_id' => $this->locationId('Silang'),
                 'street' => 'The Courtyard, Emilio Aguinaldo Highway',
-                'barangay' => 'Mataas Na Burol',
+                'barangay' => 'Mataas na Burol',
                 'attendance_latitude' => 14.2318821,
                 'attendance_longitude' => 120.9743015,
                 'attendance_radius_meters' => 45,
                 'contact_number' => '09172010002',
-                'studio_email' => 'contact@northframecollective.test',
+                'studio_email' => 'northframecollective@gmail.com',
                 'facebook_url' => 'https://facebook.com/northframecollective',
                 'instagram_url' => 'https://instagram.com/northframecollective',
                 'website_url' => 'https://northframecollective.test',
@@ -234,9 +234,9 @@ class MultiStudioBundleSeeder extends Seeder
                     'first_name' => 'Cedric',
                     'middle_name' => 'Lane',
                     'last_name' => 'Rivera',
-                    'email' => 'seed.owner.northframe@lumora.test',
+                    'email' => $this->gmail('Cedric', 'Rivera'),
                     'mobile_number' => '+639188100002',
-                    'location_id' => 7,
+                    'location_id' => $this->locationId('Silang'),
                 ],
                 'categories' => [
                     [
@@ -263,14 +263,14 @@ class MultiStudioBundleSeeder extends Seeder
             ],
             [
                 'code' => 'goldenlens',
-                'location_id' => 2,
+                'location_id' => $this->locationId('General Trias'),
                 'street' => 'Ground Floor, Evo Marketplace, Arnaldo Highway',
                 'barangay' => 'Manggahan',
                 'attendance_latitude' => 14.3612334,
                 'attendance_longitude' => 120.8824543,
                 'attendance_radius_meters' => 60,
                 'contact_number' => '09172010003',
-                'studio_email' => 'studio@goldenlenshouse.test',
+                'studio_email' => 'goldenlenshouse@gmail.com',
                 'facebook_url' => 'https://facebook.com/goldenlenshouse',
                 'instagram_url' => 'https://instagram.com/goldenlenshouse',
                 'website_url' => 'https://goldenlenshouse.test',
@@ -294,9 +294,9 @@ class MultiStudioBundleSeeder extends Seeder
                     'first_name' => 'Marion',
                     'middle_name' => 'Cruz',
                     'last_name' => 'Santiago',
-                    'email' => 'seed.owner.goldenlens@lumora.test',
+                    'email' => $this->gmail('Marion', 'Santiago'),
                     'mobile_number' => '+639188100003',
-                    'location_id' => 2,
+                    'location_id' => $this->locationId('General Trias'),
                 ],
                 'categories' => [
                     [
@@ -327,7 +327,7 @@ class MultiStudioBundleSeeder extends Seeder
     /**
      * Create or update a user record for the seed bundle.
      *
-     * @param array<string, string> $definition
+     * @param  array<string, string>  $definition
      */
     private function upsertUser(array $definition): UserModel
     {
@@ -345,7 +345,7 @@ class MultiStudioBundleSeeder extends Seeder
                 'middle_name' => $definition['middle_name'],
                 'last_name' => $definition['last_name'],
                 'mobile_number' => $definition['mobile_number'],
-                'password' => Hash::make(self::DEFAULT_PASSWORD),
+                'password' => Hash::make(self::SEED_PASSWORD),
                 'status' => 'active',
                 'email_verified' => true,
                 'verification_token' => null,
@@ -358,7 +358,7 @@ class MultiStudioBundleSeeder extends Seeder
     /**
      * Create or update one studio record.
      *
-     * @param array<string, mixed> $definition
+     * @param  array<string, mixed>  $definition
      */
     private function upsertStudio(array $definition, int $ownerId): StudiosModel
     {
@@ -400,7 +400,7 @@ class MultiStudioBundleSeeder extends Seeder
     /**
      * Seed service rows by category for one studio.
      *
-     * @param array<int, array<string, mixed>> $categories
+     * @param  array<int, array<string, mixed>>  $categories
      * @return array<int, ServicesModel>
      */
     private function seedServices(int $studioId, array $categories, Carbon $now): array
@@ -429,7 +429,7 @@ class MultiStudioBundleSeeder extends Seeder
     /**
      * Seed one studio-level operating schedule.
      *
-     * @param array<string, mixed> $definition
+     * @param  array<string, mixed>  $definition
      */
     private function seedStudioSchedule(StudiosModel $studio, array $definition): void
     {
@@ -456,7 +456,7 @@ class MultiStudioBundleSeeder extends Seeder
         $legacySeedUserIds = DB::table('tbl_user_roles as user_roles')
             ->join('tbl_users as users', 'users.id', '=', 'user_roles.user_id')
             ->where('user_roles.studio_id', $studioId)
-            ->where('users.email', 'like', 'seed.studio-%@lumora.test')
+            ->whereIn('users.email', StudioEmployeesSeeder::seededEmails())
             ->pluck('users.id')
             ->unique()
             ->values();
@@ -494,9 +494,9 @@ class MultiStudioBundleSeeder extends Seeder
     /**
      * Seed all employees, schedules, studio-photographer rows, and scoped role assignments.
      *
-     * @param array<string, int> $roleIds
-     * @param array<int, ServicesModel> $serviceMap
-     * @param array<int, string> $operatingDays
+     * @param  array<string, int>  $roleIds
+     * @param  array<int, ServicesModel>  $serviceMap
+     * @param  array<int, string>  $operatingDays
      */
     private function seedEmployees(
         string $studioCode,
@@ -603,7 +603,9 @@ class MultiStudioBundleSeeder extends Seeder
             'first_name' => $firstName,
             'middle_name' => $middleName,
             'last_name' => $lastName,
-            'email' => sprintf('seed.%s.%s.%03d@lumora.test', $studioCode, $role, $sequence),
+            // The same roster of names is reused across studios, so the sequence
+            // keeps addresses unique.
+            'email' => $this->gmail($firstName, $lastName, $sequence),
             'mobile_number' => $this->makeMobileNumber($sequence),
         ];
     }
@@ -628,7 +630,7 @@ class MultiStudioBundleSeeder extends Seeder
             'first_name' => $firstName,
             'middle_name' => $middleName,
             'last_name' => $lastName,
-            'email' => sprintf('seed.%s.photographer.%03d@lumora.test', $studioCode, $sequence),
+            'email' => $this->gmail($firstName, $lastName, $sequence),
             'mobile_number' => $this->makeMobileNumber($sequence),
             'position' => $position,
             'years_of_experience' => $yearsOfExperience,
@@ -638,7 +640,7 @@ class MultiStudioBundleSeeder extends Seeder
     /**
      * Seed 3 tiered packages for each seeded category.
      *
-     * @param array<int, array<string, mixed>> $categories
+     * @param  array<int, array<string, mixed>>  $categories
      */
     private function seedPackages(int $studioId, array $categories, Carbon $now): void
     {
@@ -831,6 +833,6 @@ class MultiStudioBundleSeeder extends Seeder
      */
     private function makeMobileNumber(int $sequence): string
     {
-        return '+63917' . str_pad((string) (700000 + $sequence), 6, '0', STR_PAD_LEFT);
+        return '+63917'.str_pad((string) (700000 + $sequence), 6, '0', STR_PAD_LEFT);
     }
 }

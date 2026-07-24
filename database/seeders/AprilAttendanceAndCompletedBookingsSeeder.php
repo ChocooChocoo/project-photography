@@ -13,6 +13,7 @@ use App\Models\StudioOwner\StudioPhotographersModel;
 use App\Models\UserModel;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Database\Seeders\Concerns\SeedSupport;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -20,6 +21,8 @@ use Illuminate\Support\Str;
 
 class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
 {
+    use SeedSupport;
+
     /**
      * Seed attendance and booking data for April 2026.
      */
@@ -49,6 +52,7 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
 
         if ($employeeSchedules->isEmpty()) {
             $this->command?->warn('No active employee schedules found. April attendance seeder skipped.');
+
             return;
         }
 
@@ -56,7 +60,7 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
             $user = $schedule->user;
             $studio = $schedule->studio;
 
-            if (!$user || !$studio) {
+            if (! $user || ! $studio) {
                 continue;
             }
 
@@ -64,6 +68,7 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
 
             if ($workingDates === []) {
                 $this->command?->warn("No April working dates found for {$user->email}.");
+
                 continue;
             }
 
@@ -99,8 +104,8 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
                         'check_out_status' => $attendancePayload['check_out_status'],
                         'late_minutes' => $attendancePayload['late_minutes'],
                         'undertime_minutes' => $attendancePayload['undertime_minutes'],
-                        'check_in_ip' => '10.20.1.' . (20 + ($user->id % 150)),
-                        'check_out_ip' => '10.20.1.' . (20 + ($user->id % 150)),
+                        'check_in_ip' => '10.20.1.'.(20 + ($user->id % 150)),
+                        'check_out_ip' => '10.20.1.'.(20 + ($user->id % 150)),
                         'check_in_user_agent' => 'Seeded April 2026 attendance record',
                         'check_out_user_agent' => 'Seeded April 2026 attendance record',
                         'notes' => "Seeded April 2026 {$user->role} attendance record.",
@@ -185,8 +190,8 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
         $scheduledStartTime = $this->normalizeScheduleTime($schedule->start_time, '09:00:00');
         $scheduledEndTime = $this->normalizeScheduleTime($schedule->end_time, '18:00:00');
 
-        $scheduledStart = Carbon::parse($attendanceDate->toDateString() . ' ' . $scheduledStartTime, 'Asia/Manila');
-        $scheduledEnd = Carbon::parse($attendanceDate->toDateString() . ' ' . $scheduledEndTime, 'Asia/Manila');
+        $scheduledStart = Carbon::parse($attendanceDate->toDateString().' '.$scheduledStartTime, 'Asia/Manila');
+        $scheduledEnd = Carbon::parse($attendanceDate->toDateString().' '.$scheduledEndTime, 'Asia/Manila');
 
         $isLate = (($workingDayIndex + $userId) % 5) === 0;
         $isUndertime = (($workingDayIndex + $userId) % 7) === 0;
@@ -228,6 +233,7 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
 
         if ($photographerAssignments->isEmpty()) {
             $this->command?->warn('No active studio photographer assignments found. April completed bookings skipped.');
+
             return;
         }
 
@@ -235,7 +241,7 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
             $photographer = $assignment->photographer;
             $studio = $assignment->studio;
 
-            if (!$photographer || !$studio) {
+            if (! $photographer || ! $studio) {
                 continue;
             }
 
@@ -245,8 +251,9 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
                 ->where('is_active', true)
                 ->first();
 
-            if (!$schedule) {
+            if (! $schedule) {
                 $this->command?->warn("No active employee schedule found for photographer {$photographer->email}. Booking seeding skipped.");
+
                 continue;
             }
 
@@ -254,6 +261,7 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
 
             if (count($workingDates) < 4) {
                 $this->command?->warn("Not enough April working dates found for photographer {$photographer->email}. Booking seeding skipped.");
+
                 continue;
             }
 
@@ -296,19 +304,21 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
      */
     private function resolveSeedClient(): UserModel
     {
+        $email = $this->gmail('April', 'Villanueva');
+
         return UserModel::updateOrCreate(
-            ['email' => 'seed.april.booking.client@lumora.test'],
+            ['email' => $email],
             [
                 'uuid' => UserModel::query()
-                    ->where('email', 'seed.april.booking.client@lumora.test')
+                    ->where('email', $email)
                     ->value('uuid') ?: (string) Str::uuid(),
                 'role' => 'client',
                 'user_type' => 'Customer',
                 'first_name' => 'April',
-                'middle_name' => 'Booking',
-                'last_name' => 'Client',
+                'middle_name' => 'Denise',
+                'last_name' => 'Villanueva',
                 'mobile_number' => '+639179999901',
-                'password' => Hash::make('password'),
+                'password' => Hash::make(self::SEED_PASSWORD),
                 'status' => 'active',
                 'email_verified' => true,
                 'verification_token' => null,
@@ -335,7 +345,7 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
             $sequence
         );
         $totalAmount = round(6500 + (((int) ($assignment->years_of_experience ?? 1)) * 750) + ($sequence * 250), 2);
-        $startTime = Carbon::parse($bookingDate->toDateString() . ' 10:00:00', 'Asia/Manila');
+        $startTime = Carbon::parse($bookingDate->toDateString().' 10:00:00', 'Asia/Manila');
         $endTime = $startTime->copy()->addHours(3);
         $createdAt = $bookingDate->copy()->subDays(8)->setTime(11, 0);
 
@@ -346,7 +356,7 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
                 'booking_type' => 'studio',
                 'provider_id' => $studio->id,
                 'category_id' => $studio->category_id,
-                'event_name' => trim(($assignment->position ?? 'Studio Session') . ' April Shoot'),
+                'event_name' => trim(($assignment->position ?? 'Studio Session').' April Shoot'),
                 'event_date' => $bookingDate->toDateString(),
                 'start_time' => $startTime->format('H:i:s'),
                 'end_time' => $endTime->format('H:i:s'),
@@ -440,7 +450,7 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
         PaymentModel::updateOrCreate(
             [
                 'booking_id' => $booking->id,
-                'payment_reference' => 'SEED-PAY-' . $booking->booking_reference,
+                'payment_reference' => 'SEED-PAY-'.$booking->booking_reference,
             ],
             [
                 'stripe_payment_intent_id' => null,
