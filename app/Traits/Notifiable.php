@@ -264,6 +264,29 @@ trait Notifiable
     }
 
     /**
+     * Create a revision-requested notification for the owner/photographer.
+     *
+     * @param object $booking
+     * @param object $recipient
+     * @return NotificationModel|null
+     */
+    public function notifyRevisionRequested($booking, $recipient)
+    {
+        return $this->createNotification(
+            $recipient->id,
+            'revision_requested',
+            'Revision Requested',
+            "The client requested a revision for booking #{$booking->booking_reference}.",
+            [
+                'booking_id' => $booking->id,
+                'booking_reference' => $booking->booking_reference,
+            ],
+            'refresh',
+            'warning'
+        );
+    }
+
+    /**
      * Create a review-received notification for the provider.
      *
      * @param object $rating
@@ -329,6 +352,30 @@ trait Notifiable
                 'route' => route('owner.subscription.index', [], false)
             ],
             'alert-triangle',
+            'warning'
+        );
+    }
+
+    /**
+     * Create a trial-ending notification for the owner.
+     *
+     * @param object $studio
+     * @param object $owner
+     * @param int $daysLeft
+     * @return NotificationModel|null
+     */
+    public function notifyTrialEnding($studio, $owner, $daysLeft)
+    {
+        return $this->createNotification(
+            $owner->id,
+            'trial_ending',
+            'Free Trial Ending Soon',
+            "Your free trial for \"{$studio->studio_name}\" ends in {$daysLeft} day(s). Add a payment method to keep your plan active.",
+            [
+                'studio_id' => $studio->id,
+                'route' => route('owner.subscription.index', [], false)
+            ],
+            'clock-exclamation',
             'warning'
         );
     }

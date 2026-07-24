@@ -133,9 +133,10 @@ class BookingController extends Controller
                 $updateData['cancellation_reason'] = $request->reason;
             }
             
-            // Mark as completed - update completion time
+            // Mark as completed - update completion time and open the revision window
             if ($newStatus === 'completed') {
                 $updateData['completed_at'] = now();
+                $updateData['revision_deadline'] = now()->addDays(7);
             }
             
             $booking->update($updateData);

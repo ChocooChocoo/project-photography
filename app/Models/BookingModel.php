@@ -77,6 +77,9 @@ class BookingModel extends Model
         'cancellation_reason',
         'cancelled_by',
         'expires_at',
+        'completed_at',
+        'revision_requested_at',
+        'revision_deadline',
     ];
 
     /**
@@ -94,6 +97,9 @@ class BookingModel extends Model
         'deleted_at' => 'datetime',
         'multiple_locations' => 'array',
         'expires_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'revision_requested_at' => 'datetime',
+        'revision_deadline' => 'datetime',
     ];
 
     /**
@@ -311,8 +317,19 @@ class BookingModel extends Model
     */
     public function canMarkAsCompleted(): bool
     {
-        return $this->isFullyPaid() && 
+        return $this->isFullyPaid() &&
                $this->status === self::STATUS_IN_PROGRESS;
+    }
+
+    /**
+     * Check if the client can still request a revision on this booking.
+     */
+    public function canRequestRevision(): bool
+    {
+        return $this->status === self::STATUS_COMPLETED
+            && $this->revision_deadline
+            && now()->lt($this->revision_deadline)
+            && !$this->revision_requested_at;
     }
 
     /**

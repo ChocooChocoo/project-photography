@@ -986,6 +986,8 @@ class BookingController extends Controller
             
             // Update booking status to completed
             $booking->status = BookingModel::STATUS_COMPLETED;
+            $booking->completed_at = now();
+            $booking->revision_deadline = now()->addDays(7);
             $booking->save();
 
             if ($booking->client) {

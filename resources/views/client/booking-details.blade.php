@@ -189,6 +189,9 @@
                                                     @foreach($packages as $package)
                                                         <div class="col-md-6 col-xl-4">
                                                             <div class="card border h-100 package-card">
+                                                                @if ($package->cover_thumbnail)
+                                                                    <img src="{{ asset('storage/' . $package->cover_thumbnail) }}" alt="{{ $package->package_name }}" class="w-100" style="height: 140px; object-fit: cover;">
+                                                                @endif
                                                                 <div class="card-body">
                                                                     <!-- Package Name & Price -->
                                                                     <div class="d-flex justify-content-between align-items-start mb-2">

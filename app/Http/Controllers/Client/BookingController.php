@@ -2466,6 +2466,8 @@ class BookingController extends Controller
                             'gallery_icon' => $package->online_gallery ? 'ti ti-photo' : 'ti ti-photo-off',
                             'gallery_class' => $package->online_gallery ? 'success' : 'secondary',
                             'photographer_text' => $package->photographer_count . ' photographer' . ($package->photographer_count > 1 ? 's' : ''),
+                            'cover_images' => $package->cover_images ?? [],
+                            'cover_thumbnail' => $package->cover_thumbnail ? asset('storage/' . $package->cover_thumbnail) : null,
                             // ========== START: DSS - Add budget info to response ==========
                             'budget_info' => $budgetMatch
                             // ========== END: DSS - Add budget info ==========
@@ -2525,6 +2527,8 @@ class BookingController extends Controller
                             'gallery_badge' => ($package->online_gallery ?? false) ? 'Yes' : 'No',
                             'gallery_icon' => ($package->online_gallery ?? false) ? 'ti ti-photo' : 'ti ti-photo-off',
                             'gallery_class' => ($package->online_gallery ?? false) ? 'success' : 'secondary',
+                            'cover_images' => $package->cover_images ?? [],
+                            'cover_thumbnail' => $package->cover_thumbnail ? asset('storage/' . $package->cover_thumbnail) : null,
                             // ========== START: DSS - Add budget info to response ==========
                             'budget_info' => $budgetMatch
                             // ========== END: DSS - Add budget info ==========

@@ -118,6 +118,18 @@
                                                                     title="Leave Freelancer Review">
                                                                 <i class="ti ti-user-star fs-lg"></i>
                                                             </button>
+                                        @endif
+                                                        @if($booking->canRequestRevision())
+                                                            <button class="btn btn-sm request-revision-btn"
+                                                                    data-booking-id="{{ $booking->id }}"
+                                                                    data-booking-reference="{{ $booking->booking_reference }}"
+                                                                    title="Request a photo revision">
+                                                                <i class="ti ti-photo-edit fs-lg"></i>
+                                                            </button>
+                                                        @elseif($booking->revision_requested_at)
+                                                            <span class="badge badge-soft-info fs-8 px-2 align-self-center" title="Revision requested">
+                                                                Revision Requested
+                                                            </span>
                                                         @endif
                                                     @endif
                                                 </div>
@@ -246,6 +258,54 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         loadStudioReviewForm(bookingId, bookingRef);
+                    }
+                });
+            });
+
+            // Request revision button
+            $(document).on('click', '.request-revision-btn', function() {
+                const bookingId = $(this).data('booking-id');
+                const bookingRef = $(this).data('booking-reference');
+
+                Swal.fire({
+                    title: 'Request a Revision',
+                    html: 'Let us know what you would like changed for booking <strong>' + bookingRef + '</strong>.',
+                    input: 'textarea',
+                    inputPlaceholder: 'Describe the revision you need (optional)...',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3475db',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Submit Request',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `{{ url('client/bookings') }}/${bookingId}/request-revision`,
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                note: result.value || ''
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Request Sent!',
+                                        text: response.message,
+                                        showConfirmButton: false,
+                                        timer: 2000,
+                                        timerProgressBar: true
+                                    }).then(() => location.reload());
+                                } else {
+                                    Swal.fire('Error', response.message, 'error');
+                                }
+                            },
+                            error: function(xhr) {
+                                Swal.fire('Error', xhr.responseJSON?.message ||
+                                    'Failed to submit revision request.', 'error');
+                            }
+                        });
                     }
                 });
             });

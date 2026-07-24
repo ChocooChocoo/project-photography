@@ -5,9 +5,13 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\BookingModel;
 use App\Models\PaymentModel;
+use App\Models\Freelancer\FreelanceOnlineGalleryModel;
 use App\Models\Freelancer\ProfileModel;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
+use App\Models\StudioOwner\StudioOnlineGalleryModel;
 use App\Models\StudioOwner\StudiosModel;
+use App\Models\UserModel;
+use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -15,6 +19,8 @@ use Illuminate\Support\Facades\Auth;
 
 class MyBookingsController extends Controller
 {
+    use Notifiable;
+
     /**
      * Display current bookings (pending, confirmed, in_progress)
      */
@@ -286,6 +292,84 @@ class MyBookingsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error cancelling booking: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Request a revision on a completed booking's gallery.
+     */
+    public function requestRevision(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'note' => 'nullable|string|max:1000',
+            ]);
+
+            $userId = Auth::id();
+
+            $booking = BookingModel::where('client_id', $userId)
+                ->where('id', $id)
+                ->where('status', 'completed')
+                ->firstOrFail();
+
+            if (!$booking->canRequestRevision()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This booking is no longer eligible for a revision request.',
+                ], 403);
+            }
+
+            $booking->update(['revision_requested_at' => now()]);
+
+            $recipients = [];
+
+            if ($booking->booking_type === 'studio') {
+                $gallery = StudioOnlineGalleryModel::where('booking_id', $id)->first();
+                if ($gallery && $gallery->gallery_status === 'published') {
+                    $gallery->update(['gallery_status' => 'draft']);
+                }
+
+                $studio = StudiosModel::find($booking->provider_id);
+                if ($studio && $studio->user) {
+                    $recipients[] = $studio->user;
+                }
+            } elseif ($booking->booking_type === 'freelancer') {
+                $gallery = FreelanceOnlineGalleryModel::where('booking_id', $id)->first();
+                if ($gallery && $gallery->gallery_status === 'published') {
+                    $gallery->update(['gallery_status' => 'draft']);
+                }
+            }
+
+            $assignedPhotographers = BookingAssignedPhotographerModel::where('booking_id', $id)
+                ->with('photographer')
+                ->get();
+
+            foreach ($assignedPhotographers as $assignment) {
+                if ($assignment->photographer) {
+                    $recipients[] = $assignment->photographer;
+                }
+            }
+
+            if ($booking->booking_type === 'freelancer') {
+                $freelancerUser = UserModel::find($booking->provider_id);
+                if ($freelancerUser) {
+                    $recipients[] = $freelancerUser;
+                }
+            }
+
+            foreach ($recipients as $recipient) {
+                $this->notifyRevisionRequested($booking, $recipient);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Your revision request has been sent.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error requesting revision: ' . $e->getMessage(),
             ], 500);
         }
     }

@@ -997,6 +997,9 @@
                                         
                                         <label class="${cardClass}${borderClass}" for="package${package.id}" style="cursor: pointer; position: relative;">
                                             ${badgeHtml}
+                                            ${package.cover_thumbnail ? `
+                                                <img src="${package.cover_thumbnail}" alt="${package.package_name}" class="w-100" style="height: 140px; object-fit: cover;">
+                                            ` : ''}
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-start mb-2 mt-3">
                                                     <h6 class="card-title fw-bold mb-0">${package.package_name}</h6>
