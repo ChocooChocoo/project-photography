@@ -74,7 +74,12 @@
                                             <td>{{ $plan->formatted_billing_cycle }}</td>
                                             <td>{{ $plan->name }}</td>
                                             <td>{{ $plan->formatted_price }}</td>
-                                            <td>{{ $plan->commission_rate }}%</td>
+                                            <td>
+                                                {{ $plan->commission_rate }}%
+                                                @if($plan->trial_days > 0)
+                                                    <span class="badge badge-soft-success d-block mt-1">{{ $plan->trial_days }}-day trial</span>
+                                                @endif
+                                            </td>
                                             <td>
                                                 <span class="badge {{ $plan->priority_badge_class }}">
                                                     Level {{ $plan->priority_level }}

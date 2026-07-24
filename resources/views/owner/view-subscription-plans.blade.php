@@ -26,10 +26,13 @@
                     <div class="alert alert-info d-flex align-items-center">
                         <i class="ti ti-info-circle fs-4 me-3"></i>
                         <div>
-                            <strong>Current Plan:</strong> {{ $currentSubscription->plan->name ?? 'Unknown' }} 
+                            <strong>Current Plan:</strong> {{ $currentSubscription->plan->name ?? 'Unknown' }}
                             (Valid until {{ $currentSubscription->end_date->format('M d, Y') }})
                             @if($currentSubscription->end_date->diffInDays(now()) <= 7)
                                 <span class="badge bg-warning ms-2">Expiring Soon</span>
+                            @endif
+                            @if($currentSubscription->isOnTrial())
+                                <span class="badge bg-info ms-2">Trial ends in {{ now()->diffInDays($currentSubscription->trial_ends_at) }} day(s)</span>
                             @endif
                         </div>
                     </div>
@@ -43,6 +46,9 @@
                 <div class="col">
                     <div class="card h-100 my-4 my-lg-0">
                         <div class="card-body p-lg-4 pb-0 text-center">
+                            @if($plan->trial_days > 0)
+                                <span class="badge badge-soft-success mb-2">{{ $plan->trial_days }}-Day Free Trial</span>
+                            @endif
                             <h3 class="fw-bold mb-1">{{ $plan->name }}</h3>
                             <p class="text-muted mb-0">{{ $plan->description }}</p>
 
@@ -627,7 +633,19 @@
                     success: function(response) {
                         if (response.success) {
                             $('#subscribeConfirmModal').modal('hide');
-                            
+
+                            if (response.trial) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Free Trial Started!',
+                                    text: response.message,
+                                    confirmButtonText: 'Go to Subscription'
+                                }).then(() => {
+                                    window.location.href = '{{ route("owner.subscription.index") }}';
+                                });
+                                return;
+                            }
+
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Redirecting to Payment',

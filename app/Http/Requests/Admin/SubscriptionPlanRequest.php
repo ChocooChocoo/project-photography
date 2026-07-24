@@ -28,6 +28,7 @@ class SubscriptionPlanRequest extends FormRequest
             'billing_cycle' => ['required', 'in:monthly,yearly'],
             'price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'commission_rate' => ['required', 'numeric', 'min:0', 'max:100'],
+            'trial_days' => ['nullable', 'integer', 'min:0', 'max:365'],
             'max_booking' => ['nullable', 'integer', 'min:0'],
             'priority_level' => ['nullable', 'integer', 'min:0', 'max:5'],
             'features' => ['required', 'array', 'min:1'],

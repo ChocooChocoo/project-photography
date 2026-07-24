@@ -141,6 +141,32 @@ class SubscriptionController extends Controller
             // Generate subscription reference
             $subscriptionReference = StudioPlanModel::generateSubscriptionReference();
 
+            // Free trial plans activate immediately with no charge
+            if ($plan->trial_days > 0) {
+                $studioPlan = StudioPlanModel::create([
+                    'studio_id' => $studio->id,
+                    'plan_id' => $plan->id,
+                    'subscription_reference' => $subscriptionReference,
+                    'start_date' => now(),
+                    'end_date' => $this->calculateEndDate($plan->billing_cycle),
+                    'next_billing_date' => $this->calculateNextBillingDate($plan->billing_cycle),
+                    'amount_paid' => 0,
+                    'payment_status' => 'paid',
+                    'status' => 'active',
+                    'paid_at' => now(),
+                    'trial_ends_at' => now()->addDays($plan->trial_days),
+                    'plan_snapshot' => $plan->toArray(),
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'trial' => true,
+                    'message' => "Your {$plan->trial_days}-day free trial has started!",
+                ]);
+            }
+
             // Create pending subscription
             $studioPlan = StudioPlanModel::create([
                 'studio_id' => $studio->id,
@@ -177,6 +203,7 @@ class SubscriptionController extends Controller
 
             return response()->json([
                 'success' => true,
+                'trial' => false,
                 'message' => 'Redirecting to payment...',
                 'checkout_url' => $checkoutSession['url']
             ]);

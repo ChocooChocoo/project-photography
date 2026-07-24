@@ -47,6 +47,7 @@ class StudioPlanModel extends Model
         'usage_metrics',
         'cancelled_at',
         'cancellation_reason',
+        'trial_ends_at',
     ];
 
     /**
@@ -60,6 +61,7 @@ class StudioPlanModel extends Model
         'next_billing_date' => 'date',
         'paid_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'trial_ends_at' => 'datetime',
         'amount_paid' => 'decimal:2',
         'plan_snapshot' => 'array',
         'stripe_response' => 'array',
@@ -137,6 +139,27 @@ class StudioPlanModel extends Model
         
         $daysUntilExpiry = now()->diffInDays($this->end_date, false);
         return $daysUntilExpiry <= 7 && $daysUntilExpiry >= 0;
+    }
+
+    /**
+     * Check if this subscription is currently within its free trial period.
+     */
+    public function isOnTrial()
+    {
+        return $this->trial_ends_at && now()->lt($this->trial_ends_at);
+    }
+
+    /**
+     * Check if the trial is ending soon (within 7 days).
+     */
+    public function isTrialEndingSoon()
+    {
+        if (!$this->isOnTrial()) {
+            return false;
+        }
+
+        $daysUntilTrialEnd = now()->diffInDays($this->trial_ends_at, false);
+        return $daysUntilTrialEnd <= 7 && $daysUntilTrialEnd >= 0;
     }
 
     /**

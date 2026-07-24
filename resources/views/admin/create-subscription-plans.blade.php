@@ -96,6 +96,15 @@
                                     </div>
                                 </div>
 
+                                {{-- Row 3b: Free Trial --}}
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Free Trial (days)</label>
+                                        <input type="number" class="form-control" name="trial_days" id="trial_days" placeholder="0" min="0" max="365" value="0">
+                                        <small class="text-muted">Owners subscribing to this plan get this many days free before being charged. Leave 0 for no trial.</small>
+                                    </div>
+                                </div>
+
                                 {{-- Row 4: Conditional Fields (Studio only) --}}
                                 <div class="row" id="studioFields" style="display: none;">
                                     <div class="col-md-4 mb-3">
@@ -318,6 +327,7 @@
                     billing_cycle: $('#billing_cycle').val(),
                     price: $('#price').val(),
                     commission_rate: $('#commission_rate').val(),
+                    trial_days: $('#trial_days').val() || 0,
                     max_booking: $('#max_booking').val() || null,
                     max_studio_photographers: $('#user_type').val() === 'studio' ? ($('#max_studio_photographers').val() || null) : null,
                     description: $('#description').val(),
