@@ -31,7 +31,7 @@ class MultiStudioBundleSeeder extends Seeder
     /**
      * Default seeded password.
      */
-    private const DEFAULT_PASSWORD = 'Password@123';
+    private const DEFAULT_PASSWORD = 'password';
 
     /**
      * Run the database seeds.

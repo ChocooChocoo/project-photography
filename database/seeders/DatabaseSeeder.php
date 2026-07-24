@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             BookingDataIntegrityRepairSeeder::class,
             ChatbotDefaultConfigSeeder::class,
             ProcurementWorkflowSeeder::class,
+            CoverageGapsAndAdminSeeder::class,
         ]);
     }
 }

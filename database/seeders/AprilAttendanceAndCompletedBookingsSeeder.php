@@ -308,7 +308,7 @@ class AprilAttendanceAndCompletedBookingsSeeder extends Seeder
                 'middle_name' => 'Booking',
                 'last_name' => 'Client',
                 'mobile_number' => '+639179999901',
-                'password' => Hash::make('Password@123'),
+                'password' => Hash::make('password'),
                 'status' => 'active',
                 'email_verified' => true,
                 'verification_token' => null,
