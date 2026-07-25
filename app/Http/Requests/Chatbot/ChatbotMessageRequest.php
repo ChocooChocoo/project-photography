@@ -23,10 +23,10 @@ class ChatbotMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'message' => 'required|string|max:1000',
+            // Length is capped for token control as well as input hygiene.
+            'message' => ['required', 'string', 'max:600', 'regex:/[\p{L}\p{N}]/u'],
             'session_id' => 'nullable|string|exists:tbl_chatbot_conversations,session_id',
             'owner_id' => 'required_if:session_id,null|exists:tbl_users,id',
-            'intent_id' => 'nullable|exists:tbl_chatbot_intents,id',
         ];
     }
 
@@ -39,7 +39,8 @@ class ChatbotMessageRequest extends FormRequest
     {
         return [
             'message.required' => 'Message cannot be empty.',
-            'message.max' => 'Message must not exceed 1000 characters.',
+            'message.max' => 'Message must not exceed 600 characters.',
+            'message.regex' => 'Please include a clear question in your message.',
             'session_id.exists' => 'Invalid conversation session.',
             'owner_id.required_if' => 'Please specify which studio you are inquiring about.',
             'owner_id.exists' => 'Selected studio owner does not exist.',

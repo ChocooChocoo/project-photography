@@ -36,6 +36,14 @@
 
     @include('layouts.partials.portal-base-scripts')
 
+    {{-- PHOTOGRAPHY AI ASSISTANT (answers for the studio this photographer belongs to) --}}
+    @php
+        $assistantStudioOwnerId = \App\Models\StudioOwner\StudioPhotographersModel::query()
+            ->where('photographer_id', auth()->id())
+            ->value('owner_id');
+    @endphp
+    @include('partials.chatbot-widget', ['ownerId' => $assistantStudioOwnerId])
+
     {{-- YIELD SCRIPT --}}
     @yield('scripts')
 </body>

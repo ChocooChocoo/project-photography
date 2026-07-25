@@ -36,6 +36,9 @@
 
     @include('layouts.partials.portal-base-scripts')
 
+    {{-- PHOTOGRAPHY AI ASSISTANT --}}
+    @include('partials.chatbot-widget', ['ownerId' => auth()->id()])
+
     {{-- YIELD SCRIPT --}}
     @yield('scripts')
 </body>

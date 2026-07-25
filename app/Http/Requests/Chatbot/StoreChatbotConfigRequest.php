@@ -25,7 +25,6 @@ class StoreChatbotConfigRequest extends FormRequest
         return [
             'config_name' => 'nullable|string|max:255',
             'welcome_message' => 'nullable|string|max:1000',
-            'fallback_message' => 'nullable|string|max:1000',
             'is_active' => 'sometimes|boolean',
             'bot_name' => 'nullable|string|max:100',
             'bot_avatar' => 'nullable|string|max:255',
@@ -43,7 +42,6 @@ class StoreChatbotConfigRequest extends FormRequest
         return [
             'config_name.max' => 'Configuration name must not exceed 255 characters.',
             'welcome_message.max' => 'Welcome message must not exceed 1000 characters.',
-            'fallback_message.max' => 'Fallback message must not exceed 1000 characters.',
             'bot_name.max' => 'Bot name must not exceed 100 characters.',
         ];
     }
