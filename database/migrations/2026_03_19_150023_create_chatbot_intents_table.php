@@ -15,25 +15,21 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('config_id');
             $table->string('intent_name');
-            $table->json('trigger_keywords'); // Array of keywords to trigger this intent
             $table->text('response_text');
-            $table->enum('response_type', ['text', 'quick_reply', 'image'])->default('text');
-            $table->string('image_url')->nullable();
-            $table->integer('priority')->default(0); // Higher priority matches first
+            $table->integer('priority')->default(0); // Higher priority is injected first
             $table->boolean('is_active')->default(true);
-            $table->integer('match_count')->default(0); // Track how many times matched
             $table->timestamps();
-            
+
             // Indexes
             $table->index('config_id');
             $table->index('is_active');
             $table->index('priority');
-            
+
             // Foreign key
             $table->foreign('config_id')
-                  ->references('id')
-                  ->on('tbl_chatbot_configs')
-                  ->onDelete('cascade');
+                ->references('id')
+                ->on('tbl_chatbot_configs')
+                ->onDelete('cascade');
         });
     }
 

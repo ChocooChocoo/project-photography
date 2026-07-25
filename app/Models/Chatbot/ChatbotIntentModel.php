@@ -24,13 +24,9 @@ class ChatbotIntentModel extends Model
     protected $fillable = [
         'config_id',
         'intent_name',
-        'trigger_keywords',
         'response_text',
-        'response_type',
-        'image_url',
         'priority',
         'is_active',
-        'match_count',
     ];
 
     /**
@@ -39,10 +35,8 @@ class ChatbotIntentModel extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'trigger_keywords' => 'array',
         'priority' => 'integer',
         'is_active' => 'boolean',
-        'match_count' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -56,37 +50,11 @@ class ChatbotIntentModel extends Model
     }
 
     /**
-     * Get the quick replies for this intent.
-     */
-    public function quickReplies()
-    {
-        return $this->hasMany(ChatbotQuickReplyModel::class, 'intent_id');
-    }
-
-    /**
      * Get the messages that used this intent.
      */
     public function messages()
     {
         return $this->hasMany(ChatbotMessageModel::class, 'intent_id');
-    }
-
-    /**
-     * Get active quick replies in order.
-     */
-    public function activeQuickReplies()
-    {
-        return $this->quickReplies()
-                    ->where('is_active', true)
-                    ->orderBy('position');
-    }
-
-    /**
-     * Increment match count.
-     */
-    public function incrementMatchCount()
-    {
-        $this->increment('match_count');
     }
 
     /**
