@@ -46,7 +46,6 @@
                 $canManagePackages = $ownerUser?->hasPermission('owner.packages.manage') ?? false;
                 $canManageServices = $ownerUser?->hasPermission('owner.services.manage') ?? false;
                 $canManageSubscription = $ownerUser?->hasPermission('owner.subscription.manage') ?? false;
-                $canManageInquiries = $ownerUser?->hasPermission('owner.inquiries.manage') ?? false;
                 $canManageChatbot = $ownerUser?->hasPermission('owner.chatbot.manage') ?? false;
                 $canViewProcurement = $ownerUser?->hasPermission('owner.procurement.view') ?? false;
                 $canApproveProcurement = $ownerUser?->hasPermission('owner.procurement.approve') ?? false;
@@ -475,56 +474,44 @@
             </li>
             @endif
 
-            {{-- Inquiries & Chatbot --}}
+            {{-- AI Assistant --}}
             @php
-                $inquiriesRoutes      = Route::is('owner.inquiries.index');
                 $chatbotConfigRoutes  = Route::is('owner.chatbot.config') || Route::is('owner.chatbot.config.get') || Route::is('owner.chatbot.config.save') || Route::is('owner.chatbot.config.toggle');
                 $chatbotIntentsRoutes = Route::is('owner.chatbot.intents.get') || Route::is('owner.chatbot.intents.store') || Route::is('owner.chatbot.intents.show') || Route::is('owner.chatbot.intents.update') || Route::is('owner.chatbot.intents.delete') || Route::is('owner.chatbot.intents.toggle');
                 $chatbotConversationsRoutes = Route::is('owner.chatbot.conversations') || Route::is('owner.chatbot.conversations.details');
-                
+
                 $isChatbotActive = $chatbotConfigRoutes || $chatbotIntentsRoutes || $chatbotConversationsRoutes;
             @endphp
 
-            @if ($canManageInquiries || $canManageChatbot)
-            <li class="side-nav-item {{ $inquiriesRoutes || $isChatbotActive ? 'active' : '' }}">
-                <a data-bs-toggle="collapse" href="#sidebarInquiries" aria-expanded="{{ $inquiriesRoutes || $isChatbotActive ? 'true' : 'false' }}" aria-controls="sidebarInquiries" class="side-nav-link {{ $inquiriesRoutes || $isChatbotActive ? 'active' : '' }}">
+            @if ($canManageChatbot)
+            <li class="side-nav-item {{ $isChatbotActive ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarInquiries" aria-expanded="{{ $isChatbotActive ? 'true' : 'false' }}" aria-controls="sidebarInquiries" class="side-nav-link {{ $isChatbotActive ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-message-2-question"></i></span>
-                    <span class="menu-text" data-lang="inquiries">Inquiries & Chatbot</span>
+                    <span class="menu-text" data-lang="ai-assistant">AI Assistant</span>
                     <span class="menu-arrow"></span>
                 </a>
-                <div class="collapse {{ $inquiriesRoutes || $isChatbotActive ? 'show' : '' }}" id="sidebarInquiries">
+                <div class="collapse {{ $isChatbotActive ? 'show' : '' }}" id="sidebarInquiries">
                     <ul class="sub-menu">
-                        {{-- View Inquiries --}}
-                        @if ($canManageInquiries)
-                        <li class="side-nav-item">
-                            <a href="{{ route('owner.inquiries.index') }}" class="side-nav-link {{ $inquiriesRoutes ? 'active' : '' }}">
-                                <span class="menu-text" data-lang="view-inquiries">View Inquiries</span>
-                            </a>
-                        </li>
-                        @endif
-                        
                         {{-- Chatbot Configuration --}}
-                        @if ($canManageChatbot)
                         <li class="side-nav-item">
                             <a href="{{ route('owner.chatbot.config') }}" class="side-nav-link {{ $chatbotConfigRoutes ? 'active' : '' }}">
-                                <span class="menu-text" data-lang="chatbot-config">Chatbot Settings</span>
+                                <span class="menu-text" data-lang="chatbot-config">Assistant Settings</span>
                             </a>
                         </li>
-                        
-                        {{-- Manage Intents --}}
+
+                        {{-- Studio Knowledge --}}
                         <li class="side-nav-item">
                             <a href="{{ route('owner.chatbot.config') }}#manage_intents" class="side-nav-link {{ $chatbotIntentsRoutes ? 'active' : '' }}">
-                                <span class="menu-text" data-lang="manage-intents">Manage Intents</span>
+                                <span class="menu-text" data-lang="manage-intents">Studio Knowledge</span>
                             </a>
                         </li>
-                        
+
                         {{-- Conversation History --}}
                         <li class="side-nav-item">
-                            <a href="{{ route('owner.chatbot.conversations') }}" class="side-nav-link {{ $chatbotConversationsRoutes ? 'active' : '' }}">
+                            <a href="{{ route('owner.chatbot.config') }}#conversation_history" class="side-nav-link {{ $chatbotConversationsRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="conversation-history">Chat History</span>
                             </a>
                         </li>
-                        @endif
                     </ul>
                 </div>
             </li>

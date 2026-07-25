@@ -33,7 +33,6 @@ class StudioOwnerRolePermissionSeeder extends Seeder
                 'owner.packages.manage',
                 'owner.services.manage',
                 'owner.subscription.manage',
-                'owner.inquiries.manage',
                 'owner.chatbot.manage',
                 'owner.procurement.view',
                 'owner.procurement.approve',
@@ -125,8 +124,9 @@ class StudioOwnerRolePermissionSeeder extends Seeder
         foreach ($rolePermissions as $roleName => $permissionStrings) {
             $role = DB::table('tbl_roles')->where('name', $roleName)->first();
 
-            if (!$role) {
+            if (! $role) {
                 $this->command?->warn("Skipped role-permission mapping. Role not found: {$roleName}");
+
                 continue;
             }
 
@@ -137,8 +137,9 @@ class StudioOwnerRolePermissionSeeder extends Seeder
             foreach ($permissionStrings as $permissionString) {
                 $permissionId = $permissionIds[$permissionString] ?? null;
 
-                if (!$permissionId) {
+                if (! $permissionId) {
                     $this->command?->warn("Skipped missing permission: {$permissionString}");
+
                     continue;
                 }
 

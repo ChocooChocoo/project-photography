@@ -35,7 +35,6 @@ class PermissionModel extends Model
         'employee' => 'Employee',
         'employees' => 'Employees',
         'generate_payroll' => 'Payroll Generation',
-        'inquiries' => 'Inquiries',
         'leave_requests' => 'Leave Requests',
         'members' => 'Members',
         'online_gallery' => 'Online Gallery',
@@ -105,7 +104,6 @@ class PermissionModel extends Model
     /**
      * Build possible legacy and protocol permission identifiers.
      *
-     * @param string $permissionIdentifier
      * @return array<int, string>
      */
     public static function buildPermissionIdentifiers(string $permissionIdentifier): array
@@ -126,16 +124,16 @@ class PermissionModel extends Model
                 $resource = array_pop($segments);
 
                 if ($resource && $action) {
-                    $identifiers[] = $action . '_' . $resource;
-                    $identifiers[] = $resource . ':' . $action;
+                    $identifiers[] = $action.'_'.$resource;
+                    $identifiers[] = $resource.':'.$action;
                 }
             }
         } elseif (str_contains($trimmedPermissionIdentifier, ':')) {
             [$resource, $action] = array_pad(explode(':', $trimmedPermissionIdentifier, 2), 2, '');
-            $identifiers[] = $action . '_' . $resource;
+            $identifiers[] = $action.'_'.$resource;
         } elseif (str_contains($trimmedPermissionIdentifier, '_')) {
             [$action, $resource] = array_pad(explode('_', $trimmedPermissionIdentifier, 2), 2, '');
-            $identifiers[] = $resource . ':' . $action;
+            $identifiers[] = $resource.':'.$action;
         }
 
         return array_values(array_unique(array_filter($identifiers)));
@@ -174,7 +172,7 @@ class PermissionModel extends Model
         $resourceLabel = static::getResourceLabel($this->resource);
         $actionLabel = static::getActionLabel($this->action);
 
-        return trim($actionLabel . ' ' . $resourceLabel);
+        return trim($actionLabel.' '.$resourceLabel);
     }
 
     /**

@@ -32,7 +32,6 @@ class StudioOwnerPermissionsSeeder extends Seeder
             ['portal' => 'owner', 'permission_string' => 'owner.packages.manage', 'resource' => 'packages', 'action' => 'manage', 'description' => 'Manage packages in the owner portal.'],
             ['portal' => 'owner', 'permission_string' => 'owner.services.manage', 'resource' => 'services', 'action' => 'manage', 'description' => 'Manage services in the owner portal.'],
             ['portal' => 'owner', 'permission_string' => 'owner.subscription.manage', 'resource' => 'subscription', 'action' => 'manage', 'description' => 'Manage subscriptions in the owner portal.'],
-            ['portal' => 'owner', 'permission_string' => 'owner.inquiries.manage', 'resource' => 'inquiries', 'action' => 'manage', 'description' => 'Manage inquiries in the owner portal.'],
             ['portal' => 'owner', 'permission_string' => 'owner.chatbot.manage', 'resource' => 'chatbot', 'action' => 'manage', 'description' => 'Manage chatbot configuration and conversations in the owner portal.'],
             ['portal' => 'owner', 'permission_string' => 'owner.procurement.view', 'resource' => 'procurement', 'action' => 'view', 'description' => 'View procurement oversight records in the owner portal.'],
             ['portal' => 'owner', 'permission_string' => 'owner.procurement.approve', 'resource' => 'procurement', 'action' => 'approve', 'description' => 'Approve, reject, or return procurement requests in the owner portal.'],
@@ -90,7 +89,7 @@ class StudioOwnerPermissionsSeeder extends Seeder
             $resource = $this->normalizeSegment($permission['resource']);
             $action = $this->normalizeSegment($permission['action']);
             $name = $this->buildUniquePermissionName($portal, $action, $resource);
-            $permissionString = $permission['permission_string'] ?? $portal . '.' . str_replace('_', '-', $resource) . '.' . $action;
+            $permissionString = $permission['permission_string'] ?? $portal.'.'.str_replace('_', '-', $resource).'.'.$action;
 
             DB::table('tbl_permissions')->updateOrInsert(
                 ['permission_string' => $permissionString],
@@ -126,6 +125,6 @@ class StudioOwnerPermissionsSeeder extends Seeder
      */
     private function buildUniquePermissionName(string $portal, string $action, string $resource): string
     {
-        return $this->normalizeSegment($portal) . '_' . $action . '_' . $resource;
+        return $this->normalizeSegment($portal).'_'.$action.'_'.$resource;
     }
 }
