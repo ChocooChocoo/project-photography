@@ -16,10 +16,10 @@ Thumbs.db
 /public/build
 
 # Storage
+# The "public" disk writes to public/storage (tracked), not storage/app/public.
 /storage/*
 !/storage/app
 /storage/app/*
-!/storage/app/public
 
 /storage/framework/*
 !/storage/framework/.gitignore

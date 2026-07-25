@@ -53,7 +53,7 @@
 
 **Steps:**
 1. Fix `getThumbnailAttribute()`: decode the images JSON array, return the first valid path wrapped with `Storage::url()` or `asset('storage/...')` — whichever is used elsewhere in the project
-2. Check whether images are stored under `storage/app/public/` and that `php artisan storage:link` has been run
+2. ~~Check whether images are stored under `storage/app/public/` and that `php artisan storage:link` has been run~~ — **superseded.** Media now lives in `public/storage/`, which the `public` disk writes to directly. There is no symlink and `php artisan storage:link` is not part of deployment. See `prompt/output/05.md`.
 3. In gallery index views, guard against empty/null thumbnail: show a placeholder image if `images` array is empty or thumbnail is null
 4. Test: upload an image to a gallery, then view it as a client — confirm it renders
 

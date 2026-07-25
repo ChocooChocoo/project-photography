@@ -85,6 +85,16 @@ Models are namespaced by their owner portal:
 
 Blade templates only (no SPA). Layouts in `resources/views/layouts/`. Partials in `resources/views/partials/`. Tailwind CSS via `@tailwindcss/vite`. No component framework — plain JS in `resources/js/`.
 
+### Media storage
+
+**There is no storage symlink, and `php artisan storage:link` is not part of deployment.** The `public` disk's root is `public_path('storage')` — uploads land directly in the directory the web server serves, so the write path and the read path are the same on Windows, Linux, and shared hosting alike. `config/filesystems.php` keeps `links` empty and `serve => false` on the private `local` disk (that flag registers a `GET /storage/{path}` route which would shadow the media namespace).
+
+Conventions: write with `Storage::disk('public')` or `->store($dir, 'public')` — always name the disk, never rely on the default (`FILESYSTEM_DISK=local` points at the private disk). Read with `asset('storage/'.$path)`; DB columns store the relative path only (`brand-logos/xxx.png`). `tests/Feature/MediaStorageTest.php` guards these invariants.
+
+Two caveats: `public/storage` is both git-tracked (it ships seed media) and the live upload target, so a deploy that recreates the tree (`git clean -fd`, fresh-clone-and-swap) would delete production uploads — deploy by `git pull` into a persistent directory. And the `public` disk has `throw => false`, so a permission-denied write returns `false` silently; verify `public/storage` is writable by the PHP user after any deploy.
+
+Background: [prompt/output/05.md](prompt/output/05.md).
+
 ### Payment integrations
 
 - **PayMongo** (`paymongo/paymongo-php`) — primary PH gateway; config in `config/services.php` under `paymongo`

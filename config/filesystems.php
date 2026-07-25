@@ -33,14 +33,17 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Off deliberately: `serve => true` registers a GET /storage/{path}
+            // route that reads from this private disk, shadowing the public
+            // media namespace. Nothing serves files from here.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            'root' => public_path('storage'),
             'url' => rtrim(env('APP_URL'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,
@@ -71,10 +74,14 @@ return [
     | `storage:link` Artisan command is executed. The array keys should be
     | the locations of the links and the values should be their targets.
     |
+    | This application deliberately declares none. The "public" disk writes
+    | directly into public/storage, so `php artisan storage:link` is not part
+    | of deployment and no symlink is required in any environment.
+    |
     */
 
     'links' => [
-        public_path('storage') => storage_path('app/public'),
+        //
     ],
 
 ];

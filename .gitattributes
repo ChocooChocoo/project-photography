@@ -1,5 +1,19 @@
 * text=auto eol=lf
 
+# Uploaded media lives in public/storage and is committed. Mark binaries
+# explicitly so the `text=auto eol=lf` rule above can never rewrite them.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
+*.doc  binary
+*.docx binary
+*.xls  binary
+*.xlsx binary
+
 *.blade.php diff=html
 *.css diff=css
 *.html diff=html
