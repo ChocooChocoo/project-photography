@@ -2,44 +2,49 @@
 
 namespace Tests\Feature;
 
-use App\Models\Chatbot\ChatbotConfigModel;
 use App\Models\Chatbot\ChatbotMessageModel;
 use App\Services\ChatbotService;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Http;
+use Tests\Concerns\BuildsChatbotSchema;
 use Tests\TestCase;
 
 class ChatbotFeatureTest extends TestCase
 {
-    /**
-     * Prepare the database for chatbot feature tests.
-     */
+    use BuildsChatbotSchema;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        Config::set('database.default', 'sqlite');
-        Config::set('database.connections.sqlite.database', ':memory:');
-        DB::purge('sqlite');
-        DB::reconnect('sqlite');
-
-        $this->createChatbotTestSchema();
+        $this->bootChatbotDatabase();
+        $this->configureFakeGroq();
+        Http::preventStrayRequests();
     }
 
     /**
-     * The chatbot bootstraps seeded defaults for an owner without a chatbot config.
+     * Fake a successful Groq completion.
      */
-    public function test_chatbot_bootstraps_seeded_defaults_for_owner_without_config(): void
+    private function fakeGroqReply(string $text, int $tokens = 120): void
+    {
+        Http::fake([
+            'api.groq.com/*' => Http::response([
+                'choices' => [['message' => ['role' => 'assistant', 'content' => $text]]],
+                'usage' => ['total_tokens' => $tokens],
+            ], 200),
+        ]);
+    }
+
+    /**
+     * The assistant bootstraps seeded defaults for an owner without a config.
+     */
+    public function test_assistant_bootstraps_seeded_defaults_for_owner_without_config(): void
     {
         $ownerId = $this->createOwnerWithStudio('bootstrap-owner@example.com', 'Bootstrap Studio');
-        $service = app(ChatbotService::class);
 
-        $config = $service->forOwner($ownerId)->getActiveConfig();
+        $config = app(ChatbotService::class)->forOwner($ownerId)->getActiveConfig();
 
         $this->assertNotNull($config);
-        $this->assertSame('Realistic Client Support', $config->config_name);
+        $this->assertSame('Photography Assistant', $config->config_name);
         $this->assertDatabaseHas('tbl_chatbot_intents', [
             'config_id' => $config->id,
             'intent_name' => 'Booking Information',
@@ -47,124 +52,36 @@ class ChatbotFeatureTest extends TestCase
     }
 
     /**
-     * The chatbot matches seeded inquiry intents for common client questions.
+     * A photography question is answered by the model, not a stored template.
      */
-    public function test_chatbot_matches_seeded_inquiry_intents(): void
+    public function test_assistant_returns_model_generated_reply(): void
     {
-        $ownerId = $this->createOwnerWithStudio('inquiry-owner@example.com', 'Inquiry Studio');
-        $this->createStudioPackage($ownerId, [
-            'package_name' => 'Classic Portrait',
-            'package_price' => 2500,
-        ]);
+        $ownerId = $this->createOwnerWithStudio('ai-owner@example.com', 'AI Studio');
+        $this->fakeGroqReply('Our wedding coverage starts with a consultation, then we lock your date.');
 
         $service = app(ChatbotService::class)->forOwner($ownerId);
         $service->startConversation();
 
-        $pricingResponse = $service->processMessage('Can you share your package price?');
-        $bookingResponse = $service->processMessage('How do I book a session?');
-        $serviceResponse = $service->processMessage('What services do you offer?');
+        $response = $service->processMessage('How do I book a wedding shoot?');
 
-        $this->assertSame('Package Pricing', $pricingResponse['metadata']['intent_name']);
-        $this->assertSame('Booking Information', $bookingResponse['metadata']['intent_name']);
-        $this->assertSame('Service Information', $serviceResponse['metadata']['intent_name']);
-        $this->assertNotEmpty($pricingResponse['quick_replies']);
-        $this->assertIsArray($pricingResponse['metadata']['packages']);
-        $this->assertNotEmpty($pricingResponse['metadata']['packages']);
-        $this->assertStringContainsString('Classic Portrait', $pricingResponse['message']);
-        $this->assertStringContainsString('PHP 2,500.00', $pricingResponse['message']);
-    }
-
-    /**
-     * The chatbot resolves exact intent targets immediately for quick reply actions.
-     */
-    public function test_chatbot_resolves_exact_intent_targets_without_fallback(): void
-    {
-        $ownerId = $this->createOwnerWithStudio('exact-intent-owner@example.com', 'Exact Intent Studio');
-        $this->createStudioPackage($ownerId, [
-            'package_name' => 'Signature Package',
-            'package_price' => 32000,
-        ]);
-
-        $service = app(ChatbotService::class)->forOwner($ownerId);
-        $service->startConversation();
-
-        $pricingResponse = $service->processMessage('Package Pricing');
-        $availabilityResponse = $service->processMessage('Availability and Contact');
-        $serviceResponse = $service->processMessage('Service Information');
-        $bookingResponse = $service->processMessage('Booking Information');
-
-        $this->assertSame('Package Pricing', $pricingResponse['metadata']['intent_name']);
-        $this->assertArrayNotHasKey('is_fallback', $pricingResponse['metadata']);
-        $this->assertStringContainsString('Signature Package', $pricingResponse['message']);
-
-        $this->assertSame('Availability and Contact', $availabilityResponse['metadata']['intent_name']);
-        $this->assertArrayNotHasKey('is_fallback', $availabilityResponse['metadata']);
-
-        $this->assertSame('Service Information', $serviceResponse['metadata']['intent_name']);
-        $this->assertArrayNotHasKey('is_fallback', $serviceResponse['metadata']);
-
-        $this->assertSame('Booking Information', $bookingResponse['metadata']['intent_name']);
-        $this->assertArrayNotHasKey('is_fallback', $bookingResponse['metadata']);
-    }
-
-    /**
-     * The chatbot moderates bad words and spam before intent matching.
-     */
-    public function test_chatbot_moderates_blocked_and_spammy_messages(): void
-    {
-        $ownerId = $this->createOwnerWithStudio('moderation-owner@example.com', 'Moderation Studio');
-        $service = app(ChatbotService::class)->forOwner($ownerId);
-        $service->startConversation();
-
-        $blockedResponse = $service->processMessage('fuck your service');
-        $spamResponse = $service->processMessage('helooooooooooooo');
-
-        $this->assertSame('blocked_language', $blockedResponse['metadata']['moderation']['type']);
-        $this->assertSame('spam_or_repetition', $spamResponse['metadata']['moderation']['type']);
-
-        $lastTwoUserMessages = ChatbotMessageModel::query()
-            ->where('sender_type', 'user')
-            ->latest('id')
-            ->take(2)
-            ->get();
-
-        $this->assertTrue($lastTwoUserMessages->contains(function (ChatbotMessageModel $message) {
-            return ($message->metadata['moderation']['type'] ?? null) === 'blocked_language';
-        }));
-
-        $this->assertTrue($lastTwoUserMessages->contains(function (ChatbotMessageModel $message) {
-            return ($message->metadata['moderation']['type'] ?? null) === 'spam_or_repetition';
-        }));
-    }
-
-    /**
-     * The chatbot returns seeded fallback guidance for unknown valid messages.
-     */
-    public function test_chatbot_returns_fallback_for_unknown_valid_message(): void
-    {
-        $ownerId = $this->createOwnerWithStudio('fallback-owner@example.com', 'Fallback Studio');
-        $service = app(ChatbotService::class)->forOwner($ownerId);
-        $service->startConversation();
-
-        $response = $service->processMessage('I want to discuss something custom and unusual.');
-        $config = ChatbotConfigModel::byOwner($ownerId)->firstOrFail();
-
-        $this->assertTrue($response['metadata']['is_fallback']);
-        $this->assertSame($config->fallback_message, $response['message']);
+        $this->assertTrue($response['success']);
+        $this->assertSame('ai', $response['metadata']['source']);
+        $this->assertStringContainsString('consultation', $response['message']);
         $this->assertNotEmpty($response['quick_replies']);
+        Http::assertSentCount(1);
     }
 
     /**
-     * The chatbot uses only active studio packages in the package pricing response.
+     * The system prompt carries the studio's live active packages, and pricing
+     * questions also return the structured package payload for the UI.
      */
-    public function test_chatbot_returns_only_active_studio_packages(): void
+    public function test_assistant_prompt_includes_only_active_packages(): void
     {
-        $ownerId = $this->createOwnerWithStudio('active-package-owner@example.com', 'Package Studio');
+        $ownerId = $this->createOwnerWithStudio('package-owner@example.com', 'Package Studio');
         $this->createStudioPackage($ownerId, [
             'package_name' => 'Wedding Essential',
             'package_price' => 15000,
-            'package_description' => 'Ideal for intimate ceremonies.',
-            'package_inclusions' => ['4 hours coverage', '150 edited photos', 'Online gallery'],
+            'package_inclusions' => ['4 hours coverage', '150 edited photos'],
             'status' => 'active',
         ]);
         $this->createStudioPackage($ownerId, [
@@ -173,252 +90,127 @@ class ChatbotFeatureTest extends TestCase
             'status' => 'inactive',
         ]);
 
+        $this->fakeGroqReply('Wedding Essential is PHP 15,000.00 and covers four hours.');
+
         $service = app(ChatbotService::class)->forOwner($ownerId);
         $service->startConversation();
-        $response = $service->processMessage('What are your packages?');
 
-        $this->assertSame('Package Pricing', $response['metadata']['intent_name']);
+        $response = $service->processMessage('What are your package rates?');
+
         $this->assertCount(1, $response['metadata']['packages']);
-        $this->assertStringContainsString('Wedding Essential', $response['message']);
-        $this->assertStringContainsString('PHP 15,000.00', $response['message']);
-        $this->assertStringContainsString('4 hours coverage', $response['message']);
-        $this->assertStringNotContainsString('Luxury Wedding', $response['message']);
+        $this->assertSame('Wedding Essential', $response['metadata']['packages'][0]['name']);
+
+        Http::assertSent(function ($request) {
+            $systemPrompt = $request['messages'][0]['content'];
+
+            return str_contains($systemPrompt, 'Wedding Essential')
+                && str_contains($systemPrompt, 'PHP 15,000.00')
+                && ! str_contains($systemPrompt, 'Luxury Wedding');
+        });
     }
 
     /**
-     * The chatbot returns a package-specific fallback when no active packages exist.
+     * Non-pricing questions do not attach the package payload.
      */
-    public function test_chatbot_returns_package_specific_fallback_when_no_active_packages_exist(): void
+    public function test_assistant_omits_package_payload_for_non_pricing_questions(): void
     {
-        $ownerId = $this->createOwnerWithStudio('no-package-owner@example.com', 'No Package Studio');
+        $ownerId = $this->createOwnerWithStudio('nonpricing-owner@example.com', 'Non Pricing Studio');
+        $this->createStudioPackage($ownerId, ['package_name' => 'Portrait Basic']);
+        $this->fakeGroqReply('We shoot on weekdays and weekends by appointment.');
 
         $service = app(ChatbotService::class)->forOwner($ownerId);
         $service->startConversation();
-        $response = $service->processMessage('Can I see your package list?');
 
-        $this->assertSame('Package Pricing', $response['metadata']['intent_name']);
-        $this->assertSame([], $response['metadata']['packages']);
-        $this->assertStringContainsString('No package details are available right now', $response['message']);
-        $this->assertNotEmpty($response['quick_replies']);
+        $response = $service->processMessage('Which days do you shoot?');
+
+        $this->assertArrayNotHasKey('packages', $response['metadata']);
+
+        // Full package rows cost tokens, so a non-pricing question only gets a
+        // one-line summary in the prompt.
+        Http::assertSent(function ($request) {
+            $systemPrompt = $request['messages'][0]['content'];
+
+            return str_contains($systemPrompt, '1 active packages, priced from PHP')
+                && ! str_contains($systemPrompt, '- Portrait Basic --');
+        });
     }
 
     /**
-     * Create a valid owner and studio record for chatbot feature tests.
+     * Owner-maintained knowledge entries reach the prompt as untrusted data.
      */
-    private function createOwnerWithStudio(string $email, string $studioName): int
+    public function test_assistant_prompt_wraps_studio_knowledge_as_untrusted_data(): void
     {
-        $ownerId = DB::table('tbl_users')->insertGetId([
-            'uuid' => (string) str()->uuid(),
-            'role' => 'owner',
-            'first_name' => 'Feature',
-            'middle_name' => null,
-            'last_name' => 'Owner',
-            'user_type' => 'photographer',
-            'email' => $email,
-            'mobile_number' => '09171234567',
-            'password' => bcrypt('Password@123'),
-            'status' => 'active',
-            'email_verified' => true,
-            'verification_token' => null,
-            'token_expiry' => null,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $ownerId = $this->createOwnerWithStudio('faq-owner@example.com', 'FAQ Studio');
+        $this->fakeGroqReply('Booking starts by sharing your preferred date.');
 
-        DB::table('tbl_studios')->insert([
-            'user_id' => $ownerId,
-            'studio_name' => $studioName,
-            'studio_type' => 'photography_studio',
-            'year_established' => 2020,
-            'studio_description' => 'Feature test studio.',
-            'studio_logo' => null,
-            'starting_price' => '1800',
-            'operating_days' => json_encode(['monday', 'tuesday']),
-            'start_time' => '09:00:00',
-            'end_time' => '18:00:00',
-            'max_clients_per_day' => 4,
-            'advance_booking_days' => 2,
-            'business_permit' => null,
-            'owner_id_document' => null,
-            'status' => 'active',
-            'rejection_note' => null,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $service = app(ChatbotService::class)->forOwner($ownerId);
+        $service->startConversation();
+        $service->processMessage('How do I book?');
 
-        return $ownerId;
+        Http::assertSent(function ($request) {
+            $messages = $request['messages'];
+            $systemPrompt = $messages[0]['content'];
+            $userMessage = $messages[count($messages) - 1]['content'];
+
+            return str_contains($systemPrompt, '<untrusted_data source="studio_faq">')
+                && str_contains($systemPrompt, 'HARD SECURITY RULES')
+                && str_contains($userMessage, '<untrusted_data source="user_message">');
+        });
     }
 
     /**
-     * Create a studio package for the owner's studio.
-     *
-     * @param array<string, mixed> $overrides
+     * Profanity and spam are stopped before any provider call is made.
      */
-    private function createStudioPackage(int $ownerId, array $overrides = []): void
+    public function test_assistant_moderates_blocked_and_spammy_messages(): void
     {
-        $studioId = DB::table('tbl_studios')->where('user_id', $ownerId)->value('id');
-        $categoryId = DB::table('tbl_categories')->insertGetId([
-            'category_name' => 'Portrait',
-            'description' => 'Portrait category',
-            'status' => 'active',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $ownerId = $this->createOwnerWithStudio('moderation-owner@example.com', 'Moderation Studio');
+        Http::fake();
 
-        if (isset($overrides['package_inclusions']) && is_array($overrides['package_inclusions'])) {
-            $overrides['package_inclusions'] = json_encode($overrides['package_inclusions']);
-        }
+        $service = app(ChatbotService::class)->forOwner($ownerId);
+        $service->startConversation();
 
-        if (isset($overrides['coverage_scope']) && is_array($overrides['coverage_scope'])) {
-            $overrides['coverage_scope'] = json_encode($overrides['coverage_scope']);
-        }
+        $blockedResponse = $service->processMessage('fuck your service');
+        $spamResponse = $service->processMessage('helooooooooooooo');
 
-        DB::table('tbl_packages')->insert(array_merge([
-            'studio_id' => $studioId,
-            'category_id' => $categoryId,
-            'package_name' => 'Default Package',
-            'package_description' => 'A sample package description for testing.',
-            'package_inclusions' => json_encode(['Consultation', 'Edited photos', 'Online gallery']),
-            'duration' => 2,
-            'maximum_edited_photos' => 20,
-            'coverage_scope' => json_encode(['Studio']),
-            'package_price' => 1999.99,
-            'status' => 'active',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ], $overrides));
+        $this->assertSame('blocked_language', $blockedResponse['metadata']['guard']);
+        $this->assertSame('spam_or_repetition', $spamResponse['metadata']['guard']);
+        $this->assertSame('guard', $blockedResponse['metadata']['source']);
+        Http::assertNothingSent();
+
+        $lastTwoUserMessages = ChatbotMessageModel::query()
+            ->where('sender_type', 'user')
+            ->latest('id')
+            ->take(2)
+            ->get();
+
+        $this->assertTrue($lastTwoUserMessages->contains(
+            fn (ChatbotMessageModel $message) => ($message->metadata['moderation']['type'] ?? null) === 'blocked_language'
+        ));
+
+        $this->assertTrue($lastTwoUserMessages->contains(
+            fn (ChatbotMessageModel $message) => ($message->metadata['moderation']['type'] ?? null) === 'spam_or_repetition'
+        ));
     }
 
     /**
-     * Create the minimal schema required for chatbot feature tests.
+     * Recent turns are replayed to the model so follow-up questions have context.
      */
-    private function createChatbotTestSchema(): void
+    public function test_assistant_sends_recent_history_to_the_model(): void
     {
-        Schema::dropAllTables();
+        $ownerId = $this->createOwnerWithStudio('history-owner@example.com', 'History Studio');
+        $this->fakeGroqReply('Yes, that package includes an online gallery.');
 
-        Schema::create('tbl_users', function (Blueprint $table) {
-            $table->id();
-            $table->uuid('uuid')->unique();
-            $table->string('role');
-            $table->string('first_name');
-            $table->string('middle_name')->nullable();
-            $table->string('last_name');
-            $table->string('user_type');
-            $table->string('email')->unique();
-            $table->string('mobile_number');
-            $table->string('password');
-            $table->string('status')->default('active');
-            $table->boolean('email_verified')->default(false);
-            $table->string('verification_token')->nullable();
-            $table->timestamp('token_expiry')->nullable();
-            $table->timestamps();
-        });
+        $service = app(ChatbotService::class)->forOwner($ownerId);
+        $service->startConversation();
+        $service->processMessage('Do you shoot christening events?');
+        $service->processMessage('Does it include an online gallery?');
 
-        Schema::create('tbl_studios', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('tbl_users')->cascadeOnDelete();
-            $table->string('studio_name');
-            $table->string('studio_type');
-            $table->integer('year_established');
-            $table->text('studio_description');
-            $table->string('studio_logo')->nullable();
-            $table->string('starting_price')->nullable();
-            $table->json('operating_days')->nullable();
-            $table->time('start_time')->nullable();
-            $table->time('end_time')->nullable();
-            $table->integer('max_clients_per_day')->default(1);
-            $table->integer('advance_booking_days')->default(1);
-            $table->string('business_permit')->nullable();
-            $table->string('owner_id_document')->nullable();
-            $table->string('status')->default('active');
-            $table->text('rejection_note')->nullable();
-            $table->timestamps();
-        });
+        Http::assertSent(function ($request) {
+            $roles = array_column($request['messages'], 'role');
 
-        Schema::create('tbl_categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('category_name');
-            $table->text('description')->nullable();
-            $table->string('status')->default('active');
-            $table->timestamps();
-        });
-
-        Schema::create('tbl_chatbot_configs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('owner_id')->constrained('tbl_users')->cascadeOnDelete();
-            $table->string('config_name')->nullable();
-            $table->text('welcome_message')->nullable();
-            $table->text('fallback_message')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->string('bot_name')->default('Support Assistant');
-            $table->string('bot_avatar')->nullable();
-            $table->json('settings')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('tbl_packages', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('studio_id')->constrained('tbl_studios')->cascadeOnDelete();
-            $table->foreignId('category_id')->constrained('tbl_categories')->cascadeOnDelete();
-            $table->string('package_name');
-            $table->text('package_description');
-            $table->json('package_inclusions')->nullable();
-            $table->integer('duration')->nullable();
-            $table->integer('maximum_edited_photos')->default(0);
-            $table->json('coverage_scope')->nullable();
-            $table->decimal('package_price', 10, 2);
-            $table->string('status')->default('active');
-            $table->timestamps();
-        });
-
-        Schema::create('tbl_chatbot_conversations', function (Blueprint $table) {
-            $table->id();
-            $table->string('session_id')->unique();
-            $table->foreignId('user_id')->nullable()->constrained('tbl_users')->nullOnDelete();
-            $table->foreignId('owner_id')->constrained('tbl_users')->cascadeOnDelete();
-            $table->foreignId('config_id')->nullable()->constrained('tbl_chatbot_configs')->nullOnDelete();
-            $table->string('status')->default('active');
-            $table->timestamp('started_at')->useCurrent();
-            $table->timestamp('ended_at')->nullable();
-            $table->integer('message_count')->default(0);
-            $table->json('metadata')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('tbl_chatbot_intents', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('config_id')->constrained('tbl_chatbot_configs')->cascadeOnDelete();
-            $table->string('intent_name');
-            $table->json('trigger_keywords');
-            $table->text('response_text');
-            $table->string('response_type')->default('text');
-            $table->string('image_url')->nullable();
-            $table->integer('priority')->default(0);
-            $table->boolean('is_active')->default(true);
-            $table->integer('match_count')->default(0);
-            $table->timestamps();
-        });
-
-        Schema::create('tbl_chatbot_messages', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('conversation_id')->constrained('tbl_chatbot_conversations')->cascadeOnDelete();
-            $table->string('sender_type');
-            $table->text('message');
-            $table->foreignId('intent_id')->nullable()->constrained('tbl_chatbot_intents')->nullOnDelete();
-            $table->boolean('was_helpful')->nullable();
-            $table->json('metadata')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('tbl_chatbot_quick_replies', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('intent_id')->constrained('tbl_chatbot_intents')->cascadeOnDelete();
-            $table->string('reply_text');
-            $table->string('action_value')->nullable();
-            $table->string('action_type')->default('trigger_intent');
-            $table->integer('position')->default(0);
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
+            return $roles[0] === 'system'
+                && in_array('assistant', $roles, true)
+                && count($request['messages']) > 2;
         });
     }
 }

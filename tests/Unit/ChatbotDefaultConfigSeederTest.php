@@ -27,7 +27,7 @@ class ChatbotDefaultConfigSeederTest extends TestCase
     }
 
     /**
-     * The chatbot seeder creates one default config with seeded intents and quick replies per owner.
+     * The chatbot seeder creates one default config with seeded knowledge entries per owner.
      */
     public function test_chatbot_seeder_creates_default_configuration_for_all_owners(): void
     {
@@ -38,24 +38,23 @@ class ChatbotDefaultConfigSeederTest extends TestCase
 
         $this->assertDatabaseHas('tbl_chatbot_configs', [
             'owner_id' => $firstOwnerId,
-            'config_name' => 'Realistic Client Support',
-            'bot_name' => 'Studio Support Assistant',
+            'config_name' => 'Photography Assistant',
+            'bot_name' => 'Studio Photography Assistant',
         ]);
 
         $this->assertDatabaseHas('tbl_chatbot_configs', [
             'owner_id' => $secondOwnerId,
-            'config_name' => 'Realistic Client Support',
+            'config_name' => 'Photography Assistant',
         ]);
 
         $this->assertSame(2, DB::table('tbl_chatbot_configs')->count());
         $this->assertSame(10, DB::table('tbl_chatbot_intents')->count());
-        $this->assertSame(30, DB::table('tbl_chatbot_quick_replies')->count());
     }
 
     /**
-     * The chatbot seeder can target owner 96 and each intent includes at least 20 triggers.
+     * The chatbot seeder can target owner 96 and every knowledge entry carries usable facts.
      */
-    public function test_chatbot_seeder_can_reseed_owner_96_with_expanded_triggers(): void
+    public function test_chatbot_seeder_can_reseed_owner_96_with_knowledge_entries(): void
     {
         $ownerId = $this->createOwnerWithStudio('owner-ninety-six@example.com', 'Studio Ninety Six', 96);
 
@@ -64,17 +63,16 @@ class ChatbotDefaultConfigSeederTest extends TestCase
 
         $this->assertDatabaseHas('tbl_chatbot_configs', [
             'owner_id' => $ownerId,
-            'config_name' => 'Realistic Client Support',
+            'config_name' => 'Photography Assistant',
         ]);
 
-        $triggerCounts = DB::table('tbl_chatbot_intents')
+        $entries = DB::table('tbl_chatbot_intents')
             ->join('tbl_chatbot_configs', 'tbl_chatbot_configs.id', '=', 'tbl_chatbot_intents.config_id')
             ->where('tbl_chatbot_configs.owner_id', $ownerId)
-            ->pluck('trigger_keywords')
-            ->map(fn ($keywords) => count(json_decode($keywords, true) ?: []));
+            ->get(['tbl_chatbot_intents.intent_name', 'tbl_chatbot_intents.response_text']);
 
-        $this->assertCount(5, $triggerCounts);
-        $this->assertTrue($triggerCounts->every(fn (int $count) => $count >= 20));
+        $this->assertCount(5, $entries);
+        $this->assertTrue($entries->every(fn ($entry) => filled($entry->intent_name) && filled($entry->response_text)));
     }
 
     /**
@@ -87,16 +85,14 @@ class ChatbotDefaultConfigSeederTest extends TestCase
         $this->seed(ChatbotDefaultConfigSeeder::class);
         $configCountAfterFirstRun = DB::table('tbl_chatbot_configs')->count();
         $intentCountAfterFirstRun = DB::table('tbl_chatbot_intents')->count();
-        $replyCountAfterFirstRun = DB::table('tbl_chatbot_quick_replies')->count();
 
         $this->seed(ChatbotDefaultConfigSeeder::class);
 
         $this->assertSame($configCountAfterFirstRun, DB::table('tbl_chatbot_configs')->count());
         $this->assertSame($intentCountAfterFirstRun, DB::table('tbl_chatbot_intents')->count());
-        $this->assertSame($replyCountAfterFirstRun, DB::table('tbl_chatbot_quick_replies')->count());
         $this->assertDatabaseHas('tbl_chatbot_configs', [
             'owner_id' => $ownerId,
-            'config_name' => 'Realistic Client Support',
+            'config_name' => 'Photography Assistant',
         ]);
     }
 
@@ -204,7 +200,6 @@ class ChatbotDefaultConfigSeederTest extends TestCase
             $table->foreignId('owner_id')->constrained('tbl_users')->cascadeOnDelete();
             $table->string('config_name')->nullable();
             $table->text('welcome_message')->nullable();
-            $table->text('fallback_message')->nullable();
             $table->boolean('is_active')->default(true);
             $table->string('bot_name')->default('Support Assistant');
             $table->string('bot_avatar')->nullable();
@@ -216,23 +211,8 @@ class ChatbotDefaultConfigSeederTest extends TestCase
             $table->id();
             $table->foreignId('config_id')->constrained('tbl_chatbot_configs')->cascadeOnDelete();
             $table->string('intent_name');
-            $table->json('trigger_keywords');
             $table->text('response_text');
-            $table->string('response_type')->default('text');
-            $table->string('image_url')->nullable();
             $table->integer('priority')->default(0);
-            $table->boolean('is_active')->default(true);
-            $table->integer('match_count')->default(0);
-            $table->timestamps();
-        });
-
-        Schema::create('tbl_chatbot_quick_replies', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('intent_id')->constrained('tbl_chatbot_intents')->cascadeOnDelete();
-            $table->string('reply_text');
-            $table->string('action_value')->nullable();
-            $table->string('action_type')->default('trigger_intent');
-            $table->integer('position')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
