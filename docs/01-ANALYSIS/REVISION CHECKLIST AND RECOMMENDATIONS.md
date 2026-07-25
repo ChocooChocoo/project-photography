@@ -95,7 +95,7 @@ Legend: ✅ Exists | ⚠️ Partial | ❌ Not Yet Implemented | ❓ Unclear item
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 26 | Business owner can manage system without dev team | ✅ | Owner can configure RBAC, payroll settings, chatbot intents, schedules, services, packages — no dev involvement required |
+| 26 | Business owner can manage system without dev team | ✅ | Owner can configure RBAC, payroll settings, AI assistant settings and studio knowledge entries, schedules, services, packages — no dev involvement required |
 
 ---
 
@@ -140,8 +140,8 @@ Legend: ✅ Exists | ⚠️ Partial | ❌ Not Yet Implemented | ❓ Unclear item
 | # | Item | Status | Notes |
 |---|---|---|---|
 | 42 | Multiple accounts under one email | ✅ | Handled by design — email uniqueness enforced (`unique:tbl_users,email`), so one email cannot hold multiple accounts. Not a gap; no work required. |
-| 43 | Contact between business/freelancer and platform | ⚠️ | Inquiry system and chatbot exist; no direct email/in-app messaging from provider to platform |
-| 44 | Contact between business/freelancer and client | ⚠️ | Chatbot widget exists for client → studio; no direct messaging channel |
+| 43 | Contact between business/freelancer and platform | ⚠️ | Inquiry system and AI assistant exist; no direct email/in-app messaging from provider to platform |
+| 44 | Contact between business/freelancer and client | ⚠️ | AI assistant widget exists for clients, owners, and studio photographers; no human-to-human direct messaging channel |
 | 45 | Business verification by admin (permit check) | ✅ | `business_permit` + `owner_id_document` required on registration; admin approve/reject workflow with rejection notes |
 | 46 | Business portfolio | ⚠️ | Online gallery serves as portfolio; no dedicated "portfolio" section with curated work display |
 | 47 | Owner should have a profile picture | ⚠️ | `owner_profile_photo` upload exists in studio registration form; `tbl_users.profile_photo` field exists; not validated as strictly required |
@@ -298,7 +298,7 @@ These are two distinct concepts that were conflated in the first scan:
 
 | Area | Covered? |
 |---|---|
-| Chatbot | ✅ ~50% of all tests |
+| AI assistant (behavior + security guardrails) | ✅ ~50% of all tests |
 | Payroll routes | ✅ Route-level only |
 | Procurement routes | ✅ Route-level only |
 | Dashboard access | ✅ Route-level only |

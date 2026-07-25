@@ -21,6 +21,12 @@ What to do about the findings above.
 
 - [`CAPSTONE B IMPLEMENTATION ROADMAP.md`](./02-PLANNING/CAPSTONE%20B%20IMPLEMENTATION%20ROADMAP.md) — phased execution plan derived from `REVISION CHECKLIST AND RECOMMENDATIONS.md`. Phases are dependency-ordered; each has its own checklist.
 
+## Feature references
+
+Living documentation for implemented features — these do reflect shipped code.
+
+- [`AI ASSISTANT INTEGRATION.md`](./AI%20ASSISTANT%20INTEGRATION.md) — the Groq-powered photography AI assistant that replaced the fixed-response chatbot: architecture, configuration, security controls, fallback behavior, usage limits, testing. Audience: developers/reviewers.
+
 ## 03-PROGRESS
 
 Tracking execution against the plan.

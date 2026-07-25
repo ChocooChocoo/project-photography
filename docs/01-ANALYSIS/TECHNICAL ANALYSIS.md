@@ -34,8 +34,6 @@
 | `laravel/tinker` | `^2.10.1` | REPL / console |
 | `paymongo/paymongo-php` | `^0.0.0` | PayMongo payment gateway (PH: GCash, cards, GrabPay, PayMaya) |
 | `stripe/stripe-php` | `^19.3` | Stripe payment gateway (cards, subscriptions) |
-| `botman/botman` | `^2.8` | Chatbot framework |
-| `botman/driver-web` | `^1.5` | BotMan web-chat driver |
 
 **Dev dependencies:** `phpunit/phpunit ^11.5.3`, `laravel/pint ^1.24` (formatter), `laravel/pail ^1.2`
 (log viewer), `laravel/sail ^1.41` (Docker dev), `fakerphp/faker ^1.23`, `mockery/mockery ^1.6`,
@@ -130,7 +128,7 @@ freelancer user id depending on type (polymorphic-by-convention, not a DB-level 
   `tbl_procurement_inventory_stocks`, `tbl_procurement_defect_returns`.
 - **Subscriptions / revenue:** `tbl_subscription_plans`, `tbl_studio_plans`, `tbl_freelancer_plans`,
   `tbl_system_revenue`.
-- **Chatbot:** config, intents, conversations, messages, quick replies (per studio owner).
+- **AI assistant:** config, studio knowledge entries (formerly intents), quick replies, conversations, messages (per studio owner).
 - **Misc:** `tbl_notifications`, `tbl_client_budget`.
 
 ---
@@ -183,7 +181,10 @@ OR logic and resolves `studio_id` from the route/input so permissions are studio
 |---|---|
 | `PaymongoService` | PayMongo REST API: checkout sessions, payment intents (3-D Secure), payment links, status checks. Card-only in test mode; GCash/GrabPay/PayMaya in live. |
 | `StripeService` | Stripe: checkout sessions, subscription checkout, payment intents, webhook signature verification. |
-| `ChatbotService` | BotMan web driver; message normalization → moderation → intent matching → response; per-owner config. |
+| `ChatbotService` | Photography AI assistant: sanitize → moderation → guard → Groq → output guard; per-owner config and live studio context. |
+| `Ai/GroqClient` | Groq chat-completions transport. The only class that reads `services.groq.api_key`; returns reason codes, never provider error text. |
+| `Ai/ChatbotGuard` | Security guardrails: input sanitization, prompt-injection and credential-probe detection, output leak/echo detection, fixed fallback copy. |
+| `Ai/GroqRateLimiter` | Cache-based request and token budget windows sitting under the provider's published limits. |
 | `AttendanceGeolocationService` | Haversine distance between employee coords and studio geofence; returns distance + status (`WITHIN_GEOFENCE` / `OUTSIDE_GEOFENCE` / `MISSING_STUDIO_PIN`). No external API. |
 | `PhotographerAvailabilityService` | Checks leave requests + conflicting assignments to decide availability for booking dates. |
 | `ProcurementWorkflowService` | State machine for the procurement lifecycle; audit trails, defect returns, assets, inventory. Constants: `HIGH_VALUE_THRESHOLD=50000`, `OVERDUE_HOURS=48`. |
@@ -202,7 +203,7 @@ flowchart TB
         CTL[Controllers x ~60]
     end
     subgraph Domain
-        SVC[Services: payments, chatbot, geolocation,<br/>availability, procurement, dashboards]
+        SVC[Services: payments, AI assistant, geolocation,<br/>availability, procurement, dashboards]
     end
     subgraph Data
         MOD[Eloquent models]
@@ -394,28 +395,34 @@ flowchart TD
     F -->|reject| H[status = rejected,<br/>rejection_note]
 ```
 
-### 5.10 Chatbot message handling
+### 5.10 AI assistant message handling
+
+Groq-backed, photography-scope-only. Guardrails run on both sides of the model
+call, and any layer that trips returns fixed fallback copy. Full reference:
+[AI ASSISTANT INTEGRATION.md](../AI%20ASSISTANT%20INTEGRATION.md).
 
 ```mermaid
 flowchart TD
-    A[Visitor sends message] --> B[Normalize message]
-    B --> C[evaluateMessage: moderation]
-    C --> D{Spam / blocked words / noise?}
-    D -->|yes| E[Return moderation message,<br/>log metadata]
-    D -->|no| F[matchIntent]
-    F --> G[Direct intent-name match]
-    G --> H{found?}
-    H -->|no| I[Fuzzy keyword match<br/>+ priority scoring]
-    H -->|yes| J[Matched intent]
-    I --> K{best match?}
-    K -->|yes| J
-    K -->|no| L[fallback_message]
-    J --> M{intent == 'package pricing'?}
-    M -->|yes| N[Build dynamic response<br/>from active packages]
-    M -->|no| O[Static reply + quick replies]
-    N --> P[Reply + persist conversation/message]
-    O --> P
-    L --> P
+    A[User sends message] --> B[Sanitize: control/zero-width chars, length cap]
+    B --> C[evaluateMessage: owner moderation]
+    C --> D{Profanity / spam / noise?}
+    D -->|yes| Z[Fixed fallback copy,<br/>persist guard code]
+    D -->|no| E[ChatbotGuard::inspectInput]
+    E --> F{Prompt injection or<br/>credential probe?}
+    F -->|yes| Z
+    F -->|no| G[GroqRateLimiter::attempt]
+    G --> H{Request or token<br/>window exhausted?}
+    H -->|yes| Z
+    H -->|no| I[Build system prompt:<br/>security rules + studio context<br/>in untrusted_data markers]
+    I --> J[GroqClient::chat<br/>model from config, key server-side]
+    J --> K{Provider ok?}
+    K -->|no| Z
+    K -->|yes| L[ChatbotGuard::inspectOutput]
+    L --> M{OFFTOPIC marker, secret leak,<br/>or instruction echo?}
+    M -->|yes| Z
+    M -->|no| N[Guarded reply]
+    N --> O[Persist message + reconcile token usage]
+    Z --> O
 ```
 
 ---
@@ -431,13 +438,13 @@ flowchart TD
 |---|---|---|---|
 | Auth | — | ~8 | login, register, verify-email, logout |
 | Admin | `/admin` | ~40 | users, studios (approve/reject), freelancers, categories, locations, subscriptions, dashboard+export |
-| Owner | `/owner` | ~120 | studios, bookings (assign/status), employees, schedules, packages, services, payroll settings, roles, permissions, chatbot config, procurement approval, online gallery |
+| Owner | `/owner` | ~120 | studios, bookings (assign/status), employees, schedules, packages, services, payroll settings, roles, permissions, AI assistant config + studio knowledge, procurement approval, online gallery |
 | Studio HR | `/studio-hr` | ~65 | employees, attendance, leave, overtime, payroll settings, generate payroll, procurement requests |
 | Finance | `/studio-finance` | ~35 | dashboard, attendance, leave/overtime, payroll approval, procurement review/PO/delivery/payment |
 | Freelancer | `/freelancer` | ~40 | profile, services, packages, bookings, member invitations, online gallery |
 | Photographer | `/studio-photographer` | ~40 | attendance, assigned studios/bookings, leave/overtime, online gallery, procurement requests |
-| Client | `/client` | ~55 | booking form + payment, my bookings (cancel/pay/confirm), gallery, studio/freelancer ratings, budget, chatbot |
-| Shared (`auth`) | — | ~8 | notifications, profile, home redirect |
+| Client | `/client` | ~55 | booking form + payment, my bookings (cancel/pay/confirm), gallery, studio/freelancer ratings, budget |
+| Shared (`auth`) | — | ~15 | notifications, profile, home redirect, AI assistant (`/chatbot/*`, cross-portal) |
 
 ### 6.2 Third-party integrations
 
@@ -445,7 +452,7 @@ flowchart TD
 |---|---|---|---|
 | **PayMongo** | `PaymongoService` | Checkout sessions, payment intents (3-D Secure), payment links w/ redirect, status retrieval. v1 REST API, HTTP Basic auth. | `services.paymongo.secret_key`, `.public_key`, `.base_url`, `.mode` |
 | **Stripe** | `StripeService`, `Client\BookingController` | Checkout sessions, subscription checkout, payment intents, webhook signature verification. | `services.stripe.secret_key`, `.public_key`, `.webhook_secret`, `.mode` |
-| **BotMan** | `ChatbotService`, `ChatbotConfigController` | Web-driver chatbot, per-owner intents/quick replies, moderation. | none external (DB-driven config) |
+| **Groq (AI assistant)** | `Ai/GroqClient`, `ChatbotService`, `ChatbotConfigController` | Chat completions for photography-scope conversations; server-side only, guardrails on input and output, cache-based request/token budgets. | `services.groq.api_key`, `.model`, `.base_url`, `.timeout`, `.max_tokens`, `.temperature`, `.limits.*` |
 | **Mail** | Laravel mailer | Verification emails, transactional templates in `resources/views/emails/`. | `MAIL_*`; Postmark/Resend/SES blocks in `config/services.php` |
 | **Geolocation** | `AttendanceGeolocationService` | Local Haversine; **no external API**. | studio `attendance_latitude/longitude/radius_meters` |
 | **Slack** | `config/services.php` block present | Not wired into app logic observed. | `services.slack.*` |
@@ -458,6 +465,7 @@ flowchart TD
 - **Session/Cache/Queue:** `SESSION_DRIVER`, `SESSION_LIFETIME`, `CACHE_STORE`, `QUEUE_CONNECTION`, `BROADCAST_CONNECTION`.
 - **Mail:** `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`.
 - **Payments:** PayMongo + Stripe keys/mode (see 6.2).
+- **AI assistant:** `GROQ_API_KEY` (server-side only, never `VITE_`-prefixed), `GROQ_MODEL` (default `qwen/qwen3.6-27b`), `GROQ_BASE_URL`, `GROQ_TIMEOUT`, `GROQ_MAX_TOKENS`, `GROQ_TEMPERATURE`, `GROQ_LIMIT_RPM/RPD/TPM/TPD/USER_RPM`, `GROQ_HISTORY_MESSAGES/CHARACTERS`.
 - **AWS (optional):** `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`.
 
 ### 6.4 Authentication
@@ -488,9 +496,12 @@ flowchart TD
 
 ### Test coverage
 
-- Strong: `ChatbotFeatureTest` (~424 lines) + `ChatbotDefaultConfigSeederTest` (~240 lines), good edge cases.
+- Strong: the AI assistant. `ChatbotFeatureTest` (happy path, prompt assembly, moderation, history) plus
+  `ChatbotAiGuardrailsTest` (injection, credential leakage, off-topic enforcement, provider failures,
+  budget exhaustion, session ownership) and `ChatbotDefaultConfigSeederTest`. Both feature suites use
+  `Http::fake()` + `Http::preventStrayRequests()`, so they need no API key and never reach the network.
 - Thin: most Dashboard / Procurement / Payroll tests assert **route registration only**, not behavior.
-- Gaps: no PayMongo/Stripe integration tests, no auth-controller tests, no geolocation tests.
+- Gaps: no PayMongo/Stripe integration tests (the `Http::fake()` pattern established for Groq applies directly), no auth-controller tests, no geolocation tests.
   *(Partly addressed in Phase 1.5 — `tests/Feature/Payment/WebhookTest.php` now covers the webhook
   handlers. Auth and geolocation remain untested.)*
 

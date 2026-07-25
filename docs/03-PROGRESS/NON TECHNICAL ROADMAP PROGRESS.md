@@ -1,4 +1,4 @@
-# Capstone B Roadmap — Progress, Plain Language (Phase 1, Phase 2 & Phase 3)
+# Capstone B Roadmap — Progress, Plain Language (Phases 1, 2, 3 & 8)
 
 > Non-technical companion to `ROADMAP PROGRESS.md`. Same work, same structure, explained in
 > everyday language — what was broken, what was missing, and what now works, without code terms.
@@ -7,6 +7,9 @@
 >
 > This work has since been merged into the main project. The "check it in a real browser first"
 > cautions noted below were never carried out before that merge, so they remain open items.
+>
+> Phases 4 to 7 have not been started. Phase 8 (the AI assistant) was done ahead of them because it
+> came from a separate request and doesn't touch bookings, payments, or payroll at all.
 
 Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (checked, no change needed) | ⚠️ Partial — see note
 
@@ -84,3 +87,44 @@ Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (checked, n
 1. **The local database server problem** (see above) blocks real-database testing until it's repaired — this is a machine/environment issue, not something this work caused.
 2. **The admin page for editing an existing subscription plan doesn't actually exist yet** — only creating a new plan works today (pre-existing gap, not introduced this pass). The free-trial setting was still wired into the save logic so it'll work the moment that missing page gets built.
 3. **The package edit screens repeat a lot of the create-screen's design** since there was no shared building block to reuse — a future cleanup could combine them, but that wasn't part of this pass's job.
+
+---
+
+## Phase 8 — The AI Assistant
+
+> Done 2026-07-25. The old chat box has been replaced with a real AI assistant that only talks about
+> photography services. Safety was the top priority throughout, ahead of making it chatty.
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| 8.1 | Replace the old scripted chat with a real AI | ✅ | The old chat box only worked by keyword-matching: the studio owner typed out answers in advance, and the box repeated them word for word if a customer happened to use a matching word. It now writes its own answers using a real AI service (Groq), drawing on the studio's actual current packages and prices. **Something odd was discovered along the way:** the system had a chatbot toolkit installed and listed as a dependency, but it was never actually used for anything — the "chatbot" was entirely hand-written keyword matching. That unused toolkit has been removed. No database changes were needed. |
+| 8.2 | Keep it strictly to photography | ✅ | The assistant will only discuss photography services — bookings, packages, prices, what's included, services, schedules, availability, and how to reach the team. Ask it anything else and it politely says it can only help with photography questions. Its rules live in the application's code, not in a settings screen, so nobody can accidentally (or deliberately) weaken them from the admin area, and the rules are re-sent with every single message so a long conversation can't gradually talk it out of them. It's also told to only state facts it has actually been given — it must never invent a price or a date. |
+| 8.3 | Safety checks on the way in and on the way out | ✅ | Before a message reaches the AI, the system screens out rude language, spam, and — new this round — attempts to trick the assistant into breaking its rules or revealing private technical information. Those messages are answered locally and never sent onward. After the AI replies, the answer is checked *again* before anyone sees it: if it has drifted off-topic, quoted its own instructions, or contains anything resembling a password or internal setting, the whole reply is thrown away and a safe standard message is shown instead. Discarded replies are never saved or recorded anywhere. The system also never reveals *which* check a message tripped, so the safeguards can't be probed and mapped. |
+| 8.4 | Protecting the key, handling failures, staying within the usage allowance | ✅ | The AI service key stays on the server and is read in exactly one place in the code. It never reaches a browser, a page, a log, an error message, or any document. The AI service also has a usage allowance (so many messages and so much text per minute and per day), so the system counts its own usage and stops itself just short of the limit rather than being cut off by the provider. Individual accounts have their own smaller cap so one person can't use up the whole studio's daily allowance. If anything goes wrong — the service is down, slow, or misconfigured — users see a short "temporarily unavailable" note and nothing more. No technical details are ever shown. |
+| 8.5 | Available everywhere, and documented | ✅ | The chat window used to exist on exactly one customer page, written directly into that page. It's now a single reusable component available to customers, studio owners, and studio photographers alike. The owner's admin screen was relabelled to match how it now works: what used to be "chatbot answers" are now "studio knowledge" facts the assistant can draw on, with a clear note that replies are AI-written and that the safety rules can't be changed from that screen. A new reference document explains the whole setup, and every older document that still described the old chat box was updated. |
+
+### Problems found and fixed along the way (not part of the plan)
+
+Three genuine security problems already present in the old chat code, all fixed:
+
+1. **Anyone logged in could read anyone else's chat history.** The system never checked that a conversation actually belonged to the person asking for it. Now it does, and there's an automated test to make sure it stays that way. This was the most serious of the three.
+2. **Internal error text was being shown to users.** When something went wrong, the raw technical error was sent straight to the browser. Users now see a short, plain message; the technical detail goes to the private log only.
+3. **One studio owner could edit another studio owner's chat answers.** The edit, delete, and enable/disable actions never checked who owned the entry. They do now.
+
+### Verification performed (Phase 8)
+
+- The full automated test suite passes — 62 checks, 39 of them about the assistant, including 25 new ones dedicated purely to security.
+- The security tests deliberately stand in for the real AI service, so they cost nothing to run, need no key, and never contact the outside world.
+- What those tests prove: twelve different trick-question and password-fishing attempts are all refused **without the message ever leaving the building**; off-topic answers are swapped for the standard reply; anything password-like in an answer is thrown away; the service being down, slow, or misconfigured all produce the same harmless message; the usage allowance genuinely stops requests; one user can't read another's conversation; and the key never appears in anything sent to a browser.
+- Unlike earlier phases, this one **could** be tested against the real outside service — and was. Real questions about wedding packages came back with the studio's actual prices, and attempts to extract the assistant's instructions or its key were refused.
+- Every changed page was confirmed to load without errors, and the new chat component was checked to confirm it contains no key and doesn't even mention which AI service is being used.
+- **A manual click-through while logged in was not done.** Reaching the owner or customer area means signing into a real account, which was outside what could be done this pass. The underlying request handling was tested automatically instead. Same standing caution as the earlier phases.
+
+### Known follow-ups (Phase 8)
+
+1. **The settings file with live keys is still stored in version history — the keys need replacing.** This was already flagged back in Phase 1/2 (follow-up #3) for payment test keys. It is now more serious, because a live AI service key was added to that same file. The file needs to be removed from version tracking, and then **every key that has ever been in it must be replaced with a fresh one** — removing the file stops it being saved in future but does not erase the copies already in the project's history. This was deliberately left for you to do, because replacing the keys has to happen at the same time.
+2. **The assistant can only handle roughly 3 to 5 messages per minute across the entire platform.** This is a limit of the current (free-tier) AI service plan, not a flaw in the build: the safety rules that go with every message are themselves substantial, and the plan allows only so much text per minute. Beyond that, users briefly see "the assistant is busy, try again in a moment." The build already minimises this as far as it sensibly can — full package details are only attached when someone actually asks about prices, and the conversation history sent along is kept short. If more capacity is needed, upgrade the AI service plan. Trimming the safety rules to buy speed is not an acceptable trade.
+3. **This particular AI model needed a setting changed to be usable.** It's a "thinking out loud" model: by default it wrote its reasoning into the reply, which used fifteen times more of the usage allowance, cut off the real answer partway, and repeated the safety rules back into the reply — which the safety check then correctly rejected. The first live test therefore refused a perfectly normal question about wedding packages. A configuration setting now suppresses that, and it works correctly. Worth re-checking if the AI model is ever swapped for a different one.
+4. **A leftover unused screen and an unfinished page** sit in the same admin menu as the assistant: an old chat-history component that isn't reachable from anywhere, and an "Inquiries" page that's still an empty template. Both pre-date this work and were left alone.
+5. **The payment services still record more detail in their logs than they should.** The assistant now follows a strict rule of never logging message content. The two payment integrations were not brought up to that standard this round — worth a separate pass.
+6. **There's no "was this helpful?" button on assistant replies yet.** The behind-the-scenes support for it exists (and is now properly secured), but nothing in the interface uses it. A small future addition.

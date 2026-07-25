@@ -66,7 +66,10 @@ Studio staff permissions are managed via `tbl_roles` / `tbl_permissions` / `tbl_
 - `PhotographerAvailabilityService` — checks photographer schedule conflicts
 - `ProcurementWorkflowService` — multi-step procurement state machine
 - `AttendanceGeolocationService` — validates employee check-in location
-- `ChatbotService` — BotMan-powered FAQ chatbot
+- `ChatbotService` — photography AI assistant (Groq); orchestrates guard → model → guard
+- `Ai/GroqClient` — Groq chat-completions transport; the only class that reads the API key
+- `Ai/ChatbotGuard` — input/output security guardrails and fallback copy
+- `Ai/GroqRateLimiter` — request/token budget windows over the cache
 
 ### Models namespace convention
 
@@ -87,6 +90,14 @@ Blade templates only (no SPA). Layouts in `resources/views/layouts/`. Partials i
 - **PayMongo** (`paymongo/paymongo-php`) — primary PH gateway; config in `config/services.php` under `paymongo`
 - **Stripe** (`stripe/stripe-php`) — secondary; same config block
 
-### Chatbot
+### AI assistant
 
-BotMan (`botman/botman` + `botman/driver-web`) powers an FAQ chatbot configurable per studio via `ChatbotConfigController`. Default config seeded by `ChatbotDefaultConfigSeeder`.
+A Groq-powered assistant restricted to photography-service conversations replaces the old fixed-response chatbot. Model id comes from `config('services.groq.model')` (default `qwen/qwen3.6-27b`, override with `GROQ_MODEL`); the key is `GROQ_API_KEY` and is server-side only.
+
+Pipeline in `ChatbotService::processMessage()`: sanitize → owner moderation (`evaluateMessage`) → `ChatbotGuard::inspectInput()` (prompt injection, credential probes) → `GroqRateLimiter::attempt()` → `GroqClient::chat()` → `ChatbotGuard::inspectOutput()` (off-topic marker, secret/instruction leaks). Any layer that trips returns fixed fallback copy and never calls the provider needlessly.
+
+Security rules live in the `ChatbotService::SECURITY_RULES` constant — not the DB — so owners cannot edit them and history cannot override them. Owner-editable rows in `tbl_chatbot_intents` are studio knowledge facts injected as `<untrusted_data>`, not literal replies.
+
+Endpoints are cross-portal: `/chatbot/*` (`chatbot.*` route names, `App\Http\Controllers\ChatbotController`), mounted in the client booking-details page and the owner / studio-photographer layouts via `resources/views/partials/chatbot-widget.blade.php`. Owner-facing config UI is `ChatbotConfigController`; defaults seeded by `ChatbotDefaultConfigSeeder`.
+
+Full reference: [docs/AI ASSISTANT INTEGRATION.md](docs/AI%20ASSISTANT%20INTEGRATION.md).

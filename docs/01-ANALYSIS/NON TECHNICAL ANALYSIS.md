@@ -19,7 +19,7 @@
    photos through an online gallery.
 2. **A back-office system for studios** — tools a studio needs to actually run as a business: managing
    staff, tracking attendance, calculating payroll, handling purchase requests for equipment, and
-   answering customer questions with a chatbot.
+   answering customer questions with an AI assistant.
 
 In short: it connects clients with photographers **and** gives studios the administrative machinery to
 operate, all in one website.
@@ -49,11 +49,11 @@ admin tools, and so on.
 
 **As a Client:** search studios/freelancers, pick a package, choose a date and location, pay a deposit
 or in full online, track your booking, download your photos from the gallery, rate your photographer,
-keep a personal budget, and ask the chatbot questions.
+keep a personal budget, and ask the AI assistant questions about photography services.
 
 **As a Studio Owner:** register your studio, set up packages and services, accept bookings, assign
 photographers to jobs, manage employees and their schedules, set up payroll rules, approve purchase
-requests, configure your chatbot, and view dashboards of your business.
+requests, configure your AI assistant, and view dashboards of your business.
 
 **As a Freelancer:** build a profile, list services and packages, set your deposit policy, take
 bookings, and deliver galleries.
@@ -180,19 +180,36 @@ flowchart LR
     E -->|Reject| G[Rejected with reason]
 ```
 
-### 4.8 The chatbot
+### 4.8 The AI assistant
 
-Each studio can offer a chatbot. When a visitor types a question, the system first screens out spam and
-inappropriate messages, then tries to match the question to a known topic and replies. If it can't, it
-gives a friendly "I didn't understand" fallback. Pricing questions pull live package prices.
+Each studio has an AI assistant that clients, the owner, and studio photographers can all chat with. It
+writes its answers fresh each time rather than picking from a list of pre-written replies, and it works
+from the studio's real information — current packages and prices, plus any facts the owner has added
+under *Studio Knowledge*.
+
+It only talks about photography services: bookings, packages, prices, what's included, services,
+schedules, and how to reach the team. Anything else gets a polite note that it can only help with
+photography questions, along with an invitation to ask one.
+
+Several safety checks run around every message. Before a question is sent to the AI, the system screens
+out spam, rude language, and attempts to trick the assistant into breaking its rules or revealing
+private technical information. After the AI answers, the reply is checked again before anyone sees it —
+if it drifts off-topic or contains anything that looks like a password or internal setting, the whole
+reply is thrown away and a safe message is shown instead. If the AI service is unavailable or the
+studio's daily usage allowance runs out, users simply see a short "temporarily unavailable" note. No
+technical details are ever shown, and a user who hits any of these messages can carry on normally with
+their next question.
 
 ```mermaid
-flowchart LR
-    A[Visitor asks a question] --> B{Spam or blocked?}
-    B -->|Yes| C[Polite block message]
-    B -->|No| D{Matches a topic?}
-    D -->|Yes| E[Helpful answer]
-    D -->|No| F[Fallback: didn't understand]
+flowchart TD
+    A[User asks a question] --> B{Rude, spam, or<br/>trying to break the rules?}
+    B -->|Yes| C[Polite, professional<br/>standard reply]
+    B -->|No| D{Usage allowance left?}
+    D -->|No| E[Temporarily busy note]
+    D -->|Yes| F[AI writes an answer using<br/>the studio's real information]
+    F --> G{Answer on-topic and<br/>free of private details?}
+    G -->|No| C
+    G -->|Yes| H[Answer shown to the user]
 ```
 
 ---
@@ -202,8 +219,8 @@ flowchart LR
 The platform is a **web application** built on **Laravel** (a popular, well-supported toolkit for
 building websites in the PHP programming language). Pages are generated on the server and styled with
 **Tailwind**. Information is stored in a **relational database** (organized tables that link to each
-other). Online payments go through **PayMongo** and **Stripe**, and the customer chatbot uses a tool
-called **BotMan**. It is a single, self-contained website — not a collection of separate apps.
+other). Online payments go through **PayMongo** and **Stripe**, and the AI assistant is powered by
+**Groq** (an AI service the system calls from the server, never from your browser). It is a single, self-contained website — not a collection of separate apps.
 
 ---
 
@@ -214,10 +231,10 @@ called **BotMan**. It is a single, self-contained website — not a collection o
 - A complete end-to-end business flow: from booking and payment through to photo delivery and reviews.
 - Genuinely deep studio back-office features (attendance with location checks, detailed payroll rules,
   a full purchase-approval process).
-- The chatbot is the most thoroughly tested part of the system.
+- The AI assistant is the most thoroughly tested part of the system, including its security behavior.
 
 **What's thin or worth noting:**
-- **Limited automated testing** outside the chatbot. Many areas only check that pages exist, not that
+- **Limited automated testing** outside the AI assistant. Many areas only check that pages exist, not that
   the logic behind them is correct — so changes carry more risk of unnoticed bugs. *(Partly improved
   since: the payment-confirmation path now has its own automated checks.)*
 - **Two payment systems** (PayMongo and Stripe) are wired in slightly inconsistently, which can be
@@ -239,8 +256,10 @@ None of these are broken features — they're areas a future team should be awar
 | **API** | A way for two pieces of software to talk to each other (e.g. the app talking to PayMongo). |
 | **Back-office** | The behind-the-scenes admin tools a business uses (staff, payroll, purchasing). |
 | **Blade** | Laravel's system for building web pages on the server before sending them to your browser. |
-| **BotMan** | The toolkit used to build the customer chatbot. |
-| **Chatbot** | An automated assistant that answers visitor questions in a chat box. |
+| **AI assistant** | An assistant that writes its own answers to questions, rather than picking from pre-written replies. |
+| **Groq** | The outside AI service that generates the assistant's answers. The app calls it from the server. |
+| **Guardrail** | An automatic safety check on what goes into the AI and what comes back out of it. |
+| **Prompt injection** | A message crafted to trick an AI into ignoring its rules or leaking private information. |
 | **Database (relational)** | An organized store of information in linked tables (e.g. a Bookings table linked to a Users table). |
 | **Dashboard** | A summary screen showing key numbers and activity for your role. |
 | **Deposit** | A partial up-front payment; the rest is paid later. |
