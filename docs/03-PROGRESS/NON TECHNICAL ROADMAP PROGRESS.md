@@ -1,4 +1,4 @@
-# Capstone B Roadmap — Progress, Plain Language (Phases 1, 2, 3 & 8)
+# Capstone B Roadmap — Progress, Plain Language (Phases 1, 2, 3, 8 & 9)
 
 > Non-technical companion to `ROADMAP PROGRESS.md`. Same work, same structure, explained in
 > everyday language — what was broken, what was missing, and what now works, without code terms.
@@ -9,9 +9,11 @@
 > cautions noted below were never carried out before that merge, so they remain open items.
 >
 > Phases 4 to 7 have not been started. Phase 8 (the AI assistant) was done ahead of them because it
-> came from a separate request and doesn't touch bookings, payments, or payroll at all.
+> came from a separate request and doesn't touch bookings, payments, or payroll at all. **Phase 9 is
+> written up but not built** — it was deliberately a research and options exercise, waiting on a
+> business decision.
 
-Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (checked, no change needed) | ⚠️ Partial — see note
+Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (checked, no change needed) | ⚠️ Partial — see note | 📋 Written up — nothing built yet
 
 ---
 
@@ -128,3 +130,135 @@ Three genuine security problems already present in the old chat code, all fixed:
 4. **A leftover unused screen and an unfinished page** sit in the same admin menu as the assistant: an old chat-history component that isn't reachable from anywhere, and an "Inquiries" page that's still an empty template. Both pre-date this work and were left alone.
 5. **The payment services still record more detail in their logs than they should.** The assistant now follows a strict rule of never logging message content. The two payment integrations were not brought up to that standard this round — worth a separate pass.
 6. **There's no "was this helpful?" button on assistant replies yet.** The behind-the-scenes support for it exists (and is now properly secured), but nothing in the interface uses it. A small future addition.
+
+---
+
+## Phase 9 — What happens when a photographer cancels a booking the customer already paid for
+
+> Written up 26 Jul 2026. **Nothing was built this round, on purpose.** The request was to study the
+> problem, lay out several possible answers rather than pick one, and list the decisions the business
+> has to make before anyone writes code. Full write-up in the planning folder.
+
+**The situation.** A customer books a shoot and pays. The studio owner assigns a photographer. The
+photographer accepts, then later backs out — illness, an emergency, a clash, or simply changing their
+mind. The customer's money is with the platform, the event date is often one that cannot move, and the
+customer never chose that photographer in the first place.
+
+**What happens today: almost nothing.** The photographer's assignment is marked cancelled and that is
+the end of it. The booking itself still says the shoot is in progress. The owner isn't told — they only
+find out if they happen to open that booking. The customer is never told at all. No decision is made
+about the money.
+
+**And there's a trap in it.** Because a photographer accepting a job switches the booking to "in
+progress," and because "in progress" is exactly the state that stops an owner from swapping a
+photographer or removing one, the owner is locked out of both of the obvious fixes. The only way out is
+to cancel the whole booking on a customer who did nothing wrong — and even that only sets an internal
+"needs a refund" marker that nothing in the system actually acts on.
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| 9.1 | Let the owner rescue a stuck booking | 📋 | **Doesn't depend on any decision — this one should be done first.** Undo the lock described above, so an owner can bring in another photographer instead of scrapping the booking. |
+| 9.2 | Tell somebody when it happens | 📋 | **Doesn't depend on any decision either.** Notify the owner immediately and the customer promptly, and put a clock on it so an unresolved cancellation is chased rather than forgotten. The messaging system already supports this — it simply is not being called. |
+| 9.3 | Send a different photographer, same date and time | 📋 | Needs a decision on who chooses, and whether the customer may say no to the replacement. The best outcome by far: the shoot still happens, on the day, and no money has to move. The system can already work out which photographers are genuinely free. |
+| 9.4 | Move the booking to another date | 📋 | Needs a decision on who chooses. There is currently no way to change a booking's date at all — that would have to be built. Useless for a wedding or a graduation, which cannot be moved. |
+| 9.5 | Give the money back | 📋 | Needs decisions on automatic versus manual refunds, and who absorbs the platform's fee. **The platform currently cannot issue a refund at all** — neither payment provider connection has that ability, and the existing "needs a refund" marker is read by nothing. This is the single biggest piece of work in the phase. |
+| 9.6 | Offer credit toward a future shoot instead | 📋 | Needs a decision on whether credit is ever offered in place of cash. There's no such thing as a customer credit balance in the system today; building one is the largest job here and creates a real financial obligation to track. It should never be the *only* option offered when the cancellation was the studio's fault. |
+| 9.7 | Keep a record against the photographer | 📋 | Needs a decision on whether it carries any consequence. Right now a photographer who cancels constantly looks exactly the same as one who never has — the reason they give is stored and then never looked at again. |
+| 9.8 | Look outside the studio for a replacement | 📋 | Needs a decision on how far to look. If nobody at the studio is free, check off-duty staff on overtime, then **freelancers already on the platform** in the same city and category. This is the biggest missed opportunity in the whole phase — the platform is already full of freelancers with their own calendars, and none of them has ever been reachable when a studio is stuck. Freelancers would opt in, never be volunteered. |
+| 9.9 | Refund the difference if the replacement is a step down | 📋 | Needs the refund ability (9.5) to exist first. A ten-year lead photographer swapped for a first-year assistant is the same booking on paper and a different thing in reality. Same or better → no change. Worse → the difference comes back automatically, without the customer having to ask. |
+| 9.10 | Make last-minute cancelling harder | 📋 | Needs a decision on where the line sits. Today a photographer can quit with one click at any moment right up until they arrive — cancelling three weeks ahead and cancelling twelve hours ahead use the exact same button. **Cheapest change here and the one that helps most:** by the morning of the event every available answer is a bad one, so the real win is fewer last-minute cancellations in the first place. |
+| 9.11 | Name a backup photographer on big bookings | 📋 | **Doesn't depend on any decision.** A named second photographer attached from the start, who steps up automatically if the first one quits. Costs nothing until it's needed. |
+
+**Nine possible answers were written up**, not one: send a substitute from the studio, look outside the
+studio for one, move the date with the same photographer, move it with a different one, refund
+everything, refund part of it, refund just the difference if the replacement is a step down, give credit
+toward a future shoot, or simply handle it by hand within a strict deadline. Each is described in terms
+of what the customer experiences, what happens to their money, whether the shoot still goes ahead, and
+what would have to be built.
+
+**Nine decisions have to be made before building anything**, and they are business questions, not
+technical ones: who picks the remedy, whether the customer can refuse a substitute, whether refunds are
+automatic, who absorbs the platform's fee, whether credit is ever offered instead of cash, whether
+holding back part of a payment is ever fair when the *studio* cancelled, what happens to a photographer
+who does this repeatedly, how far outside the studio to look for a replacement, and whether last-minute
+cancelling should be restricted.
+
+---
+
+### The case that really matters: the event is tomorrow and it cannot be moved
+
+The wedding is booked, the guests are invited, the venue is paid for. It happens **on that day**. The
+photographer quits with days — or hours — to go.
+
+In that situation most of the answers above stop being useful:
+
+- **Moving the date** — impossible. That's the whole problem.
+- **A refund** — correct on paper, useless in practice. Money back at 7am on a Saturday does not get
+  anyone photographed, and nobody rebooks a wedding photographer that morning.
+- **Credit toward a future shoot** — worse. It offers a future occasion to replace one that only happens
+  once.
+
+**Only finding a replacement helps.** So the real question isn't "which remedy" — it's **how far do we
+look, and how fast.**
+
+**The search should widen one step at a time**, each step only when the last comes back empty: another
+photographer at the same studio → the studio's off-duty staff offered overtime → **freelancers already on
+the platform** → another studio → and finally, if genuinely nobody can be found, a full refund with
+something extra on top.
+
+**How much notice there is changes what the customer is owed.** Weeks out, they get a choice — see the
+replacement's profile, say no, take a refund and rebook elsewhere. Days out, that choice narrows. Hours
+out, there is no time to ask: the owner sends whoever is qualified and available and tells the customer
+who is coming. At that point the customer's protection stops being choice and becomes money — which is
+exactly what item 9.9 is for.
+
+**And a replacement alone isn't always enough.** If the stand-in is less experienced than the person
+booked, the customer should get the difference back automatically. If nobody at all can be found, that
+should be a designed outcome — full refund, compensation on top, a real apology, and a mark against the
+photographer who caused it — not something the business improvises on the day.
+
+**Prevention beats all of it.** By the morning of the event every option is a bad one. Making last-minute
+cancellation harder (9.10) and naming a backup on big bookings (9.11) are both cheap, and both stop the
+emergency happening at all.
+
+---
+
+### What we'd actually recommend building
+
+Written up as a **recommendation, not a decision** — the request was to lay out options, not pick one.
+**Nine things, in three groups:**
+
+**Must build — four.** Without these the system is broken, not just limited.
+1. Unlock the owner so they can rescue a stuck booking (9.1)
+2. Tell the owner and customer, on a clock (9.2)
+3. Send a replacement from the studio (9.3)
+4. Be able to issue refunds at all (9.5)
+
+Items 1 and 2 need no decision from anybody and could start tomorrow. Item 4 is the one genuinely big
+project — the platform currently cannot refund anyone.
+
+**Build next — three.** Turns "not broken" into "actually good": look outside the studio for a
+replacement (9.8), refund the difference on a downgrade (9.9), and track photographers who cancel
+repeatedly (9.7).
+
+**Prevention — two.** Cheap, and worth more than any remedy: restrict last-minute cancelling (9.10) and
+name a backup on high-value bookings (9.11).
+
+**Don't build — two.**
+- **Credit toward a future shoot (9.6).** The largest job of the lot, it creates a real ongoing financial
+  obligation to track, and offering credit instead of cash when the *studio* cancelled looks like holding
+  the customer's money hostage. Refunds cover the same ground honestly.
+- **Changing a booking's date (9.4).** It only helps when the date can move — which is exactly the
+  situation that was never an emergency. Worth building if customers want to reschedule in general, but
+  not as an answer to this problem.
+
+**Other problems noticed while writing this up** (all left alone, none of them new):
+
+1. When a customer cancels their own booking, the system wipes the record that they had paid. That will
+   conflict with anything built here.
+2. Freelancer bookings are a different problem entirely — a freelancer *is* the photographer, so there
+   is nobody to substitute. That deserves its own study.
+3. Bookings needing several photographers aren't covered by any of the nine options — one of four
+   dropping out is a short-staffing problem, not a cancellation.
+4. Freelancers are proposed as the rescue for studio bookings, but have no rescue of their own — if a
+   freelancer cancels on their own client, there is nobody to substitute. That needs its own study.

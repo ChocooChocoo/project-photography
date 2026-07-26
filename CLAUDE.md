@@ -58,6 +58,14 @@ Studio staff permissions are managed via `tbl_roles` / `tbl_permissions` / `tbl_
 
 `BookingModel` (`tbl_bookings`) is the central entity. `booking_type` is either `studio` or `freelancer`. Status constants: `pending → confirmed → in_progress → completed | cancelled`. Payment: `PaymongoService` (GCash/card via PayMongo API) and `StripeService`. `BookingPackageModel` holds the selected package snapshot. `BookingAssignedPhotographerModel` links photographers assigned by the studio owner.
 
+**Photographer cancellation is an open gap, documented but undecided.** A photographer who accepts an
+assignment flips the booking to `in_progress`, which is the same status that blocks the owner from
+reassigning or removing them — so a cancellation after acceptance deadlocks a paid booking. Cancellation
+also notifies nobody, and no remedy exists yet (neither gateway wrapper can refund; there is no
+reschedule path and no credit ledger). Nine options and the decisions gating them are in
+[docs/04-REFERENCE/PHOTOGRAPHER CANCELLATION CONTINGENCY.md](docs/04-REFERENCE/PHOTOGRAPHER%20CANCELLATION%20CONTINGENCY.md)
+(roadmap Phase 9). Do not implement a remedy before that policy is chosen.
+
 ### Services layer
 
 `app/Services/` contains non-trivial business logic extracted from controllers:
@@ -130,4 +138,4 @@ Security rules live in the `ChatbotService::SECURITY_RULES` constant — not the
 
 Endpoints are cross-portal: `/chatbot/*` (`chatbot.*` route names, `App\Http\Controllers\ChatbotController`), mounted in the client booking-details page and the owner / studio-photographer layouts via `resources/views/partials/chatbot-widget.blade.php`. Owner-facing config UI is `ChatbotConfigController`; defaults seeded by `ChatbotDefaultConfigSeeder`.
 
-Full reference: [docs/AI ASSISTANT INTEGRATION.md](docs/AI%20ASSISTANT%20INTEGRATION.md).
+Full reference: [docs/04-REFERENCE/AI ASSISTANT INTEGRATION.md](docs/04-REFERENCE/AI%20ASSISTANT%20INTEGRATION.md).

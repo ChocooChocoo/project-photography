@@ -1,10 +1,10 @@
-# Capstone B Roadmap — Progress (Phases 1, 2, 3 & 8)
+# Capstone B Roadmap — Progress (Phases 1, 2, 3, 8 & 9)
 
-> Tracks completion of [`../02-PLANNING/CAPSTONE B IMPLEMENTATION ROADMAP.md`](../02-PLANNING/CAPSTONE%20B%20IMPLEMENTATION%20ROADMAP.md) Phase 1 ("Stabilize"), Phase 2 ("Complete"), Phase 3 ("Core New Features"), and Phase 8 ("AI Assistant"), per `prompt/tasks/01.md`, `02.md`, and `04.md` (project repo). Phase 1/2 generated 2026-07-13; Phase 3 generated 2026-07-14 — both were developed on branch `capstone-b/phase-1-2` (the branch name predates the Phase 3 work and was reused) and have since been **merged into `main`**. The pre-merge browser-verification caveats recorded below were therefore never cleared; they are now outstanding post-merge checks. Phase 8 was implemented 2026-07-25 directly on `main`.
+> Tracks completion of [`../02-PLANNING/CAPSTONE B IMPLEMENTATION ROADMAP.md`](../02-PLANNING/CAPSTONE%20B%20IMPLEMENTATION%20ROADMAP.md) Phase 1 ("Stabilize"), Phase 2 ("Complete"), Phase 3 ("Core New Features"), Phase 8 ("AI Assistant"), and Phase 9 ("Cancellation Contingency"), per `prompt/tasks/01.md`, `02.md`, `04.md`, and `07.md` (project repo). Phase 1/2 generated 2026-07-13; Phase 3 generated 2026-07-14 — both were developed on branch `capstone-b/phase-1-2` (the branch name predates the Phase 3 work and was reused) and have since been **merged into `main`**. The pre-merge browser-verification caveats recorded below were therefore never cleared; they are now outstanding post-merge checks. Phase 8 was implemented 2026-07-25 directly on `main`.
 >
-> **Phases 4–7 have not been started.** Phase 8 was implemented out of order because it came from a separate task brief and shares no code with the booking, payment, or payroll flows those phases cover.
+> **Phases 4–7 have not been started.** Phase 8 was implemented out of order because it came from a separate task brief and shares no code with the booking, payment, or payroll flows those phases cover. **Phase 9 is documented only — no code exists for any of it.**
 
-Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (verified, no change needed) | ⚠️ Partial — see note
+Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (verified, no change needed) | ⚠️ Partial — see note | 📋 Documented — analysis complete, nothing built
 
 ---
 
@@ -86,7 +86,7 @@ Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (verified, 
 
 ## Phase 8 — AI Assistant
 
-> Implemented 2026-07-25 on `main`, from `prompt/tasks/04.md`. Full task report: [`../../prompt/output/04.md`](../../prompt/output/04.md). Feature reference: [`../AI ASSISTANT INTEGRATION.md`](../AI%20ASSISTANT%20INTEGRATION.md).
+> Implemented 2026-07-25 on `main`, from `prompt/tasks/04.md`. Full task report: [`../../prompt/output/04.md`](../../prompt/output/04.md). Feature reference: [`../04-REFERENCE/AI ASSISTANT INTEGRATION.md`](../04-REFERENCE/AI%20ASSISTANT%20INTEGRATION.md).
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -124,3 +124,74 @@ Three pre-existing holes in the chat code, all fixed and regression-tested:
 5. **`owner/view-inquiries.blade.php` is still a static placeholder** — "Example Field" scaffolding with no data binding. Pre-existing and unrelated to the assistant, but it sits in the same sidebar group.
 6. **`PaymongoService` and `StripeService` log full request payloads and error bodies.** The assistant's logging policy (status codes and reason codes only) was deliberately not retrofitted onto them this pass — out of scope, but they are the remaining places where sensitive request data reaches the logs.
 7. **Feedback endpoints are still unwired in the UI.** `chatbot.helpful` / `chatbot.not-helpful` now enforce session ownership but no surface calls them — pre-existing, and a thumbs up/down control on assistant replies would be a small follow-up.
+
+---
+
+## Phase 9 — Cancellation Contingency
+
+> Documented 2026-07-26 on `main`, from `prompt/tasks/07.md`. Full analysis:
+> [`../04-REFERENCE/PHOTOGRAPHER CANCELLATION CONTINGENCY.md`](../04-REFERENCE/PHOTOGRAPHER%20CANCELLATION%20CONTINGENCY.md).
+> Task report: [`../../prompt/output/07.md`](../../prompt/output/07.md).
+>
+> **This pass changed no code.** The brief was explicitly analysis-only: document the scenario, present
+> multiple resolution options rather than one, and record the decisions that must be made before
+> implementation. Every row below is 📋.
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| 9.1 | Unblock owner recovery on a deadlocked booking | 📋 | **Not gated by any decision — build this first.** Accepting an assignment sets `booking.status = 'in_progress'`, which is the exact status that blocks both `getAvailablePhotographers()` and `removePhotographerAssignment()`. A photographer who accepts and then cancels therefore leaves a paid booking `in_progress` with zero active photographers and the owner locked out of both recoveries. `canTransitionTo()` also allows no backwards move out of `in_progress`. |
+| 9.2 | Cascade notification on photographer cancellation | 📋 | **Not gated by any decision.** Cancellation currently writes `status`/`cancelled_at`/`cancellation_reason` on the assignment row and stops — no booking change, no owner notice, no client notice. `Notifiable` already has 18 methods; this is a missing call, not a missing capability. Needs a resolution SLA in the shape of 2.3's `response_deadline` and 2.7's `bookings:expire-pending`. |
+| 9.3 | Photographer substitution flow (Option A) | 📋 | Needs **D1** (who chooses the remedy) and **D2** (may the client reject a substitute). Cheapest remedy and the only one preserving an unmovable date. `PhotographerAvailabilityService::getAvailabilityMapForBooking()` already does the leave + time-overlap matching, so no new matching logic is required. Requires 9.1 first. |
+| 9.4 | Reschedule path (Options B and C) | 📋 | Needs **D1**. No controller changes `event_date`/`start_time`/`end_time` after creation — the whole path is missing. Inapplicable to fixed-date events, which is a large share of real cases. |
+| 9.5 | Refund execution (Options D and E) | 📋 | Needs **D3**, **D4**, **D6**. Largest technical prerequisite in the phase: **neither `PaymongoService` nor `StripeService` can refund at all**. `refund_pending` (set by 2.5) is read by nothing, has no badge mapping, and has no queue; `PAYMENT_REFUNDED` is declared and never assigned; the freelancer-side handler is a `Log::info` stub. Refunding today would also leave `SystemRevenueModel` overstating revenue — `markAsRefunded()` exists but no booking path calls it. PayMongo GCash refund rules must be verified against the live account before the API surface is designed. |
+| 9.6 | Booking credit ledger (Option F) | 📋 | Needs **D5**, and 9.5 must exist first. No credit or wallet concept exists; `tbl_client_budget` is a spending planner, not stored value. Largest item in the phase and the only one creating a standing financial liability. |
+| 9.7 | Photographer cancellation record | 📋 | Needs **D7**. Cancellation reasons are stored and read nowhere — no count, no rate, nothing surfaced to the owner at assignment time. |
+| 9.8 | Freelancer emergency pool (Option H) | 📋 | Needs **D8**, and 9.3 first. Widens substitution beyond the studio's own roster: studio staff → off-duty staff on overtime → **platform freelancers**. Best return per unit of work in the phase — a small studio on a Saturday often has nobody free, which is exactly the case where the date cannot move. The freelancer supply already exists on the platform with categories and schedules and has never been connected to studio bookings. Opt-in for freelancers, never an automatic draft. Studio-to-studio cover deliberately excluded — needs a revenue split that does not exist. |
+| 9.9 | Value-gap refund on a downgraded substitution (Option I) | 📋 | Needs **D4**, **D8**, and 9.5 first. A ten-year lead replaced by a first-year assistant is the same booking on paper and a different product in reality. Equal or better replacement → no adjustment; worse → refund the difference automatically. Anchors on position/years/specialization already stored on `tbl_studio_photographers`. Small once 9.5 exists. |
+| 9.10 | Restrict late cancellation (prevention) | 📋 | Needs **D9**. Today a photographer can self-cancel with one click at any moment until they mark themselves on-site — a cancellation three weeks out and one twelve hours out share the same interface. **Cheapest item in the phase with the largest effect:** by event morning every remedy is bad, so the leverage is in having fewer event-morning cancellations. |
+| 9.11 | Backup photographer on high-value bookings (prevention) | 📋 | **Not gated by any decision.** A named second on the assignment from the start, promoted automatically if the primary cancels — collapses the whole escalation ladder into one step. Substantive design question is whether a backup blocks that photographer from other work. |
+
+### Recommended build set
+
+Documented in §6 of the contingency document as a **recommendation, not a decision** — the brief
+requires options be evaluated before a policy is finalised.
+
+- **Tier 1, required (4):** 9.1, 9.2, 9.3, 9.5. Stop here and no paid client is ever stranded silently
+  again. 9.1 and 9.2 are gated by nothing and can start now; 9.5 (refund capability from zero) is the
+  only real project.
+- **Tier 2, high value (3):** 9.8, 9.9, 9.7.
+- **Tier 3, prevention (2):** 9.10, 9.11.
+- **Not recommended (2):** 9.6 (credit ledger — biggest build, standing financial liability, and
+  credit-instead-of-cash when the *provider* cancelled reads as coercive) and 9.4 (reschedule — only
+  helps when the date can move, which is the case that was never urgent).
+
+### Why the fixed-date case drives the design
+
+When the event cannot move — a wedding, a graduation — most of the option set evaporates: reschedule is
+inapplicable, credit offers a future shoot for an occasion that happens once, and a refund on the morning
+of the event does not get anyone photographed. **Only substitution helps.** That is why the recommended
+order is 9.1 → 9.2 → 9.3, with 9.5 as the floor when substitution fails outright, and why 9.8 (widening
+the pool) outranks 9.4 (moving the date). §5 of the contingency document covers the escalation ladder,
+the notice tiers, and the honest failure case where nobody can be found.
+
+### Decisions outstanding
+
+D1 who chooses the remedy · D2 may the client reject a substitute · D3 automated vs manual refunds ·
+D4 who absorbs the platform fee and any studio payout already made · D5 is credit ever offered instead
+of cash · D6 are partial refunds acceptable when the *provider* cancelled · D7 what consequence attaches
+to a cancelling photographer · **D8 how wide the substitution net goes** (studio only, plus overtime, or
+platform freelancers) · **D9 should late cancellation be restricted, and from what point**. Full framing
+in §8 of the contingency document. D1, D2, D8, D9 gate the options that actually save the session.
+
+### Related defects surfaced while documenting (not fixed)
+
+1. **`Client\MyBookingsController::cancelBooking()` overwrites `payment_status` with `'cancelled'`** even on a fully paid booking, destroying the record that money was received. Pre-existing, and it will collide with whatever refund states Phase 9 introduces — both paths write the same column.
+2. **`tbl_bookings.payment_status` is an unconstrained string**, not an enum, so states like `refund_pending` can be written with nothing rendering them. That is exactly what happened in 2.5.
+3. **Freelancer bookings are a parallel unanalysed case** — a freelancer *is* the photographer, so substitution is impossible and the same brief collapses to reschedule/refund/credit. Worth its own pass.
+4. **Multi-photographer bookings are unmodelled** — one of four photographers cancelling is a partial-staffing problem, and none of the seven documented options is written for it. `allPhotographersCompleted()` assumes every assignment eventually completes.
+
+### Verification performed (Phase 9)
+
+- Documentation only: `git diff --stat` shows `.md` files exclusively — no `app/`, `database/`, `resources/`, or `tests/` changes.
+- `composer test` unchanged at 70 passed, confirming no behavioral edit slipped in.
+- Every code claim in the analysis was read out of the current source before being written down, and each is cited to its file and line.

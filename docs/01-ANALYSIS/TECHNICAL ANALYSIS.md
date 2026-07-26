@@ -399,7 +399,7 @@ flowchart TD
 
 Groq-backed, photography-scope-only. Guardrails run on both sides of the model
 call, and any layer that trips returns fixed fallback copy. Full reference:
-[AI ASSISTANT INTEGRATION.md](../AI%20ASSISTANT%20INTEGRATION.md).
+[AI ASSISTANT INTEGRATION.md](../04-REFERENCE/AI%20ASSISTANT%20INTEGRATION.md).
 
 ```mermaid
 flowchart TD

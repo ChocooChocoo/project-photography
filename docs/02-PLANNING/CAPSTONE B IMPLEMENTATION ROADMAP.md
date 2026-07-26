@@ -18,6 +18,7 @@
 | 6 | **Automation** | Notifications, triggers, scheduling | Only useful after the flows they automate are correct |
 | 7 | **Resource Authorization & Test Coverage** | Policies, core feature test coverage | Security and confidence layer — after all features are stable |
 | 8 | **AI Assistant** | Replace the fixed-response chatbot with a secure Groq assistant | Task-driven addition (`prompt/tasks/04.md`), not derived from the original gap list. Independent of Phases 4–7 — the chat surface touches no booking, payment, or payroll logic |
+| 9 | **Cancellation Contingency** | Photographer cancels a paid booking — cascade, substitution, refund, prevention | Task-driven addition (`prompt/tasks/07.md`). 11 items, listed in recommended build order in the execution summary. **Decision-blocked:** everything except 9.1, 9.2, and 9.11 waits on D1–D9 in [`PHOTOGRAPHER CANCELLATION CONTINGENCY.md`](../04-REFERENCE/PHOTOGRAPHER%20CANCELLATION%20CONTINGENCY.md). 9.1 + 9.2 + 9.3 + 9.5 are the minimum set; 9.4 and 9.6 are documented but **not recommended** for this problem |
 
 ---
 
@@ -824,6 +825,328 @@ When owner opens a pending booking to assign:
 
 ---
 
+## Phase 9 — Cancellation Contingency (Photographer Cancels a Paid Booking)
+
+> Derived from [`PHOTOGRAPHER CANCELLATION CONTINGENCY.md`](../04-REFERENCE/PHOTOGRAPHER%20CANCELLATION%20CONTINGENCY.md)
+> (task `prompt/tasks/07.md`), not from the original gap list.
+>
+> **Every item except 9.1, 9.2, and 9.11 is blocked on decisions D1–D9 in that document.** They are
+> business-policy decisions, not technical ones, and building the wrong remedy is more expensive than
+> waiting. **9.1 and 9.2 are unblocked** — all nine candidate options need them, so building them is not
+> wasted work whichever policy is chosen.
+>
+> **Recommended set (§6 of that document, offered as a default rather than a decision):** 9.1, 9.2, 9.3,
+> 9.5 are required; 9.8, 9.9, 9.7 come next; 9.10 and 9.11 are cheap prevention. **9.4 and 9.6 are
+> documented but not recommended** for this problem — see their entries for why. The execution summary at
+> the end of this file lists them in build order rather than numeric order.
+>
+> **Design around the fixed-date case.** When the event cannot move, reschedule and credit are useless and
+> a refund does not get the client photographed — only substitution helps. §5 of the contingency document
+> covers the escalation ladder (studio → overtime → platform freelancers → partner studio → nobody found),
+> why the client's protection shifts from choice to money as the event approaches, and the failure case
+> that has to be designed rather than improvised.
+>
+> Items below are written to the same format as the rest of this roadmap so they are ready to execute
+> once unblocked. They describe intended work; none of it exists.
+
+### 9.1 Unblock Owner Recovery on a Deadlocked Booking
+
+**Gated by:** nothing. Safe to build now.
+
+**Problem:** A photographer who accepts an assignment sets `booking.status = 'in_progress'`. If they
+then cancel, that status remains — and it is the exact status that blocks both
+`getAvailablePhotographers()` and `removePhotographerAssignment()`. The owner cannot assign a
+replacement or clear the dead assignment. The booking is paid, scheduled, and unstaffed, with no way
+forward except cancelling it outright.
+
+**Files to touch:**
+- `app/Http/Controllers/StudioOwner/BookingController.php` (the `in_progress` guards at
+  `getAvailablePhotographers()` and `removePhotographerAssignment()`)
+- `app/Models/BookingModel.php` (`canTransitionTo()` — no backwards route out of `in_progress` exists)
+- `app/Models/StudioOwner/BookingAssignedPhotographerModel.php` (a "has any active assignment" helper)
+
+**Steps:**
+1. Add a helper answering "does this booking still have an active assignment?" — reuse the
+   `isActive()` status list already on `BookingAssignedPhotographerModel`.
+2. Decide and implement the cascade: when the last active assignment is cancelled, the booking must
+   leave `in_progress`. Options are a new status, a flag, or reverting to `confirmed` — see §7.1 of the
+   contingency document.
+3. Narrow both owner guards so they block a genuinely staffed in-progress booking and permit an
+   unstaffed one.
+4. Allow the corresponding backwards transition in `canTransitionTo()`.
+5. Regression test: a booking whose only photographer cancelled after accepting must be reassignable.
+
+**Done when:** An owner can assign a replacement to a paid booking whose photographer cancelled after
+accepting, without cancelling the booking first.
+
+---
+
+### 9.2 Cascade Notification on Photographer Cancellation
+
+**Gated by:** nothing. Safe to build now.
+
+**Problem:** Photographer cancellation notifies nobody. The owner finds out by opening the booking; the
+client never finds out at all.
+
+**Files to touch:**
+- `app/Http/Controllers/StudioPhotographer/AssignedBookingController.php` (the `cancelled` case)
+- `app/Traits/Notifiable.php` (new methods alongside the existing 18)
+- Owner booking view — surface unresolved cancellations
+
+**Steps:**
+1. On assignment cancellation, notify the studio owner immediately with booking reference, event date,
+   and the photographer's reason.
+2. Notify the client — copy must state what happens to their payment even when the answer is "nothing,
+   your booking is unaffected". Decide separately whether the client sees the photographer's reason
+   verbatim (open question 6 in the contingency document).
+3. Add a resolution deadline scaled to how close the event is, modelled on the `response_deadline`
+   pattern from 2.3.
+4. Add a scheduled escalation command in the shape of `bookings:expire-pending` (2.7), registered
+   hourly in `routes/console.php`.
+5. Show the owner a queue of unresolved cancellations.
+
+**Done when:** No photographer cancellation is silent, and an unresolved one escalates on a clock.
+
+---
+
+### 9.3 Photographer Substitution Flow (Option A)
+
+**Gated by:** D1 (who chooses the remedy), D2 (may the client reject a substitute).
+
+**Problem:** There is no "find a replacement for this booking" action. The owner must manually work out
+who is free.
+
+**Files to touch:**
+- `app/Http/Controllers/StudioOwner/BookingController.php`
+- `app/Services/PhotographerAvailabilityService.php` (reuse — do not duplicate)
+- Owner booking view; client booking view (show the replacement)
+
+**Steps:**
+1. Requires 9.1. Add a substitution action that calls
+   `PhotographerAvailabilityService::getAvailabilityMapForBooking()` — leave and time-overlap conflict
+   detection already exist and need no new logic.
+2. Preserve the original assignment row as history; do not overwrite it.
+3. Notify the client naming the replacement (reuse `notifyPhotographerAssigned()`).
+4. Per D2, add a client acknowledgment window and a defined path when they decline.
+5. Handle "no replacement available inside the studio" explicitly — it must escalate, not fail silently.
+
+**Done when:** An owner can substitute a photographer in one action, the client is told who, and no
+money moves.
+
+---
+
+### 9.4 Reschedule Path (Options B and C)
+
+**Gated by:** D1.
+
+**Problem:** No controller ever changes `event_date`, `start_time`, or `end_time` after creation. A
+booking cannot be moved.
+
+**Files to touch:**
+- `database/migrations/` — original-date history on `tbl_bookings`
+- `app/Models/BookingModel.php`, `app/Http/Controllers/StudioOwner/BookingController.php`
+- Client booking view (reuse the 2.4 calendar for date selection)
+
+**Steps:**
+1. Migration: record the original date/time so a reschedule does not erase what was booked.
+2. Propose/accept flow — the client must consent to a new slot, not merely be told.
+3. Re-run availability against the new slot; re-validate the package snapshot and pricing.
+4. Limits: how many reschedules, and how close to the event one may be offered.
+5. Define what happens when the client declines — it must land on another option, not dead-end.
+
+**Done when:** A booking can move date with client consent, payment intact, and the original date on
+record.
+
+---
+
+### 9.5 Refund Execution (Options D and E)
+
+**Gated by:** D3 (automated or manual), D4 (who absorbs the platform fee), D6 (partial refunds at all).
+
+**Problem:** Neither `PaymongoService` nor `StripeService` can refund. `refund_pending` is written by
+2.5 and read by nothing — no queue, no badge mapping, no reversal. `PAYMENT_REFUNDED` is declared and
+never assigned. Refunding today would also leave `SystemRevenueModel` overstating platform revenue.
+
+**Files to touch:**
+- `app/Services/PaymongoService.php`, `app/Services/StripeService.php`
+- `app/Models/PaymentModel.php`, `app/Models/BookingModel.php` (`getPaymentStatusBadgeClass()`)
+- `app/Models/SystemRevenueModel.php` (reuse `markAsRefunded()`)
+- `app/Http/Controllers/Freelancer/BookingController.php` (`handleCancellationRefund()` is a log stub)
+- Finance/admin refund queue view
+
+**Steps:**
+1. **Confirm gateway refund support against the live accounts first** — PayMongo GCash refund rules
+   (window, partial support, settlement timing) are the largest unknown in this phase and must be
+   verified before the API surface is designed.
+2. Add refund methods to both wrappers, with explicit handling for a declined or asynchronously failing
+   refund.
+3. Record refunds against payments: amount, gateway reference, full vs partial.
+4. Reverse the matching `SystemRevenueModel` rows via the existing `markAsRefunded()`, following the
+   pattern already used by subscription cancellation.
+5. Give `refund_pending` and the refunded states a badge mapping and a real queue behind them.
+6. Reconcile the client-cancel path, which currently overwrites `payment_status` with `'cancelled'` on
+   paid bookings and destroys the record that money was received.
+7. Replace the freelancer-side stub with the real path.
+
+**Done when:** A paid booking can be refunded end to end, platform revenue reflects it, and the state is
+visible in the UI.
+
+---
+
+### 9.6 Booking Credit Ledger (Option F)
+
+**Gated by:** D5 — and do not start before 9.5 exists.
+
+**Problem:** There is no credit or wallet concept. `tbl_client_budget` is a spending planner, not stored
+value, and must not be repurposed as one.
+
+**Files to touch:** new migration(s), new model(s), client checkout, admin/finance views.
+
+**Steps:**
+1. Decide the rules first: expiry, transferability, studio-scoped vs platform-wide, and what happens if
+   the studio leaves the platform.
+2. Ledger: issuance, balance, redemption, refund of unused credit.
+3. Spend credit against a booking total at checkout.
+4. Accounting treatment — issued credit is a liability, not revenue.
+
+**Done when:** Credit can be issued, spent, and reported on — with the accounting correct.
+
+**Note:** This is the largest item in the phase by a wide margin and the only one that creates a standing
+financial liability. It should not be the platform's *only* remedy for a provider-caused cancellation.
+
+---
+
+### 9.7 Photographer Cancellation Record
+
+**Gated by:** D7.
+
+**Problem:** Cancellation reasons are stored on the assignment row and read nowhere. There is no count,
+no rate, and nothing surfaces to the owner at assignment time — a photographer who cancels constantly
+looks identical to one who never has.
+
+**Files to touch:**
+- `app/Models/StudioOwner/StudioPhotographersModel.php`
+- `app/Services/PhotographerAvailabilityService.php` (surface the signal in the assignment payload)
+- Owner assignment modal; HR views
+
+**Steps:**
+1. Aggregate cancellations per photographer.
+2. Show the count or rate in the owner's assignment modal alongside the existing availability reason.
+3. Per D7, decide whether it carries any consequence beyond visibility.
+
+**Done when:** An owner can see a photographer's cancellation history before assigning them.
+
+---
+
+### 9.8 Freelancer Emergency Pool — Widen the Substitution Net (Option H)
+
+**Gated by:** D8 (how wide the net goes). Requires 9.3.
+
+**Problem:** 9.3 can only substitute from the studio's own roster. A small studio on a Saturday often has
+nobody free — which is exactly the case where the event date cannot move and substitution is the only
+remedy that helps. The platform already carries freelancers with categories, schedules, and packages,
+and they are entirely disconnected from studio bookings.
+
+**Files to touch:**
+- `app/Services/PhotographerAvailabilityService.php` (extend the pool, do not fork it)
+- `app/Http/Controllers/StudioOwner/BookingController.php`
+- `app/Models/StudioOwner/BookingAssignedPhotographerModel.php` (an assignment whose photographer is not studio staff)
+- Freelancer portal — opt-in and incoming emergency offers
+
+**Steps:**
+1. Escalate the search only when the previous step is empty: studio roster → studio off-duty staff on
+   overtime → platform freelancers (same city, same category, free that date).
+2. Reuse `tbl_overtime_requests` and its approval flow for the off-duty step — it already exists.
+3. Freelancer step is **opt-in**, never an automatic draft. A freelancer chooses to be reachable for
+   emergency cover.
+4. Resolve payment and liability for a non-staff replacement before building — see D8 and open question 7.
+5. Leave studio-to-studio cover (step 4 of the ladder) out of this item; it needs a revenue-split
+   agreement that does not exist.
+
+**Done when:** An owner with no free photographer can reach a qualified freelancer for the original date,
+and the client's session proceeds.
+
+---
+
+### 9.9 Value-Gap Refund on a Downgraded Substitution (Option I)
+
+**Gated by:** D4, D8. Requires 9.5.
+
+**Problem:** A ten-year lead photographer replaced by a first-year assistant is the same booking on paper
+and a different product in reality. Substitution alone lets the platform quietly deliver less than was
+sold and treat the matter as closed.
+
+**Files to touch:**
+- `app/Models/StudioOwner/StudioPhotographersModel.php` (position, years of experience, specialization already stored)
+- The refund path built in 9.5
+- Client booking view — show the adjustment and why
+
+**Steps:**
+1. Define a comparability rule: equal, better, or worse. Anchor it on the fields already recorded —
+   position, years of experience, specialization.
+2. Equal or better → no adjustment. Worse → refund the difference automatically, without the client
+   having to ask.
+3. Publish the rule in advance. A percentage per experience tier is cruder than a case-by-case judgment
+   and far easier to defend when contested.
+
+**Done when:** A client who receives a less experienced replacement is refunded the difference
+automatically.
+
+---
+
+### 9.10 Restrict Late Cancellation (Prevention)
+
+**Gated by:** D9.
+
+**Problem:** A photographer can self-cancel with one click at any moment up until they mark themselves
+on-site. A cancellation three weeks out and one twelve hours out are not the same act and currently share
+an interface with no distinction at all.
+
+**Files to touch:**
+- `app/Models/StudioOwner/BookingAssignedPhotographerModel.php` (`canCancel()`)
+- `app/Http/Controllers/StudioPhotographer/AssignedBookingController.php`
+- `app/Http/Requests/StudioPhotographer/UpdateAssignmentStatusRequest.php`
+- Photographer assignment view
+
+**Steps:**
+1. Add a lateness threshold measured against `booking.event_date` / `start_time`.
+2. Inside the threshold, require owner approval rather than allowing a self-service cancellation — or
+   record a defined consequence, per D9.
+3. Require a substantive reason for a late cancellation (2.5 already sets the precedent with its
+   minimum-length cancellation reason).
+4. Make the difference visible to the photographer *before* they confirm.
+
+**Done when:** A photographer cannot silently self-cancel hours before an event.
+
+**Note:** The cheapest item in this phase and the one with the largest effect. By the morning of the
+event every remedy is bad, so the leverage is in having fewer event-morning cancellations at all.
+
+---
+
+### 9.11 Backup Photographer on High-Value Bookings (Prevention)
+
+**Gated by:** nothing, but low priority until 9.1–9.3 exist.
+
+**Problem:** Every remedy in this phase is a scramble that starts the moment a cancellation lands. A named
+second on the assignment from the outset collapses the whole escalation ladder into a single step.
+
+**Files to touch:**
+- `app/Models/StudioOwner/BookingAssignedPhotographerModel.php` (a backup role on the assignment)
+- `app/Http/Controllers/StudioOwner/BookingController.php` (assignment flow)
+- Owner booking view
+
+**Steps:**
+1. Allow an assignment to be marked as backup rather than primary.
+2. Backups reserve availability more weakly than a primary — decide whether a backup blocks that
+   photographer from taking other work (this is the substantive design question in the item).
+3. On primary cancellation, promote the backup automatically and notify everyone.
+4. Decide which bookings warrant one — by value, by category, or at the owner's discretion.
+
+**Done when:** A high-value booking can carry a named backup who is promoted automatically if the primary
+cancels.
+
+---
+
 ## Execution Order Summary
 
 ```
@@ -884,6 +1207,22 @@ Phase 8 — AI Assistant                                  ← NEW (task 04, off 
   8.4  Credential protection, failure handling, usage limits
   8.5  Surfaces and documentation
 
+Phase 9 — Cancellation Contingency                      ← NEW (task 07, decision-blocked)
+  9.1  Unblock owner recovery on a deadlocked booking     ← unblocked  ── TIER 1
+  9.2  Cascade notification on photographer cancellation  ← unblocked  ── TIER 1
+  9.10 Restrict late cancellation                         ← needs D9   ── prevention, do early
+  9.3  Photographer substitution flow                     ← needs D1, D2 ── TIER 1
+  9.5  Refund execution                                   ← needs D3, D4, D6 ── TIER 1, the one real project
+  9.9  Value-gap refund on downgraded substitution        ← needs 9.5
+  9.8  Freelancer emergency pool                          ← needs D8, and 9.3 first
+  9.7  Photographer cancellation record                   ← needs D7
+  9.11 Backup photographer on high-value bookings         ← independent
+  9.4  Reschedule path                                    ← needs D1; not recommended for this problem
+  9.6  Booking credit ledger                              ← needs D5; not recommended
+
+  Listed in recommended build order, not numeric order. 9.1 + 9.2 + 9.3 + 9.5 are the
+  minimum set that makes the system non-broken; see §6 of the contingency document.
+
 ```
 
 ---
@@ -898,3 +1237,5 @@ Phase 8 — AI Assistant                                  ← NEW (task 04, off 
 6. **Do not start Phase 6 automation** until Phase 5 is stable and tested.
 7. **Phase 7 tests** should be written incrementally — add tests for each feature as it is completed, not all at the end.
 8. **Never trade a Phase 8 security control for conversational quality.** The assistant's rules stay in code, not in the database; guardrails run on both sides of every model call; and no credential, prompt, or internal detail may appear in a response, a view, a bundle, a log, or a document.
+9. **Do not start the decision-gated Phase 9 items before the policy is decided.** D1–D9 in [`PHOTOGRAPHER CANCELLATION CONTINGENCY.md`](../04-REFERENCE/PHOTOGRAPHER%20CANCELLATION%20CONTINGENCY.md) are business decisions; implementing a remedy before one is chosen builds the wrong thing. 9.1, 9.2, and 9.11 are needed under every option and may proceed. Nothing that returns money to a client ships before 9.5's refund path is correct end to end.
+10. **Design Phase 9 around the fixed-date case, not the general one.** When the event cannot move, reschedule and credit are useless and a refund does not get the client photographed — only substitution helps. Build order should reflect that: 9.1, 9.2, 9.3, then 9.5 as the floor when substitution fails. See §5 of the contingency document.

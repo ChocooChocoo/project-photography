@@ -421,6 +421,20 @@ These are two distinct concepts that were conflated in the first scan:
 
 ---
 
+### 11. Photographer Cancellation Leaves a Paid Booking Stranded
+
+> Added 2026-07-26 from `prompt/tasks/07.md`. Item 2 above covers *studio-side* cancellation (now shipped as roadmap 2.5). This is its photographer-side sibling, which 2.5 does not touch. Full analysis: [`../04-REFERENCE/PHOTOGRAPHER CANCELLATION CONTINGENCY.md`](../04-REFERENCE/PHOTOGRAPHER%20CANCELLATION%20CONTINGENCY.md).
+
+**Current flow:** Client pays → owner assigns a photographer → photographer accepts (this flips the booking to `in_progress`) → photographer cancels the assignment. The assignment row is marked `cancelled` and that is the end of it.
+
+**Problem:** Nothing downstream reacts. The booking status is not changed, the owner is not notified, the client is never told, and no payment action is taken — the client's money sits against a booking the system still reports as in progress with nobody working on it. Worse, `in_progress` is exactly the status that blocks the owner from removing the dead assignment or assigning a replacement, so the two obvious recoveries are both locked out. The only escape is cancelling the whole booking on a client who did nothing wrong, which sets a `refund_pending` flag that no queue reads and no badge renders. Neither payment gateway wrapper can actually refund, there is no reschedule path, and there is no credit ledger — so *every* remedy is currently unavailable.
+
+**The case that defines it:** the client has prepared for months and the event happens *on that day* — a wedding, a graduation. There, reschedule is inapplicable, credit offers a future shoot for a once-only occasion, and a refund on the morning does not get anyone photographed. **Only substitution helps**, so the design question is how wide the replacement search goes (studio roster → off-duty staff on overtime → platform freelancers, who are existing supply that has never been connected to studio bookings) and how fast. How much notice there is also changes what the client is owed: weeks out they get a choice, hours out their protection has to shift from choice to money.
+
+**Suggestion:** Decide a policy before building. Nine resolution options are documented (substitute inside the studio, widen the pool beyond it, reschedule with the original photographer, reschedule with a replacement, full refund, partial refund, refund the value gap on a downgrade, booking credit, structured manual escalation) along with the nine decisions that gate them and a recommended build set of nine methods in three tiers. Three pieces are unblocked regardless of the policy chosen and should come first: cascade the assignment cancellation onto the booking so the state stops lying and recovery unblocks, notify the owner and client when it happens, and restrict one-click late self-cancellation — by the morning of the event every remedy is bad, so prevention outranks all of them.
+
+---
+
 ### Summary Table
 
 | # | Gap | Impact | Effort |
@@ -435,9 +449,12 @@ These are two distinct concepts that were conflated in the first scan:
 | 8 | Subscription rank vs rating rank opaque to clients | Platform credibility | Low |
 | 9 | On-location booking address too vague for navigation | Operational accuracy | Low |
 | 10 | No post-completion dispute or revision request path | Client satisfaction, accountability | Medium |
+| 11 | Photographer cancellation strands a paid booking — no cascade, no notice, no remedy | Client protection, payment integrity | Medium (policy decision first) |
 
 **Low effort, high value (start here):** Items 1, 3, 4, 7, 8, 9
-**Medium effort, core quality:** Items 2, 5, 6, 10
+**Medium effort, core quality:** Items 2, 5, 6, 10, 11
+
+Item 11 is the only one blocked on a business decision rather than build effort — the options are documented, the policy is not chosen. Its two unblocked pieces (cascade + notify) are low effort.
 
 ---
 
