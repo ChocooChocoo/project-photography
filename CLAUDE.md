@@ -17,11 +17,11 @@ php artisan test tests/Feature/ChatbotFeatureTest.php
 # Run a specific test method
 php artisan test --filter=test_method_name
 
-# Fresh seed (wipes DB)
-php artisan migrate:fresh --seed
+# Fresh seed: resets every table except tbl_users and tbl_locations, then rebuilds
+php artisan db:seed
 
-# Run specific seeder
-php artisan db:seed --class=MultiStudioBundleSeeder
+# Verify the seeded data (orphan FK scan + seed invariants)
+php artisan db:verify-seed
 
 # Lint/format PHP
 ./vendor/bin/pint
@@ -84,6 +84,26 @@ Models are namespaced by their owner portal:
 ### Frontend
 
 Blade templates only (no SPA). Layouts in `resources/views/layouts/`. Partials in `resources/views/partials/`. Tailwind CSS via `@tailwindcss/vite`. No component framework — plain JS in `resources/js/`.
+
+### Seeding
+
+`DatabaseSeeder` runs a single pass: bootstrap `tbl_locations` only if empty, then
+`Database\Seeders\Fresh\FreshSeedSeeder`. That seeder truncates every table **except**
+`tbl_users` and `tbl_locations` (both preserved, guarded three ways in `FreshResetSeeder`),
+rebuilds categories and RBAC, and writes a media-free dataset: 10 studios, 10 distinct owners,
+10 photographers each, plus HR/finance staff, clients, freelancers, subscriptions, bookings,
+payroll, attendance, procurement, and chatbot config. New users land in the 4000-series
+sequence / `+63918404xxx` mobile block, which no other seeder touches.
+
+**Nothing under `database/seeders/Fresh/` may contain a media path, URL, or file extension** —
+`tests/Feature/FreshSeedContractTest.php` fails the build if one appears. The gallery tables and
+`tbl_procurement_documents` are cleared but never written.
+
+The ~29 legacy per-feature seeders remain on disk and runnable by name, but are no longer in the
+chain; several of them write media paths and will reintroduce media rows if run after a fresh
+seed. Background: [prompt/output/06.md](prompt/output/06.md).
+
+Note: `migrate:fresh` currently fails on a virgin database — see risk 1 in that document.
 
 ### Media storage
 
