@@ -35,6 +35,7 @@ feature or a single problem, each feeding one roadmap phase rather than the road
 
 - [`AI ASSISTANT INTEGRATION.md`](./04-REFERENCE/AI%20ASSISTANT%20INTEGRATION.md) — the Groq-powered photography AI assistant that replaced the fixed-response chatbot: architecture, configuration, security controls, fallback behavior, usage limits, testing. **Living documentation of shipped code** (roadmap Phase 8). Audience: developers/reviewers.
 - [`PHOTOGRAPHER CANCELLATION CONTINGENCY.md`](./04-REFERENCE/PHOTOGRAPHER%20CANCELLATION%20CONTINGENCY.md) — what happens when a photographer cancels a booking the client has already paid for: current behavior, nine resolution options (substitution inside and outside the studio, reschedule, refund, value-gap refund, credit, manual escalation), the nine business decisions that gate them, and a recommended build set. **Analysis only — no policy chosen, nothing implemented** (feeds roadmap Phase 9).
+- [`SUBSCRIPTION LIFECYCLE.md`](./04-REFERENCE/SUBSCRIPTION%20LIFECYCLE.md) — the studio-owner subscription from trial to expiry: what the code actually does today (a free trial that never ends, an `expired` state nothing writes, and no part of the platform that requires a subscription), the eleven gaps behind that, one recommended lifecycle with post-expiry access rules, and the six business decisions that gate it. **Analysis and recommendation — nothing implemented** (feeds roadmap Phase 10). Audience: developers/reviewers and platform stakeholders.
 
 ---
 
@@ -59,4 +60,5 @@ implementation detail. `REVISION CHECKLIST AND RECOMMENDATIONS.md` is the source
 (scan dates 2026-06-21 / 2026-06-24). Roadmap Phases 1–3 have since been implemented, so several gaps
 listed there are now closed. For the current state of any checklist item, read
 [`03-PROGRESS/ROADMAP PROGRESS.md`](./03-PROGRESS/ROADMAP%20PROGRESS.md) — it takes precedence over
-01-ANALYSIS wherever the two disagree.
+01-ANALYSIS wherever the two disagree. Where a 01-ANALYSIS statement was found to be wrong rather than
+merely stale, it is corrected in place with a dated parenthetical rather than silently rewritten.

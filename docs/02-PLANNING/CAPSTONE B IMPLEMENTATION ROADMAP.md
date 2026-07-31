@@ -19,6 +19,7 @@
 | 7 | **Resource Authorization & Test Coverage** | Policies, core feature test coverage | Security and confidence layer — after all features are stable |
 | 8 | **AI Assistant** | Replace the fixed-response chatbot with a secure Groq assistant | Task-driven addition (`prompt/tasks/04.md`), not derived from the original gap list. Independent of Phases 4–7 — the chat surface touches no booking, payment, or payroll logic |
 | 9 | **Cancellation Contingency** | Photographer cancels a paid booking — cascade, substitution, refund, prevention | Task-driven addition (`prompt/tasks/07.md`). 11 items, listed in recommended build order in the execution summary. **Decision-blocked:** everything except 9.1, 9.2, and 9.11 waits on D1–D9 in [`PHOTOGRAPHER CANCELLATION CONTINGENCY.md`](../04-REFERENCE/PHOTOGRAPHER%20CANCELLATION%20CONTINGENCY.md). 9.1 + 9.2 + 9.3 + 9.5 are the minimum set; 9.4 and 9.6 are documented but **not recommended** for this problem |
+| 10 | **Subscription Lifecycle** | Trial expiry, renewal, grace, expiry, access restriction, reactivation | Task-driven addition (`prompt/tasks/08.md`). 9 items. Completes and corrects Phase 3.4 (trial) and replaces Phase 6.4 (expiry reminders), both of which describe behaviour the code does not have. **10.1 and 10.2 are unblocked and urgent** — today a free trial grants a full billing period of free access and never ends. Everything from 10.5 onward waits on S1–S6 in [`SUBSCRIPTION LIFECYCLE.md`](../04-REFERENCE/SUBSCRIPTION%20LIFECYCLE.md) |
 
 ---
 
@@ -449,6 +450,14 @@
 
 **Done when:** Admin can set trial days per plan; owners get a trial period before being charged.
 
+*(Update 2026-07-27, `prompt/tasks/08.md`: steps 1–4 shipped, step 5 did not — see
+[`ROADMAP PROGRESS.md`](../03-PROGRESS/ROADMAP%20PROGRESS.md) 3.4. Step 4 as written is
+also the defect: the implementation sets `end_date` to a full billing period rather than to
+`trial_ends_at`, so "during trial period" is 30 days for a 14-day trial and the trial never
+ends. **The remainder of this item moved to Phase 10** — 10.1 and 10.2 close it. Step 5's
+"subscription downgrades" assumes a free tier that does not exist; see S6 in
+[`SUBSCRIPTION LIFECYCLE.md`](../04-REFERENCE/SUBSCRIPTION%20LIFECYCLE.md).)*
+
 ---
 
 ## Phase 4 — Workflow Improvements
@@ -656,7 +665,15 @@ When a new studio is submitted:
 
 - 7 days before subscription expires: email + in-app notification to owner
 - 3 days before: second reminder
-- On expiry: downgrade to free tier, notify owner
+- ~~On expiry: downgrade to free tier, notify owner~~ — **superseded.**
+
+*(Update 2026-07-27, `prompt/tasks/08.md`: **there is no free tier to downgrade to.**
+`tbl_subscription_plans.plan_type` is `basic|premium|enterprise` and all eight seeded plans
+are priced. More importantly, reminders are the smallest part of the problem — nothing
+expires a subscription in the first place, and expiry restricts nothing when it happens.
+**This item moved to Phase 10**, where 10.3 writes the `expired` state, 10.5 makes it mean
+something, and 10.6 covers the reminder ladder. The two reminder bullets above survive
+inside 10.6. See [`SUBSCRIPTION LIFECYCLE.md`](../04-REFERENCE/SUBSCRIPTION%20LIFECYCLE.md).)*
 
 ### 6.5 Payroll Generation Trigger
 
@@ -1147,6 +1164,288 @@ cancels.
 
 ---
 
+## Phase 10 — Subscription Lifecycle (Trial, Renewal, Expiry, Reactivation)
+
+> Derived from [`SUBSCRIPTION LIFECYCLE.md`](../04-REFERENCE/SUBSCRIPTION%20LIFECYCLE.md)
+> (task `prompt/tasks/08.md`), not from the original gap list. It absorbs the unfinished half of
+> **3.4** and replaces **6.4**, both of which describe behaviour the code does not have.
+>
+> **Two findings drive this phase.** A free trial never ends — the trial branch sets `end_date` to a
+> full billing period instead of to `trial_ends_at`, so a 14-day trial grants 30 days of free, fully
+> active access and nothing ever expires it. And an expired subscription takes nothing away —
+> `OwnerMiddleware` has no subscription logic, there are no policies or gates, and the only
+> subscription-aware middleware guards two routes and only from the second studio onward.
+>
+> **10.1 and 10.2 are unblocked and should be built first.** They are bug fixes wearing a feature's
+> clothing: the platform is currently giving away a billing period per trial signup. Everything from
+> 10.5 onward is gated on **S1–S6** in the lifecycle document — what grace period, whether a card is
+> required to start a trial, what access survives expiry, whether a subscription belongs to a studio
+> or an owner, whether in-flight bookings are honoured, and whether a free tier exists at all.
+>
+> **Restrict, never delete.** The recommended post-expiry behaviour preserves the account, the
+> studios, and every historical record, and restricts only subscription-dependent capability. No
+> item in this phase deletes an owner's data.
+>
+> Items below are written to the same format as the rest of this roadmap. Except where noted as
+> already shipped, none of it exists.
+
+### 10.1 Align a Trial's `end_date` with `trial_ends_at`
+
+**Gated by:** nothing. Build first.
+
+**Problem:** [`SubscriptionController::subscribe()`](../../app/Http/Controllers/StudioOwner/SubscriptionController.php#L151)
+sets a trial subscription's `end_date` from `calculateEndDate()`, which returns a full billing period.
+`isActive()` never consults `trial_ends_at`. A 14-day trial is therefore 30 days of active access at
+`amount_paid = 0`; a 30-day trial on the yearly plan is 365 days.
+
+**Files to touch:**
+- `app/Http/Controllers/StudioOwner/SubscriptionController.php` (the trial branch, ~L145–168)
+- `app/Models/StudioPlanModel.php` (`isActive()`, `isOnTrial()`)
+
+**Steps:**
+1. In the trial branch, set `end_date = trial_ends_at`. The two dates describe the same instant.
+2. Decide whether a trial row keeps `payment_status = 'paid'` — it is currently marked paid at
+   `amount_paid = 0`, which makes trials indistinguishable from paid subscriptions in every revenue
+   query. A `trialing` value on `payment_status`, or a dedicated `status`, is cleaner.
+3. Backfill: existing trial rows have an overlong `end_date`. Write a one-off command or migration
+   that corrects them, and confirm against seed data.
+4. Regression test: a subscription created on a 14-day trial plan reports `isActive() === false` on
+   day 15.
+
+**Done when:** A trial's access window equals its trial length, and no trial grants a free billing period.
+
+---
+
+### 10.2 Expire Trials
+
+**Gated by:** nothing (S2 only affects what happens *next*).
+
+**Problem:** [`NotifyTrialEndingCommand`](../../app/Console/Commands/NotifyTrialEndingCommand.php) is
+the only consumer of `trial_ends_at` and it only writes a notification. Nothing compares
+`trial_ends_at` to now in order to change state. The notification it sends tells the owner to *"Add a
+payment method"* — a screen, route and column that do not exist.
+
+**Files to touch:**
+- New: `app/Console/Commands/ExpireTrialsCommand.php` (copy the shape of `ExpirePendingBookingsCommand`)
+- `routes/console.php` (schedule it)
+- `app/Models/StudioPlanModel.php`
+
+**Steps:**
+1. New daily command: find `status = 'active'` rows whose `trial_ends_at` has passed.
+2. Transition them per S1/S2 — to `grace` if a grace period is chosen, otherwise straight to `expired`.
+3. Notify the owner on the transition, with a link that leads somewhere real.
+4. De-duplicate per day, reusing the pattern already in `NotifyTrialEndingCommand`.
+5. Test: a trial whose `trial_ends_at` is yesterday is no longer active after the command runs.
+
+**Done when:** A trial that is not converted ends on its stated date, in the database, with the owner told.
+
+---
+
+### 10.3 Expire Paid Subscriptions and Write the `expired` State
+
+**Gated by:** nothing.
+
+**Problem:** `tbl_studio_plans.status` declares an `expired` value that **no code path ever writes**.
+Expiry today is implicit — it emerges from an `end_date >= now()` filter in three read sites and is
+invisible in the database, in reports, and to the owner. A row that lapsed a year ago still says
+`active`.
+
+**Files to touch:**
+- New: `app/Console/Commands/ExpireSubscriptionsCommand.php`
+- `routes/console.php`
+- Owner subscription views (status badge mapping for `expired`)
+
+**Steps:**
+1. Daily command: `status = 'active'` and `end_date < today` → `status = 'expired'`.
+2. Add `expired` to the status-label map in `StudioPlanModel::STATUS_LABELS` and the badge colours in
+   the owner views.
+3. Backfill historical rows once, in the same command's first run.
+4. Confirm the three implicit read sites still behave identically once the state is explicit, then
+   simplify them to test `status` rather than re-deriving expiry from dates.
+
+**Done when:** Expiry is a written state with a timestamp, not the absence of a query match.
+
+---
+
+### 10.4 Add `past_due` and a Grace Period
+
+**Gated by:** **S1** (grace length). Needs 10.8 for the retry half.
+
+**Problem:** A subscription is active or it is nothing. There is no representation of "payment is late
+but you are not cut off yet," so the only available response to a failed charge is immediate
+termination — which is what `paymentFailed()` does today, setting `payment_status = 'failed'` and
+`status = 'cancelled'` in the same write, with no retry and no notice.
+
+**Files to touch:**
+- `database/migrations/` — extend the `tbl_studio_plans.status` enum with `past_due` and `grace`;
+  add `grace_ends_at`
+- `app/Models/StudioPlanModel.php`
+- `app/Http/Controllers/StudioOwner/SubscriptionController.php` (`paymentFailed()`)
+
+**Steps:**
+1. Migration for the two new states and `grace_ends_at`.
+2. Separate "the owner abandoned Checkout" from "the card was declined" in `paymentFailed()` — today
+   both destroy the subscription.
+3. On a declined renewal: `past_due`, retry on the S1 schedule, then `grace`, then `expired`.
+4. Access is retained in both `past_due` and `grace` — a failed card is usually a bank problem.
+5. Test each transition, including the recovery path back to `active`.
+
+**Done when:** A failed payment degrades through announced states instead of terminating the subscription.
+
+---
+
+### 10.5 Access Restriction on Expiry
+
+**Gated by:** **S3** (what stays available), **S4** (studio- or owner-scoped), **S5** (in-flight
+bookings), **S6** (free tier). Needs 10.3 first.
+
+**Problem:** **The platform's revenue model rests on subscriptions and nothing on the platform depends
+on having one.** `OwnerMiddleware` checks authentication and role only; there is no `app/Policies`
+directory and no `Gate::` definition. An owner who never subscribes keeps a marketplace-listed studio
+and an unrestricted portal, forever. This is the largest item in the phase and the reason the rest of
+it matters.
+
+**Files to touch:**
+- New: `app/Http/Middleware/RequireActiveSubscription.php`, registered in `bootstrap/app.php`
+- `routes/web.php` (apply selectively to the owner group)
+- `app/Http/Middleware/CheckStudioRegistrationLimit.php` (see the two defects below)
+- Marketplace / studio-discovery queries
+- Owner layout (a persistent restricted-state banner)
+
+**Steps:**
+1. Settle S3 into a concrete capability list. §6.2 of the lifecycle document is the starting proposal.
+2. Build the middleware to gate *capabilities*, not the whole portal — the owner must always be able
+   to sign in, read their data, choose a plan, and pay.
+3. Exclude the studio from marketplace listing and from accepting new bookings while not active.
+4. **Honour in-flight paid bookings** (S5) — assignment, gallery upload and completion must keep
+   working for bookings that already exist. This is what forces capability-scoping in step 2.
+5. Fix two defects in the existing gate while here: it tests `$user->role !== 'owner'`, so
+   `owner-super-admin` skips it entirely; and it queries across all of the owner's studios while the
+   subscription is keyed to one studio (S4).
+6. Decide what happens to studio HR, finance and photographer staff logins when the owner lapses —
+   currently unaddressed.
+
+**Done when:** An expired studio is delisted and cannot take new bookings, while its owner retains
+sign-in, full read access, and a one-click path to pay.
+
+---
+
+### 10.6 Wire the Notification Ladder
+
+**Gated by:** **S1**. Absorbs 6.4.
+
+**Problem:** [`notifySubscriptionExpiring()`](../../app/Traits/Notifiable.php#L343) is defined and
+called from nowhere — dead code. `app/Mail/` contains no subscription mailable at all, so every
+subscription notification is in-app only and an owner who does not log in learns nothing.
+
+**Files to touch:**
+- `app/Traits/Notifiable.php` (new methods for grace, expiry, payment-failed, reactivation nudge)
+- New mailables in `app/Mail/`
+- `app/Console/Commands/` (the commands from 10.2 and 10.3 trigger most of these)
+
+**Steps:**
+1. Wire `notifySubscriptionExpiring()` at renewal T-7, and add a T-3 reminder (the two surviving
+   bullets from 6.4).
+2. Extend the trial ladder from T-7 only to T-7 / T-3 / T-1 / T+0.
+3. Add payment-failed notices at D+0, D+3, D+7 and an entering-grace notice.
+4. Add an expiry notice and reactivation nudges at +7d and +30d.
+5. Email as well as in-app for every state change; in-app alone for countdown reminders.
+6. Reuse the same-day de-duplication already in `NotifyTrialEndingCommand`.
+
+**Done when:** Every lifecycle transition is announced before it happens, by email as well as in-app.
+
+---
+
+### 10.7 Reactivation
+
+**Gated by:** **S4**. Needs 10.3 and 10.5.
+
+**Problem:** No route, controller method, or UI revives a cancelled or expired subscription. Because
+`subscribe()` creates a brand-new row every time, subscription history is a pile of disconnected
+records with no continuity — there is no concept of "the same subscription, resumed."
+
+**Files to touch:**
+- `app/Http/Controllers/StudioOwner/SubscriptionController.php`
+- `routes/web.php`
+- Owner subscription views
+
+**Steps:**
+1. Add a reactivate action that restores the studio to `active` and re-lists it on payment.
+2. Within 30 days of expiry, offer the previous plan as a one-click default; after 30 days, the owner
+   picks fresh from the current catalog.
+3. Link successive rows so history reads as a continuous relationship (a `previous_plan_id`, or a
+   subscription-group reference).
+4. Confirm nothing needs restoring — 10.5 removed access, not data.
+
+**Done when:** A lapsed owner can return to active service in one payment, with their studio and all
+its data exactly as they left it.
+
+---
+
+### 10.8 Recurring Billing and a Card on File
+
+**Gated by:** **S2**. Blocked by roadmap **1.5** (webhook handlers).
+
+**Problem:** There is no recurring billing. `next_billing_date` is written on every subscription and
+read by nothing. [`StripeService::createSubscriptionCheckoutSession()`](../../app/Services/StripeService.php#L79)
+builds a session with `'mode' => 'payment'` — a one-time charge. No Stripe Product or Price, no
+subscription object, no customer, no saved payment method. `verifyWebhookSignature()` exists and no
+route consumes it, so an asynchronous payment result is never learned about. **This is the largest
+technical prerequisite in the phase** and the one that makes trial conversion possible at all.
+
+**Files to touch:**
+- `app/Services/StripeService.php`
+- New: a webhook route + controller (shared with roadmap 1.5)
+- `database/migrations/` — a customer / payment-method reference on the studio or the plan row
+- `app/Http/Controllers/StudioOwner/SubscriptionController.php`
+
+**Steps:**
+1. Land roadmap 1.5's webhook infrastructure first — recurring billing without webhooks is unbuildable.
+2. Model plans as Stripe Products and Prices; create a Stripe Customer per studio owner.
+3. Switch subscription checkout to `mode: 'subscription'`, or collect a payment method via SetupIntent
+   if S2 says trials require a card.
+4. Consume `invoice.paid` and `invoice.payment_failed` to drive 10.4's state machine.
+5. Read `next_billing_date` — or delete the column if Stripe becomes the source of truth.
+6. Verify PayMongo's position: it is the primary PH gateway and currently handles bookings only. Decide
+   whether subscriptions stay Stripe-only.
+
+**Done when:** A subscription renews itself, and a trial converts to paid without the owner
+re-subscribing manually.
+
+---
+
+### 10.9 Cancellation and Upgrade Beyond the 3-Day Window
+
+**Gated by:** nothing structurally, but the refund half inherits roadmap **9.5**'s blocker.
+
+**Problem:** [`canBeCancelled()`](../../app/Models/StudioPlanModel.php#L168) allows cancellation only
+within 3 days of `paid_at`. **After day 3 there is no way to cancel at all.** And
+[`subscribe()`](../../app/Http/Controllers/StudioOwner/SubscriptionController.php#L132) rejects any new
+subscription while an active one exists — so an owner past day 3 on a yearly plan cannot upgrade,
+cannot downgrade, and cannot cancel, for the remainder of the year. The 3-day rule is a cooling-off
+refund policy that has been implemented as if it were the cancellation feature.
+
+**Files to touch:**
+- `app/Models/StudioPlanModel.php` (`canBeCancelled()`, and a separate refund-eligibility check)
+- `app/Http/Controllers/StudioOwner/SubscriptionController.php` (`cancel()`, `subscribe()`)
+- Owner subscription views
+
+**Steps:**
+1. Separate the two concepts: cancellation available at any time, taking effect at period end;
+   refund eligibility keeping the 3-day rule and being named as such in the UI.
+2. Implement cancel-at-period-end — never revoke time already paid for.
+3. Allow upgrade while active, with a proration rule (currently undesigned — see §9 of the lifecycle
+   document).
+4. Fix the revenue path: `cancel()` writes `update(['status' => 'refunded'])` directly instead of
+   calling [`SystemRevenueModel::markAsRefunded()`](../../app/Models/SystemRevenueModel.php#L290),
+   and marks revenue refunded **without calling any gateway** — the books say refunded while the money
+   stays with Stripe. A real refund waits on the same gateway capability 9.5 needs.
+
+**Done when:** An owner can cancel or change plan at any time, the effective date is stated up front,
+and the revenue ledger matches what the gateway actually did.
+
+---
+
 ## Execution Order Summary
 
 ```
@@ -1223,6 +1522,20 @@ Phase 9 — Cancellation Contingency                      ← NEW (task 07, deci
   Listed in recommended build order, not numeric order. 9.1 + 9.2 + 9.3 + 9.5 are the
   minimum set that makes the system non-broken; see §6 of the contingency document.
 
+Phase 10 — Subscription Lifecycle                       ← NEW (task 08, partly decision-blocked)
+  10.1 Align a trial's end_date with trial_ends_at       ← unblocked  ── do first, revenue leak
+  10.2 Expire trials                                     ← unblocked
+  10.3 Expire paid subscriptions, write `expired`        ← unblocked
+  10.4 Add past_due + grace period                       ← needs S1
+  10.5 Access restriction on expiry                      ← needs S3, S4, S5, S6 ── largest item
+  10.6 Wire the notification ladder (absorbs 6.4)        ← needs S1
+  10.7 Reactivation                                      ← needs S4, and 10.3 + 10.5 first
+  10.8 Recurring billing + card on file                  ← needs S2, blocked by 1.5
+  10.9 Cancellation + upgrade beyond the 3-day window    ← refund half inherits 9.5's blocker
+
+  10.1–10.3 are bug fixes and need no decision. 10.5 is what makes a subscription mean
+  anything at all; see §5–§8 of the lifecycle document.
+
 ```
 
 ---
@@ -1239,3 +1552,5 @@ Phase 9 — Cancellation Contingency                      ← NEW (task 07, deci
 8. **Never trade a Phase 8 security control for conversational quality.** The assistant's rules stay in code, not in the database; guardrails run on both sides of every model call; and no credential, prompt, or internal detail may appear in a response, a view, a bundle, a log, or a document.
 9. **Do not start the decision-gated Phase 9 items before the policy is decided.** D1–D9 in [`PHOTOGRAPHER CANCELLATION CONTINGENCY.md`](../04-REFERENCE/PHOTOGRAPHER%20CANCELLATION%20CONTINGENCY.md) are business decisions; implementing a remedy before one is chosen builds the wrong thing. 9.1, 9.2, and 9.11 are needed under every option and may proceed. Nothing that returns money to a client ships before 9.5's refund path is correct end to end.
 10. **Design Phase 9 around the fixed-date case, not the general one.** When the event cannot move, reschedule and credit are useless and a refund does not get the client photographed — only substitution helps. Build order should reflect that: 9.1, 9.2, 9.3, then 9.5 as the floor when substitution fails. See §5 of the contingency document.
+11. **Build Phase 10.1–10.3 ahead of the rest of Phase 10, and ahead of Phase 6.4.** They need no decision, they are bug fixes rather than features, and until they land every trial signup gives away a full billing period. Everything from 10.5 onward waits on S1–S6 in [`SUBSCRIPTION LIFECYCLE.md`](../04-REFERENCE/SUBSCRIPTION%20LIFECYCLE.md) — those are business decisions, and an access-restriction layer built before them restricts the wrong things.
+12. **No Phase 10 item deletes an owner's account, studio, or history.** Expiry is a billing event, not a moderation action: restrict subscription-dependent capability, preserve everything else, and keep a one-click path back. Bookings a client has already paid for are honoured to completion whatever the studio's subscription says.

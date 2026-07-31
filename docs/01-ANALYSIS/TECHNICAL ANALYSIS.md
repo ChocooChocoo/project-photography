@@ -386,14 +386,23 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Owner registers + creates studio] --> B{Active subscription?<br/>CheckStudioRegistrationLimit}
-    B -->|no / over limit| C[Block create]
-    B -->|ok| D[Studio status = pending]
+    A[Owner registers + creates studio] --> B{Owner already has a studio?<br/>CheckStudioRegistrationLimit}
+    B -->|no — 1st studio| D[Studio status = pending]
+    B -->|yes| B2{Active subscription<br/>with spare max_studios?}
+    B2 -->|no / over limit| C[Block create]
+    B2 -->|ok| D
     D --> E[Admin reviews business permit + ID]
     E --> F{Decision}
     F -->|verify| G[status = verified/active,<br/>studio listed in marketplace]
     F -->|reject| H[status = rejected,<br/>rejection_note]
 ```
+
+*(Update 2026-07-27, `prompt/tasks/08.md`: the flowchart previously showed the subscription check
+gating **all** studio creation. It does not. `CheckStudioRegistrationLimit` lets every GET through
+unconditionally, and on POST only checks a subscription when the owner already has at least one
+studio — **the first studio is free.** It also returns early unless `$user->role === 'owner'`, so
+`owner-super-admin` bypasses it entirely. This is the only subscription check on the platform; see
+[`SUBSCRIPTION LIFECYCLE.md`](../04-REFERENCE/SUBSCRIPTION%20LIFECYCLE.md) §1.3.)*
 
 ### 5.10 AI assistant message handling
 

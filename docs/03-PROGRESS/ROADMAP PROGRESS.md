@@ -1,8 +1,8 @@
-# Capstone B Roadmap — Progress (Phases 1, 2, 3, 8 & 9)
+# Capstone B Roadmap — Progress (Phases 1, 2, 3, 8, 9 & 10)
 
-> Tracks completion of [`../02-PLANNING/CAPSTONE B IMPLEMENTATION ROADMAP.md`](../02-PLANNING/CAPSTONE%20B%20IMPLEMENTATION%20ROADMAP.md) Phase 1 ("Stabilize"), Phase 2 ("Complete"), Phase 3 ("Core New Features"), Phase 8 ("AI Assistant"), and Phase 9 ("Cancellation Contingency"), per `prompt/tasks/01.md`, `02.md`, `04.md`, and `07.md` (project repo). Phase 1/2 generated 2026-07-13; Phase 3 generated 2026-07-14 — both were developed on branch `capstone-b/phase-1-2` (the branch name predates the Phase 3 work and was reused) and have since been **merged into `main`**. The pre-merge browser-verification caveats recorded below were therefore never cleared; they are now outstanding post-merge checks. Phase 8 was implemented 2026-07-25 directly on `main`.
+> Tracks completion of [`../02-PLANNING/CAPSTONE B IMPLEMENTATION ROADMAP.md`](../02-PLANNING/CAPSTONE%20B%20IMPLEMENTATION%20ROADMAP.md) Phase 1 ("Stabilize"), Phase 2 ("Complete"), Phase 3 ("Core New Features"), Phase 8 ("AI Assistant"), Phase 9 ("Cancellation Contingency"), and Phase 10 ("Subscription Lifecycle"), per `prompt/tasks/01.md`, `02.md`, `04.md`, `07.md`, and `08.md` (project repo). Phase 1/2 generated 2026-07-13; Phase 3 generated 2026-07-14 — both were developed on branch `capstone-b/phase-1-2` (the branch name predates the Phase 3 work and was reused) and have since been **merged into `main`**. The pre-merge browser-verification caveats recorded below were therefore never cleared; they are now outstanding post-merge checks. Phase 8 was implemented 2026-07-25 directly on `main`.
 >
-> **Phases 4–7 have not been started.** Phase 8 was implemented out of order because it came from a separate task brief and shares no code with the booking, payment, or payroll flows those phases cover. **Phase 9 is documented only — no code exists for any of it.**
+> **Phases 4–7 have not been started.** Phase 8 was implemented out of order because it came from a separate task brief and shares no code with the booking, payment, or payroll flows those phases cover. **Phases 9 and 10 are documented only — no code exists for any of it.**
 
 Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (verified, no change needed) | ⚠️ Partial — see note | 📋 Documented — analysis complete, nothing built
 
@@ -195,3 +195,103 @@ in §8 of the contingency document. D1, D2, D8, D9 gate the options that actuall
 - Documentation only: `git diff --stat` shows `.md` files exclusively — no `app/`, `database/`, `resources/`, or `tests/` changes.
 - `composer test` unchanged at 70 passed, confirming no behavioral edit slipped in.
 - Every code claim in the analysis was read out of the current source before being written down, and each is cited to its file and line.
+
+---
+
+## Phase 10 — Subscription Lifecycle
+
+> Documented 2026-07-27 on `main`, from `prompt/tasks/08.md`. Full analysis:
+> [`../04-REFERENCE/SUBSCRIPTION LIFECYCLE.md`](../04-REFERENCE/SUBSCRIPTION%20LIFECYCLE.md).
+> Task report: [`../../prompt/output/08.md`](../../prompt/output/08.md).
+>
+> **This pass changed no code.** The brief was explicitly documentation-only: assess the documented
+> subscription lifecycle, verify it against the implementation, and recommend a process. Every row
+> below is 📋. Unlike Phase 9, this phase recommends **one** lifecycle rather than an option set —
+> the brief asked for a process, not a menu.
+>
+> **The two findings that produced the phase.** A free trial never ends: the trial branch of
+> `SubscriptionController::subscribe()` sets `end_date` to a full billing period instead of to
+> `trial_ends_at`, and nothing anywhere compares `trial_ends_at` to the current time in order to change
+> state — so a 14-day trial on the seeded Studio Growth plan is 30 days of fully active, `amount_paid = 0`
+> access, and a 30-day trial on the yearly plan is 365. And an expired subscription takes nothing away:
+> `OwnerMiddleware` contains no subscription logic, there is no `app/Policies` directory and no `Gate::`
+> definition in the application, and the sole subscription-aware middleware guards two routes and only
+> from the owner's second studio onward. **The platform's revenue model rests on subscriptions and
+> nothing on the platform depends on having one.**
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| 10.1 | Align a trial's `end_date` with `trial_ends_at` | 📋 | **Not gated by any decision — build this first.** `subscribe()` writes `trial_ends_at = now() + trial_days` and `end_date = calculateEndDate()`, which returns `addMonth()`/`addYear()`. `StudioPlanModel::isActive()` tests `status`, `end_date` and `payment_status` and never looks at `trial_ends_at`, so the trial length governs nothing but a notification. Trial rows are also written `payment_status = 'paid'` at `amount_paid = 0`, which makes them indistinguishable from paid subscriptions in every revenue query. Needs a backfill for existing rows. |
+| 10.2 | Expire trials | 📋 | **Not gated by any decision.** `NotifyTrialEndingCommand` is the only consumer of `trial_ends_at` and only writes an in-app notification; no command mutates state on it. The notification it sends tells the owner to "Add a payment method to keep your plan active" — there is no payment-method screen, route, or column anywhere on the platform, so the instruction is unfollowable. The trial branch also makes no Stripe call at all, so no card is on file and **the trial cannot convert**. `ExpirePendingBookingsCommand` is the pattern to copy. |
+| 10.3 | Expire paid subscriptions, write `expired` | 📋 | **Not gated by any decision.** `tbl_studio_plans.status` declares `expired` and **no code path ever writes it**. Expiry is implicit, emerging from an `end_date >= now()` filter in three read sites, so a subscription that lapsed a year ago still reads `active` in the database, in reports, and to the owner. `next_billing_date` is written on every row and read by nothing. |
+| 10.4 | Add `past_due` and a grace period | 📋 | Needs **S1**. No grace column, config, or code exists — a subscription is active or it is nothing. `paymentFailed()` writes `payment_status = 'failed'` and `status = 'cancelled'` in one action with no retry, no notice, and no distinction between a declined card and an owner clicking back out of Checkout. |
+| 10.5 | Access restriction on expiry | 📋 | Needs **S3**, **S4**, **S5**, **S6**, and 10.3 first. **The largest item in the phase and the reason the rest of it matters.** `CheckStudioRegistrationLimit` is the only subscription-aware middleware: it is registered on two routes, lets the GET through unconditionally, and blocks the POST only when the owner already has ≥1 studio. Two defects to fix while there — it tests `$user->role !== 'owner'`, so `owner-super-admin` skips it entirely, and it queries across all of the owner's studios while `tbl_studio_plans` keys the subscription to one studio. Recommended behaviour is **restrict, never delete**: the account, the studios and every historical record survive; marketplace listing and new bookings stop. Honouring in-flight paid bookings (S5) forces the gate to be capability-scoped rather than a portal lock. |
+| 10.6 | Wire the notification ladder | 📋 | Needs **S1**. **Absorbs roadmap 6.4.** `notifySubscriptionExpiring()` has existed since 2.8 and is called from nowhere — dead code. `app/Mail/` holds no subscription mailable, so every subscription notification today is in-app only and an owner who does not log in learns nothing. 6.4's third bullet ("downgrade to free tier") was struck: there is no free tier, `plan_type` being `basic\|premium\|enterprise` with all eight seeded plans priced. |
+| 10.7 | Reactivation | 📋 | Needs **S4**, and 10.3 + 10.5 first. No route, controller method, or UI revives a cancelled or expired subscription. `subscribe()` creates a brand-new row every time, so history is a pile of disconnected records with no continuity. Nothing needs restoring from backup because 10.5 removes access, not data. |
+| 10.8 | Recurring billing and a card on file | 📋 | Needs **S2**, and is blocked by roadmap **1.5**'s webhook work. **Largest technical prerequisite in the phase.** `StripeService::createSubscriptionCheckoutSession()` builds a Checkout Session with `'mode' => 'payment'` — a one-time charge. No Stripe Product or Price, no subscription object, no customer, no saved payment method. `verifyWebhookSignature()` exists and no route consumes it, so an asynchronous payment result is never learned about. Until this lands there is no renewal and no trial conversion. |
+| 10.9 | Cancellation and upgrade beyond the 3-day window | 📋 | The refund half inherits **9.5**'s gateway blocker. `canBeCancelled()` permits cancellation only within 3 days of `paid_at`; **after day 3 there is no cancellation path at all**, and `subscribe()` rejects any new plan while an active one exists. An owner past day 3 on a yearly plan can neither upgrade, downgrade, nor cancel for the rest of the year. `cancel()` also flips the `tbl_system_revenue` row to `refunded` via a direct `update()` rather than `SystemRevenueModel::markAsRefunded()`, and **calls no gateway** — the books say refunded while the money stays with Stripe. |
+
+### Recommended lifecycle
+
+Documented in §5 of the lifecycle document as a **recommendation, not a decision**:
+`trialing → active → past_due → grace → expired`, with `cancelled` meaning cancel-at-period-end
+and `expired → active` on reactivation. Three rules follow from it — a trial's `end_date` **is** its
+`trial_ends_at`; expiry is a written state with a timestamp and a notification, not the absence of a
+query match; and cancellation never takes away time already paid for. Build order: 10.1, 10.2, 10.3
+need no decision and should go first; 10.5 is what makes a subscription mean anything.
+
+### Post-expiration handling
+
+The brief's central question. Recommendation is **restrict, never delete** — expiry is a billing
+event, not a moderation action, and deleting an account destroys clients' booking history,
+employees' payroll, and the platform's own revenue ledger to punish a lapsed card. Sign-in, the
+studios, and all historical data survive permanently; marketplace listing, new bookings, and
+tier-limited editing stop. Bookings a client has already paid for are honoured to completion
+whatever the subscription says — the dispute is between the owner and the platform and must not
+reach the client. §6 of the lifecycle document has the full capability split.
+
+### Decisions outstanding
+
+S1 how long the grace period is · **S2 is a payment method required to start a trial** · **S3 exactly
+what access survives expiry** · **S4 is a subscription scoped to a studio or to an owner** (the schema
+says studio; the middleware and `max_studios` say owner — both cannot stay) · S5 are in-flight paid
+bookings honoured after expiry · **S6 is there a free tier at all** (roadmap 6.4 assumed one; there
+is none). Full framing in §8 of the lifecycle document. S2 and S6 shape the state machine and should
+be settled first; S3, S4 and S5 all feed 10.5 and can be settled together.
+
+### Documentation corrected this pass
+
+Three statements in the existing docs were contradicted by the code and have been fixed in place:
+
+1. **`TECHNICAL ANALYSIS.md` §5.9** and **`NON TECHNICAL ANALYSIS.md` §4.7** both stated that a studio
+   owner needs an active subscription to create a studio. **The first studio is free** — the gate fires
+   only from the second onward, only on POST, and not at all for `owner-super-admin`.
+2. **Roadmap 6.4** specified "On expiry: downgrade to free tier." **No free tier exists.** Struck and
+   superseded by Phase 10.
+3. **Roadmap 3.4** step 4 ("during trial period: subscription is active") is the defect itself, not a
+   spec — annotated in place and its remainder moved to 10.1/10.2.
+
+`REVISION CHECKLIST AND RECOMMENDATIONS.md` item 11 ("No free-trial period implemented") was stale
+rather than wrong, and is now annotated.
+
+### Related defects surfaced while documenting (not fixed)
+
+1. **`tbl_freelancer_plans` has no `trial_ends_at` column** — the 3.4 migration added it to the studio
+   table only. There is no freelancer subscribe controller, route, or checkout path at all; freelancer
+   plan rows come from seeders and nothing else. The catalog nevertheless sells four freelancer plans,
+   two of them with trial days.
+2. **`Admin\SubscriptionController::edit()` renders a view that does not exist** (`admin.edit-subscription-plans`).
+   Already recorded under 3.4; it means `trial_days` is write-once at plan creation.
+3. **Every seeded studio plan sets `max_studios = 1`**, so with seed data the multi-studio subscription
+   gate — the only subscription check on the platform — can never pass on any plan.
+4. **The platform's booking commission works with no subscription at all**, since `SystemRevenueModel`
+   takes its cut per booking. Whether an unsubscribed studio should generate commission revenue has
+   never been posed as a question.
+5. **Studio HR, finance and photographer staff sign in through their own portals**, and nothing states
+   whether their access follows the owner's subscription. Unaddressed in every document.
+
+### Verification performed (Phase 10)
+
+- Documentation only: `git diff --stat` shows `.md` files exclusively — no `app/`, `database/`, `resources/`, or `tests/` changes.
+- `composer test` unchanged at 70 passed, confirming no behavioral edit slipped in.
+- Every code claim above was read out of the current source before being written down, and each is cited to its file and line in the lifecycle document.

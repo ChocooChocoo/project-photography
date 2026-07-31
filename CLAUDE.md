@@ -66,6 +66,23 @@ reschedule path and no credit ledger). Nine options and the decisions gating the
 [docs/04-REFERENCE/PHOTOGRAPHER CANCELLATION CONTINGENCY.md](docs/04-REFERENCE/PHOTOGRAPHER%20CANCELLATION%20CONTINGENCY.md)
 (roadmap Phase 9). Do not implement a remedy before that policy is chosen.
 
+### Subscriptions
+
+`tbl_subscription_plans` is the admin-managed catalog; `tbl_studio_plans` is a studio's actual
+subscription (`status`: `pending | active | expired | cancelled`). Owners subscribe through
+`StudioOwner\SubscriptionController`; Stripe handles the charge, PayMongo is bookings-only.
+
+**The lifecycle is documented but unbuilt, and two defects matter when touching this code.** A free
+trial never ends — the trial branch sets `end_date` to a full billing period instead of to
+`trial_ends_at`, and nothing compares `trial_ends_at` to now, so a 14-day trial grants 30 days of free
+active access. And an expired subscription restricts nothing — `OwnerMiddleware` has no subscription
+logic, there are no policies or gates, and `CheckStudioRegistrationLimit` guards only the *second*
+studio. `status = 'expired'` is never written by any code path; there is no renewal, grace period,
+dunning, or reactivation. Full analysis, one recommended lifecycle, and the six decisions gating it are
+in [docs/04-REFERENCE/SUBSCRIPTION LIFECYCLE.md](docs/04-REFERENCE/SUBSCRIPTION%20LIFECYCLE.md)
+(roadmap Phase 10). Items 10.1–10.3 are bug fixes gated by nothing; do not build the access-restriction
+layer (10.5) before S1–S6 are decided, and do not delete owner accounts or studio data on expiry.
+
 ### Services layer
 
 `app/Services/` contains non-trivial business logic extracted from controllers:

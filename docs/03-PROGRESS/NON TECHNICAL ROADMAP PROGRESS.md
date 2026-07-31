@@ -1,4 +1,4 @@
-# Capstone B Roadmap — Progress, Plain Language (Phases 1, 2, 3, 8 & 9)
+# Capstone B Roadmap — Progress, Plain Language (Phases 1, 2, 3, 8, 9 & 10)
 
 > Non-technical companion to `ROADMAP PROGRESS.md`. Same work, same structure, explained in
 > everyday language — what was broken, what was missing, and what now works, without code terms.
@@ -9,9 +9,9 @@
 > cautions noted below were never carried out before that merge, so they remain open items.
 >
 > Phases 4 to 7 have not been started. Phase 8 (the AI assistant) was done ahead of them because it
-> came from a separate request and doesn't touch bookings, payments, or payroll at all. **Phase 9 is
-> written up but not built** — it was deliberately a research and options exercise, waiting on a
-> business decision.
+> came from a separate request and doesn't touch bookings, payments, or payroll at all. **Phases 9 and
+> 10 are written up but not built** — both were deliberately research exercises. Phase 9 waits on a
+> business decision; Phase 10's first three items don't wait on anything.
 
 Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (checked, no change needed) | ⚠️ Partial — see note | 📋 Written up — nothing built yet
 
@@ -262,3 +262,105 @@ name a backup on high-value bookings (9.11).
    dropping out is a short-staffing problem, not a cancellation.
 4. Freelancers are proposed as the rescue for studio bookings, but have no rescue of their own — if a
    freelancer cancels on their own client, there is nobody to substitute. That needs its own study.
+
+---
+
+## Phase 10 — What happens when a studio's subscription runs out
+
+*Written up on 27 July 2026. Nothing was built. Full write-up:
+`docs/04-REFERENCE/SUBSCRIPTION LIFECYCLE.md`.*
+
+Studio owners pay the platform a monthly or yearly subscription, and some plans come with a free trial.
+The request was to check whether that whole arrangement — starting a trial, the trial running out,
+paying, renewing, cancelling, and what happens to the account afterwards — is properly thought through
+and properly written down.
+
+It is not. Two things came out of the review, and both are larger than a documentation problem.
+
+**A free trial never ends.** When an owner starts a 14-day trial, the system correctly notes the date
+the trial should finish — and then separately gives the account a full month of access anyway. Nothing
+ever checks the trial's finish date to actually stop anything. So a 14-day trial is really 30 free days,
+and a 30-day trial on the yearly plan is really a free year. The system also never asks for a card when
+the trial starts, so even if the trial did end, there would be nothing to charge. The reminder email the
+owner receives says "add a payment method to keep your plan active" — and there is no screen anywhere in
+the platform where they could do that.
+
+**Letting a subscription lapse costs the owner nothing.** There is no check anywhere that asks "is this
+studio actually paying?" before letting the owner use the platform. An owner whose subscription expired
+a year ago — or who never subscribed at all — still has a studio listed in the marketplace, still takes
+bookings, still runs payroll, still uses everything. The one exception is registering a *second* studio,
+which does require a subscription. The first one is free. In other words, **the platform sells
+subscriptions and nothing about the platform depends on having one.**
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| 10.1 | Make a trial actually last as long as it says | 📋 | **Doesn't depend on any decision — do this first.** A 14-day trial should be 14 days, not 30. Right now the platform gives away a full billing period with every trial signup. |
+| 10.2 | End trials when they end | 📋 | **Doesn't depend on any decision.** Something has to check the trial's finish date and act on it. Today one reminder goes out beforehand and then nothing ever happens. Also needs somewhere for the owner to actually add a card, which doesn't exist yet. |
+| 10.3 | Record when a subscription has expired | 📋 | **Doesn't depend on any decision.** The system has a place to record "expired" and has never once written it. A subscription that ran out a year ago still shows as active everywhere. |
+| 10.4 | Add a short grace period for a failed payment | 📋 | Needs a decision on how long. Today a failed payment kills the subscription instantly, with no retry and no warning — and a card being declined is usually the bank's doing, not the owner deciding to leave. |
+| 10.5 | Actually restrict what an unpaid studio can do | 📋 | Needs four decisions, and item 10.3 first. **The biggest piece of work here, and the reason the rest matters.** The recommendation is to hide the studio from the marketplace and stop new bookings, while the owner keeps their login, their studio, and every record they've ever had. |
+| 10.6 | Warn the owner before anything changes | 📋 | Needs a decision on the grace period. A reminder message for expiring subscriptions was built two phases ago and has never been switched on. Nothing about subscriptions is sent by email at all today — only inside the site, so an owner who doesn't log in hears nothing. |
+| 10.7 | Let an owner come back | 📋 | Needs a decision on how subscriptions are counted. There is currently no way to restart a cancelled or expired subscription. Nothing would need restoring — the recommendation removes access, never data. |
+| 10.8 | Charge the card automatically each period | 📋 | Needs a decision on whether trials require a card, and depends on earlier payment work. There is no automatic renewal at all today: each subscription is a single manual payment, and the card is never kept on file. |
+| 10.9 | Let owners cancel or change plan after the first three days | 📋 | Owners can only cancel within three days of paying. **After that there is no way to cancel at all**, and no way to upgrade or downgrade either — an owner on a yearly plan is stuck for the year. Cancelling also marks the money as refunded in the platform's own records without actually refunding anything. |
+
+### What we'd actually recommend
+
+Unlike the last phase, this one recommends **one** approach rather than a menu — the request was for a
+process, not options.
+
+A subscription should move through clearly named stages that the owner can always see: **on trial →
+paying → payment late → grace period → expired**, with cancelling meaning "stops at the end of what
+I've already paid for," and a one-click way back at any point. Every stage change is announced before it
+happens, by email as well as on the site.
+
+Three principles behind it:
+
+- A trial lasts exactly as long as it says it does.
+- "Expired" is something the system records and tells the owner about, not something that quietly
+  becomes true when a date slips past.
+- Cancelling never takes away time already paid for.
+
+### What should happen when it expires
+
+**Restrict, never delete.** An expired subscription is a billing matter, not a punishment. Deleting the
+account would destroy other people's records too — customers' booking history, employees' payroll, the
+platform's own revenue figures — all to penalise a card that stopped working.
+
+So: the owner keeps their login, their studio, their staff list, and every booking, payment, gallery and
+payroll record they've ever had, and can still read all of it. What stops is the part they were paying
+for — the studio disappears from the customer-facing marketplace and can't take new bookings.
+
+**Bookings already paid for are honoured to the end, whatever the subscription says.** A customer who
+paid for a shoot in three weeks should never be affected by a billing argument between the studio and
+the platform.
+
+### Decisions still needed
+
+Six, all business questions rather than technical ones: how long a grace period should be · whether a
+card is required to start a free trial · exactly what an expired owner can still do · whether a
+subscription belongs to a studio or to the owner (the system currently answers both ways) · whether
+already-paid bookings continue after expiry · and whether there should be a free tier at all — an
+earlier plan assumed one existed, and none does.
+
+The first three items (10.1, 10.2, 10.3) need none of these answers and could start immediately.
+
+### Things that were written down wrongly, now fixed
+
+- Two documents said an owner needs a paid subscription before they can create a studio. **The first
+  studio is free** — the requirement only kicks in from the second one.
+- An earlier plan said that when a subscription expires the studio should "drop to the free tier."
+  **There is no free tier.** All eight plans on sale cost money.
+
+### Other things noticed while writing this up (all left alone)
+
+1. **Freelancer subscriptions barely exist.** The platform sells four freelancer plans, two with free
+   trials, and there is no way for a freelancer to subscribe to any of them.
+2. **The admin can create a subscription plan but not edit one** — the edit page was never built, so a
+   trial length can't be changed after the fact.
+3. **Every plan in the sample data allows exactly one studio**, which means the one subscription check
+   that does exist could never let anyone past it anyway.
+4. **The platform still earns its commission on every booking whether the studio subscribes or not** —
+   nobody has decided whether that's intended.
+5. **Studio staff — HR, finance, photographers — have their own logins**, and no document says whether
+   they lose access when the owner's subscription lapses.

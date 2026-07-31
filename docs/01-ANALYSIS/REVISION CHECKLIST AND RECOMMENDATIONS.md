@@ -59,8 +59,8 @@ Legend: ✅ Exists | ⚠️ Partial | ❌ Not Yet Implemented | ❓ Unclear item
 |---|---|---|---|
 | 8 | RBAC | ✅ | Full studio-scoped RBAC: `tbl_roles`, `tbl_permissions`, `tbl_user_roles` (with `studio_id`), `hasPermission()`, `CheckPermissionMiddleware` |
 | 9 | Freelancer model | ✅ | Freelancer portal fully implemented |
-| 10 | Subscription (middleman / sustainability) | ✅ | `tbl_subscription_plans` with tiers (basic/premium/enterprise), monthly/yearly billing, commission rate, max studios/staff |
-| 11 | Free trial for subscription | ❌ | No free-trial period implemented; 1st studio is free to register but that's not a time-limited trial |
+| 10 | Subscription (middleman / sustainability) | ✅ | `tbl_subscription_plans` with tiers (basic/premium/enterprise), monthly/yearly billing, commission rate, max studios/staff. *(Update 2026-07-27, `prompt/tasks/08.md`: the **catalog** exists; the **lifecycle** does not. Nothing expires a subscription, `status = 'expired'` is never written, and no part of the platform requires an active subscription except registering a 2nd studio. Downgrade to ⚠️ if read as "subscriptions work end to end." See item 12A in Part 4.)* |
+| 11 | Free trial for subscription | ⚠️ | ~~No free-trial period implemented; 1st studio is free to register but that's not a time-limited trial~~ — **superseded.** *(Update 2026-07-27: roadmap 3.4 shipped `trial_days` on the plan and `trial_ends_at` on the subscription, and trials activate free with a 7-day reminder. But the trial branch sets `end_date` to a **full billing period** rather than to `trial_ends_at`, and nothing ever compares `trial_ends_at` to now — so a 14-day trial is 30 days of free active access and the trial never ends. No card is collected at trial start, so it also cannot convert. Roadmap 10.1 / 10.2.)* |
 | 12 | User types: Client, Customer, Studio Owner | ✅ | All three implemented (`client`, `owner` roles) |
 | 13 | Budget category (not just for packages) | ⚠️ | `BudgetController` exists for clients to track personal spending by category, but no studio-side budget category system |
 
@@ -179,7 +179,7 @@ Legend: ✅ Exists | ⚠️ Partial | ❌ Not Yet Implemented | ❓ Unclear item
 | **Booking Status Progression** | Owner manually moves bookings through statuses | Auto-transition `confirmed → in_progress` on event date/start time; auto-prompt for gallery upload after event end time |
 | **Payroll Generation** | HR manually initiates payroll generation per period | Scheduled payroll generation trigger based on payroll settings (e.g., every 15th and 30th) |
 | **Gallery Upload Reminder** | No reminder; photographers may forget to upload | Auto-notify assigned photographer if gallery not uploaded within N hours after booking `completed_at` |
-| **Subscription Renewal** | Manual; owner must re-subscribe | Automated renewal reminder emails before expiry; auto-renew with stored payment method if Stripe is used |
+| **Subscription Renewal** | Manual; owner must re-subscribe — and re-subscribing is blocked while the old row is still `active`, so in practice there is no renewal path at all | Automated renewal reminder emails before expiry; auto-renew with stored payment method. Stripe currently runs in one-time `mode: 'payment'` with no customer or saved card, so this needs roadmap 10.8 and the webhook work in 1.5 first |
 | **Business Verification Queue** | Admin manually checks pending studios | Email/notification alert to admin when new studio submitted; SLA reminder if unreviewed after 48h |
 | **Studio Discovery by Location** | Client manually selects municipality/barangay | Implement GPS-based "Find studios near me" using existing studio lat/lng fields — browser geolocation API → Haversine sort |
 | **Income Report per Service** | No automated report; owner reads raw booking data | Auto-generate weekly/monthly income summary per service category from `SystemRevenueModel` |
@@ -435,6 +435,24 @@ These are two distinct concepts that were conflated in the first scan:
 
 ---
 
+### 12. Subscriptions Are Sold but Nothing Depends on Them, and Free Trials Never End
+
+> Added 2026-07-27 from `prompt/tasks/08.md`. Full analysis: [`../04-REFERENCE/SUBSCRIPTION LIFECYCLE.md`](../04-REFERENCE/SUBSCRIPTION%20LIFECYCLE.md).
+
+**Current flow:** Owner registers → creates a first studio (no subscription required) → optionally clicks Subscribe. A plan with `trial_days > 0` activates immediately at `amount_paid = 0`; a plan without one goes through a one-time Stripe Checkout. A daily command notifies the owner 7 days before the trial ends. That is the entire lifecycle.
+
+**Problem:** Two defects, either of which alone would be significant.
+
+*A free trial never ends.* The trial branch writes `trial_ends_at = now() + trial_days` but sets `end_date` from `calculateEndDate()`, which returns a full billing period. `isActive()` never consults `trial_ends_at`, and no command compares it to the current time. A 14-day trial on the seeded Studio Growth plan therefore grants **30 days** of fully active access for ₱0; a 30-day trial on the yearly plan grants **365**. No payment method is collected at trial start — the trial branch makes no Stripe call at all — so the trial cannot convert even in principle, and the reminder notification instructs the owner to "add a payment method" via a screen that does not exist.
+
+*An expired subscription takes nothing away.* `OwnerMiddleware` checks authentication and role only. There is no `app/Policies` directory and no `Gate::` definition anywhere in the application. The one subscription-aware middleware, `CheckStudioRegistrationLimit`, is registered on two routes, lets every GET through unconditionally, and blocks the POST only when the owner already has ≥1 studio — so **the first studio is free and everything else is unguarded**. An owner who never subscribes keeps a marketplace-listed studio and an unrestricted portal indefinitely. The `expired` value declared on `tbl_studio_plans.status` is never written by any code path; expiry is implicit, emerging from an `end_date >= now()` filter in three read sites, so a subscription that lapsed a year ago still reads `active`.
+
+Around those two: there is no renewal (`next_billing_date` is written and read by nothing; Stripe runs in one-time payment mode), no grace or past-due state, no dunning (a failed payment sets `cancelled` immediately, with no retry or notice), no reactivation path, and no cancellation at all after the 3-day refund window — which also means no upgrade or downgrade, since `subscribe()` refuses while an active row exists.
+
+**Suggestion:** Build 10.1–10.3 immediately; they are bug fixes, need no decision, and until they land every trial signup gives away a billing period. Then settle the six decisions in §8 of the lifecycle document and build the access-restriction layer (10.5), which is what makes a subscription mean anything. The recommended post-expiry behaviour is **restrict, never delete** — preserve the account, the studios and every historical record, restrict marketplace listing and new bookings, honour bookings a client has already paid for, and keep a one-click path back. Note that roadmap 6.4's "downgrade to free tier" cannot be built as written: there is no free tier.
+
+---
+
 ### Summary Table
 
 | # | Gap | Impact | Effort |
@@ -450,11 +468,12 @@ These are two distinct concepts that were conflated in the first scan:
 | 9 | On-location booking address too vague for navigation | Operational accuracy | Low |
 | 10 | No post-completion dispute or revision request path | Client satisfaction, accountability | Medium |
 | 11 | Photographer cancellation strands a paid booking — no cascade, no notice, no remedy | Client protection, payment integrity | Medium (policy decision first) |
+| 12 | Free trials never end and expired subscriptions restrict nothing | Platform revenue — the business model is unenforced | Low for the trial fix, High for access restriction |
 
-**Low effort, high value (start here):** Items 1, 3, 4, 7, 8, 9
+**Low effort, high value (start here):** Items 1, 3, 4, 7, 8, 9, and the trial half of item 12
 **Medium effort, core quality:** Items 2, 5, 6, 10, 11
 
-Item 11 is the only one blocked on a business decision rather than build effort — the options are documented, the policy is not chosen. Its two unblocked pieces (cascade + notify) are low effort.
+Item 11 is blocked on a business decision rather than build effort — the options are documented, the policy is not chosen. Its two unblocked pieces (cascade + notify) are low effort. Item 12 splits: the trial defect (roadmap 10.1–10.3) is a bug fix gated by nothing and should be done immediately, since until it lands every trial signup gives away a full billing period; the access-restriction half (10.5) is the largest single item in either new phase and waits on six business decisions.
 
 ---
 
@@ -483,5 +502,5 @@ This document covers:
 **Quick wins (low effort, high value):**
 - Item 7: Add price field to `tbl_services`
 - Item 47: Enforce `owner_profile_photo` as required
-- Item 11: Add free trial flag to subscription plans
+- Item 11: Add free trial flag to subscription plans *(shipped as roadmap 3.4 — but see the item 11 note above: the trial never actually ends. Roadmap 10.1/10.2 is the remaining quick win.)*
 - Item 46: Dedicated portfolio section (curated gallery subset)

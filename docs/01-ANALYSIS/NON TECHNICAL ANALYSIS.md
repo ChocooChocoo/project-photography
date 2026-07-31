@@ -166,19 +166,26 @@ flowchart LR
 
 ### 4.7 A new studio joining
 
-A studio owner signs up and submits their studio (with business permit and ID). They need an active
-subscription. An admin reviews the documents and either approves the studio (it goes live in the
-marketplace) or rejects it with a note.
+A studio owner signs up and submits their studio (with business permit and ID). Their **first** studio
+needs no subscription; a second or later one does. An admin reviews the documents and either approves
+the studio (it goes live in the marketplace) or rejects it with a note.
 
 ```mermaid
 flowchart LR
-    A[Owner submits studio] --> B{Has subscription?}
-    B -->|No| C[Cannot create]
+    A[Owner submits studio] --> B{First studio?}
     B -->|Yes| D[Admin reviews documents]
+    B -->|No| B2{Has a subscription<br/>with room for another?}
+    B2 -->|No| C[Cannot create]
+    B2 -->|Yes| D
     D --> E{Decision}
     E -->|Approve| F[Studio goes live]
     E -->|Reject| G[Rejected with reason]
 ```
+
+*(Update 27 July 2026: this section previously said an owner needs an active subscription to create a
+studio at all. That is wrong — the first studio is free, and the subscription requirement only applies
+from the second one onward. It is also the **only** place on the whole platform where a subscription is
+required for anything. See `docs/04-REFERENCE/SUBSCRIPTION LIFECYCLE.md`.)*
 
 ### 4.8 The AI assistant
 
