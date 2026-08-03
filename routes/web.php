@@ -127,7 +127,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Studio Owner Routes =================================================================================================================================================
-    Route::prefix('owner')->middleware([OwnerMiddleware::class])->group(function () {
+    Route::prefix('owner')->middleware([OwnerMiddleware::class, 'subscription.access:manage'])->group(function () {
 
         // Profile
         Route::get('/profile', [\App\Http\Controllers\GeneralProfileController::class, 'owner'])->name('owner.profile');
@@ -306,7 +306,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Studio HR Routes ====================================================================================================================================================
-    Route::prefix('studio-hr')->middleware([StudioHRMiddleware::class])->group(function () {
+    Route::prefix('studio-hr')->middleware([StudioHRMiddleware::class, 'subscription.access:manage'])->group(function () {
 
         // Profile
         Route::get('/profile', [\App\Http\Controllers\GeneralProfileController::class, 'studioHR'])->name('studio-hr.profile');
@@ -392,7 +392,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Studio Finance Routes ===============================================================================================================================================
-    Route::prefix('studio-finance')->middleware([StudioFinanceMiddleware::class])->group(function () {
+    Route::prefix('studio-finance')->middleware([StudioFinanceMiddleware::class, 'subscription.access:manage'])->group(function () {
 
         // Redirect to Dashboard
         Route::get('/', function () {
@@ -511,7 +511,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Studio-Photographer  =======================================================================================================================================================
-    Route::prefix('studio-photographer')->middleware([StudioPhotographerMiddleware::class])->group(function () {
+    Route::prefix('studio-photographer')->middleware([StudioPhotographerMiddleware::class, 'subscription.access:manage'])->group(function () {
 
         // Profile
         Route::get('/profile', [\App\Http\Controllers\GeneralProfileController::class, 'studioPhotographer'])->name('studio-photographer.profile');
@@ -618,11 +618,11 @@ Route::middleware(['auth'])->group(function () {
 
         // Booking Process
         Route::get('/booking-form/{type}/{id}', [\App\Http\Controllers\Client\BookingController::class, 'create'])->name('client.booking-forms');
-        Route::post('/bookings', [\App\Http\Controllers\Client\BookingController::class, 'store'])->name('client.bookings.store');
-        Route::post('/bookings/packages', [\App\Http\Controllers\Client\BookingController::class, 'getPackages'])->name('client.bookings.packages');
-        Route::post('/bookings/check-availability', [\App\Http\Controllers\Client\BookingController::class, 'checkAvailability'])->name('client.bookings.check-availability');
-        Route::post('/bookings/calendar-availability', [\App\Http\Controllers\Client\BookingController::class, 'getCalendarAvailability'])->name('client.bookings.calendar-availability');
-        Route::post('/bookings/summary', [\App\Http\Controllers\Client\BookingController::class, 'getSummary'])->name('client.bookings.summary');
+        Route::post('/bookings', [\App\Http\Controllers\Client\BookingController::class, 'store'])->middleware('subscription.access:manage')->name('client.bookings.store');
+        Route::post('/bookings/packages', [\App\Http\Controllers\Client\BookingController::class, 'getPackages'])->middleware('subscription.access:manage')->name('client.bookings.packages');
+        Route::post('/bookings/check-availability', [\App\Http\Controllers\Client\BookingController::class, 'checkAvailability'])->middleware('subscription.access:manage')->name('client.bookings.check-availability');
+        Route::post('/bookings/calendar-availability', [\App\Http\Controllers\Client\BookingController::class, 'getCalendarAvailability'])->middleware('subscription.access:manage')->name('client.bookings.calendar-availability');
+        Route::post('/bookings/summary', [\App\Http\Controllers\Client\BookingController::class, 'getSummary'])->middleware('subscription.access:manage')->name('client.bookings.summary');
         Route::post('/locations/barangays', [\App\Http\Controllers\Client\BookingController::class, 'getBarangays'])->name('client.locations.barangays');
 
         // Booking Process / Payment

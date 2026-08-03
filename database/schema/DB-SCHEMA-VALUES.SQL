@@ -3664,7 +3664,7 @@ CREATE TABLE IF NOT EXISTS `tbl_freelancer_plans` (
   `next_billing_date` date NOT NULL COMMENT 'Next billing date',
   `amount_paid` decimal(10,2) NOT NULL COMMENT 'Amount paid for current period',
   `payment_status` enum('pending','paid','failed','refunded') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
-  `status` enum('active','expired','cancelled','pending') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `status` enum('active','grace','expired','cancelled','pending') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
   `plan_snapshot` json DEFAULT NULL COMMENT 'Snapshot of plan details at subscription time',
   `usage_metrics` json DEFAULT NULL COMMENT 'Current usage metrics (bookings)',
   `cancelled_at` timestamp NULL DEFAULT NULL,
@@ -5444,6 +5444,8 @@ CREATE TABLE IF NOT EXISTS `tbl_studio_plans` (
   `usage_metrics` json DEFAULT NULL,
   `cancelled_at` timestamp NULL DEFAULT NULL,
   `cancellation_reason` text COLLATE utf8mb4_unicode_ci,
+  `trial_ends_at` timestamp NULL DEFAULT NULL,
+  `grace_ends_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -5452,6 +5454,7 @@ CREATE TABLE IF NOT EXISTS `tbl_studio_plans` (
   KEY `tbl_studio_plans_subscription_reference_index` (`subscription_reference`),
   KEY `tbl_studio_plans_status_index` (`status`),
   KEY `tbl_studio_plans_studio_id_status_index` (`studio_id`,`status`),
+  KEY `tbl_studio_plans_grace_ends_at_index` (`grace_ends_at`),
   CONSTRAINT `tbl_studio_plans_plan_id_foreign` FOREIGN KEY (`plan_id`) REFERENCES `tbl_subscription_plans` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_studio_plans_studio_id_foreign` FOREIGN KEY (`studio_id`) REFERENCES `tbl_studios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

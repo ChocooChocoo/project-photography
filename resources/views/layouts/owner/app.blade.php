@@ -30,6 +30,7 @@
     <div class="wrapper">
         @include('layouts.owner.sidebar')
         @include('layouts.owner.topbar')
+        @include('partials.subscription-access-banner')
         @yield('content')
         @include('layouts.owner.theme')
     </div>
@@ -37,7 +38,9 @@
     @include('layouts.partials.portal-base-scripts')
 
     {{-- PHOTOGRAPHY AI ASSISTANT --}}
-    @include('partials.chatbot-widget', ['ownerId' => auth()->id()])
+    @if($hasStudioSubscriptionAccess ?? false)
+        @include('partials.chatbot-widget', ['ownerId' => auth()->id()])
+    @endif
 
     {{-- YIELD SCRIPT --}}
     @yield('scripts')

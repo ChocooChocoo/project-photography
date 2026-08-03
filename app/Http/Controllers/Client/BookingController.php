@@ -41,6 +41,7 @@ class BookingController extends Controller
         
         if ($type === 'studio') {
             $provider = StudiosModel::whereIn('status', ['approved', 'active', 'verified'])
+                ->subscriptionAccessible()
                 ->with(['category', 'packages', 'schedules'])
                 ->findOrFail($id);
             
@@ -203,7 +204,7 @@ class BookingController extends Controller
 
         // Get provider schedule
         if ($request->type === 'studio') {
-            $provider = StudiosModel::with('schedules')->find($request->provider_id);
+            $provider = StudiosModel::subscriptionAccessible()->with('schedules')->find($request->provider_id);
 
             if (!$provider || !$provider->schedules || $provider->schedules->isEmpty()) {
                 return response()->json([
@@ -452,7 +453,7 @@ class BookingController extends Controller
             // ========== FIX: Implement deposit logic based on provider type ==========
             if ($request->type === 'studio') {
                 // Studio logic (unchanged)
-                $studio = StudiosModel::find($request->provider_id);
+                $studio = StudiosModel::subscriptionAccessible()->findOrFail($request->provider_id);
                 $downpaymentPercentage = $studio->downpayment_percentage ?? 30;
                 $paymentType = 'downpayment';
                 $downPayment = ($totalAmount * $downpaymentPercentage) / 100;
@@ -724,7 +725,7 @@ class BookingController extends Controller
 
             // Get provider schedule
             if ($request->type === 'studio') {
-                $provider = StudiosModel::with('schedules')->find($request->provider_id);
+                $provider = StudiosModel::subscriptionAccessible()->with('schedules')->find($request->provider_id);
                 
                 if (!$provider || !$provider->schedules || $provider->schedules->isEmpty()) {
                     return [
@@ -1566,7 +1567,7 @@ class BookingController extends Controller
         if ($request->type === 'studio') {
             $package = StudioPackagesModel::findOrFail($request->package_id);
             // Get downpayment percentage
-            $studio = StudiosModel::find($package->studio_id);
+            $studio = StudiosModel::subscriptionAccessible()->findOrFail($package->studio_id);
             $downpaymentPercentage = $studio->downpayment_percentage ?? 30;
             $paymentType = 'downpayment';
         } else {
@@ -1754,7 +1755,7 @@ class BookingController extends Controller
 
             // Get provider schedule
             if ($request->type === 'studio') {
-                $provider = StudiosModel::with('schedules')->find($request->provider_id);
+                $provider = StudiosModel::subscriptionAccessible()->with('schedules')->find($request->provider_id);
 
                 if (!$provider || !$provider->schedules || $provider->schedules->isEmpty()) {
                     return response()->json([

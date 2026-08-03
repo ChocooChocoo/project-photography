@@ -28,7 +28,7 @@
 | 7 | **Resource Authorization & Test Coverage** | Policies, core feature test coverage | Security and confidence layer — after all features are stable |
 | 8 | **AI Assistant** | Replace the fixed-response chatbot with a secure Groq assistant | Task-driven addition (`prompt/tasks/04.md`), not derived from the original gap list. Independent of Phases 4–7 — the chat surface touches no booking, payment, or payroll logic |
 | 9 | **Cancellation Contingency** | Photographer cancels a paid booking — cascade, substitution, refund, prevention | Task-driven addition (`prompt/tasks/07.md`). 11 items, listed in recommended build order in the execution summary. **Decision-blocked:** everything except 9.1, 9.2, and 9.11 waits on D1–D9 in [`PHOTOGRAPHER CANCELLATION CONTINGENCY.md`](../08-references/photographer-cancellation-contingency.md). 9.1 + 9.2 + 9.3 + 9.5 are the minimum set; 9.4 and 9.6 are documented but **not recommended** for this problem |
-| 10 | **Subscription Lifecycle** | Trial expiry, renewal, grace, expiry, access restriction, reactivation | Task-driven addition (`prompt/tasks/08.md`). Items **10.1–10.3 were completed and verified on 2026-08-03**: trial dates now match, ended trials and paid plans are recorded as expired, and stale rows no longer block a new subscription. Items 10.4–10.9 remain planned; everything from 10.5 onward waits on S1–S6 in [`SUBSCRIPTION LIFECYCLE.md`](../08-references/subscription-lifecycle.md). |
+| 10 | **Subscription Lifecycle** | Trial expiry, renewal, grace, expiry, access restriction, reactivation | Task-driven addition (`prompt/tasks/08.md`). Items **10.1–10.6 were completed and verified on 2026-08-03**: exact deadlines, hourly lifecycle transitions, seven-day grace, owner notices, and studio-scoped access enforcement are live. Items 10.7–10.9 remain planned; 10.8 still requires card-on-file and Stripe webhook work. |
 | 11 | **Public Landing Page** | Bootstrap-based public introduction, navigation, and authentication calls to action | Task-driven documentation addition (`prompt/tasks/09.md`). Planned only: a future implementation may make the landing page the public root after separate approval. The current login-first behavior remains unchanged; see [landing-page plan](../03-planning/landing-page.md). |
 | 12 | **Core Studio Management Requirements** | Registration, security, permits, administration, employee access, RBAC, attendance, client browsing, and commercial controls | Task-driven documentation addition (`prompt/tasks/10.md`). Planned only: the evaluator requirements are grouped for future delivery, with no implementation order or completed behavior claimed; see [requirements plan](../03-planning/core-studio-management.md). |
 
@@ -1243,7 +1243,7 @@ sets a trial subscription's `end_date` from `calculateEndDate()`, which returns 
 
 **Gated by:** nothing (S2 only affects what happens *next*).
 
-**Problem:** [`NotifyTrialEndingCommand`](../../../app/Console/Commands/NotifyTrialEndingCommand.php) is
+**Original problem:** The former `NotifyTrialEndingCommand` was
 the only consumer of `trial_ends_at` and it only writes a notification. Nothing compares
 `trial_ends_at` to now in order to change state. The notification it sends tells the owner to *"Add a
 payment method"* — a screen, route and column that do not exist.
@@ -1257,7 +1257,7 @@ payment method"* — a screen, route and column that do not exist.
 1. New daily command: find `status = 'active'` rows whose `trial_ends_at` has passed.
 2. Transition them per S1/S2 — to `grace` if a grace period is chosen, otherwise straight to `expired`.
 3. Notify the owner on the transition, with a link that leads somewhere real.
-4. De-duplicate per day, reusing the pattern already in `NotifyTrialEndingCommand`.
+4. De-duplicate per subscription, event, and deadline.
 5. Test: a trial whose `trial_ends_at` is yesterday is no longer active after the command runs.
 
 **Done when:** A trial that is not converted ends on its stated date, in the database, with the owner told.
@@ -1292,9 +1292,9 @@ invisible in the database, in reports, and to the owner. A row that lapsed a yea
 
 ---
 
-### 10.4 Add `past_due` and a Grace Period
+### 10.4 Add a Grace Period — Completed 2026-08-03
 
-**Gated by:** **S1** (grace length). Needs 10.8 for the retry half.
+**Delivered scope:** Every activated trial or paid plan receives seven days of grace. `past_due` is intentionally deferred until recurring billing provides a real failed-renewal event.
 
 **Problem:** A subscription is active or it is nothing. There is no representation of "payment is late
 but you are not cut off yet," so the only available response to a failed charge is immediate
@@ -1315,14 +1315,13 @@ termination — which is what `paymentFailed()` does today, setting `payment_sta
 4. Access is retained in both `past_due` and `grace` — a failed card is usually a bank problem.
 5. Test each transition, including the recovery path back to `active`.
 
-**Done when:** A failed payment degrades through announced states instead of terminating the subscription.
+**Verified:** `grace` and `grace_ends_at` are migrated; the hourly expiry command enters grace from the contractual deadline, catches up after downtime, expires ended grace rows, preserves payment fields, and is rerun-safe.
 
 ---
 
-### 10.5 Access Restriction on Expiry
+### 10.5 Access Restriction on Expiry — Completed 2026-08-03
 
-**Gated by:** **S3** (what stays available), **S4** (studio- or owner-scoped), **S5** (in-flight
-bookings), **S6** (free tier). Needs 10.3 first.
+**Approved policy:** Studio-scoped billing, no free tier, read-only retention after expiry, paid bookings honoured, role-limited staff access, and normal restrictions for `owner-super-admin`.
 
 **Problem:** **The platform's revenue model rests on subscriptions and nothing on the platform depends
 on having one.** `OwnerMiddleware` checks authentication and role only; there is no `app/Policies`
@@ -1350,14 +1349,13 @@ it matters.
 6. Decide what happens to studio HR, finance and photographer staff logins when the owner lapses —
    currently unaddressed.
 
-**Done when:** An expired studio is delisted and cannot take new bookings, while its owner retains
-sign-in, full read access, and a one-click path to pay.
+**Verified:** Active/grace studios remain visible and bookable; expired/never-subscribed studios are delisted and cannot take direct bookings or commercial writes. Owners retain data and subscription access, and paid-booking fulfillment remains available.
 
 ---
 
-### 10.6 Wire the Notification Ladder
+### 10.6 Wire the Notification Ladder — Completed 2026-08-03
 
-**Gated by:** **S1**. Absorbs 6.4.
+**Delivered scope:** Daily 7/3/1-day end warnings, grace entry, 3/1-day grace warnings, and final expiry; immediate transition notices are emitted by the hourly command.
 
 **Problem:** [`notifySubscriptionExpiring()`](../../../app/Traits/Notifiable.php#L343) is defined and
 called from nowhere — dead code. `app/Mail/` contains no subscription mailable at all, so every
@@ -1376,9 +1374,9 @@ subscription notification is in-app only and an owner who does not log in learns
 
 4. Add an expiry notice and reactivation nudges at +7d and +30d.
 5. Email as well as in-app for every state change; in-app alone for countdown reminders.
-6. Reuse the same-day de-duplication already in `NotifyTrialEndingCommand`.
+6. De-duplicate per subscription, event, and deadline.
 
-**Done when:** Every lifecycle transition is announced before it happens, by email as well as in-app.
+**Verified:** Each subscription/event/deadline is deduplicated, the owner receives matching in-app and email messages, and mail failures are logged without stopping other notices or lifecycle transitions.
 
 ---
 

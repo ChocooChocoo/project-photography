@@ -1,6 +1,6 @@
 # Progress in Plain Language
 
-The current record separates work that is proven complete from work still underway and work waiting for a decision. Nine of the ten task records are complete; the original Phase 3 record remains in progress. Subscription items 10.1–10.3 are now complete: trials use their stated length, ended trials and paid plans are recorded as expired, and expired rows no longer block a new subscription. The latest recorded automated check passed 74 tests with 399 checks. A full plain-language history is also retained.
+The current record separates work that is proven complete from work still underway and work waiting for a decision. Nine of the ten task records are complete; the original Phase 3 record remains in progress. Subscription items 10.1–10.6 are complete: trials use their stated length, every activated plan receives seven days of grace, owners receive milestone warnings, and expired studios lose new commercial access without losing their records or existing paid work. The latest recorded automated check passed 84 tests with 440 checks. Items 10.7–10.9 remain planned.
 
 The planned first page is recorded as documentation only. The website still opens on login, and no first-page implementation has been approved.
 

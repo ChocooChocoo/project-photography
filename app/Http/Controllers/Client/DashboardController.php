@@ -21,6 +21,7 @@ class DashboardController extends Controller
     {
         // Fetch approved studios (status = 'approved') with their average ratings
         $studios = StudiosModel::whereIn('status', ['approved', 'active', 'verified'])
+            ->subscriptionAccessible()
             ->with(['location', 'category', 'packages'])
             ->addSelect(['*', DB::raw('avg_rating as average_rating'), DB::raw('total_reviews as ratings_count')])
             ->orderBy('created_at', 'desc')
@@ -66,6 +67,7 @@ class DashboardController extends Controller
         // Filter studios
         if (!$photographerType || $photographerType === 'studio') {
             $studioQuery = StudiosModel::whereIn('status', ['approved', 'active', 'verified'])
+                ->subscriptionAccessible()
                 ->with(['location', 'category', 'packages'])
                 ->withCount(['ratings as average_rating' => function($query) {
                     $query->select(DB::raw('coalesce(avg(rating), 0)'));

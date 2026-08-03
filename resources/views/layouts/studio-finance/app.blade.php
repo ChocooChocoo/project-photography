@@ -30,6 +30,7 @@
     <div class="wrapper">
         @include('layouts.studio-finance.sidebar')
         @include('layouts.studio-finance.topbar')
+        @include('partials.subscription-access-banner')
         @yield('content')
         @include('layouts.studio-finance.theme')
     </div>

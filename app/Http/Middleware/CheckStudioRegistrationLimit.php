@@ -22,7 +22,7 @@ class CheckStudioRegistrationLimit
         $user = Auth::user();
         
         // Only apply to studio owners
-        if (!$user || $user->role !== 'owner') {
+        if (!$user || !in_array($user->role, ['owner', 'owner-super-admin'], true)) {
             return $next($request);
         }
         
@@ -37,9 +37,7 @@ class CheckStudioRegistrationLimit
         if (!empty($userStudioIds)) {
             $activeSubscription = StudioPlanModel::whereIn('studio_id', $userStudioIds)
                 ->with('plan')
-                ->where('status', 'active')
-                ->where('payment_status', 'paid')
-                ->where('end_date', '>=', now()->toDateString())
+                ->currentlyAccessible()
                 ->latest()
                 ->first();
         }

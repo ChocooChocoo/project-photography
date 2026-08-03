@@ -10,5 +10,5 @@ Artisan::command('inspire', function () {
 
 Schedule::command('procurement:escalate-overdue')->hourly();
 Schedule::command('bookings:expire-pending')->hourly();
-Schedule::command('subscriptions:notify-trial-ending')->daily();
+Schedule::command('subscriptions:notify-lifecycle')->daily();
 Schedule::command('subscriptions:expire')->hourly();

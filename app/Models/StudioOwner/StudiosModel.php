@@ -3,6 +3,8 @@
 namespace App\Models\StudioOwner;
 
 use App\Models\Admin\CategoriesModel;
+use App\Models\StudioPlanModel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -93,6 +95,40 @@ class StudiosModel extends Model
     public function user()
     {
         return $this->belongsTo(\App\Models\StudioOwner\UserModel::class, 'user_id');
+    }
+
+    /**
+     * Get the subscription history for this studio.
+     */
+    public function subscriptions()
+    {
+        return $this->hasMany(StudioPlanModel::class, 'studio_id');
+    }
+
+    /**
+     * Get the latest subscription that still grants access.
+     */
+    public function currentAccessSubscription()
+    {
+        return $this->hasOne(StudioPlanModel::class, 'studio_id')
+            ->currentlyAccessible()
+            ->latestOfMany();
+    }
+
+    /**
+     * Get the most recently created subscription record.
+     */
+    public function latestSubscription()
+    {
+        return $this->hasOne(StudioPlanModel::class, 'studio_id')->latestOfMany();
+    }
+
+    /**
+     * Limit studios to those that currently grant commercial access.
+     */
+    public function scopeSubscriptionAccessible(Builder $query): Builder
+    {
+        return $query->whereHas('subscriptions', fn (Builder $query) => $query->currentlyAccessible());
     }
 
     /**

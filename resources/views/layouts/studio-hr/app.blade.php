@@ -30,6 +30,7 @@
     <div class="wrapper">
         @include('layouts.studio-hr.sidebar')
         @include('layouts.studio-hr.topbar')
+        @include('partials.subscription-access-banner')
         @yield('content')
         @include('layouts.studio-hr.theme')
     </div>

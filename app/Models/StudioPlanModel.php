@@ -49,6 +49,7 @@ class StudioPlanModel extends Model
         'cancelled_at',
         'cancellation_reason',
         'trial_ends_at',
+        'grace_ends_at',
     ];
 
     /**
@@ -63,6 +64,7 @@ class StudioPlanModel extends Model
         'paid_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'trial_ends_at' => 'datetime',
+        'grace_ends_at' => 'datetime',
         'amount_paid' => 'decimal:2',
         'plan_snapshot' => 'array',
         'stripe_response' => 'array',
@@ -76,6 +78,7 @@ class StudioPlanModel extends Model
      */
     public const STATUS_LABELS = [
         'active' => 'Active',
+        'grace' => 'Grace Period',
         'expired' => 'Expired',
         'cancelled' => 'Cancelled',
         'pending' => 'Pending',
@@ -154,6 +157,80 @@ class StudioPlanModel extends Model
                             ->whereDate('end_date', '>=', now()->toDateString());
                     });
             });
+    }
+
+    /**
+     * Limit the query to subscriptions that still grant studio access.
+     */
+    public function scopeCurrentlyAccessible(Builder $query): Builder
+    {
+        return $query
+            ->where('payment_status', 'paid')
+            ->where(function (Builder $query) {
+                $query
+                    ->where(function (Builder $query) {
+                        $query->where('status', 'grace')
+                            ->where('grace_ends_at', '>', now());
+                    })
+                    ->orWhere(function (Builder $query) {
+                        $query->where('status', 'active')
+                            ->where(function (Builder $query) {
+                                $query
+                                    ->where(function (Builder $query) {
+                                        $query->whereNotNull('trial_ends_at')
+                                            ->where('trial_ends_at', '>', now()->subDays(7));
+                                    })
+                                    ->orWhere(function (Builder $query) {
+                                        $query->whereNull('trial_ends_at')
+                                            ->whereDate('end_date', '>=', now()->subDays(7)->toDateString());
+                                    });
+                            });
+                    });
+            });
+    }
+
+    /**
+     * Get the contractual end of the seven-day grace period.
+     */
+    public function graceDeadline(): \Illuminate\Support\Carbon
+    {
+        if ($this->grace_ends_at !== null) {
+            return $this->grace_ends_at->copy();
+        }
+
+        if ($this->trial_ends_at !== null) {
+            return $this->trial_ends_at->copy()->addDays(7);
+        }
+
+        return $this->end_date->copy()->addDays(8)->startOfDay();
+    }
+
+    /**
+     * Determine whether this subscription still grants studio access.
+     */
+    public function hasAccess(): bool
+    {
+        return in_array($this->status, ['active', 'grace'], true)
+            && $this->payment_status === 'paid'
+            && now()->lt($this->graceDeadline());
+    }
+
+    /**
+     * Determine whether the subscription is inside its recorded grace period.
+     */
+    public function isInGrace(): bool
+    {
+        return $this->status === 'grace' && $this->hasAccess();
+    }
+
+    /**
+     * Get whole grace days remaining, rounding partial days up.
+     */
+    public function graceDaysRemaining(): int
+    {
+        $seconds = $this->graceDeadline()->getTimestamp() - now()->getTimestamp();
+
+        return max(0, (int) ceil($seconds / 86400));
     }
 
     /**
@@ -266,6 +343,7 @@ class StudioPlanModel extends Model
     {
         $classes = [
             'active' => 'badge-soft-success',
+            'grace' => 'badge-soft-warning',
             'expired' => 'badge-soft-secondary',
             'cancelled' => 'badge-soft-danger',
             'pending' => 'badge-soft-warning',

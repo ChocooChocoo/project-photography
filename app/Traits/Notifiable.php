@@ -2,7 +2,11 @@
 
 namespace App\Traits;
 
+use App\Mail\SubscriptionLifecycleMail;
 use App\Models\NotificationModel;
+use App\Models\StudioPlanModel;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 trait Notifiable
 {
@@ -26,7 +30,7 @@ trait Notifiable
                 'type' => $type,
                 'title' => $title,
                 'message' => $message,
-                'data' => $data ? json_encode($data) : null,
+                'data' => $data,
                 'icon' => $icon,
                 'color' => $color,
             ]);
@@ -378,6 +382,115 @@ trait Notifiable
             'clock-exclamation',
             'warning'
         );
+    }
+
+    /**
+     * Notify a studio owner about one subscription lifecycle milestone.
+     */
+    public function notifySubscriptionLifecycle(StudioPlanModel $subscription, string $event): ?NotificationModel
+    {
+        $studio = $subscription->studio;
+        $owner = $studio?->user;
+
+        if (! $studio || ! $owner) {
+            return null;
+        }
+
+        $deadline = str_starts_with($event, 'grace_') || $event === 'expired'
+            ? $subscription->graceDeadline()
+            : ($subscription->trial_ends_at ?? $subscription->end_date->copy()->endOfDay());
+        $existing = NotificationModel::where('user_id', $owner->id)
+            ->where('type', $this->subscriptionNotificationType($event))
+            ->get()
+            ->contains(fn (NotificationModel $notification) =>
+                ($notification->data['subscription_id'] ?? null) === $subscription->id
+                && ($notification->data['event'] ?? null) === $event
+                && ($notification->data['deadline'] ?? null) === $deadline->toDateTimeString()
+            );
+
+        if ($existing) {
+            return null;
+        }
+
+        [$title, $message] = $this->subscriptionNotificationContent($studio->studio_name, $event, $deadline);
+        $notification = $this->createNotification(
+            $owner->id,
+            $this->subscriptionNotificationType($event),
+            $title,
+            $message,
+            [
+                'studio_id' => $studio->id,
+                'subscription_id' => $subscription->id,
+                'event' => $event,
+                'deadline' => $deadline->toDateTimeString(),
+                'route' => route('owner.subscription.index', [], false),
+            ],
+            'clock-exclamation',
+            'warning'
+        );
+
+        if (! $notification) {
+            return null;
+        }
+
+        try {
+            Mail::to($owner->email)->send(new SubscriptionLifecycleMail(
+                $subscription,
+                $title,
+                $message,
+                $deadline
+            ));
+        } catch (\Throwable $exception) {
+            Log::error('Subscription lifecycle email failed', [
+                'subscription_id' => $subscription->id,
+                'event' => $event,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
+        return $notification;
+    }
+
+    private function subscriptionNotificationType(string $event): string
+    {
+        return match (true) {
+            str_starts_with($event, 'ending_') => 'subscription_ending',
+            $event === 'expired' => 'subscription_expired',
+            default => 'subscription_grace',
+        };
+    }
+
+    private function subscriptionNotificationContent(string $studioName, string $event, $deadline): array
+    {
+        if (str_starts_with($event, 'ending_')) {
+            $days = (int) str($event)->afterLast('_')->toString();
+
+            return [
+                'Subscription Ending Soon',
+                "The subscription for \"{$studioName}\" ends in {$days} day(s), followed by a 7-day grace period.",
+            ];
+        }
+
+        if ($event === 'grace_entered') {
+            return [
+                'Subscription Grace Period Started',
+                "The subscription for \"{$studioName}\" is in grace until {$deadline->format('M d, Y g:i A')}.",
+            ];
+        }
+
+        if (str_starts_with($event, 'grace_')) {
+            $days = (int) str($event)->afterLast('_')->toString();
+
+            return [
+                'Subscription Grace Period Ending',
+                "The grace period for \"{$studioName}\" ends in {$days} day(s).",
+            ];
+        }
+
+        return [
+            'Subscription Expired',
+            "The subscription for \"{$studioName}\" has expired. Subscribe again to restore commercial access.",
+        ];
     }
 
     /**

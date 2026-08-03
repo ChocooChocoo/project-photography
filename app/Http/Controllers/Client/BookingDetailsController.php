@@ -22,6 +22,7 @@ class BookingDetailsController extends Controller
         if ($type === 'studio') {
             // Fetch studio details with ratings
             $studio = StudiosModel::whereIn('status', ['approved', 'active', 'verified'])
+                ->subscriptionAccessible()
                 ->with(['location', 'category', 'packages', 'schedules', 'user', 'services.category'])
                 ->findOrFail($id);
 

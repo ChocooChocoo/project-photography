@@ -1,7 +1,7 @@
 # Subscriptions
 
-Studios can have plans and trial periods. Trials now last exactly as long as advertised, and an hourly check records ended trials and paid plans as expired. An expired row no longer blocks the studio from starting another subscription.
+Studios can have plans and trial periods. Trials now last exactly as long as advertised. When an activated trial or paid plan ends, the studio receives exactly seven more days of access. The owner is warned before the plan ends, while grace is ending, and when access expires.
 
-The business has not yet chosen the full rules for grace periods, access restrictions, automatic renewal, card-on-file conversion, cancellation, or data retention. Those remain open decisions and no new access restriction was introduced.
+Active and grace studios remain visible and bookable. Expired and never-subscribed studios are hidden from discovery and cannot accept new bookings or make commercial changes. Nothing is deleted: owners retain their history, reports, profile, notifications, and subscription page, while photographers may finish existing paid bookings and HR/finance staff remain read-only. Renewal, card-on-file conversion, Stripe webhook handling, cancellation, and reactivation remain planned.
 
 See [open questions](../00-overview/open-items.md).

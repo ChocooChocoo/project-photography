@@ -3,10 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Models\StudioPlanModel;
+use App\Traits\Notifiable;
 use Illuminate\Console\Command;
 
 class ExpireSubscriptionsCommand extends Command
 {
+    use Notifiable;
+
     /**
      * The name and signature of the console command.
      *
@@ -19,27 +22,54 @@ class ExpireSubscriptionsCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Mark ended studio trials and paid subscriptions as expired.';
+    protected $description = 'Move ended studio subscriptions through grace and expiry.';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
-        $expiredTrials = StudioPlanModel::query()
-            ->where('status', 'active')
-            ->whereNotNull('trial_ends_at')
-            ->where('trial_ends_at', '<=', now())
-            ->update(['status' => 'expired']);
+        $movedToGrace = 0;
+        $expired = 0;
 
-        $expiredPaid = StudioPlanModel::query()
+        StudioPlanModel::query()
             ->where('status', 'active')
-            ->whereNull('trial_ends_at')
-            ->whereDate('end_date', '<', now()->toDateString())
-            ->update(['status' => 'expired']);
+            ->where('payment_status', 'paid')
+            ->get()
+            ->filter(fn (StudioPlanModel $subscription) => ! $subscription->isActive())
+            ->each(function (StudioPlanModel $subscription) use (&$movedToGrace, &$expired) {
+                $graceDeadline = $subscription->graceDeadline();
 
-        $expired = $expiredTrials + $expiredPaid;
-        $this->info("Expired {$expired} subscription(s).");
+                if (now()->gte($graceDeadline)) {
+                    $subscription->update([
+                        'status' => 'expired',
+                        'grace_ends_at' => $graceDeadline,
+                    ]);
+                    $expired++;
+                    $this->notifySubscriptionLifecycle($subscription->fresh(), 'expired');
+
+                    return;
+                }
+
+                $subscription->update([
+                    'status' => 'grace',
+                    'grace_ends_at' => $graceDeadline,
+                ]);
+                $movedToGrace++;
+                $this->notifySubscriptionLifecycle($subscription->fresh(), 'grace_entered');
+            });
+
+        StudioPlanModel::query()
+            ->where('status', 'grace')
+            ->where('grace_ends_at', '<=', now())
+            ->get()
+            ->each(function (StudioPlanModel $subscription) use (&$expired) {
+                $subscription->update(['status' => 'expired']);
+                $expired++;
+                $this->notifySubscriptionLifecycle($subscription->fresh(), 'expired');
+            });
+
+        $this->info("Moved {$movedToGrace} subscription(s) to grace; expired {$expired} subscription(s).");
 
         return self::SUCCESS;
     }

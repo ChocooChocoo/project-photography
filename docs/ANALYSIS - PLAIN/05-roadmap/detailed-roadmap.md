@@ -4,12 +4,12 @@ This twelve-stage roadmap combines the retained project plan with the two latest
 
 ### MIL-001 — Canonical documentation reset
 
-**Closes.** Documentation reset. · **Aiming for.** No date set. · **Status.** Under review.
+**Closes.** Documentation reset. · **Completed.** 2026-08-03. · **Status.** Completed.
 **What would prove it.** Every link works, every permanent label is unique, obsolete workflow references are gone, and the technical and plain-language records agree.
 
 ### MIL-002 — Next approved implementation task
 
-**Closes.** Next approved implementation. · **Aiming for.** No date set. · **Status.** Blocked.
+**Closes.** Next approved implementation. · **Completed.** 2026-08-03. · **Status.** Completed through subscription item 10.6.
 **What would prove it.** The owner approves a task and supplies every policy decision that task needs.
 
 ## Phase 1 — Fix what was broken

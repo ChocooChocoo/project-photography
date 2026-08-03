@@ -118,19 +118,92 @@ class SubscriptionLifecycleTest extends TestCase
         $this->assertTrue($paidThroughToday->isActive());
     }
 
-    public function test_expiry_command_updates_only_due_subscriptions_and_is_safe_to_rerun(): void
+    public function test_access_continues_through_grace_and_stops_at_the_exact_deadline(): void
     {
-        $expiredTrial = $this->createSubscription([
+        $trial = $this->createSubscription([
             'subscription_reference' => 'SUB-DUE-TRIAL',
             'trial_ends_at' => '2026-08-03 10:30:00',
             'end_date' => '2026-08-03',
             'next_billing_date' => '2026-08-03',
         ]);
-        $expiredPaid = $this->createSubscription([
+
+        $this->assertFalse($trial->isActive());
+        $this->assertTrue($trial->hasAccess());
+        $this->assertSame('2026-08-10 10:30:00', $trial->graceDeadline()->format('Y-m-d H:i:s'));
+
+        Carbon::setTestNow('2026-08-10 10:29:59');
+        $this->assertTrue($trial->hasAccess());
+
+        Carbon::setTestNow('2026-08-10 10:30:00');
+        $this->assertFalse($trial->hasAccess());
+    }
+
+    public function test_currently_accessible_scope_is_studio_specific_and_includes_unexpired_grace(): void
+    {
+        $dueActive = $this->createSubscription([
+            'subscription_reference' => 'SUB-DUE-ACTIVE',
+            'trial_ends_at' => '2026-08-03 10:30:00',
+            'end_date' => '2026-08-03',
+            'next_billing_date' => '2026-08-03',
+        ]);
+        $grace = $this->createSubscription([
+            'subscription_reference' => 'SUB-GRACE',
+            'status' => 'grace',
+            'trial_ends_at' => null,
+            'end_date' => '2026-08-02',
+            'next_billing_date' => '2026-08-02',
+            'grace_ends_at' => '2026-08-10 00:00:00',
+        ]);
+        $this->createSubscription([
+            'subscription_reference' => 'SUB-EXPIRED',
+            'status' => 'expired',
+            'trial_ends_at' => null,
+            'end_date' => '2026-08-01',
+            'next_billing_date' => '2026-08-01',
+            'grace_ends_at' => '2026-08-03 10:30:00',
+        ]);
+
+        $accessibleIds = StudioPlanModel::currentlyAccessible()->pluck('id')->all();
+
+        $this->assertEqualsCanonicalizing([$dueActive->id, $grace->id], $accessibleIds);
+        $this->assertTrue($grace->isInGrace());
+    }
+
+    public function test_grace_days_remaining_rounds_partial_days_up_and_never_goes_negative(): void
+    {
+        $subscription = $this->createSubscription([
+            'status' => 'grace',
+            'grace_ends_at' => '2026-08-10 10:30:00',
+        ]);
+
+        $this->assertSame(7, $subscription->graceDaysRemaining());
+
+        Carbon::setTestNow('2026-08-09 12:00:00');
+        $this->assertSame(1, $subscription->graceDaysRemaining());
+
+        Carbon::setTestNow('2026-08-11 12:00:00');
+        $this->assertSame(0, $subscription->graceDaysRemaining());
+    }
+
+    public function test_expiry_command_enters_grace_catches_up_old_rows_and_is_safe_to_rerun(): void
+    {
+        $graceTrial = $this->createSubscription([
+            'subscription_reference' => 'SUB-DUE-TRIAL',
+            'trial_ends_at' => '2026-08-03 10:30:00',
+            'end_date' => '2026-08-03',
+            'next_billing_date' => '2026-08-03',
+        ]);
+        $gracePaid = $this->createSubscription([
             'subscription_reference' => 'SUB-DUE-PAID',
             'trial_ends_at' => null,
             'end_date' => '2026-08-02',
             'next_billing_date' => '2026-08-02',
+        ]);
+        $expiredCatchUp = $this->createSubscription([
+            'subscription_reference' => 'SUB-OLD-PAID',
+            'trial_ends_at' => null,
+            'end_date' => '2026-07-20',
+            'next_billing_date' => '2026-07-20',
         ]);
         $futureTrial = $this->createSubscription([
             'subscription_reference' => 'SUB-SAFE-TRIAL',
@@ -146,17 +219,20 @@ class SubscriptionLifecycleTest extends TestCase
         ]);
 
         $this->artisan('subscriptions:expire')
-            ->expectsOutput('Expired 2 subscription(s).')
+            ->expectsOutput('Moved 2 subscription(s) to grace; expired 1 subscription(s).')
             ->assertSuccessful();
 
-        $this->assertSame('expired', $expiredTrial->fresh()->status);
-        $this->assertSame('expired', $expiredPaid->fresh()->status);
+        $this->assertSame('grace', $graceTrial->fresh()->status);
+        $this->assertSame('2026-08-10 10:30:00', $graceTrial->fresh()->grace_ends_at->format('Y-m-d H:i:s'));
+        $this->assertSame('grace', $gracePaid->fresh()->status);
+        $this->assertSame('2026-08-10 00:00:00', $gracePaid->fresh()->grace_ends_at->format('Y-m-d H:i:s'));
+        $this->assertSame('expired', $expiredCatchUp->fresh()->status);
         $this->assertSame('active', $futureTrial->fresh()->status);
         $this->assertSame('active', $paidThroughToday->fresh()->status);
-        $this->assertSame('paid', $expiredTrial->fresh()->payment_status);
+        $this->assertSame('paid', $expiredCatchUp->fresh()->payment_status);
 
         $this->artisan('subscriptions:expire')
-            ->expectsOutput('Expired 0 subscription(s).')
+            ->expectsOutput('Moved 0 subscription(s) to grace; expired 0 subscription(s).')
             ->assertSuccessful();
     }
 
@@ -245,6 +321,7 @@ class SubscriptionLifecycleTest extends TestCase
             $table->date('next_billing_date');
             $table->timestamp('paid_at')->nullable();
             $table->timestamp('trial_ends_at')->nullable();
+            $table->timestamp('grace_ends_at')->nullable();
             $table->decimal('amount_paid', 10, 2);
             $table->string('payment_status');
             $table->string('status');

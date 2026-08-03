@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'studio.finance'        => \App\Http\Middleware\StudioFinanceMiddleware::class,
             'check.studio.limit'    => \App\Http\Middleware\CheckStudioRegistrationLimit::class,
             'permission'            => \App\Http\Middleware\CheckPermissionMiddleware::class,
+            'subscription.access'   => \App\Http\Middleware\EnforceStudioSubscriptionAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

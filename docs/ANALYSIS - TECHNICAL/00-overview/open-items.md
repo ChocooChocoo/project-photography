@@ -11,10 +11,9 @@
 
 ### QST-002 — Subscription access policy
 
-**Context.** Trial fields and subscription states exist, but a complete access-enforcement policy is not approved. See [RSK-001](../05-progress/risks.md#rsk-001--subscription-state-and-access-can-diverge).
-**Needs an answer.** What access, renewal, grace-period, and data-retention rules apply when a studio trial or paid plan ends?
-**Owner.** Unassigned.
-**Blocks.** Any subscription access-enforcement implementation.
+**Status.** Resolved on 2026-08-03 for roadmap items 10.4–10.6.
+**Decision.** Trials remain card-free and there is no free tier. Billing is studio-scoped. Every activated trial or paid plan receives seven days of grace after its contractual deadline. Active and grace studios retain commercial access. Expired and never-subscribed studios are delisted and cannot accept new bookings or commercial writes, while their data, reports, history, profile, notifications, and subscription management remain available. Paid bookings already in progress may be fulfilled. Studio photographers retain only that paid-booking fulfillment access; HR and finance are read-only. `owner-super-admin` follows the owner restrictions.
+**Still open elsewhere.** Renewal, card-on-file conversion, webhook-driven failed renewals, cancellation, and reactivation remain roadmap items 10.7–10.9 and do not reopen this access decision.
 
 ### ASM-001 — Historical delivery status
 

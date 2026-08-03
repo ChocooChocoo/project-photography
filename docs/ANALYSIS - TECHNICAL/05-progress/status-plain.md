@@ -20,7 +20,7 @@
 > Phases 4 to 7 have not been started. Phase 8 (the AI assistant) was done ahead of them because it
 > came from a separate request and doesn't touch bookings, payments, or payroll at all. **Phase 9 is
 > written up but not built. Phase 10 is partly built:** items 10.1–10.3 were completed on 2026-08-03,
-> while items 10.4–10.9 remain planned and policy-dependent.
+> items 10.4–10.6 are also complete, while items 10.7–10.9 remain planned.
 
 Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (checked, no change needed) | ⚠️ Partial — see note | 📋 Written up — nothing built yet
 
@@ -307,10 +307,10 @@ subscriptions and nothing about the platform depends on having one.**
 | 10.1 | Make a trial actually last as long as it says | ✅ | Completed 2026-08-03. Trial end and next-billing dates now match the exact trial deadline. |
 | 10.2 | End trials when they end | ✅ | Completed 2026-08-03. An hourly check expires trials at their recorded deadline; card collection and automatic conversion remain outside this item. |
 | 10.3 | Record when a subscription has expired | ✅ | Completed 2026-08-03. The same hourly check records ended paid subscriptions as expired, and stale rows no longer block a new subscription. |
-| 10.4 | Add a short grace period for a failed payment | 📋 | Needs a decision on how long. Today a failed payment kills the subscription instantly, with no retry and no warning — and a card being declined is usually the bank's doing, not the owner deciding to leave. |
+| 10.4 | Add a seven-day grace period | ✅ | Every activated trial or paid plan keeps access for exactly seven days after its stated deadline. Late checks still measure from that deadline. |
 
-| 10.5 | Actually restrict what an unpaid studio can do | 📋 | Needs four decisions, and item 10.3 first. **The biggest piece of work here, and the reason the rest matters.** The recommendation is to hide the studio from the marketplace and stop new bookings, while the owner keeps their login, their studio, and every record they've ever had. |
-| 10.6 | Warn the owner before anything changes | 📋 | Needs a decision on the grace period. A reminder message for expiring subscriptions was built two phases ago and has never been switched on. Nothing about subscriptions is sent by email at all today — only inside the site, so an owner who doesn't log in hears nothing. |
+| 10.5 | Restrict expired studios without deleting data | ✅ | Expired studios disappear from discovery and cannot accept new work or commercial changes. Owners keep records and subscription access; already-paid work can still be finished. |
+| 10.6 | Warn the owner before anything changes | ✅ | Owners receive one in-app and email notice at each approved plan-end, grace, and expiry milestone. |
 | 10.7 | Let an owner come back | 📋 | Needs a decision on how subscriptions are counted. There is currently no way to restart a cancelled or expired subscription. Nothing would need restoring — the recommendation removes access, never data. |
 | 10.8 | Charge the card automatically each period | 📋 | Needs a decision on whether trials require a card, and depends on earlier payment work. There is no automatic renewal at all today: each subscription is a single manual payment, and the card is never kept on file. |
 | 10.9 | Let owners cancel or change plan after the first three days | 📋 | Owners can only cancel within three days of paying. **After that there is no way to cancel at all**, and no way to upgrade or downgrade either — an owner on a yearly plan is stuck for the year. Cancelling also marks the money as refunded in the platform's own records without actually refunding anything. |
@@ -354,7 +354,7 @@ subscription belongs to a studio or to the owner (the system currently answers b
 already-paid bookings continue after expiry · and whether there should be a free tier at all — an
 earlier plan assumed one existed, and none does.
 
-The first three items (10.1, 10.2, 10.3) were completed on 2026-08-03. The remaining decisions still govern items 10.4–10.9.
+The first six items (10.1–10.6) were completed on 2026-08-03. Renewal, reactivation, and card-on-file/webhook work remain in items 10.7–10.9.
 
 ### Things that were written down wrongly, now fixed
 

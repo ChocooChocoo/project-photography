@@ -4,7 +4,7 @@
 >
 > **Status:** Historical detail retained in the new System Analysis format. For the current normalized status, see the [progress tracker](../05-progress/tracker.md).
 
-> **Implementation update — 2026-08-03:** Roadmap items 10.1–10.3 are complete. New trials use one exact deadline for `trial_ends_at`, `end_date`, and `next_billing_date`; active-subscription checks observe trial and paid boundaries; and the hourly `subscriptions:expire` command writes `expired` for ended trials and paid subscriptions. Sections 1–3 below preserve the 2026-07-27 pre-implementation analysis. Access restriction, grace, renewal, card collection, cancellation reform, and reactivation remain unimplemented and policy-blocked.
+> **Implementation update — 2026-08-03:** Roadmap items 10.1–10.6 are complete. New trials use one exact deadline; the hourly lifecycle command moves ended plans through an exact seven-day grace window; owner notices cover every approved milestone; and studio-scoped access enforcement delists expired studios while preserving data and paid-booking fulfillment. Sections 1–3 below preserve the 2026-07-27 pre-implementation analysis. Renewal, card collection/webhooks, cancellation reform, and reactivation remain unimplemented.
 
 ---
 
@@ -121,7 +121,7 @@ column anywhere in the platform. The instruction is unfollowable.
 
 ### 2.4 Nothing expires the trial
 
-[`NotifyTrialEndingCommand`](../../../app/Console/Commands/NotifyTrialEndingCommand.php#L31)
+The former `NotifyTrialEndingCommand`
 is the only consumer of `trial_ends_at`. It writes an in-app notification and returns; it
 never mutates the subscription. The scheduler
 ([`routes/console.php#L11-13`](../../../routes/console.php#L11)) registers three commands, and
@@ -380,9 +380,8 @@ infrastructure covers two of these slots already.
 
 Two notes. First, `app/Mail/` contains no subscription mailable — **every** notification in
 the lifecycle today is in-app only, which means an owner who does not log in learns nothing.
-Second, `NotifyTrialEndingCommand` already implements same-day de-duplication
-([`#L47-54`](../../../app/Console/Commands/NotifyTrialEndingCommand.php#L47)); the wider ladder
-should reuse that approach rather than reinvent it.
+Second, the former trial reminder used same-day de-duplication; the delivered wider ladder
+strengthens that approach with subscription/event/deadline keys.
 
 ---
 
@@ -440,7 +439,7 @@ The original brief was documentation-only. On 2026-08-03, a separately approved 
 - The hourly `subscriptions:expire` command records ended trials and paid subscriptions as `expired`, keeps payment history unchanged, and is safe to rerun.
 - Browser verification confirmed trial start, expiration display, and re-subscription availability. The focused lifecycle suite passed 4 tests / 16 assertions; the full suite passed 74 tests / 399 assertions.
 
-The remaining recommendations in §§5–8 are not approved behavior. QST-002 still blocks access enforcement and the other policy-dependent lifecycle items.
+Roadmap items 10.4–10.6 were subsequently approved and delivered. QST-002 is resolved for access enforcement: card-free trials, no free tier, studio-scoped billing, seven-day grace, preserved read access, honoured paid bookings, role-limited staff access, and normal owner restrictions for `owner-super-admin`. Items 10.7–10.9 remain planned; 10.8 is still blocked by card-on-file and Stripe webhook work.
 
 Related documentation:
 
