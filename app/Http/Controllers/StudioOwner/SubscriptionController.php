@@ -37,8 +37,7 @@ class SubscriptionController extends Controller
         $currentSubscription = null;
         if (auth()->user()->studio) {
             $currentSubscription = StudioPlanModel::where('studio_id', auth()->user()->studio->id)
-                ->where('status', 'active')
-                ->where('end_date', '>=', now())
+                ->currentlyActive()
                 ->latest()
                 ->first();
         }
@@ -125,8 +124,7 @@ class SubscriptionController extends Controller
 
             // Check if there's an active subscription
             $activeSubscription = StudioPlanModel::where('studio_id', $studio->id)
-                ->where('status', 'active')
-                ->where('end_date', '>=', now())
+                ->currentlyActive()
                 ->first();
 
             if ($activeSubscription) {
@@ -143,18 +141,21 @@ class SubscriptionController extends Controller
 
             // Free trial plans activate immediately with no charge
             if ($plan->trial_days > 0) {
+                $startsAt = now();
+                $trialEndsAt = $startsAt->copy()->addDays($plan->trial_days);
+
                 $studioPlan = StudioPlanModel::create([
                     'studio_id' => $studio->id,
                     'plan_id' => $plan->id,
                     'subscription_reference' => $subscriptionReference,
-                    'start_date' => now(),
-                    'end_date' => $this->calculateEndDate($plan->billing_cycle),
-                    'next_billing_date' => $this->calculateNextBillingDate($plan->billing_cycle),
+                    'start_date' => $startsAt,
+                    'end_date' => $trialEndsAt,
+                    'next_billing_date' => $trialEndsAt,
                     'amount_paid' => 0,
                     'payment_status' => 'paid',
                     'status' => 'active',
-                    'paid_at' => now(),
-                    'trial_ends_at' => now()->addDays($plan->trial_days),
+                    'paid_at' => $startsAt,
+                    'trial_ends_at' => $trialEndsAt,
                     'plan_snapshot' => $plan->toArray(),
                 ]);
 

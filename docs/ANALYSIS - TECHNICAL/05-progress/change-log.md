@@ -2,6 +2,13 @@
 
 > **In plain terms:** This record lists documentation and delivery changes in date order. It distinguishes plans and records from changes to the running website.
 
+## 2026-08-03 — Subscription expiry mechanics
+
+- Completed roadmap items 10.1–10.3: exact trial dates, effective active-subscription boundaries, and hourly expiry of ended trial and paid rows.
+- Added four lifecycle regression tests; the full suite now records 74 tests and 399 assertions.
+- Browser-checked owner, client, studio-photographer, and administrator surfaces and recorded the unrelated owner Services HTTP 500 as ISS-002.
+- Completed the canonical documentation reset review after link, identifier, and plain-tree independence validation.
+
 ## 2026-08-03 — System Analysis Workflow v2 synchronization
 
 - Replaced obsolete v1 workflow references with the paired technical and plain-language V2 sources.

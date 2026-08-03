@@ -4,12 +4,14 @@
 >
 > **Status:** Historical detail retained in the new System Analysis format. For the current normalized status, see the [progress tracker](../05-progress/tracker.md).
 
+> **Implementation update — 2026-08-03:** Roadmap items 10.1–10.3 are complete. New trials use one exact deadline for `trial_ends_at`, `end_date`, and `next_billing_date`; active-subscription checks observe trial and paid boundaries; and the hourly `subscriptions:expire` command writes `expired` for ended trials and paid subscriptions. Sections 1–3 below preserve the 2026-07-27 pre-implementation analysis. Access restriction, grace, renewal, card collection, cancellation reform, and reactivation remain unimplemented and policy-blocked.
+
 ---
 
 
 # Studio Owner Subscription Lifecycle
 
-> **Status: analysis and recommendation. Nothing in §5–§8 is implemented.**
+> **Status: analysis and recommendation with 10.1–10.3 implemented on 2026-08-03.**
 >   Source brief: `prompt/tasks/08.md`. Task report: [`prompt/output/08.md`](../../../prompt/output/08.md).
 >   Scan date 2026-07-27, against `main`.
 >
@@ -23,7 +25,7 @@
 
 ---
 
-## 1. The lifecycle as built
+## 1. The lifecycle as built at the 2026-07-27 scan
 
 Subscriptions live in two tables. `tbl_subscription_plans` is the **catalog** the admin
 maintains; `tbl_studio_plans` is a **studio's actual subscription**.
@@ -38,7 +40,7 @@ maintains; `tbl_studio_plans` is a **studio's actual subscription**.
 | `pending` | Column default, and the paid branch of [`SubscriptionController::subscribe()`](../../../app/Http/Controllers/StudioOwner/SubscriptionController.php#L171) | Yes |
 | `active` | Trial branch [`#L155`](../../../app/Http/Controllers/StudioOwner/SubscriptionController.php#L155); `verifyPayment()` [`#L639`](../../../app/Http/Controllers/StudioOwner/SubscriptionController.php#L639) | Yes |
 | `cancelled` | `cancel()` [`#L753`](../../../app/Http/Controllers/StudioOwner/SubscriptionController.php#L753); also `paymentFailed()` [`#L397`](../../../app/Http/Controllers/StudioOwner/SubscriptionController.php#L397) | Yes |
-| `expired` | — | **No. Never written by any code path.** |
+| `expired` | `subscriptions:expire` (added 2026-08-03) | **Yes.** Ended trials and paid subscriptions are updated hourly. |
 
 `payment_status` is a second enum — `pending`, `paid`, `failed`, `refunded` — and `refunded`
 is likewise never written on this table. The revenue row is flipped to `refunded` instead
@@ -64,9 +66,9 @@ flowchart TD
     M --> N[Owner keeps full portal access]
 ```
 
-### 1.3 The two findings that matter
+### 1.3 The two findings that mattered at the scan
 
-**A free trial never ends.** The trial branch sets `trial_ends_at = now() + trial_days`
+**Fixed 2026-08-03: a free trial never ended.** The trial branch set `trial_ends_at = now() + trial_days`
 but sets `end_date` from `calculateEndDate()`
 ([`#L151`](../../../app/Http/Controllers/StudioOwner/SubscriptionController.php#L151),
 [`#L291`](../../../app/Http/Controllers/StudioOwner/SubscriptionController.php#L291)), which
@@ -429,11 +431,16 @@ number and can be changed later without redesign.
 
 ---
 
-## 10. What this changes today
+## 10. What changed after this analysis
 
-Nothing. No code, schema, route, or runtime behaviour was modified for this analysis; the
-brief was explicitly documentation-only. Three inaccurate statements in existing documents
-were corrected (§4), and a new roadmap phase was added to hold the work.
+The original brief was documentation-only. On 2026-08-03, a separately approved implementation completed roadmap items 10.1–10.3 without adding a migration, dependency, HTTP route, access restriction, refund, renewal, or card-on-file behavior.
+
+- Trial creation now stores the exact trial deadline as `trial_ends_at`, `end_date`, and `next_billing_date`.
+- `StudioPlanModel::isActive()` and the shared `currentlyActive` scope use the trial deadline for trials and keep paid subscriptions active through their `end_date`.
+- The hourly `subscriptions:expire` command records ended trials and paid subscriptions as `expired`, keeps payment history unchanged, and is safe to rerun.
+- Browser verification confirmed trial start, expiration display, and re-subscription availability. The focused lifecycle suite passed 4 tests / 16 assertions; the full suite passed 74 tests / 399 assertions.
+
+The remaining recommendations in §§5–8 are not approved behavior. QST-002 still blocks access enforcement and the other policy-dependent lifecycle items.
 
 Related documentation:
 

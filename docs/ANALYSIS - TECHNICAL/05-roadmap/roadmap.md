@@ -28,7 +28,7 @@
 | 7 | **Resource Authorization & Test Coverage** | Policies, core feature test coverage | Security and confidence layer — after all features are stable |
 | 8 | **AI Assistant** | Replace the fixed-response chatbot with a secure Groq assistant | Task-driven addition (`prompt/tasks/04.md`), not derived from the original gap list. Independent of Phases 4–7 — the chat surface touches no booking, payment, or payroll logic |
 | 9 | **Cancellation Contingency** | Photographer cancels a paid booking — cascade, substitution, refund, prevention | Task-driven addition (`prompt/tasks/07.md`). 11 items, listed in recommended build order in the execution summary. **Decision-blocked:** everything except 9.1, 9.2, and 9.11 waits on D1–D9 in [`PHOTOGRAPHER CANCELLATION CONTINGENCY.md`](../08-references/photographer-cancellation-contingency.md). 9.1 + 9.2 + 9.3 + 9.5 are the minimum set; 9.4 and 9.6 are documented but **not recommended** for this problem |
-| 10 | **Subscription Lifecycle** | Trial expiry, renewal, grace, expiry, access restriction, reactivation | Task-driven addition (`prompt/tasks/08.md`). 9 items. Completes and corrects Phase 3.4 (trial) and replaces Phase 6.4 (expiry reminders), both of which describe behaviour the code does not have. **10.1 and 10.2 are unblocked and urgent** — today a free trial grants a full billing period of free access and never ends. Everything from 10.5 onward waits on S1–S6 in [`SUBSCRIPTION LIFECYCLE.md`](../08-references/subscription-lifecycle.md) |
+| 10 | **Subscription Lifecycle** | Trial expiry, renewal, grace, expiry, access restriction, reactivation | Task-driven addition (`prompt/tasks/08.md`). Items **10.1–10.3 were completed and verified on 2026-08-03**: trial dates now match, ended trials and paid plans are recorded as expired, and stale rows no longer block a new subscription. Items 10.4–10.9 remain planned; everything from 10.5 onward waits on S1–S6 in [`SUBSCRIPTION LIFECYCLE.md`](../08-references/subscription-lifecycle.md). |
 | 11 | **Public Landing Page** | Bootstrap-based public introduction, navigation, and authentication calls to action | Task-driven documentation addition (`prompt/tasks/09.md`). Planned only: a future implementation may make the landing page the public root after separate approval. The current login-first behavior remains unchanged; see [landing-page plan](../03-planning/landing-page.md). |
 | 12 | **Core Studio Management Requirements** | Registration, security, permits, administration, employee access, RBAC, attendance, client browsing, and commercial controls | Task-driven documentation addition (`prompt/tasks/10.md`). Planned only: the evaluator requirements are grouped for future delivery, with no implementation order or completed behavior claimed; see [requirements plan](../03-planning/core-studio-management.md). |
 
@@ -1194,8 +1194,9 @@ cancels.
 > `OwnerMiddleware` has no subscription logic, there are no policies or gates, and the only
 > subscription-aware middleware guards two routes and only from the second studio onward.
 >
-> **10.1 and 10.2 are unblocked and should be built first.** They are bug fixes wearing a feature's
-> clothing: the platform is currently giving away a billing period per trial signup. Everything from
+> **Update 2026-08-03:** 10.1–10.3 are implemented and verified. Trials use their exact deadline,
+> the shared active-subscription check observes trial and paid boundaries, and an hourly command writes
+> the existing `expired` state. Everything from
 > 10.5 onward is gated on **S1–S6** in the lifecycle document — what grace period, whether a card is
 > required to start a trial, what access survives expiry, whether a subscription belongs to a studio
 > or an owner, whether in-flight bookings are honoured, and whether a free tier exists at all.
@@ -1204,10 +1205,11 @@ cancels.
 > studios, and every historical record, and restricts only subscription-dependent capability. No
 > item in this phase deletes an owner's data.
 >
-> Items below are written to the same format as the rest of this roadmap. Except where noted as
-> already shipped, none of it exists.
+> Items below retain the implementation guidance. Status notes identify the shipped subset.
 
 ### 10.1 Align a Trial's `end_date` with `trial_ends_at`
+
+**Status:** Completed and verified 2026-08-03.
 
 **Gated by:** nothing. Build first.
 
@@ -1237,6 +1239,8 @@ sets a trial subscription's `end_date` from `calculateEndDate()`, which returns 
 
 ### 10.2 Expire Trials
 
+**Status:** Completed and verified 2026-08-03 through the shared `subscriptions:expire` command.
+
 **Gated by:** nothing (S2 only affects what happens *next*).
 
 **Problem:** [`NotifyTrialEndingCommand`](../../../app/Console/Commands/NotifyTrialEndingCommand.php) is
@@ -1261,6 +1265,8 @@ payment method"* — a screen, route and column that do not exist.
 ---
 
 ### 10.3 Expire Paid Subscriptions and Write the `expired` State
+
+**Status:** Completed and verified 2026-08-03 through the shared `subscriptions:expire` command.
 
 **Gated by:** nothing.
 

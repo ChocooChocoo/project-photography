@@ -11,7 +11,7 @@
 
 > Tracks completion of [`../02-PLANNING/CAPSTONE B IMPLEMENTATION ROADMAP.md`](../05-roadmap/roadmap.md) Phase 1 ("Stabilize"), Phase 2 ("Complete"), Phase 3 ("Core New Features"), Phase 8 ("AI Assistant"), Phase 9 ("Cancellation Contingency"), and Phase 10 ("Subscription Lifecycle"), per `prompt/tasks/01.md`, `02.md`, `04.md`, `07.md`, and `08.md` (project repo). Phase 1/2 generated 2026-07-13; Phase 3 generated 2026-07-14 — both were developed on branch `capstone-b/phase-1-2` (the branch name predates the Phase 3 work and was reused) and have since been **merged into `main`**. The pre-merge browser-verification caveats recorded below were therefore never cleared; they are now outstanding post-merge checks. Phase 8 was implemented 2026-07-25 directly on `main`.
 >
-> **Phases 4–7 have not been started.** Phase 8 was implemented out of order because it came from a separate task brief and shares no code with the booking, payment, or payroll flows those phases cover. **Phases 9 and 10 are documented only — no code exists for any of it.**
+> **Phases 4–7 have not been started.** Phase 8 was implemented out of order because it came from a separate task brief and shares no code with the booking, payment, or payroll flows those phases cover. **Phase 9 remains documentation-only. Phase 10 items 10.1–10.3 were implemented on 2026-08-03; items 10.4–10.9 remain planned.**
 
 Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (verified, no change needed) | ⚠️ Partial — see note | 📋 Documented — analysis complete, nothing built
 
@@ -305,3 +305,7 @@ rather than wrong, and is now annotated.
 - Documentation only: `git diff --stat` shows `.md` files exclusively — no `app/`, `database/`, `resources/`, or `tests/` changes.
 - `composer test` unchanged at 70 passed, confirming no behavioral edit slipped in.
 - Every code claim above was read out of the current source before being written down, and each is cited to its file and line in the lifecycle document.
+
+### Follow-up delivery — 2026-08-03
+
+Items 10.1–10.3 were subsequently approved and implemented. Trial dates now use the exact trial deadline, a shared active-subscription check applies the correct trial and paid boundaries, and the hourly `subscriptions:expire` command records ended rows as `expired`. Browser validation covered all four user roles plus live trial start, expiry display, and re-subscription availability. The focused lifecycle tests passed 4 tests / 16 assertions and the full suite passed 74 tests / 399 assertions. Items 10.4–10.9 and QST-002 remain open.

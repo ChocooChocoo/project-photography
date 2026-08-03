@@ -4,10 +4,10 @@
 
 ### MIL-001 — Canonical documentation reset
 
-**Closes.** Documentation reset. · **Target.** Not set. · **Status.** Under Review.
-**Evidence that proves it.** All links resolve, identifiers are unique, obsolete workflow references are removed, and the technical/plain views agree.
+**Closes.** Documentation reset. · **Target.** Not set. · **Status.** Completed 2026-08-03.
+**Evidence that proves it.** Canonical Markdown links resolve, identifiers are unique, and the technical/plain progress views agree after the Phase 10.1–10.3 update.
 
 ### MIL-002 — Next approved implementation task
 
-**Closes.** Next approved implementation. · **Target.** Not set. · **Status.** Blocked.
-**Evidence that proves it.** A new or existing user-authored task is approved, and any policy decisions it depends on are accepted.
+**Closes.** Next approved implementation. · **Target.** Not set. · **Status.** Completed 2026-08-03.
+**Evidence that proves it.** Subscription lifecycle items 10.1–10.3 were approved, implemented, and verified without requiring the still-open access policy.

@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\StudioOwner\StudiosModel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\StudioOwner\StudiosModel;
 
 class StudioPlanModel extends Model
 {
@@ -121,11 +122,38 @@ class StudioPlanModel extends Model
     /**
      * Check if subscription is active
      */
-    public function isActive()
+    public function isActive(): bool
     {
-        return $this->status === 'active' && 
-               $this->end_date >= now()->toDateString() &&
-               $this->payment_status === 'paid';
+        if ($this->status !== 'active' || $this->payment_status !== 'paid') {
+            return false;
+        }
+
+        if ($this->trial_ends_at !== null) {
+            return now()->lt($this->trial_ends_at);
+        }
+
+        return $this->end_date >= now()->toDateString();
+    }
+
+    /**
+     * Limit the query to subscriptions whose effective period has not ended.
+     */
+    public function scopeCurrentlyActive(Builder $query): Builder
+    {
+        return $query
+            ->where('status', 'active')
+            ->where('payment_status', 'paid')
+            ->where(function (Builder $query) {
+                $query
+                    ->where(function (Builder $query) {
+                        $query->whereNotNull('trial_ends_at')
+                            ->where('trial_ends_at', '>', now());
+                    })
+                    ->orWhere(function (Builder $query) {
+                        $query->whereNull('trial_ends_at')
+                            ->whereDate('end_date', '>=', now()->toDateString());
+                    });
+            });
     }
 
     /**

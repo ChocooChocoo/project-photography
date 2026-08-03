@@ -18,9 +18,9 @@
 > cautions noted below were never carried out before that merge, so they remain open items.
 >
 > Phases 4 to 7 have not been started. Phase 8 (the AI assistant) was done ahead of them because it
-> came from a separate request and doesn't touch bookings, payments, or payroll at all. **Phases 9 and
-> 10 are written up but not built** — both were deliberately research exercises. Phase 9 waits on a
-> business decision; Phase 10's first three items don't wait on anything.
+> came from a separate request and doesn't touch bookings, payments, or payroll at all. **Phase 9 is
+> written up but not built. Phase 10 is partly built:** items 10.1–10.3 were completed on 2026-08-03,
+> while items 10.4–10.9 remain planned and policy-dependent.
 
 Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (checked, no change needed) | ⚠️ Partial — see note | 📋 Written up — nothing built yet
 
@@ -293,7 +293,7 @@ name a backup on high-value bookings (9.11).
 
 ## Phase 10 — What happens when a studio's subscription runs out
 
-*Written up on 27 July 2026. Nothing was built. Full write-up:
+*Written up on 27 July 2026. Nothing was built in that analysis pass; items 10.1–10.3 were implemented on 3 August 2026. Full write-up:
 `docs/04-REFERENCE/SUBSCRIPTION LIFECYCLE.md`.*
 
 Studio owners pay the platform a monthly or yearly subscription, and some plans come with a free trial.
@@ -303,7 +303,7 @@ and properly written down.
 
 It is not. Two things came out of the review, and both are larger than a documentation problem.
 
-**A free trial never ends.** When an owner starts a 14-day trial, the system correctly notes the date
+**Historical finding, fixed 2026-08-03:** When an owner started a 14-day trial, the system correctly noted the date
 the trial should finish — and then separately gives the account a full month of access anyway. Nothing
 ever checks the trial's finish date to actually stop anything. So a 14-day trial is really 30 free days,
 and a 30-day trial on the yearly plan is really a free year. The system also never asks for a card when
@@ -311,7 +311,7 @@ the trial starts, so even if the trial did end, there would be nothing to charge
 owner receives says "add a payment method to keep your plan active" — and there is no screen anywhere in
 the platform where they could do that.
 
-**Letting a subscription lapse costs the owner nothing.** There is no check anywhere that asks "is this
+**Access-policy finding, still open:** Letting a subscription lapse costs the owner nothing. There is no check anywhere that asks "is this
 studio actually paying?" before letting the owner use the platform. An owner whose subscription expired
 a year ago — or who never subscribed at all — still has a studio listed in the marketplace, still takes
 bookings, still runs payroll, still uses everything. The one exception is registering a *second* studio,
@@ -320,9 +320,9 @@ subscriptions and nothing about the platform depends on having one.**
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 10.1 | Make a trial actually last as long as it says | 📋 | **Doesn't depend on any decision — do this first.** A 14-day trial should be 14 days, not 30. Right now the platform gives away a full billing period with every trial signup. |
-| 10.2 | End trials when they end | 📋 | **Doesn't depend on any decision.** Something has to check the trial's finish date and act on it. Today one reminder goes out beforehand and then nothing ever happens. Also needs somewhere for the owner to actually add a card, which doesn't exist yet. |
-| 10.3 | Record when a subscription has expired | 📋 | **Doesn't depend on any decision.** The system has a place to record "expired" and has never once written it. A subscription that ran out a year ago still shows as active everywhere. |
+| 10.1 | Make a trial actually last as long as it says | ✅ | Completed 2026-08-03. Trial end and next-payment dates now match the exact trial deadline. |
+| 10.2 | End trials when they end | ✅ | Completed 2026-08-03. An hourly check expires trials at their recorded deadline; collecting a card and automatically converting the trial remain separate future work. |
+| 10.3 | Record when a subscription has expired | ✅ | Completed 2026-08-03. The same hourly check records ended paid subscriptions as expired, and an old expired row no longer blocks another subscription. |
 | 10.4 | Add a short grace period for a failed payment | 📋 | Needs a decision on how long. Today a failed payment kills the subscription instantly, with no retry and no warning — and a card being declined is usually the bank's doing, not the owner deciding to leave. |
 
 | 10.5 | Actually restrict what an unpaid studio can do | 📋 | Needs four decisions, and item 10.3 first. **The biggest piece of work here, and the reason the rest matters.** The recommendation is to hide the studio from the marketplace and stop new bookings, while the owner keeps their login, their studio, and every record they've ever had. |
@@ -370,7 +370,7 @@ subscription belongs to a studio or to the owner (the system currently answers b
 already-paid bookings continue after expiry · and whether there should be a free tier at all — an
 earlier plan assumed one existed, and none does.
 
-The first three items (10.1, 10.2, 10.3) need none of these answers and could start immediately.
+The first three items (10.1, 10.2, 10.3) were completed on 2026-08-03. The remaining decisions still govern items 10.4–10.9.
 
 ### Things that were written down wrongly, now fixed
 
