@@ -26,6 +26,22 @@ Legend: ✅ Done this pass | ✔️ Already fixed prior to this pass (checked, n
 
 ---
 
+## Phase 11 — Planned first page
+
+| Item | Status | Notes |
+|---|---|---|
+| Bootstrap landing-page plan | Written up | The future first page, login and registration buttons, and responsive Bootstrap layout are documented in [the plan](../03-planning/landing-page.md). No website code, route, login behavior, or system testing changed; the website still opens on login. |
+
+---
+
+## Phase 12 — Planned studio-management improvements
+
+| Item | Status | Notes |
+|---|---|---|
+| Core studio-management requirements | Written up | Future registration, security, permit, administration, employee, role, attendance, client, and pricing requirements are documented in [the plan](../03-planning/core-studio-management.md). No implementation order or website change is approved. |
+
+---
+
 ## Phase 1 — Stabilize
 
 | # | Item | Status | Notes |

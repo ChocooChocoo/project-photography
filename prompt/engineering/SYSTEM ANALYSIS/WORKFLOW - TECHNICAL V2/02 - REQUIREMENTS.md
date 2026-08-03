@@ -1,7 +1,7 @@
-# Objective
-## Requirements Analyzer — turn the request into testable requirements
+# Requirements Analyzer — turn the request into testable requirements
 
-> Standalone prompt. Part of the System Analysis Workflow — see `00 - START HERE.md`.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Plain twin:** `02 - WRITE DOWN WHATS NEEDED.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
 
 ---
 
@@ -90,6 +90,8 @@ Traceability matrix — fill the columns you can, leave the rest for later stage
 |---|---|---|---|---|---|---|
 | REQ-004 | Email/password auth | ANL-009 | GAP-005 | — | — | Not Started |
 ```
+**Every document listed above opens with an `In plain terms` block** — two to four sentences, before any table or heading. It is the only thing making these documents readable by the people who commissioned them.
+
 
 ---
 
@@ -101,6 +103,7 @@ Traceability matrix — fill the columns you can, leave the rest for later stage
 - [ ] Assumptions logged separately from requirements
 - [ ] Traceability matrix started
 - [ ] Nothing invented that the user didn't ask for
+- [ ] Every document produced opens with an `In plain terms` block
 
 ---
 

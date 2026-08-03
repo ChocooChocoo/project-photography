@@ -1,5 +1,7 @@
 # System Summary
 
+> **In plain terms:** Platinum connects photography clients, studios, freelancers, and staff through shared booking, payment, gallery, and administration workflows. This summary states the evidence-backed current system and its present planning status.
+
 **Mode:** A — Existing system.  
 **Evidence date:** 2026-08-01.  
 **Current phase:** Maintenance and policy decisions; no unapproved implementation is scheduled.

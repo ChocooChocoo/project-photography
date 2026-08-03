@@ -1,6 +1,7 @@
 # Put It on a Timeline
 
-> Plain-language version. Does the same job as `05 - ROADMAP.md` in `WORKFLOW - TECHNICAL/` — same steps, same output files, simpler words.
+> Standalone prompt — paste the whole file. Plain-language half of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Technical twin:** `05 - ROADMAP.md` in `WORKFLOW - TECHNICAL V2/`. Same steps, same outputs, engineering words — edit both or neither.
 
 ---
 
@@ -66,9 +67,14 @@ Take them from the task list. A task in no stage is an oversight. A stage with n
 ```
 
 ### Step 3 — Set the checkpoints
-A checkpoint isn't a date. It's a point where something is demonstrably true.
+A checkpoint isn't a date. It's a point where something is demonstrably true. Give each one a permanent label and write it as a heading, the same way as everything else:
 
-> **MIL-002** — someone can sign in and submit a request from beginning to end.
+```markdown
+### MIL-002 — Someone can sign in and submit a request from beginning to end
+**Closes** Stage 6 — Building · **Aiming for** 15 August · **Status** Not met yet
+**What would prove it.** Someone doing it, watched: sign in, submit a request, see
+it turn up in the dispatcher's list. TEST-011 and TEST-019 passing.
+```
 
 That's checkable in front of a room. "Backend complete" isn't. Each checkpoint names the stage it closes and what would prove it.
 
@@ -89,6 +95,8 @@ A stage's progress is finished tasks divided by tasks in that stage. The project
 05-roadmap/milestones.md   the checkpoints and what proves each one
 05-roadmap/dependencies.md what blocks what, and what doesn't
 ```
+**Every document listed above starts with a short paragraph in ordinary words** — two or three sentences, before any table or heading. It's the only thing that makes these readable by the person who asked for the project.
+
 
 ---
 
@@ -99,6 +107,7 @@ A stage's progress is finished tasks divided by tasks in that stage. The project
 - [ ] Every checkpoint says what would prove it
 - [ ] What blocks what reflects reality, not a default straight line
 - [ ] Progress numbers are counted from the task list, not estimated
+- [ ] Every document produced starts with a short plain-words paragraph
 
 ---
 

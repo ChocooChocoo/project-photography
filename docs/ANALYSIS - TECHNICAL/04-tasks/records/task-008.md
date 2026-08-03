@@ -1,5 +1,7 @@
 # TASK-008 — Subscription Lifecycle Analysis
 
+> **In plain terms:** This analysis task is complete, but the subscription access policy remains undecided. The record does not claim that enforcement was implemented.
+
 **Source:** [`prompt/tasks/08.md`](../../../../prompt/tasks/08.md)  
 **Status:** Completed.  
 **Requirement:** [REQ-008](../../01-requirements/requirements.md#req-008--analyze-subscription-lifecycle)  

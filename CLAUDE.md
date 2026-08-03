@@ -24,6 +24,6 @@ npm run build
 
 ## Documentation rules
 
-- Begin with [docs/README.md](docs/README.md); the supplied [System Analysis workflow](docs/SYSTEM%20ANALYSIS/00%20-%20START%20HERE.md) is the documentation methodology and remains unchanged.
+- Begin with [docs/README.md](docs/README.md); the supplied [technical](prompt/engineering/SYSTEM%20ANALYSIS/WORKFLOW%20-%20TECHNICAL%20V2/00%20-%20START%20HERE.md) and [plain-language](prompt/engineering/SYSTEM%20ANALYSIS/WORKFLOW%20-%20PLAIN%20V2/00%20-%20START%20HERE.md) System Analysis Workflow v2 files are the documentation methodology and remain synchronized.
 - Record only evidence-backed current behavior. Put unapproved work in linked open items, risks, issues, or decisions—not as shipped functionality.
 - `prompt/tasks/` contains user-authored task prompts. Never rename, move, split, or invent task prompts; see [task index](docs/ANALYSIS%20-%20TECHNICAL/04-tasks/index.md).

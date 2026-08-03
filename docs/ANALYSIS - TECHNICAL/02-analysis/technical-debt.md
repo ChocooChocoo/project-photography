@@ -1,6 +1,6 @@
 # Technical Debt and Known Limits
 
-> **In plain terms:** A few areas need a business decision before they can safely be finished; they are recorded as open work, not promised features.
+> **In plain terms:** A few areas need a business decision before they can safely be finished. They are recorded as open work, not promised features.
 
 ### ANL-006 — Historical roadmap is not an executable contract
 

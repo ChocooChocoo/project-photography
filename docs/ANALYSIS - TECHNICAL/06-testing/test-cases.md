@@ -1,5 +1,7 @@
 # Test Cases and Coverage
 
+> **In plain terms:** These checks cover important current workflows and safety rules. They do not settle business policies that still need an owner decision.
+
 | ID | Area | Evidence |
 | --- | --- | --- |
 | TEST-001 | Fresh seed preserves protected records and avoids media references | `tests/Feature/FreshSeedContractTest.php` |

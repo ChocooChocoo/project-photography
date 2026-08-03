@@ -1,7 +1,7 @@
-# Objective
-## System Analyzer — find out what already exists
+# System Analyzer — find out what already exists
 
-> Standalone prompt. Part of the System Analysis Workflow — see `00 - START HERE.md`.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Plain twin:** `01 - LOOK AT WHAT EXISTS.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
 
 ---
 
@@ -159,6 +159,8 @@ Two or three paragraphs in `00-overview/plain-summary.md`: what this system is, 
 00-overview/plain-summary.md
 00-overview/open-items.md  assumptions and questions raised while analyzing
 ```
+**Every document listed above opens with an `In plain terms` block** — two to four sentences, before any table or heading. It is the only thing making these documents readable by the people who commissioned them.
+
 
 ---
 
@@ -170,6 +172,7 @@ Two or three paragraphs in `00-overview/plain-summary.md`: what this system is, 
 - [ ] One flowchart per distinct process
 - [ ] Plain-language summary written
 - [ ] Nothing was edited, fixed, or recommended
+- [ ] Every document produced opens with an `In plain terms` block
 
 **Modes A and C**
 - [ ] All 16 coverage areas addressed, or marked not applicable with a reason

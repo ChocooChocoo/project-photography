@@ -1,7 +1,7 @@
-# Objective
-## System Planner — decide what to build and why
+# System Planner — decide what to build and why
 
-> Standalone prompt. Part of the System Analysis Workflow — see `00 - START HERE.md`.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Plain twin:** `03 - MAKE A PLAN.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
 
 ---
 
@@ -69,6 +69,8 @@ The rough sequence work should happen in, and the checkpoints along the way. Don
 └── deployment.md     environments, release, rollback
 05-progress/decisions.md   DEC entries
 ```
+**Every document listed above opens with an `In plain terms` block** — two to four sentences, before any table or heading. It is the only thing making these documents readable by the people who commissioned them.
+
 
 Also draw the to-be diagrams — architecture, data flow, ERD, and a target-state flowchart for every process that will change. See `08 - DIAGRAMS.md`.
 
@@ -82,6 +84,7 @@ Also draw the to-be diagrams — architecture, data flow, ERD, and a target-stat
 - [ ] Alternatives recorded where a real choice was made
 - [ ] To-be diagrams drawn for anything that changes
 - [ ] No tasks were written — the shape of the work is described, decomposition left to the user
+- [ ] Every document produced opens with an `In plain terms` block
 
 ---
 

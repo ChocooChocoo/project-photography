@@ -1,9 +1,11 @@
 # Scope and Evidence Rules
 
+> **In plain terms:** These rules define which project facts belong in the current record. Claims without evidence stay open instead of being presented as current behavior.
+
 ## In scope
 
 - Current repository behavior evidenced by source, migrations, routes, configuration, and tests.
-- The eight unchanged prompts in `prompt/tasks/`.
+- The ten unchanged prompts in `prompt/tasks/`.
 - Historical implementation status only where repository evidence or the retained task record supports it.
 
 ## Out of scope

@@ -1,6 +1,6 @@
 # Security
 
-> **In plain terms:** Login roles restrict access, sensitive keys stay on the server, and the photography assistant filters unsafe requests and responses.
+> **In plain terms:** Login roles restrict access, sensitive keys stay on the server, and the photography assistant filters unsafe requests and responses. These findings describe protections evidenced in the current project.
 
 ### ANL-005 — Chatbot guardrails
 

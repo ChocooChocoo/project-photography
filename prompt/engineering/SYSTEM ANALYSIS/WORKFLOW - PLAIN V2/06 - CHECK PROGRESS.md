@@ -1,6 +1,7 @@
 # Check Progress
 
-> Plain-language version. Does the same job as `06 - PROGRESS TRACKER.md` in `WORKFLOW - TECHNICAL/` — same steps, same output files, simpler words.
+> Standalone prompt — paste the whole file. Plain-language half of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Technical twin:** `06 - PROGRESS TRACKER.md` in `WORKFLOW - TECHNICAL V2/`. Same steps, same outputs, engineering words — edit both or neither.
 
 ---
 
@@ -105,6 +106,8 @@ Any unticked box means it stays "being worked on." **No exceptions for "basicall
 05-progress/decisions.md     decisions and their reasons
 05-progress/risks.md         what could go wrong
 ```
+**Every document listed above starts with a short paragraph in ordinary words** — two or three sentences, before any table or heading. It's the only thing that makes these readable by the person who asked for the project.
+
 
 ---
 
@@ -115,6 +118,7 @@ Any unticked box means it stays "being worked on." **No exceptions for "basicall
 - [ ] Every stuck task has a written reason
 - [ ] Every finished task has its proof recorded
 - [ ] The "do this next" line names one specific task
+- [ ] Every document produced starts with a short plain-words paragraph
 
 ---
 

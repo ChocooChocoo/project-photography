@@ -1,6 +1,7 @@
 # Write Down What's Needed
 
-> Plain-language version. Does the same job as `02 - REQUIREMENTS.md` in `WORKFLOW - TECHNICAL/` — same steps, same output files, simpler words.
+> Standalone prompt — paste the whole file. Plain-language half of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Technical twin:** `02 - REQUIREMENTS.md` in `WORKFLOW - TECHNICAL V2/`. Same steps, same outputs, engineering words — edit both or neither.
 
 ---
 
@@ -23,18 +24,18 @@ Someone who takes a request written in ordinary conversation and turns it into a
 
 ### Step 1 — Sort everything into these ten piles
 
-| Pile | What goes in it |
-|---|---|
-| **What it does** | Features and behavior |
-| **How well it does it** | Speed, uptime, how many people at once, ease of use |
-| **What it's built with** | Required tools, platforms, versions |
-| **Business rules** | Policies, fees, eligibility, anything the organization decides |
-| **Safety** | Who can see what, how data is protected, legal requirements |
-| **Information** | What gets stored, how long, how accurate it must be |
-| **Connections** | Other systems it must work with |
-| **Getting it live** | Where it runs, how updates are released |
-| **Documents** | What has to be written, and for whom |
-| **Proof** | What must be tested, and to what standard |
+| Pile                     | What goes in it                                                |
+| ------------------------ | -------------------------------------------------------------- |
+| **What it does**         | Features and behavior                                          |
+| **How well it does it**  | Speed, uptime, how many people at once, ease of use            |
+| **What it's built with** | Required tools, platforms, versions                            |
+| **Business rules**       | Policies, fees, eligibility, anything the organization decides |
+| **Safety**               | Who can see what, how data is protected, legal requirements    |
+| **Information**          | What gets stored, how long, how accurate it must be            |
+| **Connections**          | Other systems it must work with                                |
+| **Getting it live**      | Where it runs, how updates are released                        |
+| **Documents**            | What has to be written, and for whom                           |
+| **Proof**                | What must be tested, and to what standard                      |
 
 ### Step 2 — Write each one like this
 
@@ -93,6 +94,8 @@ The tracking table connects each requirement to everything related to it. Fill i
 |---|---|---|---|---|---|---|
 | REQ-004 | Email and password sign-in | ANL-009 | GAP-005 | — | — | Not started |
 ```
+**Every document listed above starts with a short paragraph in ordinary words** — two or three sentences, before any table or heading. It's the only thing that makes these readable by the person who asked for the project.
+
 
 ---
 
@@ -104,6 +107,7 @@ The tracking table connects each requirement to everything related to it. Fill i
 - [ ] Guesses kept separate from requirements
 - [ ] The tracking table is started
 - [ ] Nothing was added that nobody asked for
+- [ ] Every document produced starts with a short plain-words paragraph
 
 ---
 

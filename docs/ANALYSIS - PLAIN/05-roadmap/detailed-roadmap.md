@@ -1,5 +1,17 @@
 # Full Roadmap in Plain Language
 
+This twelve-stage roadmap combines the retained project plan with the two latest documentation-only requests. The progress record, not a phase heading by itself, shows what is actually complete.
+
+### MIL-001 — Canonical documentation reset
+
+**Closes.** Documentation reset. · **Aiming for.** No date set. · **Status.** Under review.
+**What would prove it.** Every link works, every permanent label is unique, obsolete workflow references are gone, and the technical and plain-language records agree.
+
+### MIL-002 — Next approved implementation task
+
+**Closes.** Next approved implementation. · **Aiming for.** No date set. · **Status.** Blocked.
+**What would prove it.** The owner approves a task and supplies every policy decision that task needs.
+
 ## Phase 1 — Fix what was broken
 
 Fix location-name display, gallery images, page alignment, required owner photos, payment confirmation, and the scheduled procurement reminder.
@@ -40,5 +52,12 @@ Decide and then build a safe response when an assigned photographer cancels: hel
 
 Decide and then build a complete path for trials, paid plans, ending access, reminder periods, reactivation, repeat billing, cancellation, and plan changes. This phase is blocked until the business choices in [open questions](../00-overview/open-items.md) are made.
 
-The detailed progress record explains which roadmap items have evidence of completion and which remain plans: [progress](../05-progress/detailed-progress.md).
+## Phase 11 — Planned first page
 
+Plan a welcoming first page that explains the platform before people sign in. It will use Bootstrap and include a menu, introduction, about section, services, customer comments, login and registration buttons, and footer. This is documentation only: the website still opens on the existing login page until a separate implementation task is approved.
+
+## Phase 12 — Planned studio-management improvements
+
+Write down the requirements for better registration, safer administrator access, permit checking, employee accounts, roles, attendance, client browsing, and owner-controlled prices. This phase does not choose which improvement is built first and does not change the website. It must never require an automatic system discount or permanent record deletion.
+
+The detailed progress record explains which roadmap items have evidence of completion and which remain plans: [progress](../05-progress/detailed-progress.md).

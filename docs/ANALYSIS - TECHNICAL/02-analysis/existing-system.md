@@ -1,6 +1,6 @@
 # Existing System
 
-> **In plain terms:** Platinum is a photography booking and studio-management website with separate work areas for each type of user.
+> **In plain terms:** Platinum is a photography booking and studio-management website with separate work areas for each type of user. This document records current observable behavior rather than future plans.
 
 ### ANL-001 — Laravel server-rendered application
 

@@ -1,6 +1,7 @@
 # Keep Track of Tasks
 
-> Plain-language version. Does the same job as `04 - TASK REGISTRY.md` in `WORKFLOW - TECHNICAL/` — same steps, same output files, simpler words.
+> Standalone prompt — paste the whole file. Plain-language half of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Technical twin:** `04 - TASK REGISTRY.md` in `WORKFLOW - TECHNICAL V2/`. Same steps, same outputs, engineering words — edit both or neither.
 
 ---
 
@@ -133,17 +134,21 @@ is my suggestion and doesn't block completion until you accept it.
 ### The suggestions file — nothing here is a task until I accept it
 
 ```markdown
-## Suggestion 1 — Limit how often the request form can be submitted
+### PRO-001 — Limit how often the request form can be submitted
 **Because of** REQ-019, GAP-008 · **Would go** after TASK-015 · **Size** Small
 
 **Why it seems needed.** REQ-019 asks for protection against abuse on the public
 request form. No task covers it, and the form is open to anyone in the new design.
 
 **If you agree:** add it to your task folder using your own numbering and tell me.
-I'll record it and put it in the right place in the order.
+I'll record it as a `TASK-###` and put it in the right place in the order. The
+`PRO-001` stays in the suggestions file marked accepted, pointing at the task it
+became — so you can always see where a task came from.
 
 **Status:** Waiting for your decision.
 ```
+**Every document listed above starts with a short paragraph in ordinary words** — two or three sentences, before any table or heading. It's the only thing that makes these readable by the person who asked for the project.
+
 
 ---
 
@@ -155,6 +160,7 @@ I'll record it and put it in the right place in the order.
 - [ ] The summary list has a "do this next" line and a "watch out for" line
 - [ ] Everything not covered by a task is in the suggestions file, not quietly created
 - [ ] Unclear tasks are flagged as questions, not fixed
+- [ ] Every document produced starts with a short plain-words paragraph
 
 ---
 

@@ -1,7 +1,7 @@
-# Objective
-## Diagrams — draw every process, architecture, and schema
+# Diagrams — draw every process, architecture, and schema
 
-> Standalone prompt. Part of the System Analysis Workflow — see `00 - START HERE.md`.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Plain twin:** `08 - DRAW THE PICTURES.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
 
 ---
 
@@ -89,6 +89,8 @@ If you find a diagram that no longer matches the code, don't quietly fix it. Not
 ├── process-<module>-<name>-to-be.md
 └── sequence-<interaction>.md
 ```
+**Every file listed above opens with an `In plain terms` block** covering what the file as a whole shows, in addition to the per-diagram plain reading required above. Two to four sentences, before the first diagram.
+
 
 ---
 
@@ -100,6 +102,7 @@ If you find a diagram that no longer matches the code, don't quietly fix it. Not
 - [ ] Every diagram has a `DGM-###`, a caption, and a plain-language reading
 - [ ] Every diagram is linked from the document that analyzes or plans it
 - [ ] Nothing is a screenshot
+- [ ] Every diagram file opens with an `In plain terms` block, on top of each diagram's own plain reading
 
 ---
 

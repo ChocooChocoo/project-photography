@@ -1,5 +1,7 @@
 # Open Questions
 
+These questions must be answered by the business before the related website rules can be safely built. The current documentation keeps them visible instead of choosing an answer.
+
 ## When a photographer cancels
 
 The business still needs to decide what the studio must do if an assigned photographer cancels after a customer has paid. This includes who is contacted, how quickly the studio responds, whether another photographer can be offered, and when a refund, credit, or new date is appropriate.

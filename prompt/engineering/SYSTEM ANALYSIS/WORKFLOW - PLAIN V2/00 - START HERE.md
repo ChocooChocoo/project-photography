@@ -1,10 +1,12 @@
-# Start Here — the plain-language version
+# Start Here — the plain-language version, v2
 
-Nine prompts that take a software project from "we're not sure what we have" to "it's built, tested, and written down."
+Eight prompts and a reference sheet that take a software project from "we're not sure what we have" to "it's built, tested, and written down."
 
-This is the plain-language set. There's a matching technical set in `WORKFLOW - TECHNICAL/` that does exactly the same work in engineering vocabulary. **Same steps, same output files, same rules — only the wording differs.** You can mix them: run the plain analyzer and the technical planner, and they'll fit together.
+This is the plain-language set. There's a matching technical set in `WORKFLOW - TECHNICAL V2/` that does exactly the same work in engineering vocabulary. **Same steps, same output files, same rules — only the wording differs.** You can mix them: run the plain analyzer and the technical planner, and they'll fit together. Every file names its twin at the top. **If you change a rule, change it in both.**
 
 Use this set if you're a student, a project owner, an adviser, or anyone who'd rather not decode words like *brownfield* and *traceability matrix* to get started.
+
+**What changed in v2.** The timeline folder is now in the folder list (it was used but never listed). Checkpoints got a proper label, `MIL-004`. The rule about every technical document opening in plain words is now actually checked by each prompt instead of just being stated here. Suggestions got a label too, `PRO-001`. File 09 was cut down to the four things it was the only place to find. Anything that was defined in three files is now defined in one, with the others pointing at it.
 
 ---
 
@@ -26,7 +28,7 @@ Each file is a complete instruction sheet. Pick the one that matches what you ne
 | 06 | **CHECK PROGRESS** | Work is happening and you need an honest picture of where it stands |
 | 07 | **MAKE SURE IT WORKS** | You need to prove the thing does what was asked |
 | 08 | **DRAW THE PICTURES** | Any process, structure, or database needs a diagram |
-| 09 | **EXAMPLES** | Reference — what every document should look like |
+| 09 | **EXAMPLES** | Reference — the four formats none of the prompts above already show you |
 
 **The usual order:** 01 → 02 → 03 → 04 → 05 → 08 → 07 → 06, then 06 again and again as you build.
 
@@ -37,16 +39,11 @@ Each file is a complete instruction sheet. Pick the one that matches what you ne
 ---
 
 ## Four situations you might be in
-Step 01 works out which one applies. It's worth knowing them, because the fourth catches people out.
+**Something is built** · **Nothing at all** · **Half-built or abandoned** · **Documents only**
 
-| Situation | What it means |
-|---|---|
-| **Something is built** | Look at everything before deciding anything |
-| **Nothing at all** — no code, no documents | Say so, list what you checked to be sure, then start writing requirements |
-| **Half-built or abandoned** | Look at it, then mark each piece keep / fix / replace, with reasons |
-| **Documents only** — nothing built, but there's a specification, manuscript, proposal, or client brief | Read and analyze the documents. There's plenty to find; it just isn't code. |
+**`01 - LOOK AT WHAT EXISTS.md` explains what each one means and how to tell which you're in.** It's the file that acts on the answer, so the full description lives there and nowhere else.
 
-An empty folder with a 40-page document beside it is the fourth situation, not the second. It's the most common way a project actually starts.
+The one worth knowing in advance is the fourth. An empty folder with a 40-page document beside it is not "nothing exists" — it's the most common way a project actually starts, and there's plenty to analyze. It just isn't code.
 
 ---
 
@@ -70,6 +67,8 @@ The prompts tag things with short codes so documents can point at each other. Yo
 | `ANL-009` | Something you found while looking at the existing system |
 | `GAP-005` | A difference between what exists now and what's needed |
 | `TASK-014` | One of your tasks |
+| `PRO-001` | A suggested task — not a task until you accept it |
+| `MIL-002` | A checkpoint — a point where something is demonstrably true |
 | `TEST-011` | A test |
 | `DGM-004` | A diagram |
 | `DEC-006` | A decision someone made, and why |
@@ -91,6 +90,7 @@ docs/
 ├── 02-analysis/       what's already there
 ├── 03-planning/       how you'll build it
 ├── 04-tasks/          your task list, indexed
+├── 05-roadmap/        the stages, the checkpoints, what blocks what
 ├── 05-progress/       where things stand, decisions, risks, problems
 ├── 06-testing/        tests and results
 ├── 07-diagrams/       the pictures
@@ -100,12 +100,16 @@ docs/
 prompts/tasks/         your own task files — never moved, never renamed
 ```
 
+Two folders start with `05-` on purpose: the roadmap is the plan for the work, progress is the record of it. They change at different times and different people read them.
+
 Only create what your project actually needs. An empty folder helps nobody.
 
 ---
 
 ## Two versions of everything
 Anything written for engineers should also exist in words a client or panel can follow. The technical version is the one that must be exactly right; the plain version says the same thing more simply.
+
+Every document written for engineers opens with a short **In plain terms** paragraph — two to four sentences, before anything else. Each prompt in this set asks for it and checks for it, because a rule written down only here is a rule nobody follows.
 
 Simpler words are fine. **Softer facts are not.** If something slipped by two weeks, both versions say two weeks.
 

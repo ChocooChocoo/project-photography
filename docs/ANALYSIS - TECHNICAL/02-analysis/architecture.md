@@ -1,6 +1,6 @@
 # Architecture
 
-> **In plain terms:** Each kind of user has its own workspace, but shared records such as bookings and payments connect the whole service.
+> **In plain terms:** Each kind of user has its own workspace, but shared records such as bookings and payments connect the whole service. The current application keeps those areas within one Laravel system.
 
 ### ANL-003 — Portal boundaries
 

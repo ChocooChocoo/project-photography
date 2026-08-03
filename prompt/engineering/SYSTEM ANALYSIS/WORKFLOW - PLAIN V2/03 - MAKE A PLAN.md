@@ -1,6 +1,7 @@
 # Make a Plan
 
-> Plain-language version. Does the same job as `03 - PLANNER.md` in `WORKFLOW - TECHNICAL/` — same steps, same output files, simpler words.
+> Standalone prompt — paste the whole file. Plain-language half of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Technical twin:** `03 - PLANNER.md` in `WORKFLOW - TECHNICAL V2/`. Same steps, same outputs, engineering words — edit both or neither.
 
 ---
 
@@ -79,6 +80,8 @@ behavior that REQ-004 says can't stay.
 └── deployment.md     where it runs and how updates happen
 05-progress/decisions.md   every decision and its reason
 ```
+**Every document listed above starts with a short paragraph in ordinary words** — two or three sentences, before any table or heading. It's the only thing that makes these readable by the person who asked for the project.
+
 
 Also draw the "how it should be" pictures — the structure, how information moves, the database, and a picture of every process that's changing. See `08 - DRAW THE PICTURES.md`.
 
@@ -92,6 +95,7 @@ Also draw the "how it should be" pictures — the structure, how information mov
 - [ ] Options you didn't pick are recorded wherever there was a real choice
 - [ ] Pictures drawn for anything that's changing
 - [ ] No tasks were written — the shape is described, the breakdown left to the owner
+- [ ] Every document produced starts with a short plain-words paragraph
 
 ---
 

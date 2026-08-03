@@ -1,7 +1,7 @@
-# Objective
-## Task Registry — index and track the tasks I wrote
+# Task Registry — index and track the tasks I wrote
 
-> Standalone prompt. Part of the System Analysis Workflow — see `00 - START HERE.md`.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Plain twin:** `04 - KEEP TRACK OF TASKS.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
 
 ---
 
@@ -118,17 +118,20 @@ awaiting confirmation — does not gate completion until accepted.
 ### `04-tasks/proposed.md` — nothing here is a task until I accept it
 
 ```markdown
-## P-01 — Add rate limiting to the request submission endpoint
+### PRO-001 — Add rate limiting to the request submission endpoint
 **Implied by** REQ-019, GAP-008 · **Position** after TASK-015 · **Size** Small · **QST-007**
 
 **Why it seems needed.** REQ-019 requires abuse protection on public submission.
 No registered task covers it, and the endpoint is public in the target architecture.
 
 **If you accept:** add it to `prompts/tasks/` under your own numbering and tell me;
-I'll register it and place it in the order.
+I'll register it as a `TASK-###` and place it in the order. The `PRO-###` stays in
+`proposed.md` marked accepted, pointing at the task it became — so the trail survives.
 
 **Status:** Awaiting review.
 ```
+**Every document listed above opens with an `In plain terms` block** — two to four sentences, before any table or heading. It is the only thing making these documents readable by the people who commissioned them.
+
 
 ---
 
@@ -140,6 +143,7 @@ I'll register it and place it in the order.
 - [ ] Index built, with a next-up line and a health line
 - [ ] Every requirement with no task listed in `proposed.md`, not silently created
 - [ ] Unclear tasks flagged with a `QST-###`, not fixed
+- [ ] Every document produced opens with an `In plain terms` block
 
 ---
 

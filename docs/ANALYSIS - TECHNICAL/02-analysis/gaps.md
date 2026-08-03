@@ -1,5 +1,7 @@
 # Gaps
 
+> **In plain terms:** These are the differences between current behavior and the decisions needed for a complete workflow. Neither gap authorizes implementation while its linked question remains unanswered.
+
 ### GAP-001 — No approved cancellation remedy policy
 
 **Now:** Assignment cancellation exists without a complete, approved outcome workflow.  

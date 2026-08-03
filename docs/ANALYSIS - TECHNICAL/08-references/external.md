@@ -1,5 +1,7 @@
 # External References
 
+> **In plain terms:** These are the official product and framework references relevant to the technologies already documented in Platinum. They support terminology and engineering context only.
+
 - [Laravel documentation](https://laravel.com/docs)
 - [Vite documentation](https://vite.dev/guide/)
 - [Tailwind CSS documentation](https://tailwindcss.com/docs)
@@ -14,3 +16,5 @@ External documentation describes vendor capabilities, not a claim that every cap
 - [AI assistant integration](ai-assistant-integration.md)
 - [Photographer cancellation contingency](photographer-cancellation-contingency.md)
 - [Subscription lifecycle](subscription-lifecycle.md)
+- [Landing page](landing-page.md)
+- [Core studio management requirements](core-studio-management-requirements.md)

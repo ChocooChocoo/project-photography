@@ -1,6 +1,7 @@
 # Look at What Exists
 
-> Plain-language version. Does the same job as `01 - ANALYZER.md` in `WORKFLOW - TECHNICAL/` — same steps, same output files, simpler words.
+> Standalone prompt — paste the whole file. Plain-language half of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Technical twin:** `01 - ANALYZER.md` in `WORKFLOW - TECHNICAL V2/`. Same steps, same outputs, engineering words — edit both or neither.
 
 ---
 
@@ -172,6 +173,8 @@ Two or three paragraphs: what this system is, who uses it, what it does, and wha
 00-overview/plain-summary.md   the version anyone can read
 00-overview/open-items.md      guesses made and questions raised
 ```
+**Every document listed above starts with a short paragraph in ordinary words** — two or three sentences, before any table or heading. It's the only thing that makes these readable by the person who asked for the project.
+
 
 ---
 
@@ -183,6 +186,7 @@ Two or three paragraphs: what this system is, who uses it, what it does, and wha
 - [ ] One picture per process, not one picture per module
 - [ ] The plain-language summary is written
 - [ ] You didn't change, fix, or suggest anything
+- [ ] Every document produced starts with a short plain-words paragraph
 
 **If something is already built**
 - [ ] All 16 areas covered, or marked as not applicable with a reason

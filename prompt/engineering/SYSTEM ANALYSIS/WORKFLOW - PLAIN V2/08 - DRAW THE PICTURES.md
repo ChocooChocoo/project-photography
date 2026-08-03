@@ -1,6 +1,7 @@
 # Draw the Pictures
 
-> Plain-language version. Does the same job as `08 - DIAGRAMS.md` in `WORKFLOW - TECHNICAL/` — same steps, same output files, simpler words.
+> Standalone prompt — paste the whole file. Plain-language half of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Technical twin:** `08 - DIAGRAMS.md` in `WORKFLOW - TECHNICAL V2/`. Same steps, same outputs, engineering words — edit both or neither.
 
 ---
 
@@ -92,6 +93,8 @@ If you find a picture that no longer matches the code, **don't quietly correct i
 ├── process-<section>-<name>-to-be.md    how it will work
 └── sequence-<name>.md       conversations between parts
 ```
+**Every file listed above starts with a short paragraph in ordinary words** saying what the whole file shows — that's on top of the explanation each individual picture needs. Two or three sentences, before the first picture.
+
 
 ---
 
@@ -103,6 +106,7 @@ If you find a picture that no longer matches the code, **don't quietly correct i
 - [ ] Every picture has a number, a caption, and an explanation in ordinary words
 - [ ] Every picture is linked from the document that discusses it
 - [ ] Nothing is a screenshot
+- [ ] Every picture file starts with a plain-words paragraph, as well as each picture having its own
 
 ---
 

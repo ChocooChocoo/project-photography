@@ -1,5 +1,7 @@
 # Test Results
 
+> **In plain terms:** This is the recorded result of the latest full automated check. It proves only the behavior covered by that test run at the recorded time.
+
 ## 2026-08-01
 
 **Command:** `php artisan test --compact`  

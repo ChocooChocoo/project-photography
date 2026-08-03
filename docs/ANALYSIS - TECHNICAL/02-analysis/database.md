@@ -1,6 +1,6 @@
 # Database
 
-> **In plain terms:** The system stores people, studios, bookings, payments, work assignments, and photos in related tables.
+> **In plain terms:** The system stores people, studios, bookings, payments, work assignments, and photos in related tables. Its sample-data rules preserve the protected records named by the user.
 
 ### ANL-004 — Seed-data contracts
 

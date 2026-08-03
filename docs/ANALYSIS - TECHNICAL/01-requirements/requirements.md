@@ -1,6 +1,8 @@
 # Requirements Register
 
-These requirements are extracted from the eight user-authored prompts in `prompt/tasks/`; they do not authorize new work. Their current status is in the [task index](../04-tasks/index.md).
+> **In plain terms:** These are the ten requests the project owner has written down. Recording a request here does not mean its implementation has been approved or completed.
+
+These requirements are extracted from the ten user-authored prompts in `prompt/tasks/`; they do not authorize new work. Their current status is in the [task index](../04-tasks/index.md).
 
 ### REQ-001 — Track roadmap execution
 
@@ -41,3 +43,13 @@ These requirements are extracted from the eight user-authored prompts in `prompt
 
 **Source:** `prompt/tasks/08.md`.  
 **Requirement:** Document actual subscription behavior and decisions required before access enforcement is built.
+
+### REQ-009 — Document a future Bootstrap landing page
+
+**Source:** `prompt/tasks/09.md`.
+**Requirement:** Document the planned public landing page, Bootstrap-first design constraints, future login and registration integration, and separate technical and plain-language audits without changing system behavior.
+
+### REQ-010 — Refine core studio management requirements
+
+**Source:** `prompt/tasks/10.md`.
+**Requirement:** Formalize the requested registration, verification, administration, employee, access-control, attendance, client-booking, pricing, discount, and record-retention requirements without changing system behavior.

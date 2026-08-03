@@ -1,6 +1,7 @@
 # Make Sure It Works
 
-> Plain-language version. Does the same job as `07 - TESTING.md` in `WORKFLOW - TECHNICAL/` — same steps, same output files, simpler words.
+> Standalone prompt — paste the whole file. Plain-language half of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Technical twin:** `07 - TESTING.md` in `WORKFLOW - TECHNICAL V2/`. Same steps, same outputs, engineering words — edit both or neither.
 
 ---
 
@@ -88,6 +89,8 @@ This is the document a panel or a client actually reads. Everything else in this
 06-testing/validation.md   requirement-by-requirement proof, at the end
 03-planning/testing.md     how much checking and where, if not already written
 ```
+**Every document listed above starts with a short paragraph in ordinary words** — two or three sentences, before any table or heading. It's the only thing that makes these readable by the person who asked for the project.
+
 
 ---
 
@@ -99,6 +102,7 @@ This is the document a panel or a client actually reads. Everything else in this
 - [ ] What should happen was written before running
 - [ ] Failures are written up as problems and are stopping their tasks
 - [ ] Holes listed in both directions
+- [ ] Every document produced starts with a short plain-words paragraph
 
 ---
 

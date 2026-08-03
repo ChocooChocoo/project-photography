@@ -1,5 +1,7 @@
 # Issues
 
+> **In plain terms:** This is the current problem that blocks safe follow-on work. It stays open until the named business decision is supplied.
+
 ### ISS-001 — Photographer cancellation has no approved remedy workflow
 
 **Status:** Blocked.  

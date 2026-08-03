@@ -1,7 +1,7 @@
-# Objective
-## Progress Tracker — keep the status honest
+# Progress Tracker — keep the status honest
 
-> Standalone prompt. Part of the System Analysis Workflow — see `00 - START HERE.md`.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Plain twin:** `06 - CHECK PROGRESS.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
 
 ---
 
@@ -102,6 +102,8 @@ Any unticked box means it stays `In Progress`. No exceptions for "basically done
 05-progress/decisions.md     DEC entries
 05-progress/risks.md         RSK entries
 ```
+**Every document listed above opens with an `In plain terms` block** — two to four sentences, before any table or heading. It is the only thing making these documents readable by the people who commissioned them.
+
 
 ---
 
@@ -112,6 +114,7 @@ Any unticked box means it stays `In Progress`. No exceptions for "basically done
 - [ ] Every `Blocked` task has a matching `ISS-###`
 - [ ] Every `Completed` task has recorded evidence
 - [ ] Next action names one specific task
+- [ ] Every document produced opens with an `In plain terms` block
 
 ---
 

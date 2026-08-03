@@ -1,7 +1,7 @@
-# Objective
-## Roadmap — group the work into phases with checkpoints
+# Roadmap — group the work into phases with checkpoints
 
-> Standalone prompt. Part of the System Analysis Workflow — see `00 - START HERE.md`.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Plain twin:** `05 - PUT IT ON A TIMELINE.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
 
 ---
 
@@ -64,7 +64,16 @@ Pull from `04-tasks/index.md`. A task in no phase is an oversight; a phase with 
 ```
 
 ### 3. Set milestones
-A milestone is a point where something is demonstrably true, not a date on a calendar. `MIL-002 — a user can sign in and submit a request end to end.` Each names the phase it closes and the evidence that proves it.
+A milestone is a point where something is demonstrably true, not a date on a calendar. Declare each as a heading in `05-roadmap/milestones.md` so it can be linked, and give it a permanent `MIL-###` like every other identifier:
+
+```markdown
+### MIL-002 — A user can sign in and submit a request end to end
+**Closes** Phase 6 — Development · **Target** 2026-08-15 · **Status** Not met
+**Evidence that proves it.** A recorded run through the live flow: sign in, submit,
+see it appear in the dispatcher queue. TEST-011 and TEST-019 passing.
+```
+
+`MIL-002` is checkable in front of a room. "Backend complete" isn't.
 
 ### 4. Map dependencies between phases
 Which phase genuinely blocks which. Most don't. Write the real graph, not a waterfall.
@@ -81,6 +90,8 @@ Phase percentage is completed tasks over total tasks in the phase. Project perce
 05-roadmap/milestones.md   MIL entries with evidence conditions
 05-roadmap/dependencies.md which phase blocks which, and which don't
 ```
+**Every document listed above opens with an `In plain terms` block** — two to four sentences, before any table or heading. It is the only thing making these documents readable by the people who commissioned them.
+
 
 ---
 
@@ -91,6 +102,7 @@ Phase percentage is completed tasks over total tasks in the phase. Project perce
 - [ ] Every milestone names its evidence
 - [ ] Phase dependencies reflect what's actually blocking, not a default waterfall
 - [ ] Percentages counted from the task index, not estimated
+- [ ] Every document produced opens with an `In plain terms` block
 
 ---
 

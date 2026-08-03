@@ -8,7 +8,7 @@ This folder is a complete plain-language record of Platinum. It uses simpler lan
 | [02-analysis](../02-analysis/summary.md) | What the system is and does today |
 | [03-planning](../03-planning/summary.md) | How future work should be approached |
 | [04-tasks](../04-tasks/summary.md) | The original task requests and their status |
-| [05-roadmap](../05-roadmap/summary.md) | The ten-stage project timeline |
+| [05-roadmap](../05-roadmap/summary.md) | The twelve-stage project timeline and checkpoints |
 | [05-progress](../05-progress/summary.md) | What is complete, ongoing, or waiting for a decision |
 | [06-testing](../06-testing/summary.md) | How the project is checked |
 | [07-diagrams](../07-diagrams/summary.md) | What the system diagrams show |

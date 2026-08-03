@@ -1,6 +1,6 @@
 # Detailed Implementation Roadmap
 
-> **In plain terms:** This is the complete original ten-phase roadmap. Its implementation statuses are interpreted through the current progress tracker.
+> **In plain terms:** This is the complete twelve-phase roadmap, including the two latest documentation-only planning phases. Its implementation statuses are interpreted through the current progress tracker.
 >
 > **Status:** Historical detail retained in the new System Analysis format. For the current normalized status, see the [progress tracker](../05-progress/tracker.md).
 
@@ -29,6 +29,8 @@
 | 8 | **AI Assistant** | Replace the fixed-response chatbot with a secure Groq assistant | Task-driven addition (`prompt/tasks/04.md`), not derived from the original gap list. Independent of Phases 4–7 — the chat surface touches no booking, payment, or payroll logic |
 | 9 | **Cancellation Contingency** | Photographer cancels a paid booking — cascade, substitution, refund, prevention | Task-driven addition (`prompt/tasks/07.md`). 11 items, listed in recommended build order in the execution summary. **Decision-blocked:** everything except 9.1, 9.2, and 9.11 waits on D1–D9 in [`PHOTOGRAPHER CANCELLATION CONTINGENCY.md`](../08-references/photographer-cancellation-contingency.md). 9.1 + 9.2 + 9.3 + 9.5 are the minimum set; 9.4 and 9.6 are documented but **not recommended** for this problem |
 | 10 | **Subscription Lifecycle** | Trial expiry, renewal, grace, expiry, access restriction, reactivation | Task-driven addition (`prompt/tasks/08.md`). 9 items. Completes and corrects Phase 3.4 (trial) and replaces Phase 6.4 (expiry reminders), both of which describe behaviour the code does not have. **10.1 and 10.2 are unblocked and urgent** — today a free trial grants a full billing period of free access and never ends. Everything from 10.5 onward waits on S1–S6 in [`SUBSCRIPTION LIFECYCLE.md`](../08-references/subscription-lifecycle.md) |
+| 11 | **Public Landing Page** | Bootstrap-based public introduction, navigation, and authentication calls to action | Task-driven documentation addition (`prompt/tasks/09.md`). Planned only: a future implementation may make the landing page the public root after separate approval. The current login-first behavior remains unchanged; see [landing-page plan](../03-planning/landing-page.md). |
+| 12 | **Core Studio Management Requirements** | Registration, security, permits, administration, employee access, RBAC, attendance, client browsing, and commercial controls | Task-driven documentation addition (`prompt/tasks/10.md`). Planned only: the evaluator requirements are grouped for future delivery, with no implementation order or completed behavior claimed; see [requirements plan](../03-planning/core-studio-management.md). |
 
 ---
 
@@ -1464,6 +1466,47 @@ and the revenue ledger matches what the gateway actually did.
 
 ---
 
+## Phase 11 — Public Landing Page
+
+**Status:** Planned documentation only. No application implementation is approved in this phase.
+
+**Goal:** Make a future Bootstrap-based landing page the public first page while preserving the existing login, registration, authentication, and protected-page behavior.
+
+**Planned work:**
+1. Use a unified Bootstrap template for navigation, hero, about, services, testimonials, calls to action, and footer.
+2. Make the page responsive on desktop, tablet, and mobile with Bootstrap components and utilities first.
+3. Send login and registration calls to action to the existing `/auth/login` and `/auth/register` routes.
+4. Replace the unauthenticated root redirect only in a separately approved implementation task.
+5. Use minimal custom CSS only when Bootstrap utilities cannot meet a necessary, template-consistent design requirement.
+
+**Done when:** A separately approved implementation has verified the public entry page, responsive layouts, navigation, authentication calls to action, existing authentication flows, authenticated redirects, and protected routes. This documentation task does not satisfy those implementation checks.
+
+See the [technical landing-page plan](../03-planning/landing-page.md) and [Task 09 record](../04-tasks/records/task-009.md).
+
+---
+
+## Phase 12 — Core Studio Management Requirements
+
+**Status:** Planned documentation only. No application implementation is approved in this phase.
+
+**Goal:** Establish the evaluator-derived requirements baseline for future registration, security, permit, administration, employee, access-control, attendance, client, and commercial-rule work.
+
+**Planned requirement groups:**
+1. Registration, studio setup, price ranges, down-payment settings, service categories, and social links.
+2. Dedicated administrator login, email OTP, document review, rejection reasons, resubmission counts, and approval notifications.
+3. Permit-gated studio access, permit-expiry tracking, and re-verification.
+4. Guided onboarding, employee credential delivery, and first-login password replacement.
+5. Combined roles, category-level permission assignment, and archive-only deletion.
+6. Per-day schedules, live-photo and geolocation attendance validation, client favorites, visible package/gallery images, and owner-controlled discounts.
+
+**Constraints:** No mandatory system discount and no permanent hard deletion. Email, camera, location, permit-validity, document-review, and account-provisioning dependencies must be available before the related requirement is implemented.
+
+**Done when:** A separately approved implementation sequence has delivered and verified the requirements without changing the stated exclusions. This documentation task does not satisfy those implementation checks.
+
+See the [technical requirements plan](../03-planning/core-studio-management.md) and [requirements reference](../08-references/core-studio-management-requirements.md).
+
+---
+
 ## Execution Order Summary
 
 ```
@@ -1554,6 +1597,16 @@ Phase 10 — Subscription Lifecycle                       ← NEW (task 08, part
 
   10.1–10.3 are bug fixes and need no decision. 10.5 is what makes a subscription mean
   anything at all; see §5–§8 of the lifecycle document.
+
+Phase 11 — Public Landing Page                           ← PLANNED (task 09, documentation only)
+  11.1 Bootstrap-based navigation, hero, about, services, testimonials, calls to action, and footer
+  11.2 Make the landing page the public root only after a separate implementation task is approved
+  11.3 Preserve the existing login and registration routes and all current authentication behavior
+
+Phase 12 — Core Studio Management Requirements           ← PLANNED (task 10, documentation only)
+  12.1 Registration, pricing, permit, administration, onboarding, employee, RBAC, archive, attendance, and client requirements
+  12.2 Do not assign a delivery order until a separate implementation task is approved
+  12.3 Preserve the no-mandatory-discount and no-hard-deletion constraints
 
 ```
 

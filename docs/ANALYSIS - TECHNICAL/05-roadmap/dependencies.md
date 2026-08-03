@@ -1,5 +1,7 @@
 # Dependencies
 
+> **In plain terms:** Approved work moves from a user-authored request through requirements, implementation, proof, and a progress update. The two open policy questions block only the implementations that depend on their answers.
+
 ```mermaid
 flowchart LR
     A[User-authored prompt] --> B[Requirements and task record]

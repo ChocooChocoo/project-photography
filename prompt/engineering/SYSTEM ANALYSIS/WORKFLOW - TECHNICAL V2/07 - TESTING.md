@@ -1,7 +1,7 @@
-# Objective
-## Testing — prove each requirement actually works
+# Testing — prove each requirement actually works
 
-> Standalone prompt. Part of the System Analysis Workflow — see `00 - START HERE.md`.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
+> **Plain twin:** `07 - MAKE SURE IT WORKS.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
 
 ---
 
@@ -80,6 +80,8 @@ At the end, one document answering: does the system do what was asked? Requireme
 06-testing/validation.md   requirement-by-requirement proof (at the end)
 03-planning/testing.md     the strategy, if not already written
 ```
+**Every document listed above opens with an `In plain terms` block** — two to four sentences, before any table or heading. It is the only thing making these documents readable by the people who commissioned them.
+
 
 ---
 
@@ -91,6 +93,7 @@ At the end, one document answering: does the system do what was asked? Requireme
 - [ ] Expected results written before running
 - [ ] Failures logged as issues and blocking their tasks
 - [ ] Coverage gaps listed in both directions
+- [ ] Every document produced opens with an `In plain terms` block
 
 ---
 
