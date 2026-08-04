@@ -1,0 +1,17 @@
+# Gaps
+
+> **In plain terms:** These are the differences between current behavior and the decisions needed for a complete workflow. Neither gap authorizes implementation while its linked question remains unanswered.
+
+### GAP-001 — No approved cancellation remedy policy
+
+**Now:** Assignment cancellation exists without a complete, approved outcome workflow.
+**Target:** A policy decision before implementation.
+**From:** [ANL-012](technical-debt.md#anl-012--cancellation-outcome-is-incomplete).
+**Status:** Blocked by [QST-001](../../00%20-%20START%20HERE/PLAIN/open-items.md#qst-001--photographer-cancellation-policy).
+
+### GAP-002 — Subscription access policy is unresolved
+
+**Now:** Trial and subscription data exists without a complete approved lifecycle.
+**Target:** An approved access, renewal, and data-retention policy before implementation.
+**From:** [ANL-013](technical-debt.md#anl-013--subscription-access-enforcement-is-unresolved).
+**Status:** Blocked by [QST-002](../../00%20-%20START%20HERE/PLAIN/open-items.md#qst-002--subscription-access-policy).

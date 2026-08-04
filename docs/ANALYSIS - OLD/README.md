@@ -4,6 +4,8 @@ Documentation for the Laravel Studio Platform capstone project, organized by pur
 directory reflects implemented code changes unless a document explicitly says so — most of this is
 analysis and planning.
 
+Current documentation lives under [`../WORKFLOW/`](../WORKFLOW/00%20-%20START%20HERE/PLAIN/summary.md). The `2026-08-04-pre-workflow-migration` directory preserves the former analysis trees as historical, non-current records.
+
 ---
 
 ## 01-ANALYSIS
