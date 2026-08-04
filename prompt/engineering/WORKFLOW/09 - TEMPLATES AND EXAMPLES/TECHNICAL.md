@@ -1,35 +1,46 @@
 # Templates — the four formats no prompt already shows
 
-> Reference file, not a prompt. Part of the System Analysis Workflow v2 — see `00 - START HERE.md`.
-> **Plain twin:** `09 - EXAMPLES.md` in `WORKFLOW - PLAIN V2/`.
+> Reference file, not a prompt. Part of the System Analysis Workflow v2 — see `../00 - START HERE/TECHNICAL.md`.
+> **Plain counterpart:** `PLAIN.md` in this folder.
 
 **Why this file is short.** In v1 it repeated eleven formats that prompts `01`–`08` already showed in full. Two copies of a format means one of them silently goes stale, and nothing tells you which. So each format now has exactly one home — the prompt that produces it — and this file holds only the four that no prompt shows, plus a map to the rest.
 
-Every identifier is declared as a heading so it can be linked: `[REQ-004](../01-requirements/requirements.md#req-004)`
+Stage 09 is reference-only by default and creates no required project document. Every identifier is declared as a heading so it can be linked. From a materialized Stage 09 technical file: `[REQ-004](../../02%20-%20REQUIREMENTS/TECHNICAL/requirements.md#req-004)`
 
 ---
 
-## Where each format lives
+## Where each format is defined
 
 | Format | Defined in |
 |---|---|
-| Requirement `REQ-###` | `02 - REQUIREMENTS.md` |
-| Analysis finding `ANL-###` — code and document variants | `01 - ANALYZER.md` |
-| Gap `GAP-###` | `01 - ANALYZER.md` |
-| Decision `DEC-###` | `03 - PLANNER.md` |
-| Task record + task index | `04 - TASK REGISTRY.md` |
-| Proposed task `PRO-###` | `04 - TASK REGISTRY.md` |
-| Roadmap phase + milestone `MIL-###` | `05 - ROADMAP.md` |
-| Progress tracker + plain-language status | `06 - PROGRESS TRACKER.md` |
-| Issue `ISS-###` | `06 - PROGRESS TRACKER.md` |
-| Test case `TEST-###` + results table | `07 - TESTING.md` |
-| Diagram `DGM-###` | `08 - DIAGRAMS.md` |
+| Requirement `REQ-###` | `../02 - REQUIREMENTS/TECHNICAL.md` |
+| Analysis finding `ANL-###` — code and document variants | `../01 - SYSTEM ANALYSIS/TECHNICAL.md` |
+| Gap `GAP-###` | `../01 - SYSTEM ANALYSIS/TECHNICAL.md` |
+| Decision `DEC-###` | `../03 - PLANNING/TECHNICAL.md` |
+| Task record + task index | `../04 - TASK TRACKING/TECHNICAL.md` |
+| Proposed task `PRO-###` | `../04 - TASK TRACKING/TECHNICAL.md` |
+| Roadmap phase + milestone `MIL-###` | `../05 - ROADMAP/TECHNICAL.md` |
+| Progress tracker + plain-language status | `../06 - PROGRESS TRACKING/TECHNICAL.md` |
+| Issue `ISS-###` | `../06 - PROGRESS TRACKING/TECHNICAL.md` |
+| Test case `TEST-###` + results table | `../07 - TESTING/TECHNICAL.md` |
+| Diagram `DGM-###` | `../08 - DIAGRAMS/TECHNICAL.md` |
 
 Change a format in its home file and it's changed everywhere. Nothing below duplicates any of them.
 
+## Generated homes for the four reference formats
+
+| Format | Technical generated home |
+|---|---|
+| Risk | `docs/WORKFLOW/06 - PROGRESS TRACKING/TECHNICAL/risks.md` |
+| Open items | `docs/WORKFLOW/00 - START HERE/TECHNICAL/open-items.md` |
+| Traceability matrix | `docs/WORKFLOW/02 - REQUIREMENTS/TECHNICAL/traceability.md` |
+| Glossary or another project reference | A needed file such as `docs/WORKFLOW/09 - TEMPLATES AND EXAMPLES/TECHNICAL/glossary.md`, only if the project materializes it |
+
+The first three belong to their owning stages, not Stage 09. Do not create a Stage 09 output merely because an example appears here.
+
 ---
 
-## Risk — `05-progress/risks.md`
+## Risk — `docs/WORKFLOW/06 - PROGRESS TRACKING/TECHNICAL/risks.md`
 
 No stage produces these on a schedule; they get written whenever a plan or a task surfaces one. That's why the format lives here rather than inside a single prompt.
 
@@ -46,7 +57,7 @@ A risk with no trigger is a worry, not a risk. If you can't say what would set i
 
 ---
 
-## Open items — `00-overview/open-items.md`
+## Open items — `docs/WORKFLOW/00 - START HERE/TECHNICAL/open-items.md`
 
 Two identifiers share one file. `ASM-###` is something you decided yourself and are prepared to be wrong about; `QST-###` is something only the owner can decide. Keeping them together means there's one place to check before a meeting.
 
@@ -66,9 +77,9 @@ An assumption with no stated basis is a guess wearing a label. Name what it rest
 
 ---
 
-## Traceability matrix — `01-requirements/traceability.md`
+## Traceability matrix — `docs/WORKFLOW/02 - REQUIREMENTS/TECHNICAL/traceability.md`
 
-Started in `02 - REQUIREMENTS.md` and filled in by every stage after it. This is the full shape, once every column has an owner.
+Started in Stage 02 and filled in by every stage after it. This is the full shape, once every column has an owner.
 
 ```markdown
 | REQ | Requirement | Analysis | Gap | Tasks | Tests | Status |
@@ -83,7 +94,7 @@ The coverage-gaps line is the point of the table. A matrix with no gaps listed u
 
 ---
 
-## Glossary — `08-references/glossary.md`
+## Glossary — optional paired Stage 09 file
 
 ```markdown
 | Technical term | In plain words | Why it matters |
@@ -94,3 +105,27 @@ The coverage-gaps line is the point of the table. A matrix with no gaps listed u
 ```
 
 Any technical term appearing in a non-technical document needs an entry here. The third column is what makes the glossary worth writing — the definition tells a panelist what the word means, the "why it matters" tells them why they should care that you got it right.
+
+---
+
+## Output
+
+None by default. If this project needs a glossary, reference, template, or example file, create only that needed filename under both audience folders, for example:
+
+```text
+docs/WORKFLOW/09 - TEMPLATES AND EXAMPLES/
+├── PLAIN/glossary.md
+└── TECHNICAL/glossary.md
+```
+
+The relative filename is identical in both folders. Add, delete, or rename both copies together. Both carry identical facts, statuses, dates, decisions, risks, and outcomes. Technical may include code, schema/database, APIs, paths, frameworks, configuration, and engineering detail; Plain contains none of those and never depends on or links to Technical.
+
+---
+
+## Done when
+
+- [ ] No Stage 09 project file was created unless the project actually needs it
+- [ ] Risks are kept in Stage 06, open items in Stage 00, and traceability in Stage 02
+- [ ] Every materialized Stage 09 relative filename exists under both audience folders
+- [ ] Both audience copies agree on facts, statuses, dates, decisions, risks, and outcomes
+- [ ] Plain files contain no code, programming-language detail, implementation syntax, or dependency on Technical

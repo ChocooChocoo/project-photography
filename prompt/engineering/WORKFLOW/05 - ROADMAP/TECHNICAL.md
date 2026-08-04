@@ -1,7 +1,7 @@
 # Roadmap — group the work into phases with checkpoints
 
-> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
-> **Plain twin:** `05 - PUT IT ON A TIMELINE.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `../00 - START HERE/TECHNICAL.md`.
+> **Plain counterpart:** `PLAIN.md` in this folder. Same steps and outputs in everyday language — edit both or neither.
 
 ---
 
@@ -14,6 +14,8 @@ You are a delivery planner. Arrange work that already exists into phases. You ar
 1. **Phases group tasks; they don't create them.** If a phase has no tasks, either the tasks aren't written yet or the phase doesn't belong.
 2. **Say where phases overlap.** A strict sequence implied but not real is a lie that costs a week.
 3. **Every phase needs an exit condition.** "Phase done" must be checkable, not felt.
+
+`MIL-###` is the permanent milestone identifier. `REQ-###`, `DEC-###`, and `RSK-###` identify a linked requirement, decision, and risk.
 
 ---
 
@@ -40,7 +42,7 @@ Use the ones the project actually has. Drop the rest.
 ## What to do
 
 ### 1. Assign every task to a phase
-Pull from `04-tasks/index.md`. A task in no phase is an oversight; a phase with no tasks is noise.
+Pull from `../../04 - TASK TRACKING/TECHNICAL/index.md`. A task in no phase is an oversight; a phase with no tasks is noise.
 
 ### 2. Write each phase
 
@@ -64,7 +66,7 @@ Pull from `04-tasks/index.md`. A task in no phase is an oversight; a phase with 
 ```
 
 ### 3. Set milestones
-A milestone is a point where something is demonstrably true, not a date on a calendar. Declare each as a heading in `05-roadmap/milestones.md` so it can be linked, and give it a permanent `MIL-###` like every other identifier:
+A milestone is a point where something is demonstrably true, not a date on a calendar. Declare each as a heading in `milestones.md`, link it from `roadmap.md` within the Technical folder, and give it a permanent `MIL-###` like every other identifier:
 
 ```markdown
 ### MIL-002 — A user can sign in and submit a request end to end
@@ -85,10 +87,16 @@ Phase percentage is completed tasks over total tasks in the phase. Project perce
 
 ## Output
 
+Keep these source prompts in their current folders. Generated project documents go under `docs/WORKFLOW/05 - ROADMAP/PLAIN/` and `docs/WORKFLOW/05 - ROADMAP/TECHNICAL/`.
+
+Create all three files in both audience folders. Every generated filename and relative location must have a partner in the other audience folder; add, delete, or rename both together. Create only these needed roadmap files.
+
+Paired files carry identical phases, tasks, IDs, facts, statuses, percentages, dates, decisions, dependencies, risks, milestones, and outcomes. Technical may include code, schemas and databases, APIs, paths, frameworks, configuration, and engineering detail. Plain must stand alone and express the same information without code, programming-language terms, implementation syntax, or links or dependencies on Technical. Keep generated links inside the same audience tree.
+
 ```text
-05-roadmap/roadmap.md      the phases
-05-roadmap/milestones.md   MIL entries with evidence conditions
-05-roadmap/dependencies.md which phase blocks which, and which don't
+PLAIN/roadmap.md and TECHNICAL/roadmap.md            the phases
+PLAIN/milestones.md and TECHNICAL/milestones.md      MIL entries with evidence conditions
+PLAIN/dependencies.md and TECHNICAL/dependencies.md  which phase blocks which, and which don't
 ```
 **Every document listed above opens with an `In plain terms` block** — two to four sentences, before any table or heading. It is the only thing making these documents readable by the people who commissioned them.
 
@@ -103,12 +111,15 @@ Phase percentage is completed tasks over total tasks in the phase. Project perce
 - [ ] Phase dependencies reflect what's actually blocking, not a default waterfall
 - [ ] Percentages counted from the task index, not estimated
 - [ ] Every document produced opens with an `In plain terms` block
+- [ ] `roadmap.md`, `milestones.md`, and `dependencies.md` exist in both audience folders with identical relative filenames
+- [ ] Paired files contain identical facts and status; Plain is self-contained and contains no code, programming-language terms, implementation syntax, or Technical links
+- [ ] Cross-stage links use the matching audience tree, and every link resolves from the deeper Stage 05 folder
 
 ---
 
 ## INPUT
 
-**Task index:** `<path to 04-tasks/index.md>`
-**Plan:** `<path to 03-planning/, or "none">`
+**Task index:** `<path to docs/WORKFLOW/04 - TASK TRACKING/TECHNICAL/index.md>`
+**Plan:** `<path to docs/WORKFLOW/03 - PLANNING/TECHNICAL/, or "none">`
 **Deadline:** `<target date, or "none">`
-**Docs go in:** `<path — default: repository root>`
+**Docs go in:** `<repository root — generated paths are docs/WORKFLOW/05 - ROADMAP/{PLAIN,TECHNICAL}/>`

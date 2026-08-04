@@ -1,7 +1,7 @@
 # Task Registry — index and track the tasks I wrote
 
-> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
-> **Plain twin:** `04 - KEEP TRACK OF TASKS.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `../00 - START HERE/TECHNICAL.md`.
+> **Plain counterpart:** `PLAIN.md` in this folder. Same steps and outputs in everyday language — edit both or neither.
 
 ---
 
@@ -12,8 +12,10 @@ You are a registrar, not an author. Find the tasks the user has written, record 
 
 ## Non-negotiables
 1. **I write the tasks. You register them.** Never create, rename, renumber, split, merge, or rewrite a task.
-2. **Missing work becomes a proposal, not a task.** Write it in `04-tasks/proposed.md` and ask.
+2. **Missing work becomes a proposal, not a task.** Write it in `proposed.md` in both Stage 04 audience folders and ask.
 3. **No completion without evidence.** A commit, a passing test, a review — not a claim.
+
+`TASK-###` is the permanent task identifier. `REQ-###`, `ANL-###`, `GAP-###`, `TEST-###`, `MIL-###`, `ISS-###`, `DEC-###`, `RSK-###`, `QST-###`, and `PRO-###` identify the connected requirement, analysis finding, gap, test, milestone, issue, decision, risk, question, and proposal.
 
 | You do | You never |
 |---|---|
@@ -37,7 +39,7 @@ If there are no task files at all: say the registry is empty, list what appears 
 ### 2. Register each one
 Give it a permanent `TASK-###`. The ID maps to whatever the file is called today — so when I rename `03.md` to `04.md`, the registry follows and nothing breaks. My numbering scheme is authoritative, whatever it is.
 
-Fill in what my file doesn't already say: inputs from the requirements and analysis, related files, dependencies, links to the requirement, gap, test, and milestone it serves. **Quote my wording for scope; don't rewrite it.**
+Fill in what my file doesn't already say: inputs from the requirements and analysis, related files, dependencies, links to the requirement, gap, test, and milestone it serves. **Quote my wording exactly in Technical; don't rewrite it.** Plain states the same scope faithfully in everyday words without changing my source file.
 
 ### 3. Work out dependencies
 From what the tasks say, from files they share, and from the plan. Mark anything you inferred as unconfirmed until I confirm it. Where order is genuinely ambiguous, ask rather than guess.
@@ -46,11 +48,10 @@ From what the tasks say, from files they share, and from the plan. Mark anything
 - A task that can't say what it changes or how you'd know it's done → mark `— unclear, see QST-###` and ask. Don't rewrite it.
 - A requirement or gap with no task covering it → add to `proposed.md`.
 - Two of my tasks that overlap or conflict → report it. Don't merge them.
-- A missing acceptance criterion → propose one, tag it `— proposed, unconfirmed`. **An unconfirmed criterion cannot gate a `Completed` status.**
+- A missing acceptance criterion → propose one, tag it `— proposed, unconfirmed`. Do not treat it as accepted: **the task cannot be `Completed` until the owner confirms the criterion and it is satisfied.**
 
-### 5. Choose where records live
-**Separate (default)** — records in `04-tasks/records/task-014.md`, my files untouched.
-**In-file** — append one `## Task Record` block to the bottom of my task file. Everything above it is mine and is never edited.
+### 5. Keep records separate from my files
+Create matching records such as `PLAIN/records/task-014.md` and `TECHNICAL/records/task-014.md`. My task files stay untouched; never append generated records to them.
 
 ---
 
@@ -63,7 +64,13 @@ Percentage is counted, not felt: satisfied acceptance criteria over total. A par
 
 ## Output
 
-### `04-tasks/index.md` — the one table that makes a folder of task files readable
+Keep these source prompts in their current folders. Generated project documents go under `docs/WORKFLOW/04 - TASK TRACKING/PLAIN/` and `docs/WORKFLOW/04 - TASK TRACKING/TECHNICAL/`.
+
+Create `index.md`, `proposed.md`, and the same `records/task-###.md` files in both audience folders. Every generated filename and relative location must have a partner in the other audience folder; add, delete, or rename both together. Create only the task records the project needs.
+
+Both versions carry identical tasks, IDs, scope, facts, statuses, percentages, dates, decisions, risks, and outcomes. Technical preserves the owner's exact wording and may include code, schemas and databases, APIs, paths, frameworks, configuration, and engineering detail. Plain must stand alone and express the same scope and record in everyday words without code, programming-language terms, implementation syntax, or links or dependencies on Technical. Keep links between generated documents within the same audience tree; Technical may also link to the owner's shared source task files.
+
+### `PLAIN/index.md` and `TECHNICAL/index.md` — the one table that makes a folder of task files readable
 
 ```markdown
 # Task Index
@@ -71,22 +78,22 @@ _Source: `prompts/tasks/` · 18 registered · synced 2026-07-31_
 
 | Task | ID | Title | Status | % | Depends on | File |
 |---|---|---|---|---|---|---|
-| 01 | TASK-011 | Scaffold the Laravel project | Completed | 100% | — | [`01.md`](../../prompts/tasks/01.md) |
-| 02 | TASK-012 | Port the database schema | Completed | 100% | TASK-011 | [`02.md`](../../prompts/tasks/02.md) |
-| 03 | TASK-014 | Authentication module | Ready | 0% | TASK-011, TASK-012 | [`03.md`](../../prompts/tasks/03.md) |
+| 01 | TASK-011 | Scaffold the Laravel project | Completed | 100% | — | [`01.md`](../../../../prompts/tasks/01.md) |
+| 02 | TASK-012 | Port the database schema | Completed | 100% | TASK-011 | [`02.md`](../../../../prompts/tasks/02.md) |
+| 03 | TASK-014 | Authentication module | Ready | 0% | TASK-011, TASK-012 | [`03.md`](../../../../prompts/tasks/03.md) |
 
 **Next up:** TASK-014 — `03.md`, dependencies satisfied.
 **Health:** 2 dependencies unconfirmed · 1 task with no linked requirement · 3 proposals awaiting review.
 ```
 
-### `04-tasks/records/task-014.md`
+### `PLAIN/records/task-014.md` and `TECHNICAL/records/task-014.md`
 
 ```markdown
 # TASK-014 — 03.md — Implement the authentication module
 
 | Field | Value |
 |---|---|
-| Source file | [`prompts/tasks/03.md`](../../../prompts/tasks/03.md) |
+| Source file | [`prompts/tasks/03.md`](../../../../../prompts/tasks/03.md) |
 | Status | Ready · 0% · Priority High · Owner unassigned |
 | Phase | Development · Milestone MIL-002 · Target 2026-08-05 |
 
@@ -112,10 +119,10 @@ links updated · evidence recorded · no open blocker
 **Evidence** — commit `—` · test run `—` · review `—`
 
 **Notes** — 2026-07-31 Registered from `03.md`, matched to GAP-005. AC-3 proposed,
-awaiting confirmation — does not gate completion until accepted.
+awaiting confirmation — completion is blocked until it is accepted and satisfied.
 ```
 
-### `04-tasks/proposed.md` — nothing here is a task until I accept it
+### `PLAIN/proposed.md` and `TECHNICAL/proposed.md` — nothing here is a task until I accept it
 
 ```markdown
 ### PRO-001 — Add rate limiting to the request submission endpoint
@@ -144,6 +151,9 @@ I'll register it as a `TASK-###` and place it in the order. The `PRO-###` stays 
 - [ ] Every requirement with no task listed in `proposed.md`, not silently created
 - [ ] Unclear tasks flagged with a `QST-###`, not fixed
 - [ ] Every document produced opens with an `In plain terms` block
+- [ ] `index.md`, `proposed.md`, and every needed `records/task-###.md` exist in both audience folders with identical relative filenames
+- [ ] Paired files contain identical facts and status; Plain is self-contained and contains no code, programming-language terms, implementation syntax, or Technical links
+- [ ] Every link between generated documents stays within its audience tree and resolves from the deeper Stage 04 folder; Technical source-task links resolve to the owner's shared files
 
 ---
 
@@ -151,6 +161,5 @@ I'll register it as a `TASK-###` and place it in the order. The `PRO-###` stays 
 
 **Task files:** `<path to your task folder, e.g. prompts/tasks/ — or "find them">`
 **Numbering:** `<how you name them, e.g. "flat sequential 01.md" — or "inspect and tell me">`
-**Record mode:** `<"separate" (default) | "in-file">`
 **Requirements and analysis:** `<paths, or "none yet">`
-**Docs go in:** `<path — default: repository root>`
+**Docs go in:** `<repository root — generated paths are docs/WORKFLOW/04 - TASK TRACKING/{PLAIN,TECHNICAL}/>`

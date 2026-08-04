@@ -1,7 +1,7 @@
 # System Analyzer — find out what already exists
 
-> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
-> **Plain twin:** `01 - LOOK AT WHAT EXISTS.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `../00 - START HERE/TECHNICAL.md`.
+> **Plain counterpart:** `PLAIN.md` in this folder. Same steps and outputs in everyday language — edit both or neither.
 
 ---
 
@@ -15,6 +15,14 @@ You are a Systems Analyst. Inspect, verify, and record. Do not recommend, redesi
 2. **No claim without evidence.** A finding needs something you can point at — a file path and line range, a command output, a schema excerpt, or a document and section. If you can't point at anything, it's an assumption — log it as `ASM-###`, not a finding.
 3. **Don't touch anything.** This stage is read-only — no edits, no fixes, no refactors, and no rewriting the documents you were given.
 4. **What a document says is not what a system does.** Keep claims and observations apart. This matters most in Mode D below, where every finding is a claim.
+
+### Generated-document contract
+
+- Leave this source prompt in place. Generated project documentation belongs under `docs/WORKFLOW/<numbered stage>/<audience>/`, with `PLAIN` and `TECHNICAL` as the audience folders.
+- Every generated relative filename must exist in both audience folders. Add, delete, or rename both copies together, and keep their facts, statuses, dates, decisions, risks, and outcomes aligned.
+- `TECHNICAL` contains code, database/schema, APIs, paths, frameworks, configuration, and other engineering detail.
+- `PLAIN` covers the same record independently but contains no code, programming-language names, implementation syntax, or link or dependency on `TECHNICAL`.
+- Create only the listed files the project needs; any file created must be paired.
 
 ---
 
@@ -107,7 +115,7 @@ Where an existing component already satisfies something, say so explicitly. This
 **In Mode D, skip this step.** Nothing exists yet, so nothing works yet. Do not let a document's description of a feature become "this already works."
 
 ### 5. Trace the processes
-In Modes A and C, follow each process through the code. In Mode D, follow each process as the documents describe it, and mark the drawing as intended rather than actual. Draw a flowchart for each one — one per process, not one merged diagram per module. See `08 - DIAGRAMS.md` for the format.
+In Modes A and C, follow each process through the code. In Mode D, follow each process as the documents describe it, and mark the drawing as intended rather than actual. Draw a flowchart for each one — one per process, not one merged diagram per module. See `../08 - DIAGRAMS/TECHNICAL.md` for the format.
 
 ### 6. Turn findings into gaps
 ```markdown
@@ -119,47 +127,28 @@ In Modes A and C, follow each process through the code. In Mode D, follow each p
 
 **In Mode D, skip the gap list.** Nothing is built, so every feature is a gap and the list says nothing useful. Write one line in `gaps.md` recording that the whole system is to-be, and put the effort into requirements and planning instead. The contradictions, omissions, and ambiguities from Step 2D are what carry forward — they become `QST-###` entries in Stage 02, and they are the most valuable thing this stage produces in Mode D.
 
-### 7. Write the plain-language version
-Two or three paragraphs in `00-overview/plain-summary.md`: what this system is, who uses it, what it does, and what's wrong with it — no jargon, no file paths. In Mode D, what it *will* be, and what's unresolved.
+### 7. Write the paired summaries and scope
+Write two or three paragraphs in each audience's `summary.md`: what this system is, who uses it, what it does, and what's wrong with it. In Mode D, explain what it *will* be and what's unresolved. Write `scope.md` with the inspected and excluded areas, selected mode, and evidence boundary, and use `open-items.md` for assumptions and questions. The `PLAIN` copies remain jargon-free and contain no paths; the `TECHNICAL` copies carry the matching engineering detail.
 
 ---
 
 ## Output
 
-**Modes A and C**
+Create the same relative filenames in both audience folders:
 
 ```text
-02-analysis/
-├── existing-system.md    stack, structure, features, config, environment
-├── architecture.md       components, boundaries, business logic
-├── database.md           schema, relationships, migrations
-├── security.md           auth, secrets, vulnerabilities
-├── technical-debt.md     duplication, dead code, shortcuts, known issues
-├── gaps.md               GAP entries
-└── process-flows.md      one flowchart per process
+docs/WORKFLOW/
+|- 00 - START HERE/
+|  |- PLAIN/{summary.md, scope.md, open-items.md}
+|  `- TECHNICAL/{summary.md, scope.md, open-items.md}
+`- 01 - SYSTEM ANALYSIS/
+   |- PLAIN/{existing-system.md, architecture.md, database.md, security.md, technical-debt.md, gaps.md, process-flows.md}
+   `- TECHNICAL/{existing-system.md, architecture.md, database.md, security.md, technical-debt.md, gaps.md, process-flows.md}
 ```
 
-**Mode D**
+For Mode D, retain those filenames: `existing-system.md` holds the document inventory and stated intent; `architecture.md` holds claimed components and business rules; `database.md` holds the draft data model; `security.md` holds security claims and omissions; `technical-debt.md` holds contradictions, omissions, ambiguity, and unstated assumptions; `gaps.md` holds the one-line to-be statement; and `process-flows.md` holds intended flows.
 
-```text
-02-analysis/
-├── document-inventory.md  every document read: name, date, authority, what it covers
-├── stated-intent.md       purpose, actors, roles, features as described
-├── business-rules.md      policies, formulas, thresholds, scoring logic
-├── draft-data-model.md    entities and relationships extracted from the documents
-├── contradictions.md      where documents disagree, both sides named
-├── omissions.md           what's obviously needed and mentioned nowhere
-├── gaps.md                one line: nothing built, whole system is to-be
-└── process-flows.md       one flowchart per described process, marked "intended"
-```
-
-**Both**
-
-```text
-00-overview/plain-summary.md
-00-overview/open-items.md  assumptions and questions raised while analyzing
-```
-**Every document listed above opens with an `In plain terms` block** — two to four sentences, before any table or heading. It is the only thing making these documents readable by the people who commissioned them.
+**Every document listed above opens with an `In plain terms` block** — two to four sentences, before any table or heading. Generated links stay within the same audience, for example `[ANL-009](architecture.md#anl-009)` inside either audience folder.
 
 
 ---
@@ -170,9 +159,11 @@ Two or three paragraphs in `00-overview/plain-summary.md`: what this system is, 
 - [ ] Mode recorded, with the reason it was chosen
 - [ ] Every finding has evidence, or has been demoted to `ASM-###`
 - [ ] One flowchart per distinct process
-- [ ] Plain-language summary written
+- [ ] Paired summaries, scopes, and open-items records written
 - [ ] Nothing was edited, fixed, or recommended
 - [ ] Every document produced opens with an `In plain terms` block
+- [ ] Every generated relative filename exists in both audience folders, with aligned facts, statuses, dates, decisions, risks, and outcomes
+- [ ] `PLAIN` documents stand alone without code, programming-language names, implementation syntax, or links or dependencies to `TECHNICAL`
 
 **Modes A and C**
 - [ ] All 16 coverage areas addressed, or marked not applicable with a reason
@@ -195,4 +186,4 @@ Two or three paragraphs in `00-overview/plain-summary.md`: what this system is, 
 **Project:** `<path to repository, or "fresh repository — documents only">`
 **Documents:** `<paths to any specs, manuscripts, proposals, briefs, or prior documentation — or "none">`
 **Focus:** `<specific area to prioritize, or "everything">`
-**Docs go in:** `<path — default: repository root>`
+**Docs go in:** `<project root — generated files use docs/WORKFLOW/>`

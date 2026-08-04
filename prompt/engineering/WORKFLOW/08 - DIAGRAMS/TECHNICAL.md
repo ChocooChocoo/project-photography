@@ -1,7 +1,7 @@
 # Diagrams — draw every process, architecture, and schema
 
-> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `00 - START HERE.md`.
-> **Plain twin:** `08 - DRAW THE PICTURES.md` in `WORKFLOW - PLAIN V2/`. Same steps, same outputs, simpler words — edit both or neither.
+> Standalone prompt — paste the whole file. Part of the System Analysis Workflow v2; see `../00 - START HERE/TECHNICAL.md`.
+> **Plain counterpart:** `PLAIN.md` in this folder. Same steps and outputs in everyday language — edit both or neither.
 
 ---
 
@@ -14,6 +14,8 @@ You are a visual modeler. Diagrams are deliverables, not decoration. Draw what t
 1. **One flowchart per distinct process.** If a module has three processes, that's three diagrams. Merging unrelated processes to save space makes both unreadable.
 2. **Mermaid in Markdown, never images.** It diffs in Git, renders in Obsidian, and can't go stale the way a screenshot does.
 3. **Every diagram is linked from the document that analyzes or plans it.** A diagram nothing points at won't be updated.
+4. **Generated files are paired by audience.** Every relative filename exists under both the Stage 08 `PLAIN` and `TECHNICAL` folders; add, delete, or rename both copies together.
+5. **Audience content stays aligned.** Both copies carry identical facts, statuses, dates, decisions, risks, and outcomes. Technical may include code, schema/database, APIs, paths, frameworks, configuration, and engineering detail; Plain contains none of those and never depends on or links to Technical.
 
 ---
 
@@ -37,8 +39,8 @@ Each diagram gets a `DGM-###`, a caption naming the process, module, and state, 
 
 ````markdown
 ### DGM-004 — User sign-in (as-is)
-_Module: Authentication · [ANL-009](../02-analysis/architecture.md#anl-009) ·
-Target state: [DGM-005](process-auth-signin-to-be.md) · Changed by: TASK-014_
+_Module: Authentication · [ANL-009](../../01%20-%20SYSTEM%20ANALYSIS/TECHNICAL/architecture.md#anl-009) ·
+Target state: [DGM-005](process-auth-signin-to-be.md) · Changed by: TASK-014._
 
 ```mermaid
 flowchart TD
@@ -81,15 +83,25 @@ If you find a diagram that no longer matches the code, don't quietly fix it. Not
 ## Output
 
 ```text
-07-diagrams/
-├── architecture.md
-├── data-flow.md
-├── erd.md
-├── process-<module>-<name>-as-is.md
-├── process-<module>-<name>-to-be.md
-└── sequence-<interaction>.md
+docs/WORKFLOW/08 - DIAGRAMS/
+├── PLAIN/
+│   ├── architecture.md
+│   ├── data-flow.md
+│   ├── erd.md
+│   ├── process-<module>-<name>-as-is.md
+│   ├── process-<module>-<name>-to-be.md
+│   └── sequence-<interaction>.md
+└── TECHNICAL/
+    ├── architecture.md
+    ├── data-flow.md
+    ├── erd.md
+    ├── process-<module>-<name>-as-is.md
+    ├── process-<module>-<name>-to-be.md
+    └── sequence-<interaction>.md
 ```
-**Every file listed above opens with an `In plain terms` block** covering what the file as a whole shows, in addition to the per-diagram plain reading required above. Two to four sentences, before the first diagram.
+Create only what the project needs: architecture and data flow always; ERD when there is a database; process files for each distinct process; sequence files for each multi-party interaction. In an existing system, each changing process has both its `as-is` and `to-be` files. In a new system, create only its target process file. A state diagram, when needed, belongs in the relevant paired process file rather than introducing another filename.
+
+Every created relative filename appears under both audience folders; add, delete, and rename both copies together. **Every file listed above opens with an `In plain terms` block** covering what the file as a whole shows, in addition to the per-diagram plain reading required above. Two to four sentences, before the first diagram.
 
 
 ---
@@ -97,11 +109,14 @@ If you find a diagram that no longer matches the code, don't quietly fix it. Not
 ## Done when
 - [ ] Every distinct process has its own flowchart
 - [ ] Every process that will change has both as-is and to-be versions
-- [ ] Architecture, data flow, and ERD drawn
+- [ ] Architecture and data flow drawn; ERD drawn whenever there is a database
 - [ ] Sequence diagrams for every multi-party interaction
 - [ ] Every diagram has a `DGM-###`, a caption, and a plain-language reading
 - [ ] Every diagram is linked from the document that analyzes or plans it
 - [ ] Nothing is a screenshot
+- [ ] Every created relative filename exists under both audience folders
+- [ ] Both audience copies agree on facts, statuses, dates, decisions, risks, and outcomes
+- [ ] Plain files contain no code, programming-language detail, implementation syntax, or dependency on Technical
 - [ ] Every diagram file opens with an `In plain terms` block, on top of each diagram's own plain reading
 
 ---
@@ -111,4 +126,4 @@ If you find a diagram that no longer matches the code, don't quietly fix it. Not
 **Project:** `<path to repository>`
 **Draw:** `<which processes or modules, or "everything">`
 **State:** `<"as-is" | "to-be" | "both">`
-**Docs go in:** `<path — default: repository root>`
+**Docs go in:** `<path — default: docs/WORKFLOW>`
