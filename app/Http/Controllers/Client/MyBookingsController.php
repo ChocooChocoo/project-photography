@@ -135,8 +135,10 @@ class MyBookingsController extends Controller
                     'category:id,category_name',
                     'packages:id,booking_id,package_name,package_price,package_inclusions,duration,maximum_edited_photos,coverage_scope',
                     'payments:id,booking_id,amount,status,payment_method,paid_at,payment_reference',
-                    'assignedPhotographers.photographer:id,first_name,last_name',
+                    'assignedPhotographers' => fn ($query) => $query->whereNotIn('status', ['cancelled', 'rejected']),
+                    'assignedPhotographers.photographer:id,first_name,last_name,profile_photo',
                     'assignedPhotographers.studioPhotographer:id,photographer_id,position,specialization,years_of_experience',
+                    'assignedPhotographers.studioPhotographer.specializationService:id,service_name',
                 ])
                 ->findOrFail($id);
 

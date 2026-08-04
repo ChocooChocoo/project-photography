@@ -17,8 +17,8 @@
 > This work has since been merged into the main project. The "check it in a real browser first"
 > cautions noted below were never carried out before that merge, so they remain open items.
 >
-> Phases 4 to 7 have not been started. Phase 8 (the AI assistant) was done ahead of them because i
-> came from a separate request and doesn't touch bookings, payments, or payroll at all. **Phase 9 is
+> **Current status as of 2026-08-04:** Phase 4 is complete, Phases 5 to 7 remain planned, and Phase 8
+> (the AI assistant) was completed ahead of them from a separate request. **Phase 9 is
 > written up but not built. Phase 10 is partly built:** items 10.1–10.3 were completed on 2026-08-03,
 > items 10.4–10.6 are also complete, while items 10.7–10.9 remain planned.
 

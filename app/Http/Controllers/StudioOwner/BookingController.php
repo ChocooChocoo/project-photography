@@ -749,7 +749,7 @@ class BookingController extends Controller
 
                 // ========== NOTIFICATION 3: Let the client know a photographer was assigned ==========
                 if ($client) {
-                    $this->notifyPhotographerAssigned($booking, $client);
+                    $this->notifyPhotographerAssigned($booking, $client, $photographerNames);
                 }
             }
             // ========== END: ADD NOTIFICATIONS ==========

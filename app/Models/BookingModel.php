@@ -61,6 +61,7 @@ class BookingModel extends Model
         'end_time',
         'location_type',
         'venue_name',
+        'venue_landmark',
         'street',
         'barangay',
         'city',
@@ -523,6 +524,7 @@ class BookingModel extends Model
             // Fallback to single location fields
             return [[
                 'venue_name' => $this->venue_name,
+                'venue_landmark' => $this->venue_landmark,
                 'street' => $this->street,
                 'barangay' => $this->barangay,
                 'city' => $this->city,

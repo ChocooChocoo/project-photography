@@ -314,6 +314,7 @@
                 const category = booking.category;
                 const packages = booking.packages || [];
                 const payments = booking.payments || [];
+                const locationParts = [booking.venue_name, booking.venue_landmark ? `Landmark: ${booking.venue_landmark}` : null, booking.street, booking.barangay, booking.city, booking.province].filter(Boolean);
                 
                 // Calculate payments
                 const totalPaid = payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
@@ -577,6 +578,14 @@
                                     </div>
                                     
                                     <div class="row g-3">
+                                        ${locationParts.length ? `
+                                            <div class="col-12">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0"><div class="bg-light-primary rounded-circle p-2"><i data-lucide="map-pin" class="fs-20 text-primary"></i></div></div>
+                                                    <div class="flex-grow-1 ms-3"><label class="text-muted small mb-1">Event Location</label><p class="mb-0 fw-medium">${locationParts.join(', ')}</p></div>
+                                                </div>
+                                            </div>
+                                        ` : ''}
                                         <div class="col-12">
                                             <div class="d-flex align-items-start">
                                                 <div class="flex-shrink-0">

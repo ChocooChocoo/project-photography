@@ -1,8 +1,128 @@
-# Detailed Progress in Plain Language
+# Progress Tracker in Plain Language
 
-> **In plain terms:** This is the complete plain-language progress history, retained in the current workflow.
->
-> **Status:** Historical detail retained in the new System Analysis format. For the current normalized status, see the progress tracker.
+> **In plain terms:** This is the current status of every project phase. Finished means there is evidence that the work was completed; planned and blocked work is not finished.
+
+**Checked:** 2026-08-04. The automated check has 89 passing tests and 447 checks.
+
+| Phase | Status | What it means now |
+| --- | --- | --- |
+| 1 — Stabilize | In progress | Most repair work is done, with follow-up checking still needed. |
+| 2 — Complete | In progress | Most improvements are done; the portfolio past-work part is still incomplete. |
+| 3 — Core New Features | In progress | Gallery review and photo redo requests work; free-trial work is only partly complete. |
+| 4 — Workflow Improvements | Completed | Photographer details, direct freelancer responses, Featured studio labels, and landmark directions are done. |
+| 5 — Advanced Features | Planned | Not started. |
+| 6 — Automation | Planned | Most automation has not started; subscription notices were completed as part of Phase 10. |
+| 7 — Authorization and Testing | Planned | Not started as a complete phase. |
+| 8 — AI Assistant | Completed | The photography help assistant and its safety limits are done. |
+| 9 — Cancellation Contingency | Blocked | A business decision is needed before the main cancellation remedy can be built. |
+| 10 — Subscription Lifecycle | In progress | Items 10.1 to 10.6 are done; 10.7 to 10.9 are still planned. |
+| 11 — Public Landing Page | Planned | The plan is written, but no website change is approved. |
+| 12 — Core Studio Management | Planned | The requirements are written, but no build order is approved. |
+
+## Delivery checklist
+
+`[x]` means done. `[ ]` means it is still unfinished, partly done, planned, or blocked.
+
+### Phase 1 — Stabilize
+- [x] 1.1 Location-data repair
+- [x] 1.2 Gallery photos appearing correctly
+- [ ] 1.3 Page layout and long-name checking (only a targeted fix is done)
+- [x] 1.4 Required owner photo
+- [x] 1.5 Safe payment confirmation
+- [x] 1.6 Purchase-request reminder schedule
+
+### Phase 2 — Complete
+- [x] 2.1 Service starting prices
+- [x] 2.2 Owner income report
+- [x] 2.3 Photographer response deadline
+- [x] 2.4 Customer booking calendar
+- [x] 2.5 Studio booking cancellation
+- [ ] 2.6 Portfolio gallery (past-work view is incomplete)
+- [x] 2.7 Unfinished booking expiry
+- [x] 2.8 Important notices
+- [x] 2.9 Budget updates from booking payments
+- [x] 2.10 Review moderation
+
+### Phase 3 — Core New Features
+- [ ] 3.1 Package or service sample media (partly done)
+- [x] 3.2 Photo review before a customer sees it
+- [x] 3.3 Requesting a photo revision
+- [ ] 3.4 Free trial (partly done)
+
+### Phase 4 — Workflow Improvements
+- [x] 4.1 Assigned photographer details
+- [x] 4.2 Direct freelancer booking response
+- [x] 4.3 Featured premium studio label
+- [x] 4.4 Landmark or directions for an event
+- [x] 4.5 Clear explanation of premium search placement
+
+### Phase 5 — Advanced Features
+- [ ] 5.1 Find studios by location
+- [ ] 5.2 Assign equipment to a booking
+- [ ] 5.3 Repeat or long-term booking
+- [ ] 5.4 Photo-role quality checking
+
+### Phase 6 — Automation
+- [ ] 6.1 Notice when a booking expires
+- [ ] 6.2 Reminder for an overdue gallery upload
+- [ ] 6.3 Notice for pending studio checks
+- [x] 6.4 Subscription-expiry reminders (done in Phase 10)
+- [ ] 6.5 Automatic payroll start
+- [ ] 6.6 Suggested photographer assignment
+
+### Phase 7 — Authorization and Testing
+- [ ] 7.1 Record-level access rules
+- [ ] 7.2 Checks for core features
+
+### Phase 8 — AI Assistant
+- [x] 8.1 AI photography assistant
+- [x] 8.2 Photography-only answers
+- [x] 8.3 Safe input and output checks
+- [x] 8.4 Secret protection, failures, and limits
+- [x] 8.5 User pages and documentation
+
+### Phase 9 — Cancellation Contingency
+- [ ] 9.1 Owner recovery from a stuck booking
+- [ ] 9.2 Notices when a photographer cancels
+- [ ] 9.3 Replacement photographer
+- [ ] 9.4 New-date option
+- [ ] 9.5 Refund handling
+- [ ] 9.6 Future-booking credit
+- [ ] 9.7 Cancellation record
+- [ ] 9.8 Freelancer emergency pool
+- [ ] 9.9 Refund for a lower-value replacement
+- [ ] 9.10 Limit late cancellations
+- [ ] 9.11 Backup photographer
+
+### Phase 10 — Subscription Lifecycle
+- [x] 10.1 Correct trial end date
+- [x] 10.2 End expired trials
+- [x] 10.3 End expired paid subscriptions
+- [x] 10.4 Grace period
+- [x] 10.5 Access limits after expiry
+- [x] 10.6 Subscription notices
+- [ ] 10.7 Reactivation
+- [ ] 10.8 Recurring billing and saved card
+- [ ] 10.9 Cancellation and upgrade rules
+
+### Phase 11 — Public Landing Page
+- [ ] 11.1 Public Bootstrap page
+- [ ] 11.2 Responsive page layout
+- [ ] 11.3 Login and registration buttons
+- [ ] 11.4 Approved change to the public first page
+- [ ] 11.5 Only needed custom styling
+
+### Phase 12 — Core Studio Management
+- [ ] 12.1 Registration, pricing, categories, and social links
+- [ ] 12.2 Administrator access and permit review
+- [ ] 12.3 Permit access and re-checking
+- [ ] 12.4 Onboarding and employee account setup
+- [ ] 12.5 Roles, permissions, and archiving
+- [ ] 12.6 Schedules, attendance, favorites, photos, and discounts
+
+The detailed historical progress record continues below.
+
+---
 
 ---
 
@@ -17,8 +137,8 @@
 > This work has since been merged into the main project. The "check it in a real browser first"
 > cautions noted below were never carried out before that merge, so they remain open items.
 >
-> Phases 4 to 7 have not been started. Phase 8 (the AI assistant) was done ahead of them because i
-> came from a separate request and doesn't touch bookings, payments, or payroll at all. **Phase 9 is
+> **Current status as of 2026-08-04:** Phase 4 is complete, Phases 5 to 7 remain planned, and Phase 8
+> (the AI assistant) was completed ahead of them from a separate request. **Phase 9 is
 > written up but not built. Phase 10 is partly built:** items 10.1–10.3 were completed on 2026-08-03,
 > items 10.4–10.6 are also complete, while items 10.7–10.9 remain planned.
 

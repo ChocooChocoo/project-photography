@@ -227,13 +227,18 @@ trait Notifiable
      * @param object $client
      * @return NotificationModel|null
      */
-    public function notifyPhotographerAssigned($booking, $client)
+    public function notifyPhotographerAssigned($booking, $client, array $photographerNames = [])
     {
+        $names = collect($photographerNames)->filter()->implode(', ');
+        $message = $names
+            ? "Your photographer for booking #{$booking->booking_reference} has been assigned — meet {$names}."
+            : "Your photographer for booking #{$booking->booking_reference} has been assigned.";
+
         return $this->createNotification(
             $client->id,
             'photographer_assigned',
             'Photographer Assigned',
-            "Your photographer for booking #{$booking->booking_reference} has been assigned.",
+            $message,
             [
                 'booking_id' => $booking->id,
                 'booking_reference' => $booking->booking_reference,

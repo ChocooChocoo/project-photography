@@ -167,6 +167,11 @@
                                         <div class="flex-grow-1 ms-3" style="min-width: 0;">
                                             <h4 class="card-title mb-1 text-truncate" title="{{ $studio->studio_name }}">{{ $studio->studio_name }}</h4>
                                             <p class="text-muted mb-1">Studio</p>
+                                            @if($studio->isFeatured())
+                                                <span class="badge badge-soft-warning mb-2" title="Featured studios are verified premium members">
+                                                    <i class="ti ti-star-filled me-1" aria-hidden="true"></i>Featured
+                                                </span>
+                                            @endif
                                             <div class="mb-2">
                                                 <span class="text-muted small">
                                                     <i class="ti ti-map-pin me-1"></i>
@@ -347,6 +352,7 @@
                                         <div class="flex-grow-1 ms-3">
                                             <h4 class="card-title mb-1">${photographer.name}</h4>
                                             <p class="text-muted mb-1">${photographer.type_label}</p>
+                                            ${photographer.featured ? '<span class="badge badge-soft-warning mb-2" title="Featured studios are verified premium members"><i class="ti ti-star-filled me-1" aria-hidden="true"></i>Featured</span>' : ''}
                                             <div class="mb-2">
                                                 <span class="text-muted small">
                                                     <i class="ti ti-map-pin me-1"></i>

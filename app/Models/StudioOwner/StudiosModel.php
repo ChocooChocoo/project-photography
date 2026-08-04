@@ -116,6 +116,22 @@ class StudiosModel extends Model
     }
 
     /**
+     * Determine whether the studio's current accessible plan is featured.
+     */
+    public function isFeatured(): bool
+    {
+        $subscription = $this->relationLoaded('currentAccessSubscription')
+            ? $this->currentAccessSubscription
+            : $this->currentAccessSubscription()->with('plan')->first();
+
+        if ($subscription && ! $subscription->relationLoaded('plan')) {
+            $subscription->load('plan');
+        }
+
+        return (int) ($subscription?->plan?->priority_level ?? 0) >= 3;
+    }
+
+    /**
      * Get the most recently created subscription record.
      */
     public function latestSubscription()

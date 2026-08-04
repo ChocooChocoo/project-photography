@@ -28,6 +28,8 @@ Add package or service selling images, gallery review before customers see photo
 
 Show photographer details after assignment, simplify freelancer bookings, mark premium studios, allow a written venue address, and explain subscription rank in search results.
 
+**Status (2026-08-04): Completed through 4.5.** Active assignment records expose client-safe photographer details and named notifications; freelancer bookings retain the direct lifecycle without assignment records; studios with a current accessible plan at priority 3 or higher are Featured; and `venue_landmark` is stored for single and multi-location bookings. No public individual-photographer portfolio route exists.
+
 ## Phase 5 — Larger additions
 
 Support location-based studio discovery, equipment assignment for a booking, repeat bookings, and quality checking for the photo role.

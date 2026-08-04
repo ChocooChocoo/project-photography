@@ -382,6 +382,11 @@
                                                 <input type="text" class="form-control" id="street" name="street" 
                                                     placeholder="Enter street name, building, unit number (optional)">
                                             </div>
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Landmark / Directions</label>
+                                                <input type="text" class="form-control" id="venueLandmark" name="venue_landmark"
+                                                    placeholder="e.g., beside the public library (optional)">
+                                            </div>
                                             
                                             <div class="col-12 mb-3">
                                                 <label class="form-label">Province</label>
@@ -1725,6 +1730,7 @@
                 } else {
                     // Single location
                     bookingData.venue_name = $('#venueName').val();
+                    bookingData.venue_landmark = $('#venueLandmark').val();
                     bookingData.street = $('#street').val();
                     bookingData.barangay = $('#barangay').val();
                     bookingData.city = $('#city').val();
@@ -2440,6 +2446,7 @@
                         let locationText = '';
                         if (loc.venue_name) locationText += `<strong>${loc.venue_name}</strong><br>`;
                         if (loc.street) locationText += loc.street + ', ';
+                        if (loc.venue_landmark) locationText += `Landmark: ${loc.venue_landmark}, `;
                         if (loc.barangay) locationText += 'Brgy. ' + loc.barangay + ', ';
                         if (loc.city) locationText += loc.city + ', ';
                         locationText += 'Cavite';
@@ -2458,6 +2465,7 @@
                     let locationText = '';
                     if (bookingData.venue_name) locationText += `<strong>${bookingData.venue_name}</strong><br>`;
                     if (bookingData.street) locationText += bookingData.street + ', ';
+                    if (bookingData.venue_landmark) locationText += `Landmark: ${bookingData.venue_landmark}, `;
                     if (bookingData.barangay) locationText += 'Brgy. ' + bookingData.barangay + ', ';
                     if (bookingData.city) locationText += bookingData.city + ', ';
                     locationText += 'Cavite';
@@ -2973,6 +2981,7 @@
             function clearSingleLocationFields() {
                 $('#venueName').val('');
                 $('#street').val('');
+                $('#venueLandmark').val('');
                 $('#city').val('');
                 $('#barangay').val('').prop('disabled', true).html('<option value="">Select Barangay</option>');
             }
@@ -3171,6 +3180,12 @@
                                     name="locations[${locationIndex}][street]" 
                                     placeholder="Enter street name, building, unit number (optional)">
                             </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Landmark / Directions</label>
+                                <input type="text" class="form-control form-control-sm"
+                                    name="locations[${locationIndex}][venue_landmark]"
+                                    placeholder="e.g., beside the public library (optional)">
+                            </div>
                             
                             <input type="hidden" name="locations[${locationIndex}][province]" value="Cavite">
                         </div>
@@ -3306,6 +3321,7 @@
                         city: $(`select[name="locations[${elementIndex}][city]"]`).val(),
                         barangay: $(`select[name="locations[${elementIndex}][barangay]"]`).val(),
                         street: $(`input[name="locations[${elementIndex}][street]"]`).val() || '',
+                        venue_landmark: $(`input[name="locations[${elementIndex}][venue_landmark]"]`).val() || '',
                         province: 'Cavite'
                     };
                     

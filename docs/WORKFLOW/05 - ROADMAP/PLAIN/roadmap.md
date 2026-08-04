@@ -28,6 +28,8 @@ Add package or service selling images, gallery review before customers see photo
 
 Show photographer details after assignment, simplify freelancer bookings, mark premium studios, allow a written venue address, and explain subscription rank in search results.
 
+**Status (2026-08-04): Complete through 4.5.** Customers can see the assigned photographer's details and a notice naming them; freelancers handle their own bookings; premium studios are marked Featured; and directions can include a landmark. There is no link to an individual photographer portfolio because the system does not have one that is public.
+
 ## Phase 5 — Larger additions
 
 Support location-based studio discovery, equipment assignment for a booking, repeat bookings, and quality checking for the photo role.

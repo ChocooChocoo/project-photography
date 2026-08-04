@@ -178,7 +178,7 @@
                                 <option value="">Select Status</option>
                                 <option value="confirmed">Confirm Booking</option>
                                 <option value="rejected">Reject Booking</option>
-                                <option value="in_progress">Mark as In Progress</option>
+                                <option value="in_progress">Mark as On-Site</option>
                                 <option value="completed">Mark as Completed</option>
                                 <option value="cancelled">Cancel Booking</option>
                             </select>
@@ -519,7 +519,7 @@
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <label class="text-muted small mb-1">Event Location</label>
-                                                    <p class="mb-0 fw-medium">${booking.venue_name || booking.street || 'N/A'}, ${booking.city || 'N/A'}, ${booking.province || 'N/A'}</p>
+                                                    <p class="mb-0 fw-medium">${booking.venue_name || booking.street || 'N/A'}, ${booking.city || 'N/A'}, ${booking.province || 'N/A'}${booking.venue_landmark ? `<br><small class="text-muted">Landmark: ${booking.venue_landmark}</small>` : ''}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -675,7 +675,7 @@
                                 <i data-lucide="credit-card" class="me-1"></i> Update Payment
                             </button>
                             <button class="btn btn-primary" id="markInProgressBtn">
-                                <i data-lucide="play-circle" class="me-1"></i> Mark as In Progress
+                                <i data-lucide="map-pin" class="me-1"></i> Mark as On-Site
                             </button>
                         `;
                         break;

@@ -807,6 +807,7 @@
                 if (booking.location_type === 'on-location') {
                     const parts = [];
                     if (booking.venue_name) parts.push(booking.venue_name);
+                    if (booking.venue_landmark) parts.push(`Landmark: ${booking.venue_landmark}`);
                     if (booking.street) parts.push(booking.street);
                     if (booking.barangay) parts.push('Brgy. ' + booking.barangay);
                     if (booking.city) parts.push(booking.city);
@@ -957,20 +958,25 @@
                         const photographer = assignment.photographer;
                         const studioPhotographer = assignment.studio_photographer;
                         const photographerName = photographer ? `${photographer.first_name} ${photographer.last_name}` : 'Unknown';
+                        const photographerPhoto = photographer && photographer.profile_photo
+                            ? `/storage/${photographer.profile_photo}`
+                            : '{{ asset('assets/images/users/avatar-1.jpg') }}';
+                        const specialization = studioPhotographer?.specialization_service?.service_name;
+                        const specializationLabel = Array.isArray(specialization)
+                            ? specialization.join(', ')
+                            : specialization || studioPhotographer?.position || 'Photographer';
                         
                         assignedPhotographersHtml += `
                             <div class="col-12">
                                 <div class="d-flex align-items-start">
                                     <div class="flex-shrink-0">
-                                        <div class="bg-light-primary rounded-circle p-2">
-                                            <i class="ti ti-user-star fs-20 text-primary"></i>
-                                        </div>
+                                        <img src="${photographerPhoto}" class="rounded-circle" alt="${photographerName}" style="width: 48px; height: 48px; object-fit: cover;">
                                     </div>
                                     <div class="flex-grow-1 ms-3">
                                         <label class="text-muted small mb-1">Photographers</label>
                                         <p class="mb-0 fw-medium">
                                             ${photographerName} 
-                                            ${studioPhotographer ? ` - ${studioPhotographer.position || 'Photographer'}` : ''}
+                                            ${studioPhotographer ? ` - ${specializationLabel}` : ''}
                                             <span class="badge ${getStatusBadgeClass(assignment.status)} ms-2">${assignment.status}</span>
                                         </p>
                                     </div>

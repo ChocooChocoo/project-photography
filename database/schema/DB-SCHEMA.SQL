@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS `tbl_bookings` (
   `end_time` time NOT NULL,
   `location_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `venue_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `venue_landmark` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `street` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `barangay` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `city` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,

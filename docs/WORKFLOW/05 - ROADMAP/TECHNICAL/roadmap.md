@@ -478,6 +478,8 @@ ends. **The remainder of this item moved to Phase 10** — 10.1 and 10.2 close i
 
 > Structural flow fixes that improve trust, clarity, and accuracy once core features are stable.
 
+> **Status (2026-08-04): Completed through 4.5.** Client booking details now reveal active assigned photographers with profile data and named notifications; freelancers respond directly without assignment records; eligible studios disclose Featured status; and on-location bookings retain landmark directions. Individual photographer portfolio links remain unavailable because no public photographer portfolio exists.
+
 ### 4.1 Reveal Photographer Profile to Client After Assignmen
 
 **Problem:** Client pays → gets assigned an unknown photographer. No visibility into who is coming to shoot their event.

@@ -353,6 +353,7 @@ class BookingController extends Controller
                 // Validate multiple locations
                 $rules['locations'] = 'required|array|min:1';
                 $rules['locations.*.venue_name'] = 'nullable|string|max:255';
+                $rules['locations.*.venue_landmark'] = 'nullable|string|max:255';
                 $rules['locations.*.city'] = 'required|string|max:255';
                 $rules['locations.*.barangay'] = 'required|string|max:255'; // Barangay REQUIRED for on-location
                 $rules['locations.*.street'] = 'nullable|string|max:255';
@@ -380,6 +381,7 @@ class BookingController extends Controller
             } else {
                 // Single location validation for on-location bookings
                 $rules['venue_name'] = 'nullable|string|max:255';
+                $rules['venue_landmark'] = 'nullable|string|max:255';
                 $rules['street'] = 'nullable|string|max:255';
                 $rules['barangay'] = 'required|string|max:255'; // Barangay REQUIRED for on-location
                 $rules['city'] = 'required|string|max:255';
@@ -388,6 +390,7 @@ class BookingController extends Controller
             // For in-studio bookings, location fields are NOT required
             // Only validate if they are present (optional)
             $rules['venue_name'] = 'nullable|string|max:255';
+            $rules['venue_landmark'] = 'nullable|string|max:255';
             $rules['street'] = 'nullable|string|max:255';
             $rules['barangay'] = 'nullable|string|max:255'; // Barangay OPTIONAL for in-studio
             $rules['city'] = 'nullable|string|max:255'; // City OPTIONAL for in-studio
@@ -540,6 +543,7 @@ class BookingController extends Controller
                     $bookingData['multiple_locations'] = $request->locations;
                     // Clear single location fields
                     $bookingData['venue_name'] = null;
+                    $bookingData['venue_landmark'] = null;
                     $bookingData['street'] = null;
                     $bookingData['barangay'] = null;
                     $bookingData['city'] = null;
@@ -547,6 +551,7 @@ class BookingController extends Controller
                 } else {
                     // Single on-location
                     $bookingData['venue_name'] = $request->venue_name;
+                    $bookingData['venue_landmark'] = $request->venue_landmark;
                     $bookingData['street'] = $request->street;
                     $bookingData['barangay'] = $request->barangay;
                     $bookingData['city'] = $request->city;
@@ -556,6 +561,7 @@ class BookingController extends Controller
             } else {
                 // For in-studio bookings, location fields are optional
                 $bookingData['venue_name'] = null;
+                $bookingData['venue_landmark'] = null;
                 $bookingData['street'] = null;
                 $bookingData['barangay'] = null;
                 $bookingData['city'] = null;
@@ -661,6 +667,7 @@ class BookingController extends Controller
                         $notificationData['barangay'] = $request->barangay;
                         $notificationData['street'] = $request->street;
                         $notificationData['venue_name'] = $request->venue_name;
+                        $notificationData['venue_landmark'] = $request->venue_landmark;
                         $notificationData['has_multiple_locations'] = false;
                     }
                 }
