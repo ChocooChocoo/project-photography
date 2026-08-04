@@ -17,5 +17,6 @@ The source files below remain unchanged in `prompt/tasks/`. Status means the pro
 | [TASK-009](records/task-009.md) | `09.md` | Planned Bootstrap landing-page documentation | Completed — documentation only |
 | [TASK-010](records/task-010.md) | `10.md` | Core studio-management requirements documentation | Completed — documentation only |
 | [TASK-011](records/task-011.md) | `11.md` | Phase 4 workflow improvements through 4.5 | Completed |
+| [TASK-012](records/task-012.md) | `12.md` | Owner studio creation municipality access | Completed |
 
 There is no proposed-task backlog. Unapproved work is listed in [open items](../../00%20-%20START%20HERE/TECHNICAL/open-items.md).

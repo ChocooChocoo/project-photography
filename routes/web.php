@@ -149,7 +149,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/view/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'index'])->middleware('permission:owner.studios.manage')->name('owner.studio.index');
         Route::get('/edit/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'edit'])->middleware('permission:owner.studios.manage')->name('owner.studio.edit');
         Route::put('/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'update'])->middleware('permission:owner.studios.manage')->name('owner.studio.update');
-        Route::get('/studio/barangays/{municipality}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'getBarangays'])->middleware('permission:owner.studios.manage')->name('owner.studio.get-barangays');
+        Route::get('/studio/barangays/{municipality}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'getBarangays'])->name('owner.studio.get-barangays');
         Route::delete('/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'destroy'])->middleware('permission:owner.studios.manage')->name('owner.studio.destroy');
 
         // Manage Bookings

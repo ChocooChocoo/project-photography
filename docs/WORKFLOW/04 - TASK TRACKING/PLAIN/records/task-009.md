@@ -5,4 +5,4 @@
 **Source:** [`prompt/tasks/09.md`](../../../../../prompt/tasks/09.md)
 **Status:** Completed as documentation only.
 **Requirement:** [REQ-009](../../../02%20-%20REQUIREMENTS/PLAIN/requirements.md#req-009--document-a-future-bootstrap-landing-page)
-**Evidence:** [technical plan](../../../03%20-%20PLANNING/PLAIN/landing-page.md), [technical audit](../../../../../prompt/audits/09-landing-page-plain-language-audit.md), and [plain-language audit](../../../../../prompt/audits/09-landing-page-plain-language-audit.md). No application code, route, authentication behavior, or system test is claimed.
+**Evidence:** [plain-language audit](../../../../../prompt/audits/2026-08-03/09-landing-page-audit.md). No application code, route, authentication behavior, or system test is claimed.
