@@ -1,6 +1,6 @@
 # 00 - START HERE
 
-Next: [01 - OVERVIEW](01 - OVERVIEW.md)
+Next: [01 - OVERVIEW](01%20-%20OVERVIEW.md)
 
 **What this is about:** Platinum Studio Platform
 **Written:** 11 August 2026
@@ -15,7 +15,7 @@ Next: [01 - OVERVIEW](01 - OVERVIEW.md)
 | Laravel application | Source code | app, routes, database, resources/views, config, and tests in this project | Main entrypoints and high-traffic workflows read; generated and dependency folders excluded |
 | Workflow Version 3 | Methodology | prompt/WORKFLOW v3 | Yes — in full; unchanged |
 
-The old record contains 109 files. Every one has an exact frozen copy and a row in [the coverage ledger](MATERIAL/LEGACY COVERAGE.md). The current code is the evidence for what exists now; old notes remain evidence of what was previously promised, observed, or planned.
+The old record contains 109 files. Every one has an exact frozen copy and a row in [the coverage ledger](MATERIAL/LEGACY%20COVERAGE.md). The current code is the evidence for what exists now; old notes remain evidence of what was previously promised, observed, or planned.
 
 ## The short version
 
@@ -25,22 +25,22 @@ Platinum is a Laravel web platform for photography studios, freelancers, clients
 
 | File | What it holds |
 |---|---|
-| [01 - OVERVIEW](01 - OVERVIEW.md) | What the platform is and who uses it |
-| [02 - DOCUMENT FINDINGS](02 - DOCUMENT FINDINGS.md) | What the supplied documentation says |
-| [03 - CODE FINDINGS](03 - CODE FINDINGS.md) | What the current working files do |
-| [04 - COMBINED FINDINGS](04 - COMBINED FINDINGS.md) | Where written intent and current behavior agree or differ |
-| [05 - SYSTEM ARCHITECTURE](05 - SYSTEM ARCHITECTURE.md) | The current parts and the proposed direction |
-| [06 - DIAGRAMS](06 - DIAGRAMS.md) | Mermaid pictures of the current and proposed flows |
-| [07 - DEVELOPMENT ROADMAP](07 - DEVELOPMENT ROADMAP.md) | Six outcome-based development phases |
-| [08 - ROADMAP TRACKER](08 - ROADMAP TRACKER.md) | Status of every roadmap item |
-| [09 - TASK TRACKER](09 - TASK TRACKER.md) | The twelve user-authored tasks and their origins |
-| [10 - WORD LIST](10 - WORD LIST.md) | Plain meanings of unavoidable technical words |
-| [11 - PARTS IN DETAIL](11 - PARTS IN DETAIL.md) | The twelve detailed system-part pages |
-| [12 - SCREENS BY ROLE](12 - SCREENS BY ROLE.md) | Derived screen map for the seven portal roles |
+| [01 - OVERVIEW](01%20-%20OVERVIEW.md) | What the platform is and who uses it |
+| [02 - DOCUMENT FINDINGS](02%20-%20DOCUMENT%20FINDINGS.md) | What the supplied documentation says |
+| [03 - CODE FINDINGS](03%20-%20CODE%20FINDINGS.md) | What the current working files do |
+| [04 - COMBINED FINDINGS](04%20-%20COMBINED%20FINDINGS.md) | Where written intent and current behavior agree or differ |
+| [05 - SYSTEM ARCHITECTURE](05%20-%20SYSTEM%20ARCHITECTURE.md) | The current parts and the proposed direction |
+| [06 - DIAGRAMS](06%20-%20DIAGRAMS.md) | Mermaid pictures of the current and proposed flows |
+| [07 - DEVELOPMENT ROADMAP](07%20-%20DEVELOPMENT%20ROADMAP.md) | Six outcome-based development phases |
+| [08 - ROADMAP TRACKER](08%20-%20ROADMAP%20TRACKER.md) | Status of every roadmap item |
+| [09 - TASK TRACKER](09%20-%20TASK%20TRACKER.md) | The twelve user-authored tasks and their origins |
+| [10 - WORD LIST](10%20-%20WORD%20LIST.md) | Plain meanings of unavoidable technical words |
+| [11 - PARTS IN DETAIL](11%20-%20PARTS%20IN%20DETAIL.md) | The twelve detailed system-part pages |
+| [12 - SCREENS BY ROLE](12%20-%20SCREENS%20BY%20ROLE.md) | Derived screen map for the seven portal roles |
 
 ## How to read this
 
-Read [04 - COMBINED FINDINGS](04 - COMBINED FINDINGS.md) for the most useful truth about promises versus the current application. Read [07 - DEVELOPMENT ROADMAP](07 - DEVELOPMENT ROADMAP.md) for the build order and [08 - ROADMAP TRACKER](08 - ROADMAP TRACKER.md) for status. Read [05 - SYSTEM ARCHITECTURE](05 - SYSTEM ARCHITECTURE.md) and [06 - DIAGRAMS](06 - DIAGRAMS.md) for the arrangement. Open [11 - PARTS IN DETAIL](11 - PARTS IN DETAIL.md) or [12 - SCREENS BY ROLE](12 - SCREENS BY ROLE.md) when you need operational or role-specific detail.
+Read [04 - COMBINED FINDINGS](04%20-%20COMBINED%20FINDINGS.md) for the most useful truth about promises versus the current application. Read [07 - DEVELOPMENT ROADMAP](07%20-%20DEVELOPMENT%20ROADMAP.md) for the build order and [08 - ROADMAP TRACKER](08%20-%20ROADMAP%20TRACKER.md) for status. Read [05 - SYSTEM ARCHITECTURE](05%20-%20SYSTEM%20ARCHITECTURE.md) and [06 - DIAGRAMS](06%20-%20DIAGRAMS.md) for the arrangement. Open [11 - PARTS IN DETAIL](11%20-%20PARTS%20IN%20DETAIL.md) or [12 - SCREENS BY ROLE](12%20-%20SCREENS%20BY%20ROLE.md) when you need operational or role-specific detail.
 
 ## Status legend
 
@@ -73,8 +73,8 @@ Read [04 - COMBINED FINDINGS](04 - COMBINED FINDINGS.md) for the most useful tru
 
 ## Evidence files
 
-- [Legacy coverage ledger](MATERIAL/LEGACY COVERAGE.md) maps all 109 sources.
-- [Frozen-source hashes](MATERIAL/LEGACY DOCUMENTATION/SHA256SUMS.md) proves the copies match their sources.
+- [Legacy coverage ledger](MATERIAL/LEGACY%20COVERAGE.md) maps all 109 sources.
+- [Frozen-source hashes](MATERIAL/LEGACY%20DOCUMENTATION/SHA256SUMS.md) proves the copies match their sources.
 
 ## What changed
 

@@ -1,6 +1,6 @@
 # 03 - CODE FINDINGS
 
-[Back to start](00 - START HERE.md) · Previous: [02 - DOCUMENT FINDINGS](02 - DOCUMENT FINDINGS.md) · Next: [04 - COMBINED FINDINGS](04 - COMBINED FINDINGS.md)
+[Back to start](00%20-%20START%20HERE.md) · Previous: [02 - DOCUMENT FINDINGS](02%20-%20DOCUMENT%20FINDINGS.md) · Next: [04 - COMBINED FINDINGS](04%20-%20COMBINED%20FINDINGS.md)
 
 ## What was read
 
@@ -85,4 +85,4 @@ The current audit covered application models, controllers, middleware, requests,
 
 ## Things worth flagging
 
-The application contains more operational behavior than the old top-level index exposes: scoped permissions, staff portals, procurement states, lifecycle commands, assistant configuration, and role-specific routes all exist. Conversely, a route or controller proves that a path exists, not that every business rule is approved or every browser journey is healthy. Those distinctions are carried into [04 - COMBINED FINDINGS](04 - COMBINED FINDINGS.md).
+The application contains more operational behavior than the old top-level index exposes: scoped permissions, staff portals, procurement states, lifecycle commands, assistant configuration, and role-specific routes all exist. Conversely, a route or controller proves that a path exists, not that every business rule is approved or every browser journey is healthy. Those distinctions are carried into [04 - COMBINED FINDINGS](04%20-%20COMBINED%20FINDINGS.md).

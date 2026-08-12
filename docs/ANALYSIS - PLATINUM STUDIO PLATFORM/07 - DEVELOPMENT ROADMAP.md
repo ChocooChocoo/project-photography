@@ -1,6 +1,6 @@
 # 07 - DEVELOPMENT ROADMAP
 
-[Back to start](00 - START HERE.md) · Previous: [06 - DIAGRAMS](06 - DIAGRAMS.md) · Next: [08 - ROADMAP TRACKER](08 - ROADMAP TRACKER.md)
+[Back to start](00%20-%20START%20HERE.md) · Previous: [06 - DIAGRAMS](06%20-%20DIAGRAMS.md) · Next: [08 - ROADMAP TRACKER](08%20-%20ROADMAP%20TRACKER.md)
 
 ## What this covers
 
@@ -8,7 +8,7 @@ This is a development order, not a launch calendar or a promise that every propo
 
 ## Where the plan came from
 
-The items are drawn from [02 - DOCUMENT FINDINGS](02 - DOCUMENT FINDINGS.md), [03 - CODE FINDINGS](03 - CODE FINDINGS.md), [04 - COMBINED FINDINGS](04 - COMBINED FINDINGS.md), the frozen roadmap and progress records, and the twelve frozen user task prompts. Existing code is marked already there in [08 - ROADMAP TRACKER](08 - ROADMAP TRACKER.md); unsupported policy is blocked or unclear.
+The items are drawn from [02 - DOCUMENT FINDINGS](02%20-%20DOCUMENT%20FINDINGS.md), [03 - CODE FINDINGS](03%20-%20CODE%20FINDINGS.md), [04 - COMBINED FINDINGS](04%20-%20COMBINED%20FINDINGS.md), the frozen roadmap and progress records, and the twelve frozen user task prompts. Existing code is marked already there in [08 - ROADMAP TRACKER](08%20-%20ROADMAP%20TRACKER.md); unsupported policy is blocked or unclear.
 
 ## The phases at a glance
 

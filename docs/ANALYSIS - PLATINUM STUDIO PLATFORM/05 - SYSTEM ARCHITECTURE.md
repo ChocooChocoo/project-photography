@@ -1,6 +1,6 @@
 # 05 - SYSTEM ARCHITECTURE
 
-[Back to start](00 - START HERE.md) · Previous: [04 - COMBINED FINDINGS](04 - COMBINED FINDINGS.md) · Next: [06 - DIAGRAMS](06 - DIAGRAMS.md)
+[Back to start](00%20-%20START%20HERE.md) · Previous: [04 - COMBINED FINDINGS](04%20-%20COMBINED%20FINDINGS.md) · Next: [06 - DIAGRAMS](06%20-%20DIAGRAMS.md)
 
 ## How to read this note
 
@@ -59,7 +59,7 @@ The proposed additions stay around the current core. A policy decision first def
 
 ### What it would take to get there
 
-First preserve evidence and settle policy blockers. Next repair current defects and complete the already-partly-built booking, gallery, operational, and subscription slices. Then build approved discovery, automation, landing, cancellation, and renewal work in the phase order in [07 - DEVELOPMENT ROADMAP](07 - DEVELOPMENT ROADMAP.md).
+First preserve evidence and settle policy blockers. Next repair current defects and complete the already-partly-built booking, gallery, operational, and subscription slices. Then build approved discovery, automation, landing, cancellation, and renewal work in the phase order in [07 - DEVELOPMENT ROADMAP](07%20-%20DEVELOPMENT%20ROADMAP.md).
 
 ### What is being given up
 

@@ -1,10 +1,10 @@
 # P-04 - BOOKING AND PAYMENT
 
-[Back to start](../00 - START HERE.md) · [All parts](../11 - PARTS IN DETAIL.md) · [Roadmap](../07 - DEVELOPMENT ROADMAP.md)
+[Back to start](../00%20-%20START%20HERE.md) · [All parts](../11%20-%20PARTS%20IN%20DETAIL.md) · [Roadmap](../07%20-%20DEVELOPMENT%20ROADMAP.md)
 
 **What it is for:** Records the client transaction and payment state shared by the portals.
-**Where it sits:** [05 - SYSTEM ARCHITECTURE](../05 - SYSTEM ARCHITECTURE.md#the-parts)
-**Built by:** R-02, R-05, R-08 in [the roadmap](../07 - DEVELOPMENT ROADMAP.md)
+**Where it sits:** [05 - SYSTEM ARCHITECTURE](../05%20-%20SYSTEM%20ARCHITECTURE.md#the-parts)
+**Built by:** R-02, R-05, R-08 in [the roadmap](../07%20-%20DEVELOPMENT%20ROADMAP.md)
 **Status:** Evidence-backed status is recorded in the parts index.
 
 ## Why it exists
@@ -64,7 +64,7 @@ Requested → payment pending → confirmed → assigned → in progress → pub
 
 ## When something goes wrong
 
-The current source exposes validation, authorization, state checks, provider fallbacks, or error responses where they exist. It does not supply a universal recovery policy for every partial failure. That limit is recorded in [combined findings](../04 - COMBINED FINDINGS.md) rather than filled with a generic assumption.
+The current source exposes validation, authorization, state checks, provider fallbacks, or error responses where they exist. It does not supply a universal recovery policy for every partial failure. That limit is recorded in [combined findings](../04%20-%20COMBINED%20FINDINGS.md) rather than filled with a generic assumption.
 
 ## What it leans on, and what leans on it
 
