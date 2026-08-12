@@ -8,7 +8,7 @@ This is the front door for the documentation vault. The canonical analysis is [[
 |---|---|---|
 | [[ANALYSIS - PLATINUM STUDIO PLATFORM/00 - START HERE|Platinum Studio Platform]] | Current Laravel photography-studio platform, its written requirements, code behavior, roles, architecture, roadmap, tasks, diagrams, parts, and screens | 11 August 2026 |
 
-The old documentation trees remain in place during this migration. Exact copies and the row-level coverage record are inside the analysis MATERIAL folder. They are evidence, not a competing source of truth.
+The old documentation trees have been removed from the active `docs` folder. Exact copies and the row-level coverage record remain inside the analysis MATERIAL folder. They are evidence, not a competing source of truth.
 
 ## Status legend
 

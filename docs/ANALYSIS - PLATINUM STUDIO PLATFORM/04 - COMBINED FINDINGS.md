@@ -42,7 +42,7 @@ The written record and the application agree on the broad platform: role-specifi
 | # | Documents say | Working files or later evidence show | Resolution in this analysis |
 |---|---|---|---|
 | K-01 | Some old progress and risk notes say subscription access is unresolved. | The dated QST-002 decision and current expiry/access code describe the seven-day grace and restriction slice as delivered. | Treat QST-002 as resolved for that slice; retain renewal questions separately as Q-02. |
-| K-02 | The old task index says ten user-authored prompts and an earlier record says eight. | The current `docs/tasks` directory contains twelve prompts. | Track all twelve; old counts are historical evidence, not a deletion instruction. |
+| K-02 | The old task index says ten user-authored prompts and an earlier record says eight. | The frozen source set contains twelve prompts. | Track all twelve; old counts are historical evidence, not a deletion instruction. |
 | K-03 | The old README names paired technical/plain trees as canonical. | Workflow v3 specifies one linked plain-language run with optional detailed parts and screens. | The v3 run becomes canonical; old trees remain frozen until approval. |
 | K-04 | Historical status labels use Completed, Planned, and In Progress without one stable meaning. | Workflow v3 distinguishes Already there, Finished, Being worked on, Blocked, and Unclear. | Use v3 statuses and retain historical wording only in provenance notes. |
 

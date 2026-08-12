@@ -10,8 +10,8 @@ Next: [[01 - OVERVIEW]]
 
 | What | Kind | Where it came from | Read? |
 |---|---|---|---|
-| Legacy analysis trees | Documentation | docs/ANALYSIS - OLD, docs/ANALYSIS - PLAIN, and docs/ANALYSIS - TECHNICAL; frozen under MATERIAL/LEGACY DOCUMENTATION | Yes — in full |
-| User task prompts | Documentation | docs/tasks; frozen under MATERIAL/LEGACY DOCUMENTATION/tasks | Yes — in full |
+| Legacy analysis trees | Documentation | Removed from the active docs folder; frozen under MATERIAL/LEGACY DOCUMENTATION | Yes — in full |
+| User task prompts | Documentation | Removed from the active docs folder; frozen under MATERIAL/LEGACY DOCUMENTATION/tasks | Yes — in full |
 | Laravel application | Source code | app, routes, database, resources/views, config, and tests in this project | Main entrypoints and high-traffic workflows read; generated and dependency folders excluded |
 | Workflow Version 3 | Methodology | prompt/WORKFLOW v3 | Yes — in full; unchanged |
 

@@ -47,7 +47,7 @@ Sources: `MATERIAL/LEGACY DOCUMENTATION/ANALYSIS - TECHNICAL/03-planning/plan.md
 | # | Written version one | Written version two | Consequence |
 |---|---|---|---|
 | C-01 | The old technical progress says subscription grace and access decisions were resolved on 3 August 2026. | Older gap and risk notes still describe subscription access as unresolved. | The current code and dated decision are separated from stale historical wording in [[04 - COMBINED FINDINGS]]. |
-| C-02 | The old task registry lists ten prompts. | The current `docs/tasks` set contains twelve prompts. | All twelve are preserved and tracked in [[09 - TASK TRACKER]]. |
+| C-02 | The old task registry lists ten prompts. | The frozen source set contains twelve prompts. | All twelve are preserved and tracked in [[09 - TASK TRACKER]]. |
 | C-03 | The old root index presents Workflow v2 and paired technical/plain trees as canonical. | Workflow v3 defines one plain-language analysis run with optional parts and screens. | The v3 front door is canonical after this migration; the old index remains only in the frozen evidence copy. |
 | C-04 | Historical roadmap records use twelve numbered phases. | Workflow v3 requires outcome-based phases and fresh `R-` numbers. | The old phase names remain provenance; the new roadmap uses six dependency-based phases. |
 

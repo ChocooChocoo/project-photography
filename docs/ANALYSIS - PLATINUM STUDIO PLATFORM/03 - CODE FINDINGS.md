@@ -81,8 +81,8 @@ The current audit covered application models, controllers, middleware, requests,
 | U-01 | The owner Services page can call `json_decode` on an already-cast array and return HTTP 500. | `resources/views/owner/view-services.blade.php`; recorded as ISS-002 in the frozen technical progress record. |
 | U-02 | A paid-booking photographer cancellation has no complete approved substitution, reschedule, refund, credit, notification, and audit outcome. | Frozen cancellation reference and current assignment code. |
 | U-03 | Renewal, failed-renewal webhook behavior, cancellation beyond the historical refund window, and reactivation remain planned. | Frozen subscription reference and current subscription controllers/commands. |
-| U-04 | Public landing-page work is documented but not approved as application implementation. | `docs/tasks/09.md` frozen copy. |
-| U-05 | The historical Phase 3 task remains in progress even though several related routes and services already exist. | `docs/tasks/02.md` and current source. |
+| U-04 | Public landing-page work is documented but not approved as application implementation. | `MATERIAL/LEGACY DOCUMENTATION/tasks/09.md` frozen copy. |
+| U-05 | The historical Phase 3 task remains in progress even though several related routes and services already exist. | `MATERIAL/LEGACY DOCUMENTATION/tasks/02.md` and current source. |
 
 ## Things worth flagging
 
