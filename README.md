@@ -4,9 +4,9 @@ Platinum is a web platform for photography studios, freelancers, clients, and st
 
 ## Start here
 
-- [Plain-language system analysis](docs/ANALYSIS%20-%20PLAIN/00-overview/START%20HERE.md)
-- [Technical system analysis](docs/ANALYSIS%20-%20TECHNICAL/00-overview/START%20HERE.md)
-- [Documentation index](docs/README.md)
+- [Workflow v3 documentation front door](docs/00%20-%20START%20HERE.md)
+- [Platinum Studio Platform analysis](docs/ANALYSIS%20-%20PLATINUM%20STUDIO%20PLATFORM/00%20-%20START%20HERE.md)
+- [Migration coverage ledger](docs/ANALYSIS%20-%20PLATINUM%20STUDIO%20PLATFORM/MATERIAL/LEGACY%20COVERAGE.md)
 - [Developer and agent context](CLAUDE.md)
 
 ## Running locally

@@ -1,18 +1,9 @@
 # Documentation Index
 
-This is the canonical documentation for the existing Platinum Studio Platform (Mode A). Technical records are the source of truth. Plain-language views report the same status, decisions, and open items without implementation detail.
+This compatibility page points to the Workflow Version 3 front door while the legacy trees remain pending the separate removal approval.
 
-## Read by audience
+- [Workflow v3 front door](00%20-%20START%20HERE.md)
+- [Platinum Studio Platform analysis](ANALYSIS%20-%20PLATINUM%20STUDIO%20PLATFORM/00%20-%20START%20HERE.md)
+- [Legacy coverage ledger](ANALYSIS%20-%20PLATINUM%20STUDIO%20PLATFORM/MATERIAL/LEGACY%20COVERAGE.md)
 
-- **Clients, advisers, and panelists:** [ANALYSIS - PLAIN](ANALYSIS%20-%20PLAIN/00-overview/START%20HERE.md).
-- **Developers and agents:** [ANALYSIS - TECHNICAL](ANALYSIS%20-%20TECHNICAL/00-overview/START%20HERE.md).
-
-## Workflow
-
-| Area | Purpose |
-| --- | --- |
-| [ANALYSIS - TECHNICAL](ANALYSIS%20-%20TECHNICAL/00-overview/START%20HERE.md) | Full detailed system analysis, requirements, roadmap, progress, testing, diagrams, and references |
-| [ANALYSIS - PLAIN](ANALYSIS%20-%20PLAIN/00-overview/START%20HERE.md) | Matching plain-language subfolders for the same lifecycle |
-| [ANALYSIS - OLD](ANALYSIS%20-%20OLD/README.md) | Pre-reset documentation preserved exactly as a historical archive; do not treat it as the current source of truth |
-
-The supplied System Analysis Workflow v2 explains how this structure is maintained: use the [technical workflow](../prompt/engineering/SYSTEM%20ANALYSIS/WORKFLOW%20-%20TECHNICAL%20V2/00%20-%20START%20HERE.md) or its matching [plain-language workflow](../prompt/engineering/SYSTEM%20ANALYSIS/WORKFLOW%20-%20PLAIN%20V2/00%20-%20START%20HERE.md).
+The old `ANALYSIS - OLD`, `ANALYSIS - PLAIN`, `ANALYSIS - TECHNICAL`, and `tasks` trees remain unchanged until the user approves the legacy-removal gate. Exact frozen copies are retained under the v3 analysis MATERIAL folder.

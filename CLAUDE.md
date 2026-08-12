@@ -2,7 +2,7 @@
 
 ## Project
 
-Platinum is a Laravel 12 photography studio platform. It is a server-rendered Blade application with Tailwind CSS and Vite; it is not an SPA. The durable project record is [docs/README.md](docs/README.md). Technical documents in [ANALYSIS - TECHNICAL](docs/ANALYSIS%20-%20TECHNICAL/00-overview/START%20HERE.md) are authoritative; [ANALYSIS - PLAIN](docs/ANALYSIS%20-%20PLAIN/00-overview/START%20HERE.md) is the matching non-technical view.
+Platinum is a Laravel 12 photography studio platform. It is a server-rendered Blade application with Tailwind CSS and Vite; it is not an SPA. The durable project record starts at [docs/00 - START HERE.md](docs/00%20-%20START%20HERE.md) and continues in [ANALYSIS - PLATINUM STUDIO PLATFORM](docs/ANALYSIS%20-%20PLATINUM%20STUDIO%20PLATFORM/00%20-%20START%20HERE.md).
 
 ## Commands
 
@@ -24,6 +24,6 @@ npm run build
 
 ## Documentation rules
 
-- Begin with [docs/README.md](docs/README.md); the supplied [technical](prompt/engineering/SYSTEM%20ANALYSIS/WORKFLOW%20-%20TECHNICAL%20V2/00%20-%20START%20HERE.md) and [plain-language](prompt/engineering/SYSTEM%20ANALYSIS/WORKFLOW%20-%20PLAIN%20V2/00%20-%20START%20HERE.md) System Analysis Workflow v2 files are the documentation methodology and remain synchronized.
+- Begin with [docs/00 - START HERE.md](docs/00%20-%20START%20HERE.md). Workflow Version 3 in [prompt/WORKFLOW v3](prompt/WORKFLOW%20v3/00%20-%20START%20HERE.md) governs the documentation structure, traceability, plain-language rules, diagrams, roadmap, task tracker, parts, and role screens.
 - Record only evidence-backed current behavior. Put unapproved work in linked open items, risks, issues, or decisions—not as shipped functionality.
-- `prompt/tasks/` contains user-authored task prompts. Never rename, move, split, or invent task prompts; see [task index](docs/ANALYSIS%20-%20TECHNICAL/04-tasks/index.md).
+- `docs/ANALYSIS - PLATINUM STUDIO PLATFORM/MATERIAL/LEGACY DOCUMENTATION/tasks/` freezes the current user-authored task prompts for provenance; `09 - TASK TRACKER.md` is the canonical task index.
