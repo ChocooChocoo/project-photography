@@ -26,7 +26,6 @@ class ChatbotConfigModel extends Model
         'owner_id',
         'config_name',
         'welcome_message',
-        'fallback_message',
         'is_active',
         'bot_name',
         'bot_avatar',

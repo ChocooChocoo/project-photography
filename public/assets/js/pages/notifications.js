@@ -238,22 +238,6 @@
             markAllAsRead();
         });
 
-        $("#viewAllNotifications").on("click.notifications", function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            if (!window.Swal) {
-                return;
-            }
-
-            window.Swal.fire({
-                title: "Coming Soon!",
-                text: "Notifications page will be available soon.",
-                icon: "info",
-                confirmButtonColor: "#3475db"
-            });
-        });
-
         $(document).on("click.notifications", ".mark-read-btn", function (event) {
             event.preventDefault();
             event.stopPropagation();

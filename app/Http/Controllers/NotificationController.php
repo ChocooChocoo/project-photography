@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\NotificationModel;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,17 +34,25 @@ class NotificationController extends Controller
     /**
      * Get all notifications for the user.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
             $notifications = NotificationModel::where('user_id', Auth::id())
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
-            
-            return response()->json([
-                'success' => true,
-                'notifications' => $notifications
-            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'notifications' => $notifications
+                ]);
+            }
+
+            $unreadCount = NotificationModel::where('user_id', Auth::id())
+                ->unread()
+                ->count();
+
+            return view('notifications.index', compact('notifications', 'unreadCount'));
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -114,7 +123,7 @@ class NotificationController extends Controller
     /**
      * Mark a single notification as read.
      */
-    public function markAsRead($id)
+    public function markAsRead(Request $request, $id)
     {
         try {
             $notification = NotificationModel::where('user_id', Auth::id())
@@ -127,6 +136,10 @@ class NotificationController extends Controller
             $unreadCount = NotificationModel::where('user_id', Auth::id())
                 ->unread()
                 ->count();
+
+            if (!$request->ajax() && !$request->wantsJson()) {
+                return redirect()->back()->with('success', 'Notification marked as read.');
+            }
             
             return response()->json([
                 'success' => true,
@@ -134,6 +147,11 @@ class NotificationController extends Controller
                 'unread_count' => $unreadCount
             ]);
             
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Notification not found.'
+            ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -145,12 +163,16 @@ class NotificationController extends Controller
     /**
      * Mark all notifications as read.
      */
-    public function markAllAsRead()
+    public function markAllAsRead(Request $request)
     {
         try {
             NotificationModel::where('user_id', Auth::id())
                 ->unread()
                 ->update(['read_at' => now()]);
+
+            if (!$request->ajax() && !$request->wantsJson()) {
+                return redirect()->back()->with('success', 'All notifications marked as read.');
+            }
             
             return response()->json([
                 'success' => true,
@@ -169,7 +191,7 @@ class NotificationController extends Controller
     /**
      * Delete a notification.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
             $notification = NotificationModel::where('user_id', Auth::id())
@@ -182,6 +204,10 @@ class NotificationController extends Controller
             $unreadCount = NotificationModel::where('user_id', Auth::id())
                 ->unread()
                 ->count();
+
+            if (!$request->ajax() && !$request->wantsJson()) {
+                return redirect()->back()->with('success', 'Notification deleted successfully.');
+            }
             
             return response()->json([
                 'success' => true,
@@ -189,6 +215,11 @@ class NotificationController extends Controller
                 'unread_count' => $unreadCount
             ]);
             
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Notification not found.'
+            ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

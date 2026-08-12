@@ -8,16 +8,16 @@
 
 | Status | How many |
 |---|---:|
-| ✅ Finished | 12 |
-| 🟨 Being worked on | 1 |
-| ⭕ Not started | 1 |
+| ✅ Finished | 14 |
+| 🟨 Being worked on | 0 |
+| ⭕ Not started | 0 |
 | ❌ Blocked | 4 |
 | 🔵 Already there | 2 |
 | ⬜ Dropped | 0 |
 | ❓ Unclear | 0 |
 | **Total** | **20** |
 
-The platform has twelve finished items, two already present, one partly delivered, one waiting for its turn, and four blocked by policy or approval questions.
+The platform has fourteen finished items, two already present, and four blocked by policy or approval questions.
 
 ## Phase 1 — Make the foundations dependable
 
@@ -58,9 +58,9 @@ The platform has twelve finished items, two already present, one partly delivere
 
 | # | What gets built | Status | Notes |
 |---|---|---|---|
-| R-16 | Complete notification, scheduler, expiry, and deadline automation | 🟨 Being worked on | Several commands and notification routes already exist. |
-| R-17 | Maintain assistant safety and operational controls | 🔵 Already there | Guardrails, ownership, throttle, and fallback behavior exist. |
-| R-18 | Broaden security and regression coverage | ⭕ Not started | Planned beyond the current focused tests. |
+| R-16 | Complete notification, scheduler, expiry, and deadline automation | ✅ Finished | "View all" notifications page built on a shared cross-portal layout; `notifications:prune` removes read records older than 30 days (configurable); `bookings:send-reminders` warns at 1 and 3 days ahead with per-day deduplication; all seven schedules carry `withoutOverlapping` and production-only constraints; procurement escalation and schedule registration are covered by tests. |
+| R-17 | Maintain assistant safety and operational controls | 🔵 Already there | Guardrails, ownership, throttle, and fallback behavior exist and are covered by 23 tests; the stale `fallback_message` fillable entry was removed after its column was dropped. |
+| R-18 | Broaden security and regression coverage | ✅ Finished | Login and registration POST routes are rate limited; CSRF wiring, webhook exemption, gallery upload rejection, cross-role access, and schedule registration are covered by regression tests. |
 
 ## Phase 6 — Resolve cancellation and subscription lifecycles
 

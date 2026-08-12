@@ -55,7 +55,7 @@
                                     </button>
                                 </div>
                                 <div class="col-6">
-                                    <a href="#" class="btn btn-sm btn-soft-secondary w-100" id="viewAllNotifications">
+                                    <a href="{{ route('notifications.index') }}" class="btn btn-sm btn-soft-secondary w-100" id="viewAllNotifications">
                                         <i class="ti ti-eye me-1"></i>View all
                                     </a>
                                 </div>
