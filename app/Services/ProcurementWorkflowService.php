@@ -1547,7 +1547,7 @@ class ProcurementWorkflowService
                 'dot_class' => 'bg-success-subtle',
                 'icon_class' => 'text-success',
             ],
-            'purchase_order_created' => [
+            'purchase_order_generated' => [
                 'title' => 'Purchase Order Generated',
                 'description' => 'Finance issued a purchase order for the approved request.',
                 'icon' => 'ti ti-file-invoice',

@@ -8,16 +8,16 @@
 
 | Status | How many |
 |---|---:|
-| ✅ Finished | 6 |
-| 🟨 Being worked on | 2 |
+| ✅ Finished | 9 |
+| 🟨 Being worked on | 1 |
 | ⭕ Not started | 4 |
 | ❌ Blocked | 4 |
-| 🔵 Already there | 4 |
+| 🔵 Already there | 2 |
 | ⬜ Dropped | 0 |
 | ❓ Unclear | 0 |
 | **Total** | **20** |
 
-The platform has six finished items, four already present, two partly delivered, four waiting for their turn, and four blocked by policy or approval questions.
+The platform has nine finished items, two already present, one partly delivered, four waiting for their turn, and four blocked by policy or approval questions.
 
 ## Phase 1 — Make the foundations dependable
 
@@ -42,9 +42,9 @@ The platform has six finished items, four already present, two partly delivered,
 | # | What gets built | Status | Notes |
 |---|---|---|---|
 | R-09 | Complete approved studio-management requirements | ❌ Blocked | Q-04 has no final build order. |
-| R-10 | Complete attendance, leave, overtime, schedules, and payroll | 🔵 Already there | Current HR/finance/owner routes cover the delivered surface. |
-| R-11 | Complete procurement lifecycle | 🔵 Already there | `ProcurementWorkflowService` contains the recorded state actions. |
-| R-12 | Enforce and test scoped role permissions | 🟨 Being worked on | The mechanism exists; cross-portal proof remains a continuing requirement. |
+| R-10 | Complete attendance, leave, overtime, schedules, and payroll | ✅ Finished | Check-in/out with geolocation, leave approval, and payroll generation with finance approval are covered by lifecycle tests. |
+| R-11 | Complete procurement lifecycle | ✅ Finished | The audit timeline action mismatch was repaired and the full request-to-completion state machine is covered by an integration test. |
+| R-12 | Enforce and test scoped role permissions | ✅ Finished | Cross-studio isolation is proven by tests for HR employees, finance payroll, and photographer assignments. |
 
 ## Phase 4 — Expand discovery and advanced operations
 
