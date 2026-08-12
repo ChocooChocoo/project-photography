@@ -10,9 +10,9 @@ The written record and the application agree on the broad platform: role-specifi
 
 | # | Promise | Written source | Current evidence | Match |
 |---|---|---|---|---|
-| M-01 | Separate portals for administrator, owner, client, freelancer, HR, finance, and photographer. | Frozen technical analysis, portal and role sections. | `routes/web.php` role groups and matching middleware/controllers. | Fully, subject to permission verification. |
+| M-01 | Separate portals for administrator, owner, client, freelancer, HR, finance, and photographer. | Frozen technical analysis, portal and role sections. | `routes/web.php` role groups and matching middleware/controllers. | Fully; portal boundaries are verified by the 49-check matrix in `tests/Feature/Auth/PortalAccessTest.php`. |
 | M-02 | Booking connects selection, payment, assignment, gallery delivery, and review. | Frozen architecture and roadmap records. | `BookingModel.php`, booking controllers, payment routes, assignment, gallery, and review records. | Mostly; cancellation outcomes remain incomplete. |
-| M-03 | Payment-provider confirmation updates payment and booking state. | Frozen technical analysis and Task 04/roadmap records. | PayMongo and Stripe webhook routes plus payment services. | Built; fresh provider-level verification is limited to local tests. |
+| M-03 | Payment-provider confirmation updates payment and booking state. | Frozen technical analysis and Task 04/roadmap records. | PayMongo and Stripe webhook routes plus payment services. | Built; both provider webhook paths verified by signature, processing, and idempotency tests in `tests/Feature/Payment/WebhookTest.php`. |
 | M-04 | Galleries can remain draft until publication and can support portfolio work. | Frozen process flows and Phase 2/3 roadmap. | Owner gallery routes for draft, upload, update, publish, and portfolio. | Built in current code. |
 | M-05 | Assistant uses photography scope and defensive validation. | Frozen AI Assistant Integration reference. | `ChatbotService.php`, request validation, throttle, and assistant tests. | Built; provider availability remains environment-dependent. |
 | M-06 | Subscription expiry has grace and scoped access behavior. | Frozen QST-002 decision and Phase 10 progress. | Expiry and notification commands plus `EnforceStudioSubscriptionAccess.php`. | Built for the recorded slice; renewal is separate. |
@@ -25,7 +25,6 @@ The written record and the application agree on the broad platform: role-specifi
 | G-02 | Full subscription renewal, failed billing, reactivation, and later cancellation behavior. | Frozen `SUBSCRIPTION LIFECYCLE.md`, sections 5–9. | Trial expiry, grace, notices, and access controls exist; later lifecycle remains planned. |
 | G-03 | A public landing page implemented from the documented plan. | Frozen `tasks/09.md`. | Documentation-only landing-page proposal. |
 | G-04 | A single approved build order for core studio-management requirements. | Frozen `tasks/10.md` and core-studio reference. | Many routes and permissions exist, but the requirement set remains a planning source. |
-| G-05 | An error-free owner Services screen. | Frozen progress issue ISS-002. | Current Blade view can fail on an already-cast array. |
 
 ## Built but never written down clearly
 

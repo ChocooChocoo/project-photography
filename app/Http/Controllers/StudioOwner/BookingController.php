@@ -8,6 +8,7 @@ use App\Models\StudioOwner\StudiosModel;
 use App\Models\StudioOwner\StudioPhotographersModel;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
 use App\Models\UserModel;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Traits\Notifiable;
@@ -897,6 +898,17 @@ class BookingController extends Controller
 
             $booking->save();
 
+            // Cascade: cancel open assignments (completed/cancelled ones are left untouched)
+            if ($newStatus === BookingModel::STATUS_CANCELLED) {
+                BookingAssignedPhotographerModel::where('booking_id', $booking->id)
+                    ->whereIn('status', ['assigned', 'confirmed', 'on_site', 'in_progress'])
+                    ->update([
+                        'status' => 'cancelled',
+                        'cancelled_at' => now(),
+                        'cancellation_reason' => $booking->cancellation_reason ?: 'Booking cancelled by the studio.',
+                    ]);
+            }
+
             if ($newStatus === BookingModel::STATUS_CANCELLED && $booking->client) {
                 $studio = StudiosModel::find($booking->provider_id);
                 $this->notifyBookingCancelledByStudio(
@@ -916,6 +928,100 @@ class BookingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating booking status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Owner updates an assignment's status (completed / cancelled).
+     */
+    public function updateAssignmentStatus(Request $request, $id)
+    {
+        try {
+            $userId = Auth::id();
+            $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
+
+            if (empty($studioIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No studios found for this owner'
+                ], 404);
+            }
+
+            $assignment = BookingAssignedPhotographerModel::where('id', $id)
+                ->whereIn('studio_id', $studioIds)
+                ->firstOrFail();
+
+            $status = $request->input('status');
+
+            if (!in_array($status, ['completed', 'cancelled'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid status. Only completed or cancelled are allowed.'
+                ], 422);
+            }
+
+            if ($status === 'cancelled') {
+                if (empty($request->input('cancellation_reason'))) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cancellation reason is required when cancelling an assignment.'
+                    ], 422);
+                }
+
+                $assignment->markAsCancelled($request->input('cancellation_reason'));
+
+                $this->createNotification(
+                    $assignment->photographer_id,
+                    'assignment_cancelled',
+                    'Assignment Cancelled',
+                    "Your assignment for booking #{$assignment->booking->booking_reference} has been cancelled by the studio. Reason: {$request->input('cancellation_reason')}",
+                    [
+                        'assignment_id' => $assignment->id,
+                        'booking_id' => $assignment->booking_id,
+                        'route' => route('assigned.bookings', [], false)
+                    ],
+                    'calendar-x',
+                    'danger'
+                );
+            } else {
+                if (!$assignment->canMarkAsCompleted()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Assignment can only be marked as completed while in progress with client confirmation.'
+                    ], 403);
+                }
+
+                $assignment->update([
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                ]);
+
+                $this->createNotification(
+                    $assignment->photographer_id,
+                    'assignment_completed',
+                    'Assignment Completed',
+                    "Your assignment for booking #{$assignment->booking->booking_reference} has been marked as completed by the studio.",
+                    [
+                        'assignment_id' => $assignment->id,
+                        'booking_id' => $assignment->booking_id,
+                        'route' => route('assigned.bookings', [], false)
+                    ],
+                    'check-circle',
+                    'success'
+                );
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Assignment status updated successfully.',
+                'assignment' => $assignment
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating assignment status: ' . $e->getMessage()
             ], 500);
         }
     }

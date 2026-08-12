@@ -17,6 +17,7 @@ use App\Models\PaymentModel;
 use App\Models\BookingPackageModel;
 use App\Models\SystemRevenueModel;
 use App\Models\ClientBudgetModel;
+use App\Services\PaymongoService;
 use App\Services\StripeService;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
@@ -26,10 +27,12 @@ class BookingController extends Controller
     use Notifiable;
 
     protected $stripeService;
+    protected $paymongoService;
 
-    public function __construct(StripeService $stripeService)
+    public function __construct(StripeService $stripeService, PaymongoService $paymongoService)
     {
         $this->stripeService = $stripeService;
+        $this->paymongoService = $paymongoService;
     }
 
     /*
@@ -1311,7 +1314,7 @@ class BookingController extends Controller
         $result = $this->paymongoService->testConnection();
         
         // Add additional info for test mode
-        if ($this->paymongoService->isTestMode) {
+        if (config('services.paymongo.mode', 'test') === 'test') {
             $result['test_mode_info'] = [
                 'limitation' => 'Test mode only supports card payments',
                 'test_card' => '4111111111111111',
@@ -1872,7 +1875,7 @@ class BookingController extends Controller
         }
 
         $timestamp = $parts['t'] ?? null;
-        $expectedSignature = $this->paymongoService->isTestMode ? ($parts['te'] ?? null) : ($parts['li'] ?? null);
+        $expectedSignature = config('services.paymongo.mode', 'test') === 'test' ? ($parts['te'] ?? null) : ($parts['li'] ?? null);
 
         if (!$timestamp || !$expectedSignature) {
             return false;

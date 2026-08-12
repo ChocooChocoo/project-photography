@@ -60,7 +60,7 @@
                                         @foreach($services as $service)
                                             @php
                                                 // Decode JSON service names
-                                                $serviceNames = $service->service_name ? json_decode($service->service_name, true) : [];
+                                                $serviceNames = $service->service_name ?? [];
                                                 $servicesList = implode(', ', $serviceNames);
                                                 $truncatedList = strlen($servicesList) > 50 ? substr($servicesList, 0, 50) . '...' : $servicesList;
                                             @endphp

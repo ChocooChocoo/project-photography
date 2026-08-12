@@ -39,6 +39,7 @@ class ExpirePendingBookingsCommand extends Command
             $booking->update([
                 'status' => BookingModel::STATUS_CANCELLED,
                 'cancellation_reason' => 'Booking expired — not confirmed within the required timeframe.',
+                'cancelled_by' => 'system',
             ]);
 
             if ($booking->client) {
@@ -48,6 +49,11 @@ class ExpirePendingBookingsCommand extends Command
             $studio = $booking->booking_type === 'studio' ? $booking->studio()->first() : null;
             if ($studio && $studio->user) {
                 $this->notifyBookingExpired($booking, $studio->user, 'owner.booking.index');
+            }
+
+            $freelancer = $booking->booking_type === 'freelancer' ? $booking->freelancer()->first() : null;
+            if ($freelancer && $freelancer->user) {
+                $this->notifyBookingExpired($booking, $freelancer->user, 'freelancer.booking.index');
             }
         }
 

@@ -2,39 +2,39 @@
 
 [[00 - START HERE|Back to start]] · Previous: [[07 - DEVELOPMENT ROADMAP]] · Next: [[09 - TASK TRACKER]]
 
-**Last checked:** 11 August 2026
+**Last checked:** 12 August 2026
 
 ## Where everything stands
 
 | Status | How many |
 |---|---:|
-| ✅ Finished | 0 |
-| 🟨 Being worked on | 4 |
-| ⭕ Not started | 5 |
+| ✅ Finished | 6 |
+| 🟨 Being worked on | 2 |
+| ⭕ Not started | 4 |
 | ❌ Blocked | 4 |
-| 🔵 Already there | 7 |
+| 🔵 Already there | 4 |
 | ⬜ Dropped | 0 |
 | ❓ Unclear | 0 |
 | **Total** | **20** |
 
-The platform has seven roadmap items already present, four partly delivered, five waiting for their turn, and four blocked by policy or approval questions.
+The platform has six finished items, four already present, two partly delivered, four waiting for their turn, and four blocked by policy or approval questions.
 
 ## Phase 1 — Make the foundations dependable
 
 | # | What gets built | Status | Notes |
 |---|---|---|---|
 | R-01 | Preserve seed, media-storage, and application contracts | 🔵 Already there | Existing tests and storage conventions are present. |
-| R-02 | Complete payment callback verification and coverage | 🟨 Being worked on | Provider routes and tests exist; broader evidence remains. |
-| R-03 | Repair the owner Services rendering defect | ⭕ Not started | Recorded as ISS-002 in the frozen progress record. |
-| R-04 | Expand route, role, studio-scope, and permission regression checks | 🔵 Already there | Middleware, permissions, and focused tests exist; coverage can expand. |
+| R-02 | Complete payment callback verification and coverage | ✅ Finished | Both provider webhook paths are covered by signature, processing, idempotency, and status-transition tests. |
+| R-03 | Repair the owner Services rendering defect | ✅ Finished | ISS-002 fixed: removed `json_decode` on already-cast arrays; page rendering verified by test. |
+| R-04 | Expand route, role, studio-scope, and permission regression checks | ✅ Finished | Portal boundaries covered by 49 matrix checks and RBAC enforcement by 4 middleware tests; photographer middleware JSON parity restored. |
 
 ## Phase 2 — Complete booking and media journeys
 
 | # | What gets built | Status | Notes |
 |---|---|---|---|
-| R-05 | Align booking expiry and status transitions | 🔵 Already there | Current commands and booking controllers implement the recorded slice. |
-| R-06 | Finish assignment lifecycle | 🟨 Being worked on | Assignment paths exist; cancellation outcome is separate and blocked. |
-| R-07 | Finish gallery and review delivery | 🔵 Already there | Draft, upload, publish, portfolio, and review surfaces exist. |
+| R-05 | Align booking expiry and status transitions | ✅ Finished | `cancelled_by` accepts `system`, the expiry command records it and notifies freelancers, and the transition matrix and expiry command are covered by tests. |
+| R-06 | Finish assignment lifecycle | ✅ Finished | Owner assignment-status route repaired, deadline warnings scheduled, owner notified on accept/cancel/complete, and cancellation cascades to open assignments; lifecycle covered by tests. |
+| R-07 | Finish gallery and review delivery | ✅ Finished | Draft, upload, publish, portfolio, and review surfaces are exercised by gallery and review lifecycle tests. |
 | R-08 | Add ordinary booking cancellation path | ❌ Blocked | Must be distinguished from photographer cancellation and Q-11. |
 
 ## Phase 3 — Make each role’s daily work complete

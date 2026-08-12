@@ -4,39 +4,67 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class StudioPhotographerMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if user is authenticated
         if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Please login to access this page.');
+            return $this->handleUnauthorized($request);
         }
 
-        // Check if user has the correct role
         $user = Auth::user();
         if ($user->role !== 'studio-photographer') {
-            // Redirect based on user's actual role
-            $routes = [
-                'admin' => 'admin.dashboard',
-                'owner' => 'owner.dashboard',
-                'freelancer' => 'freelancer.dashboard',
-                'client' => 'client.dashboard',
-                'studio-photographer' => 'studio-photographer.dashboard'
-            ];
-            
-            $route = $routes[$user->role] ?? 'login';
-            return redirect()->route($route)->with('error', 'Unauthorized access.');
+            return $this->handleForbidden($request, $user);
         }
 
-        return $next($request);
+        $response = $next($request);
+
+        return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                        ->header('Pragma', 'no-cache')
+                        ->header('Expires', '0');
+    }
+
+    private function handleUnauthorized(Request $request)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please login to access this page.',
+                'redirect' => route('login')
+            ], 401);
+        }
+
+        return redirect()->route('login')->with('error', 'Please login to access this page.');
+    }
+
+    private function handleForbidden(Request $request, $user)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Access denied. Studio photographer privileges required.',
+                'redirect' => $this->getUserDashboard($user->role)
+            ], 403);
+        }
+
+        return redirect($this->getUserDashboard($user->role))
+            ->with('error', 'Access denied. Studio photographer privileges required.');
+    }
+
+    private function getUserDashboard($role): string
+    {
+        $routes = [
+            'admin' => 'admin.dashboard',
+            'owner' => 'owner.dashboard',
+            'freelancer' => 'freelancer.dashboard',
+            'client' => 'client.dashboard',
+            'studio-hr' => 'studio-hr.dashboard',
+            'studio-finance' => 'studio-finance.dashboard'
+        ];
+
+        return route($routes[$role] ?? 'login');
     }
 }

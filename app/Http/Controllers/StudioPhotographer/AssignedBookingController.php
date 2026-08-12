@@ -113,6 +113,7 @@ class AssignedBookingController extends Controller
     {
         try {
             $userId = Auth::id();
+            $photographerName = Auth::user() ? Auth::user()->first_name . ' ' . Auth::user()->last_name : 'Photographer';
             
             $assignment = BookingAssignedPhotographerModel::where('id', $assignmentId)
                 ->where('photographer_id', $userId)
@@ -174,6 +175,22 @@ class AssignedBookingController extends Controller
                         $booking->status = 'in_progress';
                         $booking->save();
                     }
+
+                    $this->createOwnerNotification(
+                        $assignment,
+                        'photographer_confirmed_assignment',
+                        'Photographer Accepted Assignment',
+                        "Photographer {$photographerName} accepted the assignment for booking #{$booking->booking_reference}.",
+                        [
+                            'booking_id' => $booking->id,
+                            'booking_reference' => $booking->booking_reference,
+                            'assignment_id' => $assignment->id,
+                            'photographer_name' => $photographerName,
+                            'route' => route('owner.booking.index', [], false)
+                        ],
+                        'user-check',
+                        'success'
+                    );
                     break;
                 
                 // On-site status
@@ -270,11 +287,44 @@ class AssignedBookingController extends Controller
                     if ($allPhotographersCompleted) {
                         \Log::info('All photographers completed for booking: ' . $assignment->booking_id);
                     }
+
+                    $this->createOwnerNotification(
+                        $assignment,
+                        'photographer_completed_assignment',
+                        'Photographer Completed Assignment',
+                        "Photographer {$photographerName} completed the assignment for booking #{$booking->booking_reference}.",
+                        [
+                            'booking_id' => $booking->id,
+                            'booking_reference' => $booking->booking_reference,
+                            'assignment_id' => $assignment->id,
+                            'photographer_name' => $photographerName,
+                            'route' => route('owner.booking.index', [], false)
+                        ],
+                        'circle-check',
+                        'success'
+                    );
                     break;
                     
                 case 'cancelled':
                     $updateData['cancelled_at'] = now();
                     $updateData['cancellation_reason'] = $request->cancellation_reason;
+
+                    $this->createOwnerNotification(
+                        $assignment,
+                        'photographer_cancelled_assignment',
+                        'Photographer Cancelled Assignment',
+                        "Photographer {$photographerName} cancelled the assignment for booking #{$booking->booking_reference}. Reason: {$request->cancellation_reason}.",
+                        [
+                            'booking_id' => $booking->id,
+                            'booking_reference' => $booking->booking_reference,
+                            'assignment_id' => $assignment->id,
+                            'photographer_name' => $photographerName,
+                            'reason' => $request->cancellation_reason,
+                            'route' => route('owner.booking.index', [], false)
+                        ],
+                        'calendar-x',
+                        'danger'
+                    );
                     break;
             }
             
@@ -333,6 +383,43 @@ class AssignedBookingController extends Controller
             
         } catch (\Exception $e) {
             \Log::error('Failed to send client confirmation notification: ' . $e->getMessage());
+        }
+    }
+
+    // ========== Helper method to create studio owner notification ==========
+    private function createOwnerNotification($assignment, $type, $title, $message, $data, $icon, $color)
+    {
+        try {
+            $owner = $assignment->studio?->user;
+
+            if (!$owner) {
+                return;
+            }
+
+            if (trait_exists('App\Traits\Notifiable')) {
+                $notifiable = new class {
+                    use \App\Traits\Notifiable;
+                };
+
+                $notifiable->createNotification(
+                    $owner->id,
+                    $type,
+                    $title,
+                    $message,
+                    $data,
+                    $icon,
+                    $color
+                );
+            }
+
+            \Log::info('Owner notification sent', [
+                'owner_id' => $owner->id,
+                'type' => $type,
+                'assignment_id' => $assignment->id
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send owner notification: ' . $e->getMessage());
         }
     }
 }

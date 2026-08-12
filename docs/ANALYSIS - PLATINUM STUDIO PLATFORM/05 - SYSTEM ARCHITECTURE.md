@@ -16,7 +16,7 @@ The first half describes the arrangement found in the current working files. The
 | Studio onboarding and approval | 🔵 | Creates and reviews studio records and locations. | Owners and administrators |
 | Marketplace and services | 🔵 | Presents provider categories, services, packages, and discovery. | Clients, owners, freelancers |
 | Booking and payment | 🔵 | Creates bookings and tracks provider payment confirmation. | Clients, providers, finance |
-| Assignment and cancellation | 🟨 | Assigns photographers and records assignment state. | Owners and photographers |
+| Assignment and cancellation | 🔵 | Assigns photographers, tracks response deadlines and assignment state, and notifies owners; cancellation outcomes remain separately blocked. | Owners and photographers |
 | Galleries and reviews | 🔵 | Delivers draft, published, portfolio, and review material. | Owners, providers, clients, administrators |
 | Studio people and permissions | 🔵 | Manages members, roles, permissions, and employee scope. | Owners and HR |
 | Attendance and payroll | 🔵 | Handles attendance, leave, overtime, schedules, and payroll settings. | HR, finance, staff |
@@ -51,7 +51,7 @@ The application calls PayMongo and Stripe for payment-related work, Groq when th
 | Complete cancellation outcome flow | ❌ Blocked | Give a paid booking one approved operational and financial path after photographer cancellation. |
 | Complete subscription renewal lifecycle | ❌ Blocked | Add the policy and provider events for renewal, failed payment, cancellation, and reactivation. |
 | Public entry experience | ⭕ | Implement the documented landing page only after approval. |
-| Broader regression and permission coverage | ⭕ | Prove that role and studio boundaries remain enforced as the platform grows. |
+| Broader regression and permission coverage | ✅ | Delivered: role and studio boundaries are regression-checked through the 49-check portal matrix, RBAC middleware tests, and photographer middleware JSON parity. |
 
 ### How work would pass between them
 

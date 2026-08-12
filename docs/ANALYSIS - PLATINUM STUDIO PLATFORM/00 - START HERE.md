@@ -4,7 +4,7 @@ Next: [[01 - OVERVIEW]]
 
 **What this is about:** Platinum Studio Platform
 **Written:** 11 August 2026
-**Last updated:** 11 August 2026
+**Last updated:** 12 August 2026
 
 ## What was handed over
 
@@ -62,7 +62,7 @@ Read [[04 - COMBINED FINDINGS]] for the most useful truth about promises versus 
 | Q-02 | What is the approved renewal, failed-payment, cancellation, and reactivation policy? | Grace and expiry access are implemented, but card-on-file renewal and later lifecycle decisions remain planned. | Product owner and finance |
 | Q-03 | Is the public landing page approved for implementation? | The old task is explicitly documentation-only and contains no approved implementation order. | Product owner |
 | Q-04 | Which core studio-management requirements are approved for build, and in what order? | The requirements cover onboarding, permits, roles, attendance, pricing, and archive behavior, but do not establish one approved delivery sequence. | Product owner |
-| Q-05 | When will the owner Services page defect be repaired? | The current record reports an HTTP 500 caused by decoding an already-cast array. | Engineering owner |
+| Q-05 | ~~When will the owner Services page defect be repaired?~~ **Resolved — repaired and verified 12 August 2026.** | The HTTP 500 caused by decoding an already-cast array is fixed and covered by a rendering test. | — |
 | Q-06 | What remains in the historical Phase 3 task? | Its prompt is still marked in progress while parts of the feature set already exist. | Product owner and engineering owner |
 | Q-07 | Which payment-provider events and business outcomes are authoritative? | PayMongo and Stripe webhook routes exist, but provider behavior and operational policy must stay distinct. | Product owner and finance |
 | Q-08 | Which gallery, review, and portfolio rules are final? | Code supports draft, publish, portfolio, and review surfaces; moderation and visibility rules vary across historical notes. | Product owner |
@@ -81,3 +81,5 @@ Read [[04 - COMBINED FINDINGS]] for the most useful truth about promises versus 
 | Date | What changed |
 |---|---|
 | 11 August 2026 | Created the Workflow v3 canonical analysis beside the legacy trees; froze all source documentation; added coverage, current-code findings, reconciliation, roadmap, trackers, parts, and role screens. Legacy deletion is intentionally not performed. |
+| 12 August 2026 | Repaired ISS-002 (owner Services HTTP 500 from decoding an already-cast array), fixed the missing PayMongo service injection in the client booking controller, completed payment webhook regression coverage (signature, processing, idempotency, status transitions), added the 49-check portal-access matrix and RBAC permission middleware tests, and restored AJAX JSON parity to the studio-photographer middleware. Roadmap items R-02, R-03, and R-04 are now finished in the tracker. |
+| 12 August 2026 | Completed Phase 2 booking and media journeys: repaired the owner assignment-status route, scheduled assignment deadline warnings, added photographer-to-owner notifications (accept, cancel, complete), cascaded booking cancellation to open assignments, added the `system` cancellation actor with freelancer expiry notices, and added assignment, booking-status, gallery, and review lifecycle tests. Roadmap items R-05, R-06, and R-07 are now finished in the tracker. |

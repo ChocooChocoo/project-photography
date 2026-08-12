@@ -48,7 +48,7 @@ class ServicesController extends Controller
             $service = ServicesModel::create([
                 'studio_id' => $validated['studio_id'],
                 'category_id' => $validated['category_id'],
-                'service_name' => json_encode($validated['service_name']), // Store as JSON
+                'service_name' => $validated['service_name'],
                 'starting_from' => $validated['starting_from'] ?? null,
             ]);
             
@@ -79,7 +79,7 @@ class ServicesController extends Controller
                 ->findOrFail($id);
             
             // Decode JSON service names
-            $service->service_names_array = $service->service_name ? json_decode($service->service_name, true) : [];
+            $service->service_names_array = $service->service_name ?? [];
             
             return response()->json([
                 'success' => true,
@@ -106,7 +106,7 @@ class ServicesController extends Controller
                 ->findOrFail($id);
             
             // Get service names as array
-            $service->service_names_array = $service->service_name ? json_decode($service->service_name, true) : [];
+            $service->service_names_array = $service->service_name ?? [];
             
             // Get verified studios owned by the current user
             $verifiedStudios = StudiosModel::where('user_id', auth()->id())
@@ -149,7 +149,7 @@ class ServicesController extends Controller
             $service->update([
                 'studio_id' => $validated['studio_id'],
                 'category_id' => $validated['category_id'],
-                'service_name' => json_encode($validated['service_name']), // Update as JSON
+                'service_name' => $validated['service_name'],
                 'starting_from' => $validated['starting_from'] ?? null,
             ]);
             
@@ -209,7 +209,7 @@ class ServicesController extends Controller
             
             // Decode JSON service names for each service
             $services->transform(function ($service) {
-                $service->service_names_array = $service->service_name ? json_decode($service->service_name, true) : [];
+                $service->service_names_array = $service->service_name ?? [];
                 return $service;
             });
             
