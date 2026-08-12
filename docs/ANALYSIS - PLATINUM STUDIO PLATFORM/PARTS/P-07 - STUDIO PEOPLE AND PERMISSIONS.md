@@ -1,10 +1,10 @@
 # P-07 - STUDIO PEOPLE AND PERMISSIONS
 
-[[ANALYSIS - PLATINUM STUDIO PLATFORM/00 - START HERE|Back to start]] · [[ANALYSIS - PLATINUM STUDIO PLATFORM/11 - PARTS IN DETAIL|All parts]] · [[ANALYSIS - PLATINUM STUDIO PLATFORM/07 - DEVELOPMENT ROADMAP|Roadmap]]
+[Back to start](../00 - START HERE.md) · [All parts](../11 - PARTS IN DETAIL.md) · [Roadmap](../07 - DEVELOPMENT ROADMAP.md)
 
 **What it is for:** Manages staff membership, roles, permissions, and studio-specific responsibility.
-**Where it sits:** [[ANALYSIS - PLATINUM STUDIO PLATFORM/05 - SYSTEM ARCHITECTURE#The parts]]
-**Built by:** R-09, R-12 in [[ANALYSIS - PLATINUM STUDIO PLATFORM/07 - DEVELOPMENT ROADMAP|the roadmap]]
+**Where it sits:** [05 - SYSTEM ARCHITECTURE](../05 - SYSTEM ARCHITECTURE.md#the-parts)
+**Built by:** R-09, R-12 in [the roadmap](../07 - DEVELOPMENT ROADMAP.md)
 **Status:** Evidence-backed status is recorded in the parts index.
 
 ## Why it exists
@@ -64,7 +64,7 @@ Invited → active or cancelled; role active → inactive
 
 ## When something goes wrong
 
-The current source exposes validation, authorization, state checks, provider fallbacks, or error responses where they exist. It does not supply a universal recovery policy for every partial failure. That limit is recorded in [[ANALYSIS - PLATINUM STUDIO PLATFORM/04 - COMBINED FINDINGS|combined findings]] rather than filled with a generic assumption.
+The current source exposes validation, authorization, state checks, provider fallbacks, or error responses where they exist. It does not supply a universal recovery policy for every partial failure. That limit is recorded in [combined findings](../04 - COMBINED FINDINGS.md) rather than filled with a generic assumption.
 
 ## What it leans on, and what leans on it
 

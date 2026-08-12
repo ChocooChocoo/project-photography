@@ -1,6 +1,6 @@
 # 06 - DIAGRAMS
 
-[[00 - START HERE|Back to start]] · Previous: [[05 - SYSTEM ARCHITECTURE]] · Next: [[07 - DEVELOPMENT ROADMAP]]
+[Back to start](00 - START HERE.md) · Previous: [05 - SYSTEM ARCHITECTURE](05 - SYSTEM ARCHITECTURE.md) · Next: [07 - DEVELOPMENT ROADMAP](07 - DEVELOPMENT ROADMAP.md)
 
 These pictures use Mermaid. Each is followed by a plain-language reading. They show the current arrangement unless they are explicitly labelled proposed.
 

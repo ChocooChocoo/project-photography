@@ -1,6 +1,6 @@
 # 08 - ROADMAP TRACKER
 
-[[00 - START HERE|Back to start]] · Previous: [[07 - DEVELOPMENT ROADMAP]] · Next: [[09 - TASK TRACKER]]
+[Back to start](00 - START HERE.md) · Previous: [07 - DEVELOPMENT ROADMAP](07 - DEVELOPMENT ROADMAP.md) · Next: [09 - TASK TRACKER](09 - TASK TRACKER.md)
 
 **Last checked:** 12 August 2026
 

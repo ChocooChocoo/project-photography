@@ -1,6 +1,6 @@
 # 04 - COMBINED FINDINGS
 
-[[00 - START HERE|Back to start]] · Previous: [[03 - CODE FINDINGS]] · Next: [[05 - SYSTEM ARCHITECTURE]]
+[Back to start](00 - START HERE.md) · Previous: [03 - CODE FINDINGS](03 - CODE FINDINGS.md) · Next: [05 - SYSTEM ARCHITECTURE](05 - SYSTEM ARCHITECTURE.md)
 
 ## The picture in one paragraph
 
@@ -47,4 +47,4 @@ The written record and the application agree on the broad platform: role-specifi
 
 ## What this means for what happens next
 
-The first useful work is not another feature proposal. It is a dependable evidence base: preserve the source, record the current behavior, make the role and booking boundaries legible, then order the remaining work around policy blockers and current defects. That is the purpose of [[07 - DEVELOPMENT ROADMAP]].
+The first useful work is not another feature proposal. It is a dependable evidence base: preserve the source, record the current behavior, make the role and booking boundaries legible, then order the remaining work around policy blockers and current defects. That is the purpose of [07 - DEVELOPMENT ROADMAP](07 - DEVELOPMENT ROADMAP.md).

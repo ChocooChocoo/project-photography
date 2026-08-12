@@ -1,6 +1,6 @@
 # 01 - OVERVIEW
 
-[[00 - START HERE|Back to start]] · Next: [[02 - DOCUMENT FINDINGS]]
+[Back to start](00 - START HERE.md) · Next: [02 - DOCUMENT FINDINGS](02 - DOCUMENT FINDINGS.md)
 
 ## What it is
 
@@ -34,4 +34,4 @@ The current record does not prove a complete end-to-end remedy after a paid book
 
 ## Where the details are
 
-[[05 - SYSTEM ARCHITECTURE]] explains the parts and hand-offs. [[06 - DIAGRAMS]] shows the main journeys. [[07 - DEVELOPMENT ROADMAP]] gives the build order, while [[04 - COMBINED FINDINGS]] explains why the order is needed.
+[05 - SYSTEM ARCHITECTURE](05 - SYSTEM ARCHITECTURE.md) explains the parts and hand-offs. [06 - DIAGRAMS](06 - DIAGRAMS.md) shows the main journeys. [07 - DEVELOPMENT ROADMAP](07 - DEVELOPMENT ROADMAP.md) gives the build order, while [04 - COMBINED FINDINGS](04 - COMBINED FINDINGS.md) explains why the order is needed.

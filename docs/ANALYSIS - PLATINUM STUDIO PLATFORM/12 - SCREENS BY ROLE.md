@@ -1,6 +1,6 @@
 # 12 - SCREENS BY ROLE
 
-[[00 - START HERE|Back to start]] · Previous: [[11 - PARTS IN DETAIL]]
+[Back to start](00 - START HERE.md) · Previous: [11 - PARTS IN DETAIL](11 - PARTS IN DETAIL.md)
 
 ## Read this first
 
