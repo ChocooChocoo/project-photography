@@ -22,10 +22,19 @@ class DashboardController extends Controller
         // Fetch approved studios (status = 'approved') with their average ratings
         $studios = StudiosModel::whereIn('status', ['approved', 'active', 'verified'])
             ->subscriptionAccessible()
-            ->with(['location', 'category', 'packages'])
+            ->with([
+                'location',
+                'category',
+                'packages',
+                'subscriptions' => fn ($q) => $q->currentlyAccessible()->with('plan'),
+            ])
             ->addSelect(['*', DB::raw('avg_rating as average_rating'), DB::raw('total_reviews as ratings_count')])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        $featuredStudioIds = $studios
+            ->filter(fn ($s) => ($s->subscriptions->first()?->plan?->priority_level ?? 0) >= 3)
+            ->pluck('id');
 
         // Fetch freelancers with profile data and their average ratings
         $freelancers = ProfileModel::with(['user', 'location', 'categories'])
@@ -46,7 +55,7 @@ class DashboardController extends Controller
             ->orderBy('municipality', 'asc')
             ->get();
 
-        return view('client.dashboard', compact('studios', 'freelancers', 'categories', 'locations'));
+        return view('client.dashboard', compact('studios', 'freelancers', 'categories', 'locations', 'featuredStudioIds'));
     }
 
     /**

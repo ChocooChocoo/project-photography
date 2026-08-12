@@ -8,16 +8,16 @@
 
 | Status | How many |
 |---|---:|
-| ✅ Finished | 9 |
+| ✅ Finished | 12 |
 | 🟨 Being worked on | 1 |
-| ⭕ Not started | 4 |
+| ⭕ Not started | 1 |
 | ❌ Blocked | 4 |
 | 🔵 Already there | 2 |
 | ⬜ Dropped | 0 |
 | ❓ Unclear | 0 |
 | **Total** | **20** |
 
-The platform has nine finished items, two already present, one partly delivered, four waiting for their turn, and four blocked by policy or approval questions.
+The platform has twelve finished items, two already present, one partly delivered, one waiting for its turn, and four blocked by policy or approval questions.
 
 ## Phase 1 — Make the foundations dependable
 
@@ -50,9 +50,9 @@ The platform has nine finished items, two already present, one partly delivered,
 
 | # | What gets built | Status | Notes |
 |---|---|---|---|
-| R-13 | Build approved public landing page | ⭕ Not started | Documentation-only task; Q-03. |
-| R-14 | Complete discovery improvements | ⭕ Not started | Historical roadmap proposal. |
-| R-15 | Add recurring bookings and equipment assignment | ⭕ Not started | Historical advanced-work proposal. |
+| R-13 | Build approved public landing page | ✅ Finished | A Bootstrap public landing page now serves the guest root with login and register entry points. |
+| R-14 | Complete discovery improvements | ✅ Finished | Subscription rank transparency is live: studios on premium plans show a Featured badge with explanatory tooltip in the client marketplace. |
+| R-15 | Add recurring bookings and equipment assignment | ✅ Finished | Recurring bookings generate child sessions at creation, and owners can assign equipment that assigned photographers confirm. |
 
 ## Phase 5 — Automate and protect ongoing work
 

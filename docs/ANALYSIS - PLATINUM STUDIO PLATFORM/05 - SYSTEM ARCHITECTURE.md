@@ -50,7 +50,7 @@ The application calls PayMongo and Stripe for payment-related work, Groq when th
 | Defect and evidence register | ⭕ | Make current failures, verification dates, and status evidence visible before new work. |
 | Complete cancellation outcome flow | ❌ Blocked | Give a paid booking one approved operational and financial path after photographer cancellation. |
 | Complete subscription renewal lifecycle | ❌ Blocked | Add the policy and provider events for renewal, failed payment, cancellation, and reactivation. |
-| Public entry experience | ⭕ | Implement the documented landing page only after approval. |
+| Public entry experience | ✅ | Delivered: a Bootstrap landing page serves the guest root with login and register entry points. |
 | Broader regression and permission coverage | ✅ | Delivered: role and studio boundaries are regression-checked through the 49-check portal matrix, RBAC middleware tests, and photographer middleware JSON parity. |
 
 ### How work would pass between them

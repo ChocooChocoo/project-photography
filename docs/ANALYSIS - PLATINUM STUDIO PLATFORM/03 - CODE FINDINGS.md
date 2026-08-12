@@ -80,8 +80,7 @@ The current audit covered application models, controllers, middleware, requests,
 |---|---|---|
 | U-01 | A paid-booking photographer cancellation has no complete approved substitution, reschedule, refund, credit, notification, and audit outcome. | Frozen cancellation reference and current assignment code. |
 | U-02 | Renewal, failed-renewal webhook behavior, cancellation beyond the historical refund window, and reactivation remain planned. | Frozen subscription reference and current subscription controllers/commands. |
-| U-03 | Public landing-page work is documented but not approved as application implementation. | `MATERIAL/LEGACY DOCUMENTATION/tasks/09.md` frozen copy. |
-| U-04 | The historical Phase 3 task remains in progress even though several related routes and services already exist. | `MATERIAL/LEGACY DOCUMENTATION/tasks/02.md` and current source. |
+| U-03 | The historical Phase 3 task remains in progress even though several related routes and services already exist. | `MATERIAL/LEGACY DOCUMENTATION/tasks/02.md` and current source. |
 
 ## Things worth flagging
 

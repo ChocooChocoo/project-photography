@@ -21,12 +21,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tbl_chatbot_configs', function (Blueprint $table) {
-            $table->dropColumn('fallback_message');
+            if (Schema::hasColumn('tbl_chatbot_configs', 'fallback_message')) {
+                $table->dropColumn('fallback_message');
+            }
         });
 
-        Schema::table('tbl_chatbot_intents', function (Blueprint $table) {
-            $table->dropColumn(['trigger_keywords', 'response_type', 'image_url', 'match_count']);
-        });
+        if (Schema::hasTable('tbl_chatbot_intents')) {
+            Schema::table('tbl_chatbot_intents', function (Blueprint $table) {
+                $columns = ['trigger_keywords', 'response_type', 'image_url', 'match_count'];
+                $existing = array_filter($columns, fn ($c) => Schema::hasColumn('tbl_chatbot_intents', $c));
+                if (!empty($existing)) {
+                    $table->dropColumn($existing);
+                }
+            });
+        }
     }
 
     /**

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\Freelancer\ProfileModel;
 use App\Models\StudioOwner\PackagesModel as StudioPackagesModel;
@@ -346,6 +347,11 @@ class BookingController extends Controller
             'full_name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
             'email' => 'required|email|max:255',
+            'booking_frequency' => 'nullable|in:one_time,recurring',
+            'recurrence_pattern' => 'nullable|array',
+            'recurrence_pattern.frequency' => 'nullable|in:weekly,monthly',
+            'recurrence_pattern.interval' => 'nullable|integer|min:1|max:52',
+            'recurrence_pattern.sessions' => 'nullable|integer|min:1|max:52',
         ];
 
         // ==== FIXED: Conditional validation based on location type ====
@@ -566,23 +572,45 @@ class BookingController extends Controller
                 $bookingData['multiple_locations'] = null;
             }
 
-            // Create booking
-            $booking = BookingModel::create($bookingData);
+            // 5b. Detect recurring bookings and attach recurrence fields to the parent
+            $recurrencePattern = $request->input('recurrence_pattern');
+            $isRecurring = $request->input('booking_frequency') === 'recurring'
+                && is_array($recurrencePattern)
+                && in_array($recurrencePattern['frequency'] ?? null, ['weekly', 'monthly'], true)
+                && (int) ($recurrencePattern['interval'] ?? 0) >= 1
+                && (int) ($recurrencePattern['sessions'] ?? 0) >= 2;
 
-            $normalizedCoverageScope = $this->normalizeCoverageScope($package->coverage_scope);
+            if ($isRecurring) {
+                $bookingData['booking_frequency'] = 'recurring';
+                $bookingData['recurrence_pattern'] = $recurrencePattern;
+            }
 
-            // 6. Create booking package record
-            BookingPackageModel::create([
-                'booking_id' => $booking->id,
-                'package_id' => $package->id,
-                'package_type' => $request->type,
-                'package_name' => $package->package_name,
-                'package_price' => $package->package_price,
-                'package_inclusions' => json_encode($package->package_inclusions),
-                'duration' => $package->duration,
-                'maximum_edited_photos' => $package->maximum_edited_photos,
-                'coverage_scope' => $normalizedCoverageScope,
-            ]);
+            // Create booking (with child sessions for recurring bookings)
+            $booking = DB::transaction(function () use ($bookingData, $package, $request) {
+                $booking = BookingModel::create($bookingData);
+
+                $normalizedCoverageScope = $this->normalizeCoverageScope($package->coverage_scope);
+
+                // 6. Create booking package record
+                BookingPackageModel::create([
+                    'booking_id' => $booking->id,
+                    'package_id' => $package->id,
+                    'package_type' => $request->type,
+                    'package_name' => $package->package_name,
+                    'package_price' => $package->package_price,
+                    'package_inclusions' => json_encode($package->package_inclusions),
+                    'duration' => $package->duration,
+                    'maximum_edited_photos' => $package->maximum_edited_photos,
+                    'coverage_scope' => $normalizedCoverageScope,
+                ]);
+
+                // 6b. Generate child sessions for the remaining recurring sessions
+                if (($bookingData['booking_frequency'] ?? 'one_time') === 'recurring') {
+                    $this->createRecurringChildren($booking, $bookingData);
+                }
+
+                return $booking;
+            });
 
             // 7. Create initial payment record
             $payment = PaymentModel::create([
@@ -705,6 +733,29 @@ class BookingController extends Controller
                 'success' => false,
                 'message' => 'Failed to create booking: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Generate child bookings for the remaining sessions of a recurring booking.
+     */
+    private function createRecurringChildren(BookingModel $parent, array $parentData): void
+    {
+        $pattern = $parentData['recurrence_pattern'];
+        $frequency = $pattern['frequency'];
+        $interval = (int) $pattern['interval'];
+        $baseDate = Carbon::parse($parentData['event_date']);
+
+        for ($i = 1; $i < (int) $pattern['sessions']; $i++) {
+            $childData = $parentData;
+            $childData['booking_reference'] = BookingModel::generateBookingReference();
+            $childData['parent_booking_id'] = $parent->id;
+            $childData['expires_at'] = now()->addHours(48);
+            $childData['event_date'] = $frequency === 'weekly'
+                ? $baseDate->copy()->addWeeks($interval * $i)->format('Y-m-d')
+                : $baseDate->copy()->addMonths($interval * $i)->format('Y-m-d');
+
+            BookingModel::create($childData);
         }
     }
 

@@ -165,7 +165,12 @@
                                                 style="width: 100px; height: 100px; object-fit: cover;">
                                         </div>                                            
                                         <div class="flex-grow-1 ms-3" style="min-width: 0;">
-                                            <h4 class="card-title mb-1 text-truncate" title="{{ $studio->studio_name }}">{{ $studio->studio_name }}</h4>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <h4 class="card-title mb-1 text-truncate" title="{{ $studio->studio_name }}">{{ $studio->studio_name }}</h4>
+                                                @if($featuredStudioIds->contains($studio->id))
+                                                    <span class="badge bg-warning text-dark flex-shrink-0" title="Featured studios are verified premium members">Featured</span>
+                                                @endif
+                                            </div>
                                             <p class="text-muted mb-1">Studio</p>
                                             <div class="mb-2">
                                                 <span class="text-muted small">

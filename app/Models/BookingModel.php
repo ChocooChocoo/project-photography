@@ -80,6 +80,9 @@ class BookingModel extends Model
         'completed_at',
         'revision_requested_at',
         'revision_deadline',
+        'booking_frequency',
+        'recurrence_pattern',
+        'parent_booking_id',
     ];
 
     /**
@@ -100,6 +103,7 @@ class BookingModel extends Model
         'completed_at' => 'datetime',
         'revision_requested_at' => 'datetime',
         'revision_deadline' => 'datetime',
+        'recurrence_pattern' => 'array',
     ];
 
     /**
@@ -154,6 +158,30 @@ class BookingModel extends Model
     public function payments()
     {
         return $this->hasMany(PaymentModel::class, 'booking_id');
+    }
+
+    /**
+    * Get the parent booking of a recurring child session.
+    */
+    public function parent()
+    {
+        return $this->belongsTo(BookingModel::class, 'parent_booking_id');
+    }
+
+    /**
+    * Get the child sessions of a recurring booking.
+    */
+    public function children()
+    {
+        return $this->hasMany(BookingModel::class, 'parent_booking_id');
+    }
+
+    /**
+    * Check if the booking is part of a recurring series.
+    */
+    public function isRecurring(): bool
+    {
+        return $this->booking_frequency === 'recurring';
     }
 
     /**

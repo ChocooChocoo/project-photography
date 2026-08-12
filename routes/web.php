@@ -163,6 +163,11 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/bookings/{id}/status', [\App\Http\Controllers\StudioOwner\BookingController::class, 'updateStatus'])->middleware('permission:owner.bookings.manage')->name('owner.booking.update.status');
         Route::put('/bookings/{id}/complete', [\App\Http\Controllers\StudioOwner\BookingController::class, 'completeBooking'])->middleware('permission:owner.bookings.manage')->name('owner.booking.complete');
 
+        // Manage Booking Equipment
+        Route::get('/bookings/{bookingId}/equipment', [\App\Http\Controllers\StudioOwner\BookingEquipmentController::class, 'index'])->middleware('permission:owner.bookings.manage')->name('owner.booking.equipment.index');
+        Route::post('/bookings/{bookingId}/equipment', [\App\Http\Controllers\StudioOwner\BookingEquipmentController::class, 'store'])->middleware('permission:owner.bookings.manage')->name('owner.booking.equipment.store');
+        Route::delete('/equipment/{id}', [\App\Http\Controllers\StudioOwner\BookingEquipmentController::class, 'destroy'])->middleware('permission:owner.bookings.manage')->name('owner.booking.equipment.destroy');
+
         // Manage Online Gallery
         Route::get('/view/online-gallery', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'index'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.index');
         Route::get('/online-gallery/completed-bookings', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getCompletedBookings'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.completed-bookings');
@@ -554,6 +559,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/assignment/{id}/details', [\App\Http\Controllers\StudioPhotographer\AssignedBookingController::class, 'getBookingDetails'])->middleware('permission:studio-photographer.bookings.view')->name('assignment.details');
         Route::post('/assignment/{id}/update-status', [\App\Http\Controllers\StudioPhotographer\AssignedBookingController::class, 'updateAssignmentStatus'])->middleware('permission:studio-photographer.assignment.update_status')->name('assignment.update-status');
 
+        // Booking Equipment
+        Route::post('/equipment/{id}/confirm', [\App\Http\Controllers\StudioPhotographer\BookingEquipmentController::class, 'confirm'])->middleware('permission:studio-photographer.assignment.update_status')->name('assignment.equipment.confirm');
+
         // Manage Online Gallery
         Route::get('/view/online-gallery', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'index'])->middleware('permission:studio-photographer.online_gallery.view,studio-photographer.online_gallery.create,studio-photographer.online_gallery.update,studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.index');
         Route::get('/online-gallery/{bookingId}/details', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'getGalleryDetails'])->middleware('permission:studio-photographer.online_gallery.view,studio-photographer.online_gallery.update,studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.details');
@@ -644,26 +652,26 @@ Route::middleware(['auth'])->group(function () {
 
     });
 
-    // Home redirect based on authentication
-    Route::get('/', function () {
-        if (auth()->check()) {
-            $user = auth()->user();
-            $routes = [
-                'admin' => 'admin.dashboard',
-                'owner' => 'owner.dashboard',
-                'freelancer' => 'freelancer.dashboard',
-                'client' => 'client.dashboard',
-                'studio-photographer' => 'studio-photographer.dashboard',
-                'studio-hr' => 'studio-hr.dashboard',
-                'studio-finance' => 'studio-finance.dashboard',
-            ];
+});
 
-            return redirect()->route($routes[$user->role] ?? 'login');
-        }
+// Public landing page (guest-accessible root)
+Route::get('/', function () {
+    if (auth()->check()) {
+        $user = auth()->user();
+        $routes = [
+            'admin' => 'admin.dashboard',
+            'owner' => 'owner.dashboard',
+            'freelancer' => 'freelancer.dashboard',
+            'client' => 'client.dashboard',
+            'studio-photographer' => 'studio-photographer.dashboard',
+            'studio-hr' => 'studio-hr.dashboard',
+            'studio-finance' => 'studio-finance.dashboard',
+        ];
 
-        return redirect()->route('login');
-    });
+        return redirect()->route($routes[$user->role] ?? 'login');
+    }
 
+    return view('landing');
 });
 
 // Fallback route for 404 errors (MUST BE AT THE END)

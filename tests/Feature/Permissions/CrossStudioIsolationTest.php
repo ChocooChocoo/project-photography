@@ -372,6 +372,17 @@ class CrossStudioIsolationTest extends TestCase
             $table->timestamp('response_deadline')->nullable();
             $table->timestamps();
         });
+        Schema::create('tbl_booking_equipment', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('booking_id');
+            $table->unsignedBigInteger('assignment_id')->nullable();
+            $table->string('equipment_name');
+            $table->string('equipment_type');
+            $table->text('notes')->nullable();
+            $table->boolean('confirmed')->default(false);
+            $table->timestamp('confirmed_at')->nullable();
+            $table->timestamps();
+        });
         Schema::create('tbl_booking_packages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('booking_id');

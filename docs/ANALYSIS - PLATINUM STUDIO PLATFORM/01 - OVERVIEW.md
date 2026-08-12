@@ -26,11 +26,11 @@ The application starts with registration, sign-in, email verification, and role-
 
 ## What state it is in
 
-This is a partly complete working application, not a blank proposal. Current code contains all seven portal route groups, a relational `tbl_` record model, payment-provider webhook routes, gallery publication paths, studio operations, procurement, subscription expiry and grace handling, and assistant guardrails. The old roadmap still contains unfinished or policy-blocked work, especially photographer cancellation outcomes, renewal and reactivation, the public landing page, and some core studio-management decisions.
+This is a partly complete working application, not a blank proposal. Current code contains all seven portal route groups, a relational `tbl_` record model, payment-provider webhook routes, gallery publication paths, studio operations, procurement, subscription expiry and grace handling, and assistant guardrails. The old roadmap still contains unfinished or policy-blocked work, especially photographer cancellation outcomes, renewal and reactivation, and some core studio-management decisions.
 
 ## What it does not do
 
-The current record does not prove a complete end-to-end remedy after a paid booking loses its photographer. It also does not prove card-on-file renewal, failed-renewal webhooks, reactivation, or an approved public landing-page implementation. A historical requirement or proposal is not treated as shipped merely because it appears in a roadmap.
+The current record does not prove a complete end-to-end remedy after a paid booking loses its photographer. It also does not prove card-on-file renewal, failed-renewal webhooks, or reactivation. A historical requirement or proposal is not treated as shipped merely because it appears in a roadmap.
 
 ## Where the details are
 

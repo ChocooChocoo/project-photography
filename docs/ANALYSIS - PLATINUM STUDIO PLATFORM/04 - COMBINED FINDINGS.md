@@ -23,8 +23,7 @@ The written record and the application agree on the broad platform: role-specifi
 |---|---|---|---|
 | G-01 | A complete paid-booking response after a photographer cancels. | Frozen `PHOTOGRAPHER CANCELLATION CONTINGENCY.md`, sections 2–8. | Assignment updates exist, but no approved end-to-end remedy and financial policy. |
 | G-02 | Full subscription renewal, failed billing, reactivation, and later cancellation behavior. | Frozen `SUBSCRIPTION LIFECYCLE.md`, sections 5–9. | Trial expiry, grace, notices, and access controls exist; later lifecycle remains planned. |
-| G-03 | A public landing page implemented from the documented plan. | Frozen `tasks/09.md`. | Documentation-only landing-page proposal. |
-| G-04 | A single approved build order for core studio-management requirements. | Frozen `tasks/10.md` and core-studio reference. | Many routes and permissions exist, but the requirement set remains a planning source. |
+| G-03 | A single approved build order for core studio-management requirements. | Frozen `tasks/10.md` and core-studio reference. | Many routes and permissions exist, but the requirement set remains a planning source. |
 
 ## Built but never written down clearly
 

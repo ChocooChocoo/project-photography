@@ -269,11 +269,48 @@
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-default btn-secondary"
                                                         data-bs-dismiss="modal">Close</button>
-                                                </div>
-                                            </div>
+                                </div>
+                            </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                {{-- RECURRING BOOKING --}}
+                                <div class="mt-3 border-top pt-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="recurringToggle">
+                                        <label class="form-check-label fw-medium" for="recurringToggle">
+                                            Recurring booking (repeat this event)
+                                        </label>
+                                    </div>
+                                    <div id="recurringSection" style="display:none;" class="row g-3 mt-1">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Frequency</label>
+                                            <select class="form-select" name="recurrence_pattern[frequency]">
+                                                <option value="weekly">Weekly</option>
+                                                <option value="monthly">Monthly</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Every (weeks/months)</label>
+                                            <input type="number" class="form-control" name="recurrence_pattern[interval]" value="1" min="1" max="52">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Total Sessions</label>
+                                            <input type="number" class="form-control" name="recurrence_pattern[sessions]" value="2" min="2" max="52">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <script>
+                                    (function () {
+                                        var toggle = document.getElementById('recurringToggle');
+                                        var section = document.getElementById('recurringSection');
+                                        toggle.addEventListener('change', function () {
+                                            section.style.display = toggle.checked ? 'block' : 'none';
+                                        });
+                                    })();
+                                </script>
 
                                 {{-- PAYMENT TYPE --}}
                                 <h4 class="card-title text-primary mb-3">Payment Details</h4>
@@ -1675,6 +1712,17 @@
                     email: $('#email').val(),
                     _token: '{{ csrf_token() }}'
                 };
+
+                // ==== FIXED: Handle recurring booking fields ====
+                if ($('#recurringToggle').is(':checked')) {
+                    bookingData.booking_frequency = 'recurring';
+                    bookingData.recurrence_pattern = {
+                        frequency: $('select[name="recurrence_pattern[frequency]"]').val(),
+                        interval: $('input[name="recurrence_pattern[interval]"]').val(),
+                        sessions: $('input[name="recurrence_pattern[sessions]"]').val()
+                    };
+                }
+                // ==== END: Handle recurring booking fields ====
                 
                 // ==== FIXED: Handle payment type based on booking type and policy ====
                 if (bookingType === 'freelancer') {

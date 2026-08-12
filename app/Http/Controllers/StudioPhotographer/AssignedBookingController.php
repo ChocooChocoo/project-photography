@@ -67,6 +67,8 @@ class AssignedBookingController extends Controller
             // Get the booking
             $booking = $assignment->booking;
             
+            $equipment = \App\Models\StudioOwner\BookingEquipmentModel::where('booking_id', $booking->id)->get();
+            
             // ========== NEW: Calculate payment status for photographer view ==========
             $totalPaid = $booking->payments->where('status', 'succeeded')->sum('amount');
             $isFullyPaid = $totalPaid >= (float) $booking->total_amount;
@@ -94,7 +96,8 @@ class AssignedBookingController extends Controller
                 'requires_online_gallery' => $requiresOnlineGallery,
                 'has_uploaded_gallery_content' => $hasUploadedGalleryContent,
                 'completion_block_reason' => $completionBlockReason,
-                'requires_location_confirmation' => $requiresLocationConfirmation
+                'requires_location_confirmation' => $requiresLocationConfirmation,
+                'equipment' => $equipment
                 // ========== End of payment info ==========
             ]);
             
