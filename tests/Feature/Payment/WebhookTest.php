@@ -101,6 +101,40 @@ class WebhookTest extends TestCase
         $this->assertSame(1, SystemRevenueModel::where('payment_id', $payment->id)->count());
     }
 
+    public function test_stripe_balance_payment_marks_downpayment_booking_paid_without_resetting_progress(): void
+    {
+        $booking = $this->createBooking([
+            'payment_type' => 'downpayment',
+            'payment_status' => 'partially_paid',
+            'status' => 'in_progress',
+        ]);
+        $this->createPayment($booking, ['status' => 'succeeded', 'amount' => 300]);
+        $balance = $this->createPayment($booking, [
+            'amount' => 700,
+            'stripe_session_id' => 'cs_test_balance',
+        ]);
+
+        $payload = [
+            'id' => 'evt_test_balance',
+            'object' => 'event',
+            'type' => 'checkout.session.completed',
+            'data' => ['object' => [
+                'id' => 'cs_test_balance',
+                'object' => 'checkout.session',
+                'amount_total' => 70000,
+                'payment_status' => 'paid',
+            ]],
+        ];
+
+        $this->postJson('/webhook/stripe', $payload, [
+            'Stripe-Signature' => $this->stripeSignature($payload),
+        ])->assertOk();
+
+        $this->assertSame('succeeded', $balance->fresh()->status);
+        $this->assertSame('paid', $booking->fresh()->payment_status);
+        $this->assertSame('in_progress', $booking->fresh()->status);
+    }
+
     /**
      * A valid Paymongo checkout_session.paid event marks the payment
      * succeeded, the booking paid, and creates one revenue record.
@@ -192,7 +226,7 @@ class WebhookTest extends TestCase
         return "t={$timestamp},te=" . hash_hmac('sha256', $timestamp . '.' . $raw, 'whsec_test');
     }
 
-    private function createBooking(): BookingModel
+    private function createBooking(array $overrides = []): BookingModel
     {
         $client = UserModel::create([
             'role' => 'client',
@@ -206,7 +240,7 @@ class WebhookTest extends TestCase
             'email_verified' => true,
         ]);
 
-        return BookingModel::create([
+        return BookingModel::create(array_merge([
             'booking_reference' => 'BK-' . str()->upper(str()->random(10)),
             'client_id' => $client->id,
             'booking_type' => 'studio',
@@ -223,7 +257,7 @@ class WebhookTest extends TestCase
             'payment_type' => 'full_payment',
             'status' => 'pending',
             'payment_status' => 'unpaid',
-        ]);
+        ], $overrides));
     }
 
     private function createPayment(BookingModel $booking, array $overrides = []): PaymentModel

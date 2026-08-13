@@ -1296,19 +1296,15 @@ class BookingController extends Controller
                             'payment_method' => 'card',
                         ]);
                         
-                        // Update booking
+                        // Recalculate from all successful payments; balance payments must not
+                        // remain partial or move an active booking backwards to confirmed.
                         $booking = $payment->booking;
                         if ($booking) {
-                            if ($booking->payment_type === 'full_payment') {
-                                $paymentStatus = 'paid';
-                            } else {
-                                $paymentStatus = 'partially_paid';
+                            $booking->updatePaymentStatus();
+
+                            if ($booking->status === BookingModel::STATUS_PENDING) {
+                                $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
                             }
-                            
-                            $booking->update([
-                                'payment_status' => $paymentStatus,
-                                'status' => 'confirmed',
-                            ]);
                             
                             // ADD THIS LINE FOR REVENUE SPLIT IN WEBHOOK
                             $this->createRevenueRecord($booking, $payment);
