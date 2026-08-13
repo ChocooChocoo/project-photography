@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * Post-seed consistency check: walks every foreign key declared in the schema
@@ -118,6 +119,8 @@ class VerifySeedIntegrity extends Command
         }
 
         $failures += $this->checkStudioBarangays();
+        $failures += $this->checkFreshAccountContract();
+        $failures += $this->checkPackageGalleryContract();
 
         $locations = DB::table('tbl_locations')->get(['municipality', 'barangay']);
         $this->info(sprintf(
@@ -125,6 +128,130 @@ class VerifySeedIntegrity extends Command
             $locations->count(),
             $locations->sum(fn ($row) => count($this->barangays($row->barangay)))
         ));
+
+        return $failures;
+    }
+
+    private function checkFreshAccountContract(): int
+    {
+        $users = DB::table('tbl_users')
+            ->where('mobile_number', 'like', '+63918404%')
+            ->get(['id', 'role', 'first_name', 'middle_name', 'last_name', 'email', 'password']);
+
+        $failures = 0;
+        $expected = [
+            'admin' => 1,
+            'owner' => 5,
+            'studio-hr' => 5,
+            'studio-finance' => 5,
+            'studio-photographer' => 25,
+            'client' => 10,
+            'freelancer' => 8,
+        ];
+
+        if ($users->count() !== 59) {
+            $failures++;
+            $this->error("  Fresh account block has {$users->count()} row(s); expected 59.");
+        }
+
+        foreach ($expected as $role => $count) {
+            $actual = $users->where('role', $role)->count();
+
+            if ($actual !== $count) {
+                $failures++;
+                $this->error("  Fresh role {$role} has {$actual} row(s); expected {$count}.");
+            }
+        }
+
+        $names = $users->map(fn ($user) => strtolower(trim(implode(' ', array_filter([
+            $user->first_name,
+            $user->middle_name,
+            $user->last_name,
+        ])))));
+        $emails = $users->pluck('email');
+
+        if ($names->count() !== $names->unique()->count()) {
+            $failures++;
+            $this->error('  Fresh accounts contain duplicate full names.');
+        }
+
+        if ($emails->count() !== $emails->unique()->count()) {
+            $failures++;
+            $this->error('  Fresh accounts contain duplicate email addresses.');
+        }
+
+        foreach ($users as $user) {
+            if (! preg_match('/^[a-z]+\.[a-z]+@gmail\.com$/', $user->email)) {
+                $failures++;
+                $this->error("  Invalid fresh email {$user->email}.");
+            }
+
+            if (! Hash::check('Password_123', $user->password)) {
+                $failures++;
+                $this->error("  Fresh password mismatch for {$user->email}.");
+            }
+        }
+
+        return $failures + $this->checkFreshStudioRelationships($users);
+    }
+
+    private function checkFreshStudioRelationships($users): int
+    {
+        $failures = 0;
+        $freshIds = $users->pluck('id')->all();
+        $studios = DB::table('tbl_studios')->get(['id', 'user_id', 'studio_name']);
+
+        if ($studios->count() !== 5) {
+            $failures++;
+            $this->error("  Fresh studio count is {$studios->count()}; expected 5.");
+        }
+
+        foreach ($studios as $studio) {
+            if (! in_array($studio->user_id, $freshIds, true)) {
+                $failures++;
+                $this->error("  {$studio->studio_name} is owned by a non-fresh account.");
+                continue;
+            }
+
+            $scopedUsers = DB::table('tbl_user_roles')
+                ->join('tbl_users', 'tbl_users.id', '=', 'tbl_user_roles.user_id')
+                ->where('tbl_user_roles.studio_id', $studio->id)
+                ->whereIn('tbl_user_roles.user_id', $freshIds)
+                ->get(['tbl_users.role']);
+
+            foreach (['studio-hr' => 1, 'studio-finance' => 1] as $role => $count) {
+                if ($scopedUsers->where('role', $role)->count() !== $count) {
+                    $failures++;
+                    $this->error("  {$studio->studio_name} does not have exactly one {$role} account.");
+                }
+            }
+
+            $photographers = DB::table('tbl_studio_photographers')
+                ->where('studio_id', $studio->id)
+                ->whereIn('photographer_id', $freshIds)
+                ->count();
+
+            if ($photographers !== 5) {
+                $failures++;
+                $this->error("  {$studio->studio_name} has {$photographers} photographers; expected 5.");
+            }
+        }
+
+        return $failures;
+    }
+
+    private function checkPackageGalleryContract(): int
+    {
+        $failures = 0;
+
+        foreach (['tbl_packages' => 'studio', 'tbl_freelancer_packages' => 'freelancer'] as $table => $label) {
+            $disabled = DB::table($table)->where('online_gallery', false)->count();
+
+            if ($disabled > 0) {
+                $failures++;
+                $this->error("  {$disabled} {$label} package(s) do not include Online Gallery.");
+            }
+        }
 
         return $failures;
     }

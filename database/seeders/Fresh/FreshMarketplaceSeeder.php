@@ -105,7 +105,7 @@ class FreshMarketplaceSeeder
 
         foreach ($clients as $index => $clientId) {
             // Every client plans one budget; the first half plan a second.
-            $budgetCount = $index < 15 ? 2 : 1;
+            $budgetCount = $index < intdiv(self::CLIENT_COUNT, 2) ? 2 : 1;
 
             for ($b = 0; $b < $budgetCount; $b++) {
                 $categoryName = $categoryNames[($index * 2 + $b) % count($categoryNames)];
@@ -292,7 +292,7 @@ class FreshMarketplaceSeeder
                             'allow_multiple_locations' => $tierIndex === 1,
                             'max_locations' => $tierIndex === 1 ? 2 : 1,
                             'allow_time_customization' => $tierIndex === 1,
-                            'online_gallery' => false,
+                            'online_gallery' => true,
                             'cover_images' => null,
                             'status' => 'active',
                             'created_at' => $now,

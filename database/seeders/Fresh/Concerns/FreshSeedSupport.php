@@ -31,7 +31,10 @@ trait FreshSeedSupport
     /** Sequence allocated to the single platform admin. */
     public const SEQ_ADMIN = 4000;
 
-    /** Owners occupy 4001..4010. */
+    /** The fresh contract keeps the first five studio entries. */
+    public const STUDIO_COUNT = 5;
+
+    /** Owners occupy 4001..4005. */
     public const SEQ_OWNER_BASE = 4000;
 
     /** Staff occupy 4101..4294 (stride 20 per studio leaves headroom). */
@@ -46,11 +49,18 @@ trait FreshSeedSupport
     public const SEQ_FREELANCER_BASE = 4500;
 
     /** Photographers attached to every studio owner. */
-    public const PHOTOGRAPHERS_PER_STUDIO = 10;
+    public const PHOTOGRAPHERS_PER_STUDIO = 5;
 
-    public const CLIENT_COUNT = 30;
+    public const CLIENT_COUNT = 10;
 
     public const FREELANCER_COUNT = 8;
+
+    /** One admin, five studio teams, ten clients, and eight freelancers. */
+    public const MANAGED_ACCOUNT_COUNT = 1
+        + self::STUDIO_COUNT
+        + (self::STUDIO_COUNT * (1 + 1 + self::PHOTOGRAPHERS_PER_STUDIO))
+        + self::CLIENT_COUNT
+        + self::FREELANCER_COUNT;
 
     /**
      * Memoised municipality => barangay list.
@@ -134,7 +144,7 @@ trait FreshSeedSupport
     protected function upsertFreshUser(int $sequence, string $role, string $userType, ?int $locationId): UserModel
     {
         $person = $this->person($this->personCursor++);
-        $email = $this->gmail($person['first_name'], $person['last_name'], $sequence);
+        $email = $this->gmail($person['first_name'], $person['last_name']);
         $mobile = $this->freshMobile($sequence);
 
         $existing = UserModel::query()->where('email', $email)->first(['id', 'uuid', 'mobile_number']);

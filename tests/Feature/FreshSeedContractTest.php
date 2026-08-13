@@ -106,6 +106,46 @@ class FreshSeedContractTest extends TestCase
         $this->assertGreaterThanOrEqual(4000, self::SEQ_FREELANCER_BASE);
     }
 
+    public function test_fresh_seed_contract_has_the_requested_account_shape(): void
+    {
+        $this->assertSame(5, self::STUDIO_COUNT);
+        $this->assertSame(5, self::PHOTOGRAPHERS_PER_STUDIO);
+        $this->assertSame(10, self::CLIENT_COUNT);
+        $this->assertSame(59, self::MANAGED_ACCOUNT_COUNT);
+    }
+
+    public function test_fresh_identity_roster_is_unique_and_uses_plain_gmail_addresses(): void
+    {
+        $names = [];
+        $emails = [];
+
+        for ($index = 0; $index < self::MANAGED_ACCOUNT_COUNT; $index++) {
+            $person = $this->person($index);
+            $names[] = implode(' ', [$person['first_name'], $person['middle_name'], $person['last_name']]);
+            $emails[] = $this->gmail($person['first_name'], $person['last_name']);
+        }
+
+        $this->assertCount(self::MANAGED_ACCOUNT_COUNT, array_unique($names));
+        $this->assertCount(self::MANAGED_ACCOUNT_COUNT, array_unique($emails));
+        $this->assertNotEmpty($emails);
+
+        foreach ($emails as $email) {
+            $this->assertMatchesRegularExpression('/^[a-z]+\.[a-z]+@gmail\.com$/', $email);
+        }
+    }
+
+    public function test_seeded_credential_document_covers_the_managed_roster(): void
+    {
+        $contents = file_get_contents(base_path('docs/01 - SEEDED ACCOUNT CREDENTIALS.md'));
+
+        $this->assertSame(self::MANAGED_ACCOUNT_COUNT, substr_count($contents, '@gmail.com'));
+        $this->assertSame(self::MANAGED_ACCOUNT_COUNT, substr_count($contents, '| Password_123 |'));
+        $this->assertSame(7, array_sum(array_map(
+            static fn (string $heading): int => substr_count($contents, '### '.$heading),
+            ['Admin', 'Studio Owner', 'Studio HR', 'Studio Finance', 'Studio Photographer', 'Client', 'Freelancer']
+        )));
+    }
+
     /**
      * @return array<int, string>
      */

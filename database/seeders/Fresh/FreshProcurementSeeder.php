@@ -72,7 +72,7 @@ class FreshProcurementSeeder
         $defectRows = [];
 
         foreach ($studios as $studio) {
-            $requester = $studio['hr'][1];
+            $requester = $studio['hr'][0];
             $financeReviewer = $studio['finance'][0];
 
             foreach ($flows as $flowIndex => $flow) {

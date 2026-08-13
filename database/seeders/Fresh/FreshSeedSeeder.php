@@ -35,6 +35,7 @@ class FreshSeedSeeder extends Seeder
         $this->reportExistingFreshAccounts();
 
         (new FreshResetSeeder($this->command))->run();
+        $this->clearFreshAccounts();
 
         $this->call([
             CategorySeeder::class,
@@ -48,6 +49,21 @@ class FreshSeedSeeder extends Seeder
         (new FreshProcurementSeeder($this->command))->run($graph);
 
         $this->command?->info('Fresh seed complete.');
+    }
+
+    /**
+     * The fresh user table is preserved for unrelated accounts. Remove only
+     * rows written by this seed contract before rebuilding its smaller roster.
+     */
+    private function clearFreshAccounts(): void
+    {
+        $deleted = DB::table('tbl_users')
+            ->where('mobile_number', 'like', '+63918404%')
+            ->delete();
+
+        if ($deleted > 0) {
+            $this->command?->info("Removed {$deleted} previous fresh-seed account(s).");
+        }
     }
 
     /**

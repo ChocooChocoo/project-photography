@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 /**
- * Ten studios, ten distinct owners, ten photographers each.
+ * Five studios, five distinct owners, and five photographers each.
  *
  * Owns tbl_studios, pvt_studio_categories, tbl_services, tbl_packages,
  * tbl_studio_schedules, the staff rows in tbl_users, tbl_user_roles,
@@ -22,8 +22,8 @@ class FreshStudioNetworkSeeder
 {
     use FreshSeedSupport;
 
-    /** Staff per studio: 2 HR + 2 finance + 10 photographers. */
-    private const STAFF_PER_STUDIO = 14;
+    /** Staff per studio: 1 HR + 1 finance + 5 photographers. */
+    private const STAFF_PER_STUDIO = 7;
 
     /**
      * Photographer job titles, longest tenure first.
@@ -57,7 +57,7 @@ class FreshStudioNetworkSeeder
 
         $studios = [];
 
-        foreach ($this->studioCatalog() as $studioIndex => $entry) {
+        foreach (array_slice($this->studioCatalog(), 0, self::STUDIO_COUNT) as $studioIndex => $entry) {
             $locationId = $this->locationId($entry['municipality']);
             $owner = $this->upsertFreshUser(self::SEQ_OWNER_BASE + $studioIndex + 1, 'owner', 'Manager', $locationId);
             $studioId = $this->createStudio($studioIndex, $entry, $owner->id, $locationId, $now);
@@ -311,9 +311,7 @@ class FreshStudioNetworkSeeder
                     'max_locations' => $tier['max'],
                     'allow_time_customization' => $tier['custom_time'],
                     'package_price' => $price,
-                    // The online gallery tables stay empty, so no package may
-                    // advertise a gallery deliverable.
-                    'online_gallery' => false,
+                    'online_gallery' => true,
                     'cover_images' => null,
                     'photographer_count' => $tier['photographers'],
                     'status' => 'active',
@@ -362,7 +360,7 @@ class FreshStudioNetworkSeeder
     }
 
     /**
-     * Fourteen staff per studio: an HR pair, a finance pair, and ten
+     * Seven staff per studio: one HR manager, one finance manager, and five
      * photographers, each with a scoped role and a working schedule.
      *
      * @param  array<string, int>  $roleIds
@@ -436,7 +434,7 @@ class FreshStudioNetworkSeeder
                 continue;
             }
 
-            $photographerIndex = $k - 5;
+            $photographerIndex = $k - 3;
             $profile = self::PHOTOGRAPHER_ROLES[$photographerIndex];
 
             $photographerRows[] = [
@@ -478,9 +476,7 @@ class FreshStudioNetworkSeeder
     {
         return match (true) {
             $slot === 1 => ['studio-hr', 'Manager', 'studio-hr-manager'],
-            $slot === 2 => ['studio-hr', 'Staff', 'studio-hr-staff'],
-            $slot === 3 => ['studio-finance', 'Manager', 'studio-finance-manager'],
-            $slot === 4 => ['studio-finance', 'Staff', 'studio-finance-staff'],
+            $slot === 2 => ['studio-finance', 'Manager', 'studio-finance-manager'],
             default => ['studio-photographer', 'Photographer', 'studio-photographer'],
         };
     }
