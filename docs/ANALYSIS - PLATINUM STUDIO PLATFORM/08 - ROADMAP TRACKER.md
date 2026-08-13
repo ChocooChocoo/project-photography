@@ -8,10 +8,10 @@
 
 | Status | How many |
 |---|---:|
-| ✅ Finished | 14 |
+| ✅ Finished | 16 |
 | 🟨 Being worked on | 0 |
 | ⭕ Not started | 0 |
-| ❌ Blocked | 4 |
+| ❌ Blocked | 2 |
 | 🔵 Already there | 2 |
 | ⬜ Dropped | 0 |
 | ❓ Unclear | 0 |
@@ -66,8 +66,8 @@ The platform has fourteen finished items, two already present, and four blocked 
 
 | # | What gets built | Status | Notes |
 |---|---|---|---|
-| R-19 | Complete renewal, failed billing, cancellation, and reactivation | ❌ Blocked | Q-02. |
-| R-20 | Implement paid-booking photographer cancellation remedy | ❌ Blocked | Q-01 and Q-11. |
+| R-19 | Complete renewal, failed billing, cancellation, and reactivation | ✅ Finished | Recurring Stripe Checkout/webhooks, card-free trials, fixed seven-day grace, period-end cancel/resume, previous-plan reactivation, idempotent invoice/revenue records, and focused/full regression evidence delivered 12 August 2026. |
+| R-20 | Implement paid-booking photographer cancellation remedy | ✅ Finished | Same-studio replacement, client response, deadline escalation, manual admin full-refund evidence, payment/revenue reversal, role/studio isolation, UI routes, and focused/full regression evidence delivered 12 August 2026. |
 
 ## What is blocked
 
@@ -75,8 +75,6 @@ The platform has fourteen finished items, two already present, and four blocked 
 |---|---|---|
 | R-08 | Ordinary cancellation policy is not fully reconciled with historical options. | Approve the final rule and financial outcome. |
 | R-09 | Core studio-management requirements lack one approved order. | Approve scope and sequence under Q-04. |
-| R-19 | Renewal and reactivation policy is not approved. | Answer Q-02. |
-| R-20 | Paid-booking cancellation remedy is not approved. | Answer Q-01 and Q-11. |
 
 ## Status legend
 

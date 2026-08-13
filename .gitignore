@@ -53,6 +53,7 @@ Homestead.yaml
 # Extra
 *.bak
 *~
+.worktrees/
 telescope-*.sqlite*
 horizon.*
 reverb.*

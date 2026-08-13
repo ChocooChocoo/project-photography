@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Models\BookingCancellationRecoveryModel;
 use App\Models\BookingModel;
-use App\Models\PaymentModel;
 use App\Models\Freelancer\FreelanceOnlineGalleryModel;
 use App\Models\Freelancer\ProfileModel;
+use App\Models\PaymentModel;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
 use App\Models\StudioOwner\StudioOnlineGalleryModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
+use App\Services\BookingCancellationRecoveryService;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -97,17 +99,17 @@ class MyBookingsController extends Controller
                 $freelancer = $freelancers->get($booking->provider_id);
                 $booking->provider = $freelancer;
 
-                if (!$includePaymentDisplay) {
+                if (! $includePaymentDisplay) {
                     return $booking;
                 }
 
                 if ($freelancer && $freelancer->deposit_policy === 'required') {
                     if ($freelancer->deposit_type === 'percentage') {
                         $booking->downpayment_percentage = $freelancer->deposit_amount ?? 30;
-                        $booking->payment_display = $booking->downpayment_percentage . '% Downpayment';
+                        $booking->payment_display = $booking->downpayment_percentage.'% Downpayment';
                     } elseif ($freelancer->deposit_type === 'fixed') {
                         $booking->downpayment_percentage = 0;
-                        $booking->payment_display = 'Fixed: PHP ' . number_format($freelancer->deposit_amount, 2);
+                        $booking->payment_display = 'Fixed: PHP '.number_format($freelancer->deposit_amount, 2);
                     } else {
                         $booking->downpayment_percentage = 30;
                         $booking->payment_display = '30% Downpayment';
@@ -161,7 +163,7 @@ class MyBookingsController extends Controller
 
                 $depositType = 'percentage';
                 $depositAmount = $downpaymentPercentage;
-                $depositDisplay = $downpaymentPercentage . '% Downpayment';
+                $depositDisplay = $downpaymentPercentage.'% Downpayment';
             } else {
                 $provider = ProfileModel::where('user_id', $booking->provider_id)
                     ->select(
@@ -193,10 +195,10 @@ class MyBookingsController extends Controller
 
                         if ($depositType === 'percentage') {
                             $downpaymentPercentage = $depositAmount;
-                            $depositDisplay = $depositAmount . '% Downpayment';
+                            $depositDisplay = $depositAmount.'% Downpayment';
                         } else {
                             $downpaymentPercentage = 0;
-                            $depositDisplay = 'Fixed Deposit: PHP ' . number_format($depositAmount, 2);
+                            $depositDisplay = 'Fixed Deposit: PHP '.number_format($depositAmount, 2);
                         }
                     } else {
                         $depositPolicy = 'not_required';
@@ -246,7 +248,7 @@ class MyBookingsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error fetching booking details: ' . $e->getMessage(),
+                'message' => 'Error fetching booking details: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -291,9 +293,47 @@ class MyBookingsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error cancelling booking: ' . $e->getMessage(),
+                'message' => 'Error cancelling booking: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    public function respondToPhotographerReplacement(Request $request, $recoveryId)
+    {
+        $request->validate(['accepted' => 'required|boolean']);
+        $recovery = BookingCancellationRecoveryModel::with('booking')->findOrFail($recoveryId);
+        abort_unless($recovery->booking->client_id === Auth::id(), 403);
+
+        $accepted = (bool) $request->boolean('accepted');
+        if ($recovery->status !== BookingCancellationRecoveryService::STATUS_AWAITING_CLIENT) {
+            return response()->json(['success' => false, 'message' => 'This replacement response is no longer available.'], 409);
+        }
+
+        try {
+            app(BookingCancellationRecoveryService::class)->clientRespond($recovery, $accepted);
+        } catch (\DomainException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 409);
+        }
+        $payload = $recovery->fresh()->only([
+            'id', 'booking_id', 'replacement_assignment_id', 'status', 'deadline',
+            'replacement_proposed_at', 'replacement_confirmed_at', 'client_responded_at',
+            'resolved_at', 'outcome_reason',
+        ]);
+
+        return response()->json([
+            'success' => $accepted,
+            'message' => $accepted ? 'Replacement accepted.' : 'Booking cancellation and refund review queued.',
+            'recovery' => $payload,
+        ], $accepted ? 200 : 422);
+    }
+
+    public function cancellationRecoveryView($recoveryId)
+    {
+        $recovery = BookingCancellationRecoveryModel::with(['booking', 'replacementAssignment.photographer'])
+            ->findOrFail($recoveryId);
+        abort_unless($recovery->booking->client_id === Auth::id(), 403);
+
+        return view('client.cancellation-recovery', compact('recovery'));
     }
 
     /**
@@ -313,7 +353,7 @@ class MyBookingsController extends Controller
                 ->where('status', 'completed')
                 ->firstOrFail();
 
-            if (!$booking->canRequestRevision()) {
+            if (! $booking->canRequestRevision()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This booking is no longer eligible for a revision request.',
@@ -369,7 +409,7 @@ class MyBookingsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error requesting revision: ' . $e->getMessage(),
+                'message' => 'Error requesting revision: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -413,7 +453,7 @@ class MyBookingsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error fetching payment details: ' . $e->getMessage(),
+                'message' => 'Error fetching payment details: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -442,7 +482,7 @@ class MyBookingsController extends Controller
             if ($request->amount > $remainingBalance) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Payment amount cannot exceed remaining balance of PHP ' . number_format($remainingBalance, 2),
+                    'message' => 'Payment amount cannot exceed remaining balance of PHP '.number_format($remainingBalance, 2),
                 ]);
             }
 
@@ -480,7 +520,7 @@ class MyBookingsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error initializing payment: ' . $e->getMessage(),
+                'message' => 'Error initializing payment: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -504,14 +544,14 @@ class MyBookingsController extends Controller
                 ], 403);
             }
 
-            if (!$assignment->booking->requiresLocationConfirmation()) {
+            if (! $assignment->booking->requiresLocationConfirmation()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Arrival confirmation is only required for on-location bookings.',
                 ], 403);
             }
 
-            if (!$assignment->on_site_at) {
+            if (! $assignment->on_site_at) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Photographer has not marked as on-site yet.',
@@ -544,7 +584,7 @@ class MyBookingsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error confirming photographer: ' . $e->getMessage(),
+                'message' => 'Error confirming photographer: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -578,7 +618,7 @@ class MyBookingsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error fetching pending confirmations: ' . $e->getMessage(),
+                'message' => 'Error fetching pending confirmations: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -594,7 +634,8 @@ class MyBookingsController extends Controller
             $client = Auth::user();
 
             if (trait_exists('App\Traits\Notifiable')) {
-                $notifiable = new class {
+                $notifiable = new class
+                {
                     use \App\Traits\Notifiable;
                 };
 
@@ -607,7 +648,7 @@ class MyBookingsController extends Controller
                         'booking_id' => $booking->id,
                         'booking_reference' => $booking->booking_reference,
                         'assignment_id' => $assignment->id,
-                        'client_name' => $client->first_name . ' ' . $client->last_name,
+                        'client_name' => $client->first_name.' '.$client->last_name,
                         'route' => route('assigned.bookings', [], false),
                     ],
                     'user-check',
@@ -615,7 +656,7 @@ class MyBookingsController extends Controller
                 );
             }
         } catch (\Exception $e) {
-            \Log::error('Failed to notify photographer of client confirmation: ' . $e->getMessage());
+            \Log::error('Failed to notify photographer of client confirmation: '.$e->getMessage());
         }
     }
 }

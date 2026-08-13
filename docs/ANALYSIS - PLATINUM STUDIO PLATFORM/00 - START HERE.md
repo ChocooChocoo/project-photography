@@ -58,8 +58,8 @@ Read [04 - COMBINED FINDINGS](04%20-%20COMBINED%20FINDINGS.md) for the most usef
 
 | # | Question | Why it matters | Who can answer |
 |---|---|---|---|
-| Q-01 | What approved remedy applies when a photographer cancels after payment? | The code records assignment changes, but the old contingency record leaves substitution, rescheduling, refund, credit, timing, and responsibility unresolved. | Product owner and finance |
-| Q-02 | What is the approved renewal, failed-payment, cancellation, and reactivation policy? | Grace and expiry access are implemented, but card-on-file renewal and later lifecycle decisions remain planned. | Product owner and finance |
+| Q-01 | ~~What approved remedy applies when a photographer cancels after payment?~~ **Resolved — Phase 6 approved same-studio replacement, client response, deadline escalation, and admin manual full-refund flow on 12 August 2026.** | Detailed photographer reasons remain owner-only; rescheduling, credits, partial refunds, freelancer rescue, penalties, and automated refund APIs remain out of scope. | — |
+| Q-02 | ~~What is the approved renewal, failed-payment, cancellation, and reactivation policy?~~ **Resolved — Phase 6 recurring Stripe lifecycle delivered 12 August 2026.** | Card-free trials, provider retries, fixed seven-day grace, period-end cancellation/resume, and previous-plan reactivation are implemented; upgrades and freelancer subscriptions remain out of scope. | — |
 | Q-03 | ~~Is the public landing page approved for implementation?~~ **Resolved — approved and built 12 August 2026.** | The Bootstrap landing page now serves the guest root with login and register entry points. | — |
 | Q-04 | Which core studio-management requirements are approved for build, and in what order? | The requirements cover onboarding, permits, roles, attendance, pricing, and archive behavior, but do not establish one approved delivery sequence. | Product owner |
 | Q-05 | ~~When will the owner Services page defect be repaired?~~ **Resolved — repaired and verified 12 August 2026.** | The HTTP 500 caused by decoding an already-cast array is fixed and covered by a rendering test. | — |
@@ -68,7 +68,7 @@ Read [04 - COMBINED FINDINGS](04%20-%20COMBINED%20FINDINGS.md) for the most usef
 | Q-08 | Which gallery, review, and portfolio rules are final? | Code supports draft, publish, portfolio, and review surfaces; moderation and visibility rules vary across historical notes. | Product owner |
 | Q-09 | Which roles may perform each cross-portal action? | Middleware and studio-scoped permissions exist, but the old notes contain broad and sometimes conflicting role claims. | Product owner and security owner |
 | Q-10 | Which attendance, overtime, and payroll actions are automatic versus manually approved? | The application has routes and services, while the old roadmap proposes additional automation. | Studio operations owner |
-| Q-11 | What financial state should a paid booking enter after cancellation? | This is the concrete business consequence behind the photographer-cancellation gap. | Product owner and finance |
+| Q-11 | ~~What financial state should a paid booking enter after cancellation?~~ **Resolved — Phase 6 queues one full manual refund and requires unique provider evidence per succeeded payment before local reversal on 12 August 2026.** | Processor fees remain notes only; partial refunds and credits are excluded. | — |
 | Q-12 | Which historical completion dates should be retained as official delivery history? | Old progress notes and current source do not always use the same status vocabulary or date. | Project owner |
 
 ## Evidence files

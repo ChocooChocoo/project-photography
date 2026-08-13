@@ -58,7 +58,12 @@ class SubscriptionLifecycleTest extends TestCase
 
         $plan = $this->createPlan(['trial_days' => 14, 'billing_cycle' => 'yearly']);
         $request = SubscribeRequest::create('/subscription/subscribe', 'POST', ['plan_id' => $plan->id]);
-        $controller = new SubscriptionController(Mockery::mock(StripeService::class));
+        $stripe = Mockery::mock(StripeService::class);
+        $stripe->shouldReceive('createSubscriptionCheckoutSession')->once()->andReturn([
+            'id' => 'cs_trial',
+            'url' => 'https://checkout.test/trial',
+        ]);
+        $controller = new SubscriptionController($stripe);
 
         $response = $controller->subscribe($request);
         $subscription = StudioPlanModel::sole();

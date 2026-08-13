@@ -52,7 +52,7 @@ The material does not authorize a broader permission merely because it would be 
 
 ## The states things move through
 
-Trial → active or grace → expired; reactivation is not yet implemented
+Card-free trial → active → paid renewal or fixed seven-day grace → expired; cancellation is period-end and resumable before termination; post-termination reactivation starts a new subscription using the previous plan when available.
 
 ## What it checks before it agrees
 
@@ -92,4 +92,4 @@ The current source exposes validation, authorization, state checks, provider fal
 
 | # | Unclear point | Why it matters |
 |---|---|---|
-| Q-02 | What are renewal, failed-payment, cancellation, card-on-file, and reactivation rules? | The part cannot safely promise this behavior until the decision is answered. |
+| Q-02 | ~~What are renewal, failed-payment, cancellation, card-on-file, and reactivation rules?~~ **Resolved by the approved Phase 6 design and implementation on 12 August 2026.** | Card-free trials, signed Stripe subscription events, provider retries with fixed local grace, period-end cancel/resume, and previous-plan reactivation are covered; upgrades and freelancer subscriptions remain out of scope. |

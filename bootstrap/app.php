@@ -14,19 +14,20 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'webhook/paymongo',
             'webhook/stripe',
+            'webhook/stripe/subscriptions',
         ]);
 
         $middleware->alias([
-            'admin'                 => \App\Http\Middleware\AdminMiddleware::class,
-            'client'                => \App\Http\Middleware\ClientMiddleware::class,
-            'owner'                 => \App\Http\Middleware\OwnerMiddleware::class,
-            'freelancer'            => \App\Http\Middleware\FreelancerMiddleware::class,
-            'studio.photographer'   => \App\Http\Middleware\StudioPhotographerMiddleware::class,
-            'studio.hr'             => \App\Http\Middleware\StudioHRMiddleware::class,
-            'studio.finance'        => \App\Http\Middleware\StudioFinanceMiddleware::class,
-            'check.studio.limit'    => \App\Http\Middleware\CheckStudioRegistrationLimit::class,
-            'permission'            => \App\Http\Middleware\CheckPermissionMiddleware::class,
-            'subscription.access'   => \App\Http\Middleware\EnforceStudioSubscriptionAccess::class,
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'client' => \App\Http\Middleware\ClientMiddleware::class,
+            'owner' => \App\Http\Middleware\OwnerMiddleware::class,
+            'freelancer' => \App\Http\Middleware\FreelancerMiddleware::class,
+            'studio.photographer' => \App\Http\Middleware\StudioPhotographerMiddleware::class,
+            'studio.hr' => \App\Http\Middleware\StudioHRMiddleware::class,
+            'studio.finance' => \App\Http\Middleware\StudioFinanceMiddleware::class,
+            'check.studio.limit' => \App\Http\Middleware\CheckStudioRegistrationLimit::class,
+            'permission' => \App\Http\Middleware\CheckPermissionMiddleware::class,
+            'subscription.access' => \App\Http\Middleware\EnforceStudioSubscriptionAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

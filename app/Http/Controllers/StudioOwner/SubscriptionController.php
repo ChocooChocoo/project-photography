@@ -4,13 +4,12 @@ namespace App\Http\Controllers\StudioOwner;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StudioOwner\SubscribeRequest;
-use App\Models\SubscriptionPlanModel;
-use App\Models\StudioPlanModel;
 use App\Models\StudioOwner\StudiosModel;
-use App\Models\SystemRevenueModel;
+use App\Models\StudioPlanModel;
+use App\Models\SubscriptionPlanModel;
 use App\Services\StripeService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -60,7 +59,7 @@ class SubscriptionController extends Controller
     {
         try {
             $plan = SubscriptionPlanModel::findOrFail($id);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -78,19 +77,19 @@ class SubscriptionController extends Controller
                     'max_studios' => $plan->max_studios === null ? 'Unlimited' : $plan->max_studios,
                     'staff_limit' => $plan->staff_limit === null ? 'Unlimited' : $plan->staff_limit,
                     'support_level' => ucfirst($plan->support_level),
-                    'commission_rate' => $plan->commission_rate . '%',
-                ]
+                    'commission_rate' => $plan->commission_rate.'%',
+                ],
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to fetch subscription plan', [
                 'error' => $e->getMessage(),
-                'plan_id' => $id
+                'plan_id' => $id,
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Subscription plan not found.'
+                'message' => 'Subscription plan not found.',
             ], 404);
         }
     }
@@ -104,20 +103,20 @@ class SubscriptionController extends Controller
             DB::beginTransaction();
 
             $user = auth()->user();
-            
+
             // Check if user has a studio
             $studio = $user->studio;
-            
-            if (!$studio) {
+
+            if (! $studio) {
                 // Check if there are any studios owned by this user
                 $studio = \App\Models\StudioOwner\StudiosModel::where('user_id', $user->id)->first();
-                
-                if (!$studio) {
+
+                if (! $studio) {
                     return response()->json([
                         'success' => false,
                         'message' => 'You need to create a studio first before subscribing to a plan.',
                         'redirect_to_studio_creation' => true,
-                        'studio_creation_url' => route('owner.studio.create')
+                        'studio_creation_url' => route('owner.studio.create'),
                     ], 400);
                 }
             }
@@ -130,7 +129,7 @@ class SubscriptionController extends Controller
             if ($activeSubscription) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You already have an active subscription. Please wait until it expires or cancel it first.'
+                    'message' => 'You already have an active subscription. Please wait until it expires or cancel it first.',
                 ], 400);
             }
 
@@ -159,12 +158,27 @@ class SubscriptionController extends Controller
                     'plan_snapshot' => $plan->toArray(),
                 ]);
 
+                // Keep the existing immediate access while Stripe owns the recurring trial.
+                $checkoutSession = $this->stripeService->createSubscriptionCheckoutSession(
+                    $plan->price,
+                    $subscriptionReference,
+                    $plan->name,
+                    $plan->billing_cycle,
+                    'PHP',
+                    (int) $plan->trial_days
+                );
+                if (! $checkoutSession) {
+                    throw new \RuntimeException('Failed to create Stripe trial checkout session');
+                }
+                $studioPlan->update(['stripe_session_id' => $checkoutSession['id']]);
+
                 DB::commit();
 
                 return response()->json([
                     'success' => true,
                     'trial' => true,
                     'message' => "Your {$plan->trial_days}-day free trial has started!",
+                    'checkout_url' => $checkoutSession['url'] ?? null,
                 ]);
             }
 
@@ -175,7 +189,7 @@ class SubscriptionController extends Controller
                 'subscription_reference' => $subscriptionReference,
                 'start_date' => now(),
                 'end_date' => $this->calculateEndDate($plan->billing_cycle),
-                'next_billing_date' => $this->calculateNextBillingDate($plan->billing_cycle),
+                'next_billing_date' => $this->calculateEndDate($plan->billing_cycle),
                 'amount_paid' => $plan->price,
                 'payment_status' => 'pending',
                 'status' => 'pending',
@@ -191,13 +205,13 @@ class SubscriptionController extends Controller
                 'PHP'
             );
 
-            if (!$checkoutSession) {
+            if (! $checkoutSession) {
                 throw new \Exception('Failed to create Stripe checkout session');
             }
 
             // Update subscription with Stripe session ID
             $studioPlan->update([
-                'stripe_session_id' => $checkoutSession['id']
+                'stripe_session_id' => $checkoutSession['id'],
             ]);
 
             DB::commit();
@@ -206,21 +220,21 @@ class SubscriptionController extends Controller
                 'success' => true,
                 'trial' => false,
                 'message' => 'Redirecting to payment...',
-                'checkout_url' => $checkoutSession['url']
+                'checkout_url' => $checkoutSession['url'],
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Failed to initialize subscription', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
-                'plan_id' => $request->plan_id ?? null
+                'plan_id' => $request->plan_id ?? null,
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to process subscription. Please try again.'
+                'message' => 'Failed to process subscription. Please try again.',
             ], 500);
         }
     }
@@ -232,20 +246,20 @@ class SubscriptionController extends Controller
     {
         try {
             $user = auth()->user();
-            
+
             // Get the studio - check both relations
             $studio = $user->studio;
-            
-            if (!$studio) {
+
+            if (! $studio) {
                 // Try to find studio directly
                 $studio = \App\Models\StudioOwner\StudiosModel::where('user_id', $user->id)->first();
             }
-            
+
             // If still no studio, return empty history instead of error
-            if (!$studio) {
+            if (! $studio) {
                 return response()->json([
                     'success' => true,
-                    'data' => []
+                    'data' => [],
                 ]);
             }
 
@@ -253,7 +267,7 @@ class SubscriptionController extends Controller
                 ->where('studio_id', $studio->id)
                 ->orderBy('created_at', 'desc')
                 ->get()
-                ->map(function($subscription) {
+                ->map(function ($subscription) {
                     return [
                         'id' => $subscription->id,
                         'subscription_reference' => $subscription->subscription_reference,
@@ -270,18 +284,18 @@ class SubscriptionController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $subscriptions
+                'data' => $subscriptions,
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to fetch subscription history', [
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch subscription history.'
+                'message' => 'Failed to fetch subscription history.',
             ], 500);
         }
     }
@@ -302,21 +316,6 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * Calculate next billing date based on billing cycle.
-     */
-    private function calculateNextBillingDate(string $billingCycle)
-    {
-        switch ($billingCycle) {
-            case 'monthly':
-                return now()->addMonth();
-            case 'yearly':
-                return now()->addYear();
-            default:
-                return now()->addMonth();
-        }
-    }
-
-    /**
      * Get payment status badge.
      */
     private function getPaymentStatusBadge(string $status): string
@@ -325,14 +324,14 @@ class SubscriptionController extends Controller
             'pending' => 'badge-soft-warning',
             'paid' => 'badge-soft-success',
             'failed' => 'badge-soft-danger',
-            'refunded' => 'badge-soft-danger'
+            'refunded' => 'badge-soft-danger',
         ];
 
         $labels = [
             'pending' => 'Pending',
             'paid' => 'Paid',
             'failed' => 'Failed',
-            'refunded' => 'Refunded'
+            'refunded' => 'Refunded',
         ];
 
         $class = $classes[$status] ?? 'badge-soft-secondary';
@@ -350,14 +349,14 @@ class SubscriptionController extends Controller
             'active' => 'badge-soft-primary',
             'expired' => 'badge-soft-danger',
             'cancelled' => 'badge-soft-danger',
-            'pending' => 'badge-soft-warning'
+            'pending' => 'badge-soft-warning',
         ];
 
         $labels = [
             'active' => 'Active',
             'expired' => 'Expired',
             'cancelled' => 'Cancelled',
-            'pending' => 'Pending'
+            'pending' => 'Pending',
         ];
 
         $class = $classes[$status] ?? 'badge-soft-secondary';
@@ -372,15 +371,15 @@ class SubscriptionController extends Controller
     public function paymentSuccess(string $reference)
     {
         $studioPlan = StudioPlanModel::where('subscription_reference', $reference)->first();
-        
-        if (!$studioPlan) {
+
+        if (! $studioPlan) {
             return redirect()->route('owner.subscription.index')
                 ->with('error', 'Subscription not found.');
         }
 
         return view('owner.subscription-success', [
             'subscription' => $studioPlan,
-            'plan' => $studioPlan->plan
+            'plan' => $studioPlan->plan,
         ]);
     }
 
@@ -390,18 +389,10 @@ class SubscriptionController extends Controller
     public function paymentFailed(string $reference)
     {
         $studioPlan = StudioPlanModel::where('subscription_reference', $reference)->first();
-        
-        // Update status to failed if needed
-        if ($studioPlan && $studioPlan->payment_status === 'pending') {
-            $studioPlan->update([
-                'payment_status' => 'failed',
-                'status' => 'cancelled'
-            ]);
-        }
 
         return view('owner.subscription-failed', [
             'subscription' => $studioPlan,
-            'error' => session('error', 'Payment was cancelled or failed.')
+            'error' => session('error', 'Payment was cancelled or failed.'),
         ]);
     }
 
@@ -412,19 +403,19 @@ class SubscriptionController extends Controller
     {
         try {
             $user = auth()->user();
-            
+
             // Get the studio
             $studio = $user->studio;
-            if (!$studio) {
+            if (! $studio) {
                 $studio = \App\Models\StudioOwner\StudiosModel::where('user_id', $user->id)->first();
             }
-            
-            if (!$studio) {
+
+            if (! $studio) {
                 return response()->json([
                     'draw' => intval($request->input('draw', 1)),
                     'recordsTotal' => 0,
                     'recordsFiltered' => 0,
-                    'data' => []
+                    'data' => [],
                 ]);
             }
 
@@ -432,28 +423,28 @@ class SubscriptionController extends Controller
                 ->where('studio_id', $studio->id);
 
             // Search
-            if ($request->has('search') && !empty($request->search['value'])) {
+            if ($request->has('search') && ! empty($request->search['value'])) {
                 $search = $request->search['value'];
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('subscription_reference', 'like', "%{$search}%")
-                    ->orWhereHas('plan', function($sq) use ($search) {
-                        $sq->where('name', 'like', "%{$search}%");
-                    });
+                        ->orWhereHas('plan', function ($sq) use ($search) {
+                            $sq->where('name', 'like', "%{$search}%");
+                        });
                 });
             }
 
             // Filter by status
-            if ($request->has('status') && !empty($request->status)) {
+            if ($request->has('status') && ! empty($request->status)) {
                 $query->where('status', $request->status);
             }
 
             $totalRecords = $query->count();
-            
+
             // Ordering
             $columns = ['subscription_reference', 'plan_name', 'amount_paid', 'start_date', 'end_date', 'payment_status', 'status'];
             $orderColumnIndex = $request->input('order.0.column', 0);
             $orderDirection = $request->input('order.0.dir', 'desc');
-            
+
             if (isset($columns[$orderColumnIndex])) {
                 $query->orderBy($columns[$orderColumnIndex], $orderDirection);
             } else {
@@ -466,29 +457,33 @@ class SubscriptionController extends Controller
             $subscriptions = $query->skip($start)->take($length)->get();
 
             // Format data for DataTable
-            $data = $subscriptions->map(function($subscription) {
+            $data = $subscriptions->map(function ($subscription) {
                 // Use the model's canBeCancelled method
                 $canCancel = $subscription->canBeCancelled();
-                
+
                 $cancelButton = '';
                 if ($canCancel) {
                     $cancelButton = '<button class="btn btn-sm btn-soft-danger cancel-subscription-btn" 
-                                            data-id="' . $subscription->id . '"
-                                            data-reference="' . $subscription->subscription_reference . '"
-                                            data-plan="' . ($subscription->plan->name ?? 'Unknown') . '">
+                                            data-id="'.$subscription->id.'"
+                                            data-reference="'.$subscription->subscription_reference.'"
+                                            data-plan="'.($subscription->plan->name ?? 'Unknown').'">
                                         <i class="ti ti-x"></i> Cancel
+                                    </button>';
+                } elseif ($subscription->scheduled_cancellation_at) {
+                    $cancelButton = '<button class="btn btn-sm btn-soft-success resume-subscription-btn" data-id="'.$subscription->id.'">
+                                        <i class="ti ti-player-play"></i> Resume
                                     </button>';
                 }
 
                 return [
-                    'subscription_reference' => '<span class="fw-medium font-monospace">' . $subscription->subscription_reference . '</span>',
+                    'subscription_reference' => '<span class="fw-medium font-monospace">'.$subscription->subscription_reference.'</span>',
                     'plan_name' => $subscription->plan->name ?? 'Unknown Plan',
-                    'amount' => '₱' . number_format($subscription->amount_paid, 2),
+                    'amount' => '₱'.number_format($subscription->amount_paid, 2),
                     'start_date' => $subscription->start_date->format('M d, Y'),
                     'end_date' => $subscription->end_date->format('M d, Y'),
                     'payment_status' => $this->getPaymentStatusBadge($subscription->payment_status),
                     'status' => $this->getStatusBadge($subscription->status),
-                    'actions' => '<div class="d-flex justify-content-center gap-1">' . $cancelButton . '</div>'
+                    'actions' => '<div class="d-flex justify-content-center gap-1">'.$cancelButton.'</div>',
                 ];
             });
 
@@ -496,20 +491,20 @@ class SubscriptionController extends Controller
                 'draw' => intval($request->input('draw', 1)),
                 'recordsTotal' => $totalRecords,
                 'recordsFiltered' => $totalRecords,
-                'data' => $data
+                'data' => $data,
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to fetch subscription status data', [
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return response()->json([
                 'draw' => intval($request->input('draw', 1)),
                 'recordsTotal' => 0,
                 'recordsFiltered' => 0,
-                'data' => []
+                'data' => [],
             ], 500);
         }
     }
@@ -521,17 +516,17 @@ class SubscriptionController extends Controller
     {
         try {
             $user = auth()->user();
-            
+
             // Get the studio
             $studio = $user->studio;
-            if (!$studio) {
+            if (! $studio) {
                 $studio = \App\Models\StudioOwner\StudiosModel::where('user_id', $user->id)->first();
             }
-            
-            if (!$studio) {
+
+            if (! $studio) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Studio not found.'
+                    'message' => 'Studio not found.',
                 ], 400);
             }
 
@@ -540,17 +535,17 @@ class SubscriptionController extends Controller
                 ->where('studio_id', $studio->id)
                 ->first();
 
-            if (!$subscription) {
+            if (! $subscription) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Subscription not found.'
+                    'message' => 'Subscription not found.',
                 ], 404);
             }
 
             // Check if can be cancelled
             $canCancel = $subscription->canBeCancelled();
             $cancelDeadline = $subscription->getCancellationDeadline();
-            
+
             // Calculate days since subscription started
             $referenceDate = $subscription->paid_at ?? $subscription->start_date;
             $daysSinceStart = now()->diffInDays($referenceDate, false);
@@ -563,7 +558,7 @@ class SubscriptionController extends Controller
                     'plan_name' => $subscription->plan->name ?? 'Unknown Plan',
                     'plan_type' => $subscription->plan->plan_type ?? 'N/A',
                     'billing_cycle' => ucfirst($subscription->plan->billing_cycle ?? 'N/A'),
-                    'amount' => '₱' . number_format($subscription->amount_paid, 2),
+                    'amount' => '₱'.number_format($subscription->amount_paid, 2),
                     'amount_raw' => $subscription->amount_paid,
                     'start_date' => $subscription->start_date->format('M d, Y'),
                     'start_date_raw' => $subscription->start_date->format('Y-m-d'),
@@ -579,19 +574,19 @@ class SubscriptionController extends Controller
                     'cancel_deadline' => $cancelDeadline->format('M d, Y'),
                     'cancel_deadline_raw' => $cancelDeadline->format('Y-m-d'),
                     'days_since_start' => $daysSinceStart,
-                ]
+                ],
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to fetch subscription details', [
                 'error' => $e->getMessage(),
                 'subscription_id' => $id,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load subscription details. Please try again.'
+                'message' => 'Failed to load subscription details. Please try again.',
             ], 500);
         }
     }
@@ -601,97 +596,13 @@ class SubscriptionController extends Controller
      */
     public function verifyPayment(Request $request, string $reference)
     {
-        try {
-            $sessionId = $request->get('session_id');
-            
-            if (!$sessionId) {
-                return redirect()->route('owner.subscription.failed', ['reference' => $reference])
-                    ->with('error', 'Invalid payment session.');
-            }
-
-            // Retrieve the subscription
-            $studioPlan = StudioPlanModel::where('subscription_reference', $reference)->first();
-            
-            if (!$studioPlan) {
-                Log::error('Subscription not found for verification', ['reference' => $reference]);
-                return redirect()->route('owner.subscription.failed', ['reference' => $reference])
-                    ->with('error', 'Subscription record not found.');
-            }
-
-            // Retrieve the checkout session from Stripe
-            $session = $this->stripeService->retrieveCheckoutSession($sessionId);
-            
-            if (!$session) {
-                return redirect()->route('owner.subscription.failed', ['reference' => $reference])
-                    ->with('error', 'Failed to retrieve payment information.');
-            }
-
-            // Check if payment was successful
-            if ($session['payment_status'] === 'paid') {
-                DB::beginTransaction();
-                
-                try {
-                    // Get the studio
-                    $studio = $studioPlan->studio;
-                    
-                    // Prepare update data
-                    $updateData = [
-                        'payment_status' => 'paid',
-                        'status' => 'active',
-                        'stripe_payment_intent_id' => $session['payment_intent'] ?? null,
-                        'stripe_response' => $session,
-                        'paid_at' => now(),
-                    ];
-                    
-                    // Update subscription
-                    $studioPlan->update($updateData);
-
-                    // ===== NEW: Create revenue record for this subscription =====
-                    $revenue = SystemRevenueModel::createForSubscription($studioPlan, $studio);
-                    
-                    if (!$revenue) {
-                        Log::warning('Revenue record creation failed for subscription', [
-                            'subscription_id' => $studioPlan->id,
-                            'reference' => $reference
-                        ]);
-                        // Don't throw exception - subscription is still active, just log the warning
-                    }
-
-                    DB::commit();
-
-                    Log::info('Subscription payment verified and revenue recorded', [
-                        'subscription_reference' => $reference,
-                        'session_id' => $sessionId,
-                        'revenue_id' => $revenue ? $revenue->id : null
-                    ]);
-
-                    return redirect()->route('owner.subscription.success', ['reference' => $reference]);
-
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    Log::error('Failed to update subscription after payment', [
-                        'error' => $e->getMessage(),
-                        'reference' => $reference
-                    ]);
-                    
-                    return redirect()->route('owner.subscription.failed', ['reference' => $reference])
-                        ->with('error', 'Failed to update subscription status.');
-                }
-            }
-
-            // Payment not successful
+        if (! $request->get('session_id') || ! StudioPlanModel::where('subscription_reference', $reference)->exists()) {
             return redirect()->route('owner.subscription.failed', ['reference' => $reference])
-                ->with('error', 'Payment was not successful.');
-
-        } catch (\Exception $e) {
-            Log::error('Payment verification failed', [
-                'error' => $e->getMessage(),
-                'reference' => $reference
-            ]);
-
-            return redirect()->route('owner.subscription.failed', ['reference' => $reference])
-                ->with('error', 'Payment verification failed.');
+                ->with('error', 'Payment is awaiting provider confirmation.');
         }
+
+        return redirect()->route('owner.subscription.success', ['reference' => $reference])
+            ->with('status', 'Payment received. Stripe confirmation will update access shortly.');
     }
 
     /**
@@ -700,107 +611,131 @@ class SubscriptionController extends Controller
     public function cancel(Request $request, string $id): JsonResponse
     {
         try {
-            DB::beginTransaction();
-
-            $user = auth()->user();
-            
-            // Get the studio
-            $studio = $user->studio;
-            if (!$studio) {
-                $studio = \App\Models\StudioOwner\StudiosModel::where('user_id', $user->id)->first();
-            }
-            
-            if (!$studio) {
+            $studio = $this->studioForUser();
+            if (! $studio) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Studio not found.'
+                    'message' => 'Studio not found.',
                 ], 400);
             }
 
-            $subscription = StudioPlanModel::where('id', $id)
+            $subscription = StudioPlanModel::whereKey($id)
                 ->where('studio_id', $studio->id)
                 ->first();
 
-            if (!$subscription) {
+            if (! $subscription) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Subscription not found.'
+                    'message' => 'Subscription not found.',
                 ], 404);
             }
 
-            // Check if subscription can be cancelled using the model method
-            if (!$subscription->canBeCancelled()) {
-                // Determine specific reason
-                if ($subscription->status !== 'active') {
-                    $message = 'Only active subscriptions can be cancelled.';
-                } elseif ($subscription->payment_status !== 'paid') {
-                    $message = 'Cannot cancel unpaid subscription.';
-                } else {
-                    // Cancellation period has expired
-                    $deadline = $subscription->getCancellationDeadline()->format('M d, Y');
-                    $message = "The 3-day cancellation period has expired. Cancellation was only available until {$deadline}.";
-                }
-
+            if (! in_array($subscription->status, ['active', 'grace'], true)
+                || $subscription->payment_status !== 'paid') {
                 return response()->json([
                     'success' => false,
-                    'message' => $message
+                    'message' => 'Only an accessible paid subscription can be cancelled.',
                 ], 400);
             }
 
-            $reason = $request->input('reason', 'Cancelled by user');
-
-            // Update subscription
-            $subscription->update([
-                'status' => 'cancelled',
-                'cancelled_at' => now(),
-                'cancellation_reason' => $reason
-            ]);
-
-            // ===== NEW: Update revenue record status to refunded if exists =====
-            $revenue = SystemRevenueModel::where('subscription_id', $subscription->id)
-                ->where('revenue_type', 'subscription')
-                ->first();
-                
-            if ($revenue) {
-                $revenue->update([
-                    'status' => 'refunded'
-                ]);
-                
-                Log::info('Revenue record marked as refunded due to subscription cancellation', [
-                    'revenue_id' => $revenue->id,
-                    'subscription_id' => $subscription->id
-                ]);
+            $providerPeriodEnd = $subscription->stripe_subscription_id
+                ? $this->stripeService->cancelSubscriptionAtPeriodEnd($subscription->stripe_subscription_id)
+                : true;
+            if ($providerPeriodEnd === false) {
+                return response()->json(['success' => false, 'message' => 'Stripe could not schedule cancellation.'], 502);
             }
 
-            // Log the cancellation
-            Log::info('Subscription cancelled and revenue refunded', [
-                'subscription_id' => $subscription->id,
-                'subscription_reference' => $subscription->subscription_reference,
-                'studio_id' => $studio->id,
-                'reason' => $reason,
-                'cancelled_within_days' => now()->diffInDays($subscription->paid_at ?? $subscription->start_date)
+            $reason = $request->input('reason', 'Cancelled by user');
+            $scheduledAt = is_numeric($providerPeriodEnd)
+                ? now()->setTimestamp((int) $providerPeriodEnd)
+                : ($subscription->end_date?->copy()->endOfDay() ?? now());
+            $subscription->update([
+                'scheduled_cancellation_at' => $scheduledAt,
+                'cancellation_reason' => $reason,
             ]);
-
-            DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Subscription has been cancelled successfully.'
+                'message' => 'Subscription will cancel at the end of the paid period.',
             ]);
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
+        } catch (\Throwable $e) {
             Log::error('Failed to cancel subscription', [
                 'error' => $e->getMessage(),
                 'subscription_id' => $id,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to cancel subscription. Please try again.'
+                'message' => 'Failed to cancel subscription. Please try again.',
             ], 500);
         }
+    }
+
+    public function resume(Request $request, string $id): JsonResponse
+    {
+        $studio = $this->studioForUser();
+        $subscription = $studio
+            ? StudioPlanModel::whereKey($id)->where('studio_id', $studio->id)->first()
+            : null;
+
+        if (! $subscription) {
+            return response()->json(['success' => false, 'message' => 'Subscription not found.'], 404);
+        }
+
+        if ($subscription->scheduled_cancellation_at && $subscription->scheduled_cancellation_at->isFuture()) {
+            if ($subscription->stripe_subscription_id
+                && ! $this->stripeService->resumeSubscription($subscription->stripe_subscription_id)) {
+                return response()->json(['success' => false, 'message' => 'Stripe could not resume the subscription.'], 502);
+            }
+            $subscription->update(['scheduled_cancellation_at' => null, 'cancellation_reason' => null]);
+
+            return response()->json(['success' => true, 'message' => 'Subscription cancellation was resumed.']);
+        }
+
+        if (! in_array($subscription->status, ['expired', 'cancelled'], true)) {
+            return response()->json(['success' => false, 'message' => 'Subscription is already active.'], 400);
+        }
+
+        $plan = $subscription->plan;
+        if (! $plan || $plan->status !== 'active' || $plan->user_type !== 'studio') {
+            $plan = SubscriptionPlanModel::where('user_type', 'studio')->where('status', 'active')->orderBy('price')->first();
+        }
+        if (! $plan) {
+            return response()->json(['success' => false, 'message' => 'No active studio plan is available.'], 409);
+        }
+
+        $reference = StudioPlanModel::generateSubscriptionReference();
+        $renewal = StudioPlanModel::create([
+            'studio_id' => $studio->id,
+            'plan_id' => $plan->id,
+            'subscription_reference' => $reference,
+            'start_date' => now(),
+            'end_date' => $this->calculateEndDate($plan->billing_cycle),
+            'next_billing_date' => $this->calculateEndDate($plan->billing_cycle),
+            'amount_paid' => $plan->price,
+            'payment_status' => 'pending',
+            'status' => 'pending',
+            'plan_snapshot' => $plan->toArray(),
+        ]);
+        $checkout = $this->stripeService->createSubscriptionCheckoutSession(
+            $plan->price, $reference, $plan->name, $plan->billing_cycle, 'PHP'
+        );
+        if (! $checkout) {
+            $renewal->delete();
+
+            return response()->json(['success' => false, 'message' => 'Failed to create the reactivation checkout.'], 502);
+        }
+        $renewal->update(['stripe_session_id' => $checkout['id']]);
+
+        return response()->json(['success' => true, 'checkout_url' => $checkout['url'], 'subscription_id' => $renewal->id]);
+    }
+
+    private function studioForUser(): ?StudiosModel
+    {
+        $user = auth()->user();
+
+        return $user?->studio ?: StudiosModel::where('user_id', $user?->id)->first();
     }
 }

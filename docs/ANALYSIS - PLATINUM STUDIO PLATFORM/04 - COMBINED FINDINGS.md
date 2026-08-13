@@ -4,14 +4,14 @@
 
 ## The picture in one paragraph
 
-The written record and the application agree on the broad platform: role-specific portals around a shared booking, payment, gallery, and studio-operations core. The current code is further along than some historical summaries suggest, especially for permissions, procurement, assistant guardrails, subscription grace, and access enforcement. It is also less complete than the broad product vision: paid-booking cancellation outcomes, renewal and reactivation, the public landing page, and selected defects or policy decisions remain open.
+The written record and the application agree on the broad platform: role-specific portals around a shared booking, payment, gallery, and studio-operations core. The current code is further along than some historical summaries suggest, especially for permissions, procurement, assistant guardrails, subscription grace, access enforcement, and the Phase 6 subscription and photographer-cancellation lifecycles. Ordinary cancellation (R-08), core studio-management ordering (R-09), and other explicit policy questions remain open.
 
 ## Promised and built
 
 | # | Promise | Written source | Current evidence | Match |
 |---|---|---|---|---|
 | M-01 | Separate portals for administrator, owner, client, freelancer, HR, finance, and photographer. | Frozen technical analysis, portal and role sections. | `routes/web.php` role groups and matching middleware/controllers. | Fully; portal boundaries are verified by the 49-check matrix in `tests/Feature/Auth/PortalAccessTest.php`. |
-| M-02 | Booking connects selection, payment, assignment, gallery delivery, and review. | Frozen architecture and roadmap records. | `BookingModel.php`, booking controllers, payment routes, assignment, gallery, and review records. | Mostly; cancellation outcomes remain incomplete. |
+| M-02 | Booking connects selection, payment, assignment, gallery delivery, and review. | Frozen architecture and roadmap records. | `BookingModel.php`, booking controllers, payment routes, assignment, recovery, gallery, and review records. | Fully for the approved photographer-cancellation remedy; ordinary cancellation remains separate. |
 | M-03 | Payment-provider confirmation updates payment and booking state. | Frozen technical analysis and Task 04/roadmap records. | PayMongo and Stripe webhook routes plus payment services. | Built; both provider webhook paths verified by signature, processing, and idempotency tests in `tests/Feature/Payment/WebhookTest.php`. |
 | M-04 | Galleries can remain draft until publication and can support portfolio work. | Frozen process flows and Phase 2/3 roadmap. | Owner gallery routes for draft, upload, update, publish, and portfolio. | Built in current code. |
 | M-05 | Assistant uses photography scope and defensive validation. | Frozen AI Assistant Integration reference. | `ChatbotService.php`, request validation, throttle, and assistant tests. | Built; provider availability remains environment-dependent. |
@@ -21,8 +21,8 @@ The written record and the application agree on the broad platform: role-specifi
 
 | # | Promise | Written source | What exists instead |
 |---|---|---|---|
-| G-01 | A complete paid-booking response after a photographer cancels. | Frozen `PHOTOGRAPHER CANCELLATION CONTINGENCY.md`, sections 2–8. | Assignment updates exist, but no approved end-to-end remedy and financial policy. |
-| G-02 | Full subscription renewal, failed billing, reactivation, and later cancellation behavior. | Frozen `SUBSCRIPTION LIFECYCLE.md`, sections 5–9. | Trial expiry, grace, notices, and access controls exist; later lifecycle remains planned. |
+| G-01 | ~~A complete paid-booking response after a photographer cancels.~~ **Delivered for the approved Phase 6 scope on 12 August 2026.** | Recovery records, same-studio replacement, client response, deadline escalation, admin manual refund evidence, revenue reversal, notifications, and UI routes. |
+| G-02 | ~~Full subscription renewal, failed billing, reactivation, and later cancellation behavior.~~ **Delivered for the approved Phase 6 scope on 12 August 2026.** | Recurring Checkout, signed authoritative subscription webhooks, deferred event ordering, fixed grace, period-end cancel/resume, previous-plan reactivation, and idempotent revenue. |
 | G-03 | A single approved build order for core studio-management requirements. | Frozen `tasks/10.md` and core-studio reference. | Many routes and permissions exist, but the requirement set remains a planning source. |
 
 ## Built but never written down clearly

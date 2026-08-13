@@ -94,6 +94,6 @@ The source and current routes do not make every overlap cell equivalent to full 
 | What is missing | Why it is not above |
 |---|---|
 | One approved final screen inventory and navigation design | The material gives needs and routes, not an approved wireframe or navigation contract. |
-| A dedicated cancellation-remedy screen | The policy and financial outcome are unresolved under Q-01 and Q-11. |
-| A dedicated renewal and failed-payment recovery screen | Renewal, card-on-file, and reactivation decisions remain open under Q-02. |
+| A dedicated cancellation-remedy screen | Delivered Phase 6 as owner/client recovery views plus the administrator refund queue and completion form; ordinary cancellation remains separate under R-08. |
+| A dedicated renewal and failed-payment recovery screen | Delivered Phase 6 through the existing owner subscription pages and resume/cancel actions; signed provider webhooks remain server-side. |
 | A final public landing-page screen | Task 09 is documentation-only until Q-03 is answered. |

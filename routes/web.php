@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 // Payment Webhook Routes (unauthenticated, CSRF-exempt via bootstrap/app.php) ========================================================================================
 Route::post('/webhook/paymongo', [\App\Http\Controllers\Client\BookingController::class, 'handleWebhook'])->name('webhook.paymongo');
 Route::post('/webhook/stripe', [\App\Http\Controllers\Client\BookingController::class, 'handleStripeWebhook'])->name('webhook.stripe');
+Route::post('/webhook/stripe/subscriptions', \App\Http\Controllers\StripeSubscriptionWebhookController::class)->name('webhook.stripe.subscriptions');
 
 // Auth Routes =========================================================================================================================================================
 Route::prefix('auth')->group(function () {
@@ -123,6 +124,9 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/subscription/{id}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'update'])->name('admin.subscription.update');
         Route::delete('/subscription/{id}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'destroy'])->name('admin.subscription.delete');
         Route::get('/subscription/data/all', [\App\Http\Controllers\Admin\SubscriptionController::class, 'getPlans'])->name('admin.subscription.data');
+        Route::get('/booking-refunds/view', [\App\Http\Controllers\Admin\BookingRefundController::class, 'view'])->name('admin.booking-refunds.view');
+        Route::get('/booking-refunds', [\App\Http\Controllers\Admin\BookingRefundController::class, 'index'])->name('admin.booking-refunds.index');
+        Route::post('/booking-refunds/{recoveryId}/complete', [\App\Http\Controllers\Admin\BookingRefundController::class, 'complete'])->name('admin.booking-refunds.complete');
 
     });
 
@@ -160,6 +164,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bookings/{id}/assign-photographers', [\App\Http\Controllers\StudioOwner\BookingController::class, 'assignPhotographers'])->middleware('permission:owner.bookings.manage')->name('owner.booking.assign.photographers');
         Route::delete('/assignments/{id}', [\App\Http\Controllers\StudioOwner\BookingController::class, 'removePhotographerAssignment'])->middleware('permission:owner.bookings.manage')->name('owner.booking.remove.assignment');
         Route::put('/assignments/{id}/status', [\App\Http\Controllers\StudioOwner\BookingController::class, 'updateAssignmentStatus'])->middleware('permission:owner.bookings.manage')->name('owner.booking.update.assignment.status');
+        Route::post('/cancellation-recoveries/{recoveryId}/replacement', [\App\Http\Controllers\StudioOwner\BookingController::class, 'proposePhotographerReplacement'])->middleware('permission:owner.bookings.manage')->name('owner.booking.recovery.replacement');
+        Route::post('/cancellation-recoveries/{recoveryId}/escalate', [\App\Http\Controllers\StudioOwner\BookingController::class, 'escalatePhotographerCancellation'])->middleware('permission:owner.bookings.manage')->name('owner.booking.recovery.escalate');
+        Route::get('/cancellation-recoveries/{recoveryId}', [\App\Http\Controllers\StudioOwner\BookingController::class, 'cancellationRecoveryView'])->middleware('permission:owner.bookings.manage')->name('owner.booking.recovery.view');
         Route::put('/bookings/{id}/status', [\App\Http\Controllers\StudioOwner\BookingController::class, 'updateStatus'])->middleware('permission:owner.bookings.manage')->name('owner.booking.update.status');
         Route::put('/bookings/{id}/complete', [\App\Http\Controllers\StudioOwner\BookingController::class, 'completeBooking'])->middleware('permission:owner.bookings.manage')->name('owner.booking.complete');
 
@@ -228,6 +235,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/subscription/history/data', [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'history'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.history');
         Route::get('/subscription/status/data', [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'getStatusData'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.status.data');
         Route::post('/subscription/{id}/cancel', [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'cancel'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.cancel');
+        Route::post('/subscription/{id}/resume', [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'resume'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.resume');
         Route::get('/subscription/{id}/details', [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'getSubscriptionDetails'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.details');
         Route::get('/subscription/verify/{reference}', [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'verifyPayment'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.verify');
         Route::get('/subscription/success/{reference}', [\App\Http\Controllers\StudioOwner\SubscriptionController::class, 'paymentSuccess'])->middleware('permission:owner.subscription.manage')->name('owner.subscription.success');
@@ -600,6 +608,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/view/bookings-history', [\App\Http\Controllers\Client\MyBookingsController::class, 'history'])->name('client.my-bookings.history');
         Route::get('/bookings/{id}/details', [\App\Http\Controllers\Client\MyBookingsController::class, 'getBookingDetails'])->name('client.booking.details');
         Route::post('/bookings/{id}/cancel', [\App\Http\Controllers\Client\MyBookingsController::class, 'cancelBooking'])->name('client.booking.cancel');
+        Route::post('/cancellation-recoveries/{recoveryId}/response', [\App\Http\Controllers\Client\MyBookingsController::class, 'respondToPhotographerReplacement'])->name('client.booking.recovery.response');
+        Route::get('/cancellation-recoveries/{recoveryId}', [\App\Http\Controllers\Client\MyBookingsController::class, 'cancellationRecoveryView'])->name('client.booking.recovery.view');
         Route::get('/bookings/{id}/payment-details', [\App\Http\Controllers\Client\MyBookingsController::class, 'getPaymentDetails'])->name('client.booking.payment.details');
         Route::post('/bookings/{id}/balance-payment', [\App\Http\Controllers\Client\MyBookingsController::class, 'initializeBalancePayment'])->name('client.booking.balance.payment');
         Route::post('/confirm-photographer/{assignmentId}', [\App\Http\Controllers\Client\MyBookingsController::class, 'confirmPhotographerOnSite'])->name('client.confirm-photographer');

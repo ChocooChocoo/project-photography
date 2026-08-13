@@ -92,4 +92,4 @@ The current source exposes validation, authorization, state checks, provider fal
 
 | # | Unclear point | Why it matters |
 |---|---|---|
-| Q-07 and Q-11 | Which provider events and paid-cancellation financial outcome are authoritative? | The part cannot safely promise this behavior until the decision is answered. |
+| Q-07 and Q-11 | Which provider events and paid-cancellation financial outcome are authoritative? | Phase 6 resolves Q-11 for photographer cancellation: one queued full manual refund requires unique provider evidence per succeeded payment before local reversal. Q-07 remains open for broader provider policy. |

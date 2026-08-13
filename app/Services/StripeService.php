@@ -3,14 +3,17 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
-use Stripe\StripeClient;
 use Stripe\Exception\ApiErrorException;
+use Stripe\StripeClient;
 
 class StripeService
 {
     protected $stripe;
+
     protected $secretKey;
+
     protected $publicKey;
+
     protected $isTestMode;
 
     public function __construct()
@@ -18,7 +21,7 @@ class StripeService
         $this->secretKey = config('services.stripe.secret_key');
         $this->publicKey = config('services.stripe.public_key');
         $this->isTestMode = config('services.stripe.mode', 'test') === 'test';
-        
+
         $this->stripe = new StripeClient($this->secretKey);
     }
 
@@ -31,7 +34,7 @@ class StripeService
             // Redirect to verifyPayment first, which will then show success page
             $successUrl = route('client.payment.verify', ['reference' => $bookingReference]);
             $failedUrl = route('client.payment.failed', ['reference' => $bookingReference]);
-            
+
             $session = $this->stripe->checkout->sessions->create([
                 'payment_method_types' => ['card'],
                 'line_items' => [[
@@ -45,7 +48,7 @@ class StripeService
                     'quantity' => 1,
                 ]],
                 'mode' => 'payment',
-                'success_url' => $successUrl . '?session_id={CHECKOUT_SESSION_ID}',
+                'success_url' => $successUrl.'?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => $failedUrl,
                 'metadata' => [
                     'booking_reference' => $bookingReference,
@@ -69,6 +72,7 @@ class StripeService
 
         } catch (ApiErrorException $e) {
             Log::error('Stripe Checkout Session Failed', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -76,15 +80,16 @@ class StripeService
     /**
      * Create a checkout session for subscription payments
      */
-    public function createSubscriptionCheckoutSession($amount, $subscriptionReference, $planName, $billingCycle, $currency = 'PHP')
+    public function createSubscriptionCheckoutSession($amount, $subscriptionReference, $planName, $billingCycle, $currency = 'PHP', int $trialDays = 0)
     {
         try {
             $successUrl = route('owner.subscription.verify', ['reference' => $subscriptionReference]);
             $failedUrl = route('owner.subscription.failed', ['reference' => $subscriptionReference]);
-            
+
             $description = "Subscription: {$planName} ({$billingCycle})";
-            
-            $session = $this->stripe->checkout->sessions->create([
+
+            $interval = $billingCycle === 'yearly' ? 'year' : 'month';
+            $params = [
                 'payment_method_types' => ['card'],
                 'line_items' => [[
                     'price_data' => [
@@ -94,19 +99,27 @@ class StripeService
                             'description' => "{$planName} - {$billingCycle} subscription",
                         ],
                         'unit_amount' => $amount * 100, // Convert to centavos
+                        'recurring' => ['interval' => $interval],
                     ],
                     'quantity' => 1,
                 ]],
-                'mode' => 'payment',
-                'success_url' => $successUrl . '?session_id={CHECKOUT_SESSION_ID}',
+                'mode' => 'subscription',
+                'success_url' => $successUrl.'?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => $failedUrl,
                 'metadata' => [
                     'subscription_reference' => $subscriptionReference,
                     'plan_name' => $planName,
                     'billing_cycle' => $billingCycle,
-                    'type' => 'subscription'
+                    'type' => 'subscription',
                 ],
-            ]);
+            ];
+
+            if ($trialDays > 0) {
+                $params['subscription_data'] = ['trial_period_days' => $trialDays];
+                $params['payment_method_collection'] = 'if_required';
+            }
+
+            $session = $this->stripe->checkout->sessions->create($params);
 
             Log::info('Stripe Subscription Checkout Session Created', [
                 'subscription_reference' => $subscriptionReference,
@@ -114,6 +127,7 @@ class StripeService
                 'checkout_url' => $session->url,
                 'amount' => $amount,
                 'plan_name' => $planName,
+                'trial_days' => $trialDays,
             ]);
 
             return [
@@ -125,7 +139,34 @@ class StripeService
 
         } catch (ApiErrorException $e) {
             Log::error('Stripe Subscription Checkout Session Failed', ['error' => $e->getMessage()]);
+
             return null;
+        }
+    }
+
+    public function cancelSubscriptionAtPeriodEnd(string $subscriptionId)
+    {
+        try {
+            $subscription = $this->stripe->subscriptions->update($subscriptionId, ['cancel_at_period_end' => true]);
+
+            return $subscription->current_period_end ?? true;
+        } catch (ApiErrorException $e) {
+            Log::error('Stripe subscription cancellation failed', ['subscription_id' => $subscriptionId, 'error' => $e->getMessage()]);
+
+            return false;
+        }
+    }
+
+    public function resumeSubscription(string $subscriptionId): bool
+    {
+        try {
+            $this->stripe->subscriptions->update($subscriptionId, ['cancel_at_period_end' => false]);
+
+            return true;
+        } catch (ApiErrorException $e) {
+            Log::error('Stripe subscription resume failed', ['subscription_id' => $subscriptionId, 'error' => $e->getMessage()]);
+
+            return false;
         }
     }
 
@@ -160,6 +201,7 @@ class StripeService
 
         } catch (ApiErrorException $e) {
             Log::error('Stripe Payment Intent Failed', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -189,6 +231,7 @@ class StripeService
 
         } catch (ApiErrorException $e) {
             Log::error('Stripe Retrieve Session Failed', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -217,6 +260,7 @@ class StripeService
 
         } catch (ApiErrorException $e) {
             Log::error('Stripe Retrieve Intent Failed', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -242,8 +286,8 @@ class StripeService
                 'test_card' => '4242424242424242',
                 'test_expiry' => 'Any future date (e.g., 12/30)',
                 'test_cvv' => 'Any 3 digits',
-                'note' => $this->isTestMode ? 
-                    'Test mode: Use test cards only.' : 
+                'note' => $this->isTestMode ?
+                    'Test mode: Use test cards only.' :
                     'Live mode: Real payments will be processed.',
             ];
 
@@ -257,7 +301,7 @@ class StripeService
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Exception: ' . $e->getMessage(),
+                'message' => 'Exception: '.$e->getMessage(),
                 'mode' => $this->isTestMode ? 'Test Mode' : 'Live Mode',
             ];
         }
@@ -291,10 +335,11 @@ class StripeService
                 $signature,
                 $secret
             );
-            
+
             return $event;
         } catch (\Exception $e) {
             Log::error('Stripe webhook verification failed', ['error' => $e->getMessage()]);
+
             return null;
         }
     }

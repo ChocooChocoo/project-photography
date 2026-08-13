@@ -15,7 +15,7 @@ Moves assigned work through availability, status, and exceptional cancellation d
 
 | # | Job | Who asks for it | Source |
 |---|---|---|---|
-| 1 | Owner availability and assignment actions; photographer status; unresolved paid-booking remedy. | The role or workflow that owns the action | StudioOwner/BookingController.php; photographer requests; frozen cancellation reference |
+| 1 | Owner availability and assignment actions; photographer status; paid-booking recovery, replacement, client response, deadline, and manual-refund actions. | The role or workflow that owns the action | StudioOwner/BookingController.php; BookingCancellationRecoveryService.php; photographer requests |
 | 2 | Keeps the resulting state available to the next portal or workflow. | The next responsible part | StudioOwner/BookingController.php; photographer requests; frozen cancellation reference |
 
 ## Who may use it
@@ -52,7 +52,7 @@ The material does not authorize a broader permission merely because it would be 
 
 ## The states things move through
 
-Unassigned → assigned → accepted or changed → completed or cancelled
+Unassigned → assigned → accepted or changed → completed or cancelled; paid photographer cancellation → recovery → replacement proposed → client accepted, or refund pending → refunded
 
 ## What it checks before it agrees
 
@@ -92,4 +92,4 @@ The current source exposes validation, authorization, state checks, provider fal
 
 | # | Unclear point | Why it matters |
 |---|---|---|
-| Q-01 and Q-11 | What remedy, financial state, deadline, and record are required? | The part cannot safely promise this behavior until the decision is answered. |
+| Q-01 and Q-11 | ~~What remedy, financial state, deadline, and record are required?~~ **Resolved by the approved Phase 6 design and implementation on 12 August 2026.** | Same-studio replacement, client response, `min(now + 24 hours, event start − 2 hours)` Manila deadline, and admin manual full-refund evidence per succeeded payment are implemented. |

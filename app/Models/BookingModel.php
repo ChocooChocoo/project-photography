@@ -13,42 +13,52 @@ class BookingModel extends Model
     use HasFactory, SoftDeletes;
 
     /**
-    * Booking Status Constants
-    */
+     * Booking Status Constants
+     */
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_CONFIRMED = 'confirmed';
+
     public const STATUS_IN_PROGRESS = 'in_progress';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     /**
-    * Payment Status Constants
-    */
+     * Payment Status Constants
+     */
     public const PAYMENT_PENDING = 'pending';
+
     public const PAYMENT_PARTIALLY_PAID = 'partially_paid';
+
     public const PAYMENT_PAID = 'paid';
+
     public const PAYMENT_FAILED = 'failed';
+
+    public const PAYMENT_REFUND_PENDING = 'refund_pending';
+
     public const PAYMENT_REFUNDED = 'refunded';
 
     /**
-    * The table associated with the model.
-    *
-    * @var string
-    */
+     * The table associated with the model.
+     *
+     * @var string
+     */
     protected $table = 'tbl_bookings';
 
     /**
-    * The primary key for the model.
-    *
-    * @var string
-    */
+     * The primary key for the model.
+     *
+     * @var string
+     */
     protected $primaryKey = 'id';
 
     /**
-    * The attributes that are mass assignable.
-    *
-    * @var array<int, string>
-    */
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'booking_reference',
         'client_id',
@@ -86,10 +96,10 @@ class BookingModel extends Model
     ];
 
     /**
-    * The attributes that should be cast.
-    *
-    * @var array<string, string>
-    */
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'event_date' => 'date',
         'total_amount' => 'decimal:2',
@@ -107,86 +117,88 @@ class BookingModel extends Model
     ];
 
     /**
-    * Get the client who made the booking.
-    */
+     * Get the client who made the booking.
+     */
     public function client()
     {
         return $this->belongsTo(UserModel::class, 'client_id');
     }
 
     /**
-    * Get the studio for studio bookings.
-    */
+     * Get the studio for studio bookings.
+     */
     public function studio()
     {
         if ($this->booking_type === 'studio') {
             return $this->belongsTo(\App\Models\StudioOwner\StudiosModel::class, 'provider_id');
         }
+
         return null;
     }
 
     /**
-    * Get the freelancer for freelancer bookings.
-    */
+     * Get the freelancer for freelancer bookings.
+     */
     public function freelancer()
     {
         if ($this->booking_type === 'freelancer') {
             return $this->belongsTo(\App\Models\Freelancer\ProfileModel::class, 'provider_id', 'user_id');
         }
+
         return null;
     }
 
     /**
-    * Get the category for the booking.
-    */
+     * Get the category for the booking.
+     */
     public function category()
     {
         return $this->belongsTo(\App\Models\Admin\CategoriesModel::class, 'category_id');
     }
 
     /**
-    * Get the packages for this booking.
-    */
+     * Get the packages for this booking.
+     */
     public function packages()
     {
         return $this->hasMany(BookingPackageModel::class, 'booking_id');
     }
 
     /**
-    * Get the payments for this booking.
-    */
+     * Get the payments for this booking.
+     */
     public function payments()
     {
         return $this->hasMany(PaymentModel::class, 'booking_id');
     }
 
     /**
-    * Get the parent booking of a recurring child session.
-    */
+     * Get the parent booking of a recurring child session.
+     */
     public function parent()
     {
         return $this->belongsTo(BookingModel::class, 'parent_booking_id');
     }
 
     /**
-    * Get the child sessions of a recurring booking.
-    */
+     * Get the child sessions of a recurring booking.
+     */
     public function children()
     {
         return $this->hasMany(BookingModel::class, 'parent_booking_id');
     }
 
     /**
-    * Check if the booking is part of a recurring series.
-    */
+     * Check if the booking is part of a recurring series.
+     */
     public function isRecurring(): bool
     {
         return $this->booking_frequency === 'recurring';
     }
 
     /**
-    * Get assigned photographers for this booking.
-    */
+     * Get assigned photographers for this booking.
+     */
     public function assignedPhotographers()
     {
         return $this->hasMany(\App\Models\StudioOwner\BookingAssignedPhotographerModel::class, 'booking_id');
@@ -201,8 +213,8 @@ class BookingModel extends Model
     }
 
     /**
-    * Get the provider based on booking type.
-    */
+     * Get the provider based on booking type.
+     */
     public function provider()
     {
         if ($this->booking_type === 'studio') {
@@ -210,48 +222,49 @@ class BookingModel extends Model
         } elseif ($this->booking_type === 'freelancer') {
             return $this->freelancer();
         }
+
         return null;
     }
 
     /**
-    * Generate a unique booking reference.
-    */
+     * Generate a unique booking reference.
+     */
     public static function generateBookingReference()
     {
         do {
-            $reference = 'BK-' . strtoupper(uniqid());
+            $reference = 'BK-'.strtoupper(uniqid());
         } while (self::where('booking_reference', $reference)->exists());
 
         return $reference;
     }
 
     /**
-    * Check if booking is confirmed.
-    */
+     * Check if booking is confirmed.
+     */
     public function isConfirmed()
     {
         return $this->status === 'confirmed';
     }
 
     /**
-    * Check if booking is paid.
-    */
+     * Check if booking is paid.
+     */
     public function isPaid()
     {
         return $this->payment_status === 'paid';
     }
 
     /**
-    * Check if booking is partially paid.
-    */
+     * Check if booking is partially paid.
+     */
     public function isPartiallyPaid()
     {
         return $this->payment_status === 'partially_paid';
     }
 
     /**
-    * Check if payment type is full payment.
-    */
+     * Check if payment type is full payment.
+     */
     public function isFullPayment()
     {
         return $this->payment_type === 'full_payment';
@@ -266,28 +279,28 @@ class BookingModel extends Model
     }
 
     /**
-    * Check if all photographers have completed their assignments
-    */
+     * Check if all photographers have completed their assignments
+     */
     public function allPhotographersCompleted(): bool
     {
-        $assignments = $this->assignedPhotographers;
-        
+        $assignments = $this->assignedPhotographers->where('status', '!=', 'cancelled');
+
         if ($assignments->isEmpty()) {
             return false;
         }
-        
+
         foreach ($assignments as $assignment) {
             if ($assignment->status !== 'completed') {
                 return false;
             }
         }
-        
+
         return true;
     }
 
     /**
-    *  FIXED: Get total paid amount from successful payments 
-    */
+     *  FIXED: Get total paid amount from successful payments
+     */
     public function getTotalPaidAttribute(): float
     {
         return (float) $this->payments()
@@ -296,28 +309,28 @@ class BookingModel extends Model
     }
 
     /**
-    * Remaining balance = total_amount - total_paid
-    */
+     * Remaining balance = total_amount - total_paid
+     */
     public function getRemainingBalanceAttribute(): float
     {
         return max(0, (float) $this->total_amount - $this->total_paid);
     }
 
     /**
-    *  FIXED: Check if booking is fully paid 
-    */
+     *  FIXED: Check if booking is fully paid
+     */
     public function isFullyPaid(): bool
     {
         return $this->total_paid >= (float) $this->total_amount;
     }
 
     /**
-    *  NEW: Update payment status based on total paid 
-    */
+     *  NEW: Update payment status based on total paid
+     */
     public function updatePaymentStatus(): void
     {
         $totalPaid = $this->total_paid;
-        
+
         if ($totalPaid <= 0) {
             $this->payment_status = self::PAYMENT_PENDING;
         } elseif ($totalPaid < (float) $this->total_amount) {
@@ -325,13 +338,13 @@ class BookingModel extends Model
         } else {
             $this->payment_status = self::PAYMENT_PAID;
         }
-        
+
         $this->saveQuietly(); // Save without firing events
     }
 
     /**
-    *  NEW: Recalculate and update remaining balance 
-    */
+     *  NEW: Recalculate and update remaining balance
+     */
     public function recalculateRemainingBalance(): void
     {
         // Don't modify the attribute directly - let the accessor handle it
@@ -340,9 +353,9 @@ class BookingModel extends Model
     }
 
     /**
-    * Check if booking can be marked as completed.
-    * Only allowed if payment is fully paid.
-    */
+     * Check if booking can be marked as completed.
+     * Only allowed if payment is fully paid.
+     */
     public function canMarkAsCompleted(): bool
     {
         return $this->isFullyPaid() &&
@@ -357,7 +370,7 @@ class BookingModel extends Model
         return $this->status === self::STATUS_COMPLETED
             && $this->revision_deadline
             && now()->lt($this->revision_deadline)
-            && !$this->revision_requested_at;
+            && ! $this->revision_requested_at;
     }
 
     /**
@@ -384,11 +397,11 @@ class BookingModel extends Model
         $hasResolvableStudioSnapshot = $this->packages
             ->where('package_type', 'studio')
             ->contains(function (BookingPackageModel $package) {
-                return !is_null($package->package_id);
+                return ! is_null($package->package_id);
             });
 
         // Fallback for older bookings missing tbl_booking_packages snapshots or partial snapshot payloads.
-        if ($this->packages->isEmpty() || !$hasResolvableStudioSnapshot) {
+        if ($this->packages->isEmpty() || ! $hasResolvableStudioSnapshot) {
             $matchedStudioPackage = StudioPackagesModel::query()
                 ->where('studio_id', $this->provider_id)
                 ->where('category_id', $this->category_id)
@@ -415,7 +428,7 @@ class BookingModel extends Model
             ? $this->studioOnlineGallery
             : $this->studioOnlineGallery()->first();
 
-        if (!$gallery) {
+        if (! $gallery) {
             return false;
         }
 
@@ -430,7 +443,7 @@ class BookingModel extends Model
      */
     public function isGalleryReadyForCompletion(): bool
     {
-        if (!$this->requiresOnlineGalleryUpload()) {
+        if (! $this->requiresOnlineGalleryUpload()) {
             return true;
         }
 
@@ -442,7 +455,7 @@ class BookingModel extends Model
      */
     public function getGalleryCompletionBlockReason(): ?string
     {
-        if (!$this->requiresOnlineGalleryUpload() || $this->hasUploadedGalleryContent()) {
+        if (! $this->requiresOnlineGalleryUpload() || $this->hasUploadedGalleryContent()) {
             return null;
         }
 
@@ -450,8 +463,8 @@ class BookingModel extends Model
     }
 
     /**
-    * Check if status transition is allowed.
-    */
+     * Check if status transition is allowed.
+     */
     public function canTransitionTo(string $newStatus): bool
     {
         // Allowed status transitions
@@ -462,10 +475,10 @@ class BookingModel extends Model
             self::STATUS_COMPLETED => [],
             self::STATUS_CANCELLED => [],
         ];
-        
+
         $allowed = $allowedTransitions[$this->status] ?? [];
-        
-        if (!in_array($newStatus, $allowed)) {
+
+        if (! in_array($newStatus, $allowed)) {
             return false;
         }
 
@@ -478,8 +491,8 @@ class BookingModel extends Model
     }
 
     /**
-    * Get available next statuses for dropdown.
-    */
+     * Get available next statuses for dropdown.
+     */
     public function getAvailableStatuses(): array
     {
         $statuses = [];
@@ -490,21 +503,21 @@ class BookingModel extends Model
             self::STATUS_COMPLETED => [],
             self::STATUS_CANCELLED => [],
         ][$this->status] ?? [];
-        
+
         foreach ($allowedTransitions as $status) {
-            if ($status === self::STATUS_COMPLETED && !$this->canMarkAsCompleted()) {
+            if ($status === self::STATUS_COMPLETED && ! $this->canMarkAsCompleted()) {
                 continue; // Skip completed if not fully paid
             }
-            
+
             $statuses[$status] = ucwords(str_replace('_', ' ', $status));
         }
-        
+
         return $statuses;
     }
 
     /**
-    * Get status badge class.
-    */
+     * Get status badge class.
+     */
     public function getStatusBadgeClass(): string
     {
         $classes = [
@@ -512,15 +525,15 @@ class BookingModel extends Model
             self::STATUS_CONFIRMED => 'badge-soft-success',
             self::STATUS_IN_PROGRESS => 'badge-soft-info',
             self::STATUS_COMPLETED => 'badge-soft-secondary',
-            self::STATUS_CANCELLED => 'badge-soft-danger'
+            self::STATUS_CANCELLED => 'badge-soft-danger',
         ];
-        
+
         return $classes[$this->status] ?? 'badge-soft-secondary';
     }
 
     /**
-    * Get payment status badge class.
-    */
+     * Get payment status badge class.
+     */
     public function getPaymentStatusBadgeClass(): string
     {
         $classes = [
@@ -528,9 +541,10 @@ class BookingModel extends Model
             self::PAYMENT_PARTIALLY_PAID => 'badge-soft-info',
             self::PAYMENT_PAID => 'badge-soft-success',
             self::PAYMENT_FAILED => 'badge-soft-danger',
-            self::PAYMENT_REFUNDED => 'badge-soft-secondary'
+            self::PAYMENT_REFUND_PENDING => 'badge-soft-warning',
+            self::PAYMENT_REFUNDED => 'badge-soft-secondary',
         ];
-        
+
         return $classes[$this->payment_status] ?? 'badge-soft-secondary';
     }
 
@@ -539,7 +553,7 @@ class BookingModel extends Model
      */
     public function hasMultipleLocations(): bool
     {
-        return !empty($this->multiple_locations) && count($this->multiple_locations) > 1;
+        return ! empty($this->multiple_locations) && count($this->multiple_locations) > 1;
     }
 
     /**
@@ -567,6 +581,7 @@ class BookingModel extends Model
     public function getPrimaryLocationAttribute(): ?array
     {
         $locations = $this->formatted_locations;
+
         return $locations[0] ?? null;
     }
 
@@ -575,11 +590,11 @@ class BookingModel extends Model
      */
     public function getLocationCountAttribute(): int
     {
-        if (!empty($this->multiple_locations)) {
+        if (! empty($this->multiple_locations)) {
             return count($this->multiple_locations);
         }
-        
+
         // If using single location fields
-        return !empty($this->city) ? 1 : 0;
+        return ! empty($this->city) ? 1 : 0;
     }
 }

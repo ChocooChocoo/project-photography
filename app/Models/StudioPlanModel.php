@@ -36,6 +36,10 @@ class StudioPlanModel extends Model
         'subscription_reference',
         'stripe_session_id',
         'stripe_payment_intent_id',
+        'stripe_customer_id',
+        'stripe_subscription_id',
+        'stripe_invoice_id',
+        'stripe_first_failure_invoice_id',
         'start_date',
         'end_date',
         'next_billing_date',
@@ -47,6 +51,8 @@ class StudioPlanModel extends Model
         'stripe_response',
         'usage_metrics',
         'cancelled_at',
+        'scheduled_cancellation_at',
+        'first_failure_at',
         'cancellation_reason',
         'trial_ends_at',
         'grace_ends_at',
@@ -63,6 +69,8 @@ class StudioPlanModel extends Model
         'next_billing_date' => 'date',
         'paid_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'scheduled_cancellation_at' => 'datetime',
+        'first_failure_at' => 'datetime',
         'trial_ends_at' => 'datetime',
         'grace_ends_at' => 'datetime',
         'amount_paid' => 'decimal:2',
@@ -116,7 +124,7 @@ class StudioPlanModel extends Model
     public static function generateSubscriptionReference()
     {
         do {
-            $reference = 'SUB-' . strtoupper(uniqid());
+            $reference = 'SUB-'.strtoupper(uniqid());
         } while (self::where('subscription_reference', $reference)->exists());
 
         return $reference;
@@ -238,11 +246,12 @@ class StudioPlanModel extends Model
      */
     public function isExpiringSoon()
     {
-        if (!$this->isActive()) {
+        if (! $this->isActive()) {
             return false;
         }
-        
+
         $daysUntilExpiry = now()->diffInDays($this->end_date, false);
+
         return $daysUntilExpiry <= 7 && $daysUntilExpiry >= 0;
     }
 
@@ -259,32 +268,21 @@ class StudioPlanModel extends Model
      */
     public function isTrialEndingSoon()
     {
-        if (!$this->isOnTrial()) {
+        if (! $this->isOnTrial()) {
             return false;
         }
 
         $daysUntilTrialEnd = now()->diffInDays($this->trial_ends_at, false);
+
         return $daysUntilTrialEnd <= 7 && $daysUntilTrialEnd >= 0;
     }
 
-    /**
-     * Check if subscription can be cancelled (within 3 days from paid_at or start_date)
-     */
+    /** Determine whether the owner may schedule period-end cancellation. */
     public function canBeCancelled()
     {
-        // Must be active and paid
-        if ($this->status !== 'active' || $this->payment_status !== 'paid') {
-            return false;
-        }
-
-        // Get reference date (use paid_at if available, otherwise start_date)
-        $referenceDate = $this->paid_at ?? $this->start_date;
-        
-        // Get cancellation deadline (reference date + 3 days)
-        $cancellationDeadline = $referenceDate->copy()->addDays(3)->endOfDay();
-        
-        // Can cancel if current time is before or on the deadline
-        return now()->lte($cancellationDeadline);
+        return in_array($this->status, ['active', 'grace'], true)
+            && $this->payment_status === 'paid'
+            && $this->scheduled_cancellation_at === null;
     }
 
     /**
@@ -292,8 +290,7 @@ class StudioPlanModel extends Model
      */
     public function getCancellationDeadline()
     {
-        $referenceDate = $this->paid_at ?? $this->start_date;
-        return $referenceDate->copy()->addDays(3);
+        return $this->scheduled_cancellation_at ?? $this->end_date->copy()->endOfDay();
     }
 
     /**
@@ -315,7 +312,7 @@ class StudioPlanModel extends Model
         $currentBookings = $metrics['total_bookings'] ?? 0;
         $metrics['total_bookings'] = $currentBookings + 1;
         $metrics['last_booking_at'] = now()->toDateTimeString();
-        
+
         $this->usage_metrics = $metrics;
         $this->save();
     }
@@ -348,7 +345,7 @@ class StudioPlanModel extends Model
             'cancelled' => 'badge-soft-danger',
             'pending' => 'badge-soft-warning',
         ];
-        
+
         return $classes[$this->status] ?? 'badge-soft-secondary';
     }
 
@@ -363,7 +360,7 @@ class StudioPlanModel extends Model
             'failed' => 'badge-soft-danger',
             'refunded' => 'badge-soft-secondary',
         ];
-        
+
         return $classes[$this->payment_status] ?? 'badge-soft-secondary';
     }
 }

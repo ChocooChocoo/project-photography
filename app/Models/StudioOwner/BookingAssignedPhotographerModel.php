@@ -45,6 +45,7 @@ class BookingAssignedPhotographerModel extends Model
         'started_at',                  // NEW
         'completed_at',
         'cancelled_at',
+        'recovery_id',
     ];
 
     /**
@@ -53,16 +54,16 @@ class BookingAssignedPhotographerModel extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'assigned_at'           => 'datetime',
-        'response_deadline'     => 'datetime',
-        'confirmed_at'          => 'datetime',
-        'on_site_at'            => 'datetime',
-        'client_confirmed_at'   => 'datetime',
-        'started_at'            => 'datetime',
-        'completed_at'          => 'datetime',
-        'cancelled_at'          => 'datetime',
-        'created_at'            => 'datetime',
-        'updated_at'            => 'datetime',
+        'assigned_at' => 'datetime',
+        'response_deadline' => 'datetime',
+        'confirmed_at' => 'datetime',
+        'on_site_at' => 'datetime',
+        'client_confirmed_at' => 'datetime',
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     // ────────────────────────────────────────────────
@@ -75,6 +76,11 @@ class BookingAssignedPhotographerModel extends Model
     public function booking()
     {
         return $this->belongsTo(\App\Models\BookingModel::class, 'booking_id');
+    }
+
+    public function recovery()
+    {
+        return $this->belongsTo(\App\Models\BookingCancellationRecoveryModel::class, 'recovery_id');
     }
 
     /**
@@ -130,7 +136,7 @@ class BookingAssignedPhotographerModel extends Model
      */
     public function isOnSite(): bool
     {
-        return !is_null($this->on_site_at) && is_null($this->started_at);
+        return ! is_null($this->on_site_at) && is_null($this->started_at);
     }
 
     /**
@@ -138,7 +144,7 @@ class BookingAssignedPhotographerModel extends Model
      */
     public function isClientConfirmed(): bool
     {
-        return !is_null($this->client_confirmed_at);
+        return ! is_null($this->client_confirmed_at);
     }
 
     /**
@@ -148,7 +154,7 @@ class BookingAssignedPhotographerModel extends Model
     public function isPastDeadline(): bool
     {
         return $this->status === 'assigned'
-            && !is_null($this->response_deadline)
+            && ! is_null($this->response_deadline)
             && now()->greaterThan($this->response_deadline);
     }
 
@@ -162,7 +168,7 @@ class BookingAssignedPhotographerModel extends Model
     public function markAsConfirmed()
     {
         $this->update([
-            'status'       => 'confirmed',
+            'status' => 'confirmed',
             'confirmed_at' => now(),
         ]);
     }
@@ -179,7 +185,7 @@ class BookingAssignedPhotographerModel extends Model
         }
 
         $this->update([
-            'status'     => 'on_site',  // ✅ Changed from 'in_progress' to 'on_site'
+            'status' => 'on_site',  // ✅ Changed from 'in_progress' to 'on_site'
             'on_site_at' => now(),
         ]);
     }
@@ -187,19 +193,20 @@ class BookingAssignedPhotographerModel extends Model
     /**
      * Mark job as in progress after client confirms photographer is on site.
      *
-     * @param string|null $confirmationNotes Optional notes from client
+     * @param  string|null  $confirmationNotes  Optional notes from client
+     *
      * @throws \Exception
      */
     public function markAsInProgressWithClientConfirmation($confirmationNotes = null)
     {
-        if (!$this->on_site_at) {
+        if (! $this->on_site_at) {
             throw new \Exception('Photographer must mark as on-site first.');
         }
 
         $this->update([
-            'status'                  => 'in_progress',
-            'started_at'              => now(),
-            'client_confirmed_at'     => now(),
+            'status' => 'in_progress',
+            'started_at' => now(),
+            'client_confirmed_at' => now(),
             'client_confirmation_notes' => $confirmationNotes,
         ]);
     }
@@ -212,12 +219,12 @@ class BookingAssignedPhotographerModel extends Model
      */
     public function markAsCompleted()
     {
-        if (!$this->client_confirmed_at) {
+        if (! $this->client_confirmed_at) {
             throw new \Exception('Client must confirm on-site presence before work can be completed.');
         }
 
         $this->update([
-            'status'       => 'completed',
+            'status' => 'completed',
             'completed_at' => now(),
         ]);
     }
@@ -228,9 +235,9 @@ class BookingAssignedPhotographerModel extends Model
     public function markAsCancelled($reason = null)
     {
         $this->update([
-            'status'             => 'cancelled',
+            'status' => 'cancelled',
             'cancellation_reason' => $reason,
-            'cancelled_at'       => now(),
+            'cancelled_at' => now(),
         ]);
     }
 
@@ -245,30 +252,30 @@ class BookingAssignedPhotographerModel extends Model
     {
         if ($this->on_site_at && $this->client_confirmed_at) {
             return [
-                'status'      => 'confirmed',
-                'message'     => 'Photographer on-site (Confirmed by client)',
-                'time'        => $this->on_site_at,
+                'status' => 'confirmed',
+                'message' => 'Photographer on-site (Confirmed by client)',
+                'time' => $this->on_site_at,
                 'badge_class' => 'badge-soft-success',
-                'icon'        => 'ti ti-circle-check'
+                'icon' => 'ti ti-circle-check',
             ];
         }
 
-        if ($this->on_site_at && !$this->client_confirmed_at) {
+        if ($this->on_site_at && ! $this->client_confirmed_at) {
             return [
-                'status'      => 'pending_client',
-                'message'     => 'Photographer on-site (Awaiting client confirmation)',
-                'time'        => $this->on_site_at,
+                'status' => 'pending_client',
+                'message' => 'Photographer on-site (Awaiting client confirmation)',
+                'time' => $this->on_site_at,
                 'badge_class' => 'badge-soft-warning',
-                'icon'        => 'ti ti-clock'
+                'icon' => 'ti ti-clock',
             ];
         }
 
         return [
-            'status'      => 'not_on_site',
-            'message'     => 'Not on-site yet',
-            'time'        => null,
+            'status' => 'not_on_site',
+            'message' => 'Not on-site yet',
+            'time' => null,
             'badge_class' => 'badge-soft-secondary',
-            'icon'        => 'ti ti-map-pin'
+            'icon' => 'ti ti-map-pin',
         ];
     }
 
@@ -282,8 +289,8 @@ class BookingAssignedPhotographerModel extends Model
      */
     public function canMarkAsInProgress(): bool
     {
-        return !is_null($this->on_site_at) && 
-            !is_null($this->client_confirmed_at) && 
+        return ! is_null($this->on_site_at) &&
+            ! is_null($this->client_confirmed_at) &&
             $this->status === 'confirmed';
     }
 
@@ -293,8 +300,8 @@ class BookingAssignedPhotographerModel extends Model
      */
     public function canMarkAsCompleted(): bool
     {
-        return $this->status === 'in_progress' && 
-            !is_null($this->client_confirmed_at);
+        return $this->status === 'in_progress' &&
+            ! is_null($this->client_confirmed_at);
     }
 
     /**
@@ -305,21 +312,22 @@ class BookingAssignedPhotographerModel extends Model
         if ($this->status === 'assigned') {
             return 'confirm';
         }
-        
+
         if ($this->status === 'confirmed') {
-            if (!$this->on_site_at) {
+            if (! $this->on_site_at) {
                 return 'on_site';
             }
-            if (!$this->client_confirmed_at) {
+            if (! $this->client_confirmed_at) {
                 return 'waiting_client';
             }
+
             return 'start_work';
         }
-        
+
         if ($this->status === 'in_progress') {
             return 'complete';
         }
-        
+
         return null;
     }
 
@@ -332,7 +340,7 @@ class BookingAssignedPhotographerModel extends Model
     {
         // Allowed cancellation states
         $allowedCancellationStates = ['assigned', 'confirmed'];
-        
+
         // Check if current status is in allowed states
         return in_array($this->status, $allowedCancellationStates);
     }
@@ -345,14 +353,14 @@ class BookingAssignedPhotographerModel extends Model
         if ($this->canCancel()) {
             return null;
         }
-        
+
         $restrictedStates = [
             'on_site' => 'You have already marked as on-site and cannot cancel this booking.',
             'in_progress' => 'You have already started working and cannot cancel this booking.',
             'completed' => 'This booking has been completed and cannot be cancelled.',
-            'cancelled' => 'This booking is already cancelled.'
+            'cancelled' => 'This booking is already cancelled.',
         ];
-        
+
         return $restrictedStates[$this->status] ?? 'You cannot cancel this booking at its current stage.';
     }
 }

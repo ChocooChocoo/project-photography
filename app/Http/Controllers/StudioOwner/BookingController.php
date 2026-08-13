@@ -3,18 +3,20 @@
 namespace App\Http\Controllers\StudioOwner;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StudioOwner\AssignBookingPhotographersRequest;
+use App\Http\Requests\StudioOwner\UpdateBookingStatusRequest;
+use App\Models\BookingCancellationRecoveryModel;
 use App\Models\BookingModel;
-use App\Models\StudioOwner\StudiosModel;
-use App\Models\StudioOwner\StudioPhotographersModel;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
+use App\Models\StudioOwner\StudioPhotographersModel;
+use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
+use App\Services\BookingCancellationRecoveryService;
+use App\Services\PhotographerAvailabilityService;
+use App\Traits\Notifiable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Traits\Notifiable;
-use App\Http\Requests\StudioOwner\AssignBookingPhotographersRequest;
-use App\Http\Requests\StudioOwner\UpdateBookingStatusRequest;
-use App\Services\PhotographerAvailabilityService;
 
 class BookingController extends Controller
 {
@@ -22,24 +24,20 @@ class BookingController extends Controller
 
     /**
      * Create a new controller instance.
-     *
-     * @param PhotographerAvailabilityService $photographerAvailabilityService
      */
-    public function __construct(private PhotographerAvailabilityService $photographerAvailabilityService)
-    {
-    }
+    public function __construct(private PhotographerAvailabilityService $photographerAvailabilityService) {}
 
     public function index()
     {
         $userId = Auth::id();
-        
+
         // Get ALL studios owned by this user
         $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
-        
+
         if (empty($studioIds)) {
             return view('owner.view-bookings')->with('bookings', collect([]));
         }
-        
+
         // Get bookings for ALL studios owned by this user
         $bookings = BookingModel::whereIn('provider_id', $studioIds)
             ->where('booking_type', 'studio')
@@ -47,13 +45,13 @@ class BookingController extends Controller
                 'client:id,first_name,last_name,email,mobile_number',
                 'category:id,category_name',
                 'packages',
-                'assignedPhotographers' => function($query) {
+                'assignedPhotographers' => function ($query) {
                     $query->with(['photographer:id,first_name,last_name']);
-                }
+                },
             ])
             ->orderBy('created_at', 'desc')
             ->get();
-        
+
         return view('owner.view-bookings', compact('bookings'));
     }
 
@@ -63,14 +61,14 @@ class BookingController extends Controller
     public function history()
     {
         $userId = Auth::id();
-        
+
         // Get ALL studios owned by this user
         $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
-        
+
         if (empty($studioIds)) {
             return view('owner.booking-history')->with('bookings', collect([]));
         }
-        
+
         // Get completed/cancelled bookings for ALL studios
         $bookings = BookingModel::whereIn('provider_id', $studioIds)
             ->where('booking_type', 'studio')
@@ -78,11 +76,11 @@ class BookingController extends Controller
             ->with([
                 'client:id,first_name,last_name',
                 'category:id,category_name',
-                'packages'
+                'packages',
             ])
             ->orderBy('updated_at', 'desc')
             ->get();
-        
+
         return view('owner.booking-history', compact('bookings'));
     }
 
@@ -93,17 +91,17 @@ class BookingController extends Controller
     {
         try {
             $userId = Auth::id();
-            
+
             // Get ALL studios owned by this user
             $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
-            
+
             if (empty($studioIds)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No studios found for this owner'
+                    'message' => 'No studios found for this owner',
                 ], 404);
             }
-            
+
             // Get the booking - check if it belongs to ANY of the owner's studios
             $booking = BookingModel::where('id', $id)
                 ->whereIn('provider_id', $studioIds)
@@ -113,29 +111,29 @@ class BookingController extends Controller
                     'client:id,first_name,last_name,email,mobile_number',
                     'category:id,category_name',
                     'packages.studioPackage',
-                    'payments' => function($query) {
+                    'payments' => function ($query) {
                         $query->orderBy('created_at', 'desc');
                     },
-                    'assignedPhotographers' => function($query) {
+                    'assignedPhotographers' => function ($query) {
                         $query->with([
                             'photographer:id,first_name,last_name,email',
-                            'studioPhotographer'
+                            'studioPhotographer',
                         ]);
-                    }
+                    },
                 ])
                 ->firstOrFail();
-            
+
             // Calculate total paid
             $totalPaid = $booking->payments->where('status', 'succeeded')->sum('amount');
-            
+
             // Get available statuses for dropdown
             $availableStatuses = $booking->getAvailableStatuses();
-            
+
             // Check if all photographers have completed their assignments
             $allPhotographersCompleted = true;
-            $hasAssignedPhotographers = $booking->assignedPhotographers->count() > 0;
-            
-            foreach ($booking->assignedPhotographers as $assignment) {
+            $hasAssignedPhotographers = $booking->assignedPhotographers->where('status', '!=', 'cancelled')->count() > 0;
+
+            foreach ($booking->assignedPhotographers->where('status', '!=', 'cancelled') as $assignment) {
                 if ($assignment->status !== 'completed') {
                     $allPhotographersCompleted = false;
                     break;
@@ -145,26 +143,26 @@ class BookingController extends Controller
             $requiresOnlineGallery = $booking->requiresOnlineGalleryUpload();
             $hasUploadedGalleryContent = $booking->hasUploadedGalleryContent();
             $galleryBlockReason = $booking->getGalleryCompletionBlockReason();
-            
+
             // Get maximum photographers allowed based on package
             $maxPhotographers = $this->getMaxPhotographersFromPackage($booking);
-            $currentAssignedCount = $booking->assignedPhotographers->count();
-            
+            $currentAssignedCount = $booking->assignedPhotographers->where('status', '!=', 'cancelled')->count();
+
             // Get package details for display
             $bookingPackage = $booking->packages->first();
             $packageDetails = null;
-            
+
             if ($bookingPackage && $bookingPackage->package_type === 'studio') {
                 $packageDetails = \App\Models\StudioOwner\PackagesModel::find($bookingPackage->package_id);
             }
-            
+
             // Owner can only complete booking if:
             // 1. Booking is in 'in_progress' status
             // 2. All assigned photographers have marked as completed
             // 3. Booking is fully paid
             // 4. Required gallery images have been uploaded
-            $canOwnerComplete = $booking->status === 'in_progress' && 
-                                $allPhotographersCompleted && 
+            $canOwnerComplete = $booking->status === 'in_progress' &&
+                                $allPhotographersCompleted &&
                                 $totalPaid >= $booking->total_amount &&
                                 $booking->isGalleryReadyForCompletion();
 
@@ -173,7 +171,7 @@ class BookingController extends Controller
                 $allPhotographersCompleted,
                 $totalPaid
             );
-            
+
             return response()->json([
                 'success' => true,
                 'booking' => $booking,
@@ -196,11 +194,11 @@ class BookingController extends Controller
                 'completion_block_reason' => $galleryBlockReason,
                 'completion_blockers' => $completionBlockers,
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error fetching booking details: ' . $e->getMessage()
+                'message' => 'Error fetching booking details: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -220,11 +218,11 @@ class BookingController extends Controller
             $blockers[] = 'Booking must be fully paid before it can be completed.';
         }
 
-        if (!$allPhotographersCompleted) {
+        if (! $allPhotographersCompleted) {
             $blockers[] = 'All assigned photographers must mark their assignments as completed before the owner can complete the booking.';
         }
 
-        if (!$booking->isGalleryReadyForCompletion()) {
+        if (! $booking->isGalleryReadyForCompletion()) {
             $blockers[] = $booking->getGalleryCompletionBlockReason();
         }
 
@@ -238,22 +236,22 @@ class BookingController extends Controller
     {
         // Get the booking package
         $bookingPackage = $booking->packages->first();
-        
-        if (!$bookingPackage) {
+
+        if (! $bookingPackage) {
             return 1; // Default to 1 if no package
         }
-        
+
         // Get the actual package from tbl_packages based on package_id and package_type
         if ($bookingPackage->package_type === 'studio') {
             $package = \App\Models\StudioOwner\PackagesModel::find($bookingPackage->package_id);
         } else {
             $package = \App\Models\Freelancer\PackagesModel::find($bookingPackage->package_id);
         }
-        
+
         if ($package && isset($package->photographer_count)) {
             return (int) $package->photographer_count;
         }
-        
+
         return 1; // Default to 1 if no photographer_count specified
     }
 
@@ -264,60 +262,61 @@ class BookingController extends Controller
     {
         try {
             $userId = Auth::id();
-            
+
             // Get ALL studios owned by this user
             $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
-            
+
             if (empty($studioIds)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No studios found for this owner'
+                    'message' => 'No studios found for this owner',
                 ], 404);
             }
-            
+
             // Get the booking - check if it belongs to ANY of the owner's studios
             $booking = BookingModel::where('id', $bookingId)
                 ->whereIn('provider_id', $studioIds)
                 ->where('booking_type', 'studio')
                 ->with(['packages', 'category'])
                 ->firstOrFail();
-            
+
             // Get the specific studio for this booking (for photographers)
             $studio = StudiosModel::find($booking->provider_id);
-            
+
             // Don't allow assignment if booking is in progress or completed
             if (in_array($booking->status, ['in_progress', 'completed'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cannot assign photographers to a booking that is in progress or already completed.'
+                    'message' => 'Cannot assign photographers to a booking that is in progress or already completed.',
                 ]);
             }
-            
+
             // Get required photographer count from package
             $requiredPhotographers = $this->getMaxPhotographersFromPackage($booking);
-            $currentAssignedCount = BookingAssignedPhotographerModel::where('booking_id', $bookingId)->count();
+            $currentAssignedCount = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
+                ->whereIn('status', ['assigned', 'confirmed', 'on_site', 'in_progress', 'completed'])->count();
             $remainingNeeded = $requiredPhotographers - $currentAssignedCount;
-            
+
             // Get package details for display
             $bookingPackage = $booking->packages->first();
             $packageName = 'N/A';
             $packageDetails = null;
-            
+
             if ($bookingPackage) {
                 if ($bookingPackage->package_type === 'studio') {
                     $packageDetails = \App\Models\StudioOwner\PackagesModel::find($bookingPackage->package_id);
                 }
                 $packageName = $bookingPackage->package_name;
             }
-            
+
             // Check if requirement is already met
             if ($remainingNeeded <= 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => "This booking already has all {$requiredPhotographers} required photographers assigned."
+                    'message' => "This booking already has all {$requiredPhotographers} required photographers assigned.",
                 ]);
             }
-            
+
             // Get all active studio photographers
             $studioPhotographers = StudioPhotographersModel::where('studio_id', $studio->id)
                 ->where('status', 'active')
@@ -325,6 +324,7 @@ class BookingController extends Controller
                 ->get();
 
             $assignedPhotographerIds = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
+                ->where('status', '!=', 'cancelled')
                 ->pluck('photographer_id')
                 ->map(fn ($photographerId) => (int) $photographerId)
                 ->toArray();
@@ -363,7 +363,7 @@ class BookingController extends Controller
 
                 $availablePhotographers[] = [
                     'id' => $photographerId,
-                    'name' => $studioPhotographer->photographer->first_name . ' ' . $studioPhotographer->photographer->last_name,
+                    'name' => $studioPhotographer->photographer->first_name.' '.$studioPhotographer->photographer->last_name,
                     'position' => $studioPhotographer->position,
                     'status' => $studioPhotographer->status,
                     'years_experience' => $studioPhotographer->years_of_experience,
@@ -378,7 +378,7 @@ class BookingController extends Controller
             $assignablePhotographerCount = collect($availablePhotographers)
                 ->where('is_available', true)
                 ->count();
-            
+
             return response()->json([
                 'success' => true,
                 'photographers' => $availablePhotographers,
@@ -386,7 +386,7 @@ class BookingController extends Controller
                     'reference' => $booking->booking_reference,
                     'event_name' => $booking->event_name,
                     'event_date' => \Carbon\Carbon::parse($booking->event_date)->format('M d, Y'),
-                    'category' => $booking->category->category_name ?? 'N/A'
+                    'category' => $booking->category->category_name ?? 'N/A',
                 ],
                 'assignment_info' => [
                     'required_photographers' => $requiredPhotographers,
@@ -398,15 +398,15 @@ class BookingController extends Controller
                     'package_details' => $packageDetails ? [
                         'photographer_count' => $packageDetails->photographer_count,
                         'duration' => $packageDetails->duration,
-                        'maximum_edited_photos' => $packageDetails->maximum_edited_photos
-                    ] : null
-                ]
+                        'maximum_edited_photos' => $packageDetails->maximum_edited_photos,
+                    ] : null,
+                ],
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error fetching available photographers: ' . $e->getMessage()
+                'message' => 'Error fetching available photographers: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -418,80 +418,82 @@ class BookingController extends Controller
     {
         try {
             $userId = Auth::id();
-            
+
             // Get ALL studios owned by this user
             $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
-            
+
             if (empty($studioIds)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No studios found for this owner'
+                    'message' => 'No studios found for this owner',
                 ], 404);
             }
-            
+
             // Get the booking - check if it belongs to ANY of the owner's studios
             $booking = BookingModel::where('id', $bookingId)
                 ->whereIn('provider_id', $studioIds)
                 ->where('booking_type', 'studio')
                 ->with(['packages', 'client:id,first_name,last_name'])
                 ->firstOrFail();
-            
+
             // Get the specific studio for this booking
             $studio = StudiosModel::find($booking->provider_id);
-            
+
             // Don't allow assignment if booking is in progress or completed
             if (in_array($booking->status, ['in_progress', 'completed'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cannot assign photographers to a booking that is in progress or already completed.'
+                    'message' => 'Cannot assign photographers to a booking that is in progress or already completed.',
                 ]);
             }
-            
+
             // Get required photographer count from package
             $requiredPhotographers = $this->getMaxPhotographersFromPackage($booking);
-            $currentAssignedCount = BookingAssignedPhotographerModel::where('booking_id', $bookingId)->count();
+            $currentAssignedCount = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
+                ->whereIn('status', ['assigned', 'confirmed', 'on_site', 'in_progress', 'completed'])->count();
             $requestedPhotographerIds = collect($request->input('photographer_ids', []))
                 ->map(fn ($photographerId) => (int) $photographerId)
                 ->unique()
                 ->values()
                 ->all();
-            
+
             // Check if we're doing initial assignment or adding more
             if ($currentAssignedCount === 0) {
                 // Initial assignment - must assign EXACTLY the required number
                 if (count($requestedPhotographerIds) != $requiredPhotographers) {
                     return response()->json([
                         'success' => false,
-                        'message' => "This package requires exactly {$requiredPhotographers} photographer(s). Please select {$requiredPhotographers} photographers."
+                        'message' => "This package requires exactly {$requiredPhotographers} photographer(s). Please select {$requiredPhotographers} photographers.",
                     ], 422);
                 }
             } else {
                 // Adding more photographers - check if total will equal required number
                 $totalAfterAssignment = $currentAssignedCount + count($requestedPhotographerIds);
-                
+
                 if ($totalAfterAssignment > $requiredPhotographers) {
                     return response()->json([
                         'success' => false,
-                        'message' => "This package requires a total of {$requiredPhotographers} photographer(s). You currently have {$currentAssignedCount} assigned. You can only add " . ($requiredPhotographers - $currentAssignedCount) . " more."
+                        'message' => "This package requires a total of {$requiredPhotographers} photographer(s). You currently have {$currentAssignedCount} assigned. You can only add ".($requiredPhotographers - $currentAssignedCount).' more.',
                     ], 422);
                 }
-                
+
                 if ($totalAfterAssignment < $requiredPhotographers) {
                     return response()->json([
                         'success' => false,
-                        'message' => "This package requires a total of {$requiredPhotographers} photographer(s). You currently have {$currentAssignedCount} assigned. You need to add " . ($requiredPhotographers - $currentAssignedCount) . " more to complete the required count."
+                        'message' => "This package requires a total of {$requiredPhotographers} photographer(s). You currently have {$currentAssignedCount} assigned. You need to add ".($requiredPhotographers - $currentAssignedCount).' more to complete the required count.',
                     ], 422);
                 }
             }
 
             $alreadyAssignedPhotographerIds = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
+                ->where('status', '!=', 'cancelled')
                 ->pluck('photographer_id')
                 ->map(fn ($photographerId) => (int) $photographerId)
                 ->toArray();
 
             $duplicateSelections = array_values(array_intersect($requestedPhotographerIds, $alreadyAssignedPhotographerIds));
 
-            if (!empty($duplicateSelections)) {
+            if (! empty($duplicateSelections)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'One or more selected photographers are already assigned to this booking.',
@@ -516,7 +518,7 @@ class BookingController extends Controller
 
             $availabilityMap = $this->photographerAvailabilityService->getAvailabilityMapForBooking($booking, $requestedPhotographerIds);
             $unavailableSelections = collect($availabilityMap)
-                ->filter(fn ($availability) => !$availability['is_available'])
+                ->filter(fn ($availability) => ! $availability['is_available'])
                 ->values();
 
             if ($unavailableSelections->isNotEmpty()) {
@@ -526,7 +528,7 @@ class BookingController extends Controller
                     'photographer_conflicts' => $unavailableSelections->all(),
                 ], 409);
             }
-            
+
             [$assignedCount, $createdAssignments] = DB::transaction(function () use (
                 $requestedPhotographerIds,
                 $booking,
@@ -537,7 +539,7 @@ class BookingController extends Controller
             ) {
                 $freshAvailabilityMap = $this->photographerAvailabilityService->getAvailabilityMapForBooking($booking, $requestedPhotographerIds);
                 $freshUnavailableSelections = collect($freshAvailabilityMap)
-                    ->filter(fn ($availability) => !$availability['is_available'])
+                    ->filter(fn ($availability) => ! $availability['is_available'])
                     ->values();
 
                 if ($freshUnavailableSelections->isNotEmpty()) {
@@ -594,44 +596,44 @@ class BookingController extends Controller
 
                 return [$assignedCount, $createdAssignments];
             });
-            
+
             // Calculate new totals AFTER successful assignment
             $newTotal = $currentAssignedCount + $assignedCount;
             $isComplete = ($newTotal == $requiredPhotographers);
-            
+
             // ========== START: ADD NOTIFICATION FOR ASSIGNED PHOTOGRAPHERS AND OWNER ==========
-            if ($assignedCount > 0 && !empty($createdAssignments)) {
+            if ($assignedCount > 0 && ! empty($createdAssignments)) {
                 // Get the owner's name for the notification message
                 $owner = Auth::user();
-                $ownerName = $owner->first_name . ' ' . $owner->last_name;
-                
+                $ownerName = $owner->first_name.' '.$owner->last_name;
+
                 // Get client name
                 $client = $booking->client;
-                $clientName = $client ? $client->first_name . ' ' . $client->last_name : 'A client';
-                
+                $clientName = $client ? $client->first_name.' '.$client->last_name : 'A client';
+
                 // Format event details
                 $formattedDate = \Carbon\Carbon::parse($booking->event_date)->format('F d, Y');
-                $formattedTime = date('h:i A', strtotime($booking->start_time)) . ' - ' . date('h:i A', strtotime($booking->end_time));
-                
+                $formattedTime = date('h:i A', strtotime($booking->start_time)).' - '.date('h:i A', strtotime($booking->end_time));
+
                 // Get package name
                 $packageName = 'N/A';
                 if ($booking->packages && $booking->packages->count() > 0) {
                     $packageName = $booking->packages->first()->package_name;
                 }
-                
+
                 // Determine if this is part of a batch assignment
                 $isBatchAssignment = $assignedCount > 1;
-                $batchText = $isBatchAssignment ? " (as part of a team of {$assignedCount})" : "";
-                
+                $batchText = $isBatchAssignment ? " (as part of a team of {$assignedCount})" : '';
+
                 // ========== NOTIFICATION 1: Send to each newly assigned photographer ==========
                 $photographerNames = []; // Track names for owner notification
-                
+
                 foreach ($createdAssignments as $index => $assignment) {
                     // Get photographer details for the notification
                     $photographer = UserModel::find($assignment->photographer_id);
-                    $photographerName = $photographer ? $photographer->first_name . ' ' . $photographer->last_name : 'A photographer';
+                    $photographerName = $photographer ? $photographer->first_name.' '.$photographer->last_name : 'A photographer';
                     $photographerNames[] = $photographerName;
-                    
+
                     // Prepare notification data for photographer
                     $photographerNotificationData = [
                         'assignment_id' => $assignment->id,
@@ -641,7 +643,7 @@ class BookingController extends Controller
                         'studio_name' => $studio->studio_name,
                         'client_name' => $clientName,
                         'event_date' => $booking->event_date,
-                        'event_time' => $booking->start_time . ' - ' . $booking->end_time,
+                        'event_time' => $booking->start_time.' - '.$booking->end_time,
                         'formatted_date' => $formattedDate,
                         'formatted_time' => $formattedTime,
                         'package_name' => $packageName,
@@ -655,9 +657,9 @@ class BookingController extends Controller
                         'route' => route('assigned.bookings', [], false),
                         'is_batch_assignment' => $isBatchAssignment,
                         'batch_size' => $assignedCount,
-                        'notification_type' => 'photographer_notification'
+                        'notification_type' => 'photographer_notification',
                     ];
-                    
+
                     // Add location details if available
                     if ($booking->location_type === 'on-location') {
                         if ($booking->multiple_locations) {
@@ -669,7 +671,7 @@ class BookingController extends Controller
                             $photographerNotificationData['venue_name'] = $booking->venue_name;
                         }
                     }
-                    
+
                     // Create notification for photographer
                     $this->createNotification(
                         $assignment->photographer_id,                           // recipient: photographer ID
@@ -680,18 +682,18 @@ class BookingController extends Controller
                         'user-plus',                                            // icon (using Lucide icon name)
                         'info'                                                   // color
                     );
-                    
+
                     \Log::info('Booking assignment notification sent to photographer', [
                         'photographer_id' => $assignment->photographer_id,
                         'photographer_name' => $photographerName,
                         'assignment_id' => $assignment->id,
                         'booking_id' => $booking->id,
-                        'is_batch' => $isBatchAssignment
+                        'is_batch' => $isBatchAssignment,
                     ]);
                 }
-                
+
                 // ========== NOTIFICATION 2: Send to owner confirming successful assignment ==========
-                
+
                 // Prepare notification data for owner
                 $ownerNotificationData = [
                     'booking_id' => $booking->id,
@@ -701,7 +703,7 @@ class BookingController extends Controller
                     'client_name' => $clientName,
                     'event_date' => $booking->event_date,
                     'formatted_date' => $formattedDate,
-                    'event_time' => $booking->start_time . ' - ' . $booking->end_time,
+                    'event_time' => $booking->start_time.' - '.$booking->end_time,
                     'package_name' => $packageName,
                     'assigned_photographers' => $photographerNames,
                     'assigned_photographer_ids' => $requestedPhotographerIds,
@@ -712,19 +714,19 @@ class BookingController extends Controller
                     'notification_type' => 'owner_notification',
                     'current_assigned_count' => $newTotal,
                     'required_photographers' => $requiredPhotographers,
-                    'is_complete' => $isComplete
+                    'is_complete' => $isComplete,
                 ];
-                
+
                 // Determine the message based on assignment status
                 $ownerMessage = '';
                 if ($isComplete) {
                     $ownerMessage = "All {$requiredPhotographers} required photographers have been successfully assigned to booking {$booking->booking_reference}.";
                 } else {
                     $remainingNeeded = $requiredPhotographers - $newTotal;
-                    $ownerMessage = "{$assignedCount} photographer(s) have been assigned to booking {$booking->booking_reference}. " .
+                    $ownerMessage = "{$assignedCount} photographer(s) have been assigned to booking {$booking->booking_reference}. ".
                                 "You still need to assign {$remainingNeeded} more photographer(s) to complete the requirement.";
                 }
-                
+
                 // Create notification for owner
                 $this->createNotification(
                     $owner->id,                                                // recipient: owner ID
@@ -735,17 +737,17 @@ class BookingController extends Controller
                     'check-circle',                                            // icon (using Lucide icon name)
                     'success'                                                  // color
                 );
-                
+
                 \Log::info('Assignment confirmation notification sent to owner', [
                     'owner_id' => $owner->id,
                     'booking_id' => $booking->id,
                     'assigned_count' => $assignedCount,
-                    'is_complete' => $isComplete
+                    'is_complete' => $isComplete,
                 ]);
-                
+
                 // Log progress update if adding to existing assignments
                 if ($currentAssignedCount > 0 && $assignedCount > 0) {
-                    \Log::info('Progress update: Added ' . $assignedCount . ' photographers to existing ' . $currentAssignedCount);
+                    \Log::info('Progress update: Added '.$assignedCount.' photographers to existing '.$currentAssignedCount);
                 }
 
                 // ========== NOTIFICATION 3: Let the client know a photographer was assigned ==========
@@ -754,19 +756,19 @@ class BookingController extends Controller
                 }
             }
             // ========== END: ADD NOTIFICATIONS ==========
-            
+
             return response()->json([
                 'success' => true,
-                'message' => $assignedCount . ' photographer(s) assigned successfully.' . 
+                'message' => $assignedCount.' photographer(s) assigned successfully.'.
                             ($isComplete ? ' All required photographers have been assigned.' : ''),
                 'assignment_info' => [
                     'current_assigned' => $newTotal,
                     'required_photographers' => $requiredPhotographers,
                     'remaining_needed' => $requiredPhotographers - $newTotal,
-                    'is_complete' => $isComplete
-                ]
+                    'is_complete' => $isComplete,
+                ],
             ]);
-            
+
         } catch (\RuntimeException $e) {
             $payload = json_decode($e->getMessage(), true);
 
@@ -780,12 +782,12 @@ class BookingController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error assigning photographers: ' . $e->getMessage(),
+                'message' => 'Error assigning photographers: '.$e->getMessage(),
             ], 500);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error assigning photographers: ' . $e->getMessage()
+                'message' => 'Error assigning photographers: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -797,41 +799,41 @@ class BookingController extends Controller
     {
         try {
             $userId = Auth::id();
-            
+
             // Get ALL studios owned by this user
             $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
-            
+
             if (empty($studioIds)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No studios found for this owner'
+                    'message' => 'No studios found for this owner',
                 ], 404);
             }
-            
+
             $assignment = BookingAssignedPhotographerModel::where('id', $assignmentId)
                 ->whereIn('studio_id', $studioIds)
                 ->firstOrFail();
-            
+
             // Don't allow removal if booking is in progress or completed
             $booking = BookingModel::find($assignment->booking_id);
             if (in_array($booking->status, ['in_progress', 'completed'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cannot remove photographer from a booking that is in progress or already completed.'
+                    'message' => 'Cannot remove photographer from a booking that is in progress or already completed.',
                 ]);
             }
-            
+
             $assignment->delete();
-            
+
             return response()->json([
                 'success' => true,
-                'message' => 'Photographer assignment removed successfully.'
+                'message' => 'Photographer assignment removed successfully.',
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error removing assignment: ' . $e->getMessage()
+                'message' => 'Error removing assignment: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -848,7 +850,7 @@ class BookingController extends Controller
             if (empty($studioIds)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No studios found for this owner'
+                    'message' => 'No studios found for this owner',
                 ], 404);
             }
 
@@ -860,25 +862,25 @@ class BookingController extends Controller
 
             $newStatus = $request->status;
 
-            if (!$booking->canTransitionTo($newStatus) && $newStatus !== BookingModel::STATUS_CANCELLED) {
+            if (! $booking->canTransitionTo($newStatus) && $newStatus !== BookingModel::STATUS_CANCELLED) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid booking status transition.'
+                    'message' => 'Invalid booking status transition.',
                 ], 422);
             }
 
             if ($newStatus === BookingModel::STATUS_COMPLETED) {
                 $totalPaid = (float) $booking->payments->where('status', 'succeeded')->sum('amount');
-                $allPhotographersCompleted = $booking->assignedPhotographers->every(function ($assignment) {
+                $allPhotographersCompleted = $booking->assignedPhotographers->where('status', '!=', 'cancelled')->every(function ($assignment) {
                     return $assignment->status === 'completed';
                 });
 
                 $blockers = $this->getOwnerCompletionBlockers($booking, $allPhotographersCompleted, $totalPaid);
 
-                if (!empty($blockers)) {
+                if (! empty($blockers)) {
                     return response()->json([
                         'success' => false,
-                        'message' => $blockers[0]
+                        'message' => $blockers[0],
                     ], 403);
                 }
             }
@@ -922,12 +924,12 @@ class BookingController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Booking status updated successfully.',
-                'booking' => $booking
+                'booking' => $booking,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating booking status: ' . $e->getMessage()
+                'message' => 'Error updating booking status: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -944,7 +946,7 @@ class BookingController extends Controller
             if (empty($studioIds)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No studios found for this owner'
+                    'message' => 'No studios found for this owner',
                 ], 404);
             }
 
@@ -954,10 +956,10 @@ class BookingController extends Controller
 
             $status = $request->input('status');
 
-            if (!in_array($status, ['completed', 'cancelled'])) {
+            if (! in_array($status, ['completed', 'cancelled'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid status. Only completed or cancelled are allowed.'
+                    'message' => 'Invalid status. Only completed or cancelled are allowed.',
                 ], 422);
             }
 
@@ -965,7 +967,7 @@ class BookingController extends Controller
                 if (empty($request->input('cancellation_reason'))) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Cancellation reason is required when cancelling an assignment.'
+                        'message' => 'Cancellation reason is required when cancelling an assignment.',
                     ], 422);
                 }
 
@@ -979,16 +981,16 @@ class BookingController extends Controller
                     [
                         'assignment_id' => $assignment->id,
                         'booking_id' => $assignment->booking_id,
-                        'route' => route('assigned.bookings', [], false)
+                        'route' => route('assigned.bookings', [], false),
                     ],
                     'calendar-x',
                     'danger'
                 );
             } else {
-                if (!$assignment->canMarkAsCompleted()) {
+                if (! $assignment->canMarkAsCompleted()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Assignment can only be marked as completed while in progress with client confirmation.'
+                        'message' => 'Assignment can only be marked as completed while in progress with client confirmation.',
                     ], 403);
                 }
 
@@ -1005,7 +1007,7 @@ class BookingController extends Controller
                     [
                         'assignment_id' => $assignment->id,
                         'booking_id' => $assignment->booking_id,
-                        'route' => route('assigned.bookings', [], false)
+                        'route' => route('assigned.bookings', [], false),
                     ],
                     'check-circle',
                     'success'
@@ -1015,14 +1017,97 @@ class BookingController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Assignment status updated successfully.',
-                'assignment' => $assignment
+                'assignment' => $assignment,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating assignment status: ' . $e->getMessage()
+                'message' => 'Error updating assignment status: '.$e->getMessage(),
             ], 500);
+        }
+    }
+
+    public function proposePhotographerReplacement(Request $request, $recoveryId)
+    {
+        try {
+            $studioIds = StudiosModel::where('user_id', Auth::id())->pluck('id');
+            $recovery = BookingCancellationRecoveryModel::whereIn('studio_id', $studioIds)->findOrFail($recoveryId);
+            $assignmentId = $request->input('assignment_id');
+            if ($assignmentId) {
+                $assignment = BookingAssignedPhotographerModel::where('id', $assignmentId)
+                    ->where('studio_id', $recovery->studio_id)->firstOrFail();
+            } else {
+                $photographerId = (int) $request->input('photographer_id');
+                $member = StudioPhotographersModel::where('studio_id', $recovery->studio_id)
+                    ->where('photographer_id', $photographerId)->where('status', 'active')->firstOrFail();
+                $assignment = BookingAssignedPhotographerModel::where('booking_id', $recovery->booking_id)
+                    ->where('studio_id', $recovery->studio_id)
+                    ->where('photographer_id', $member->photographer_id)
+                    ->whereNull('recovery_id')
+                    ->whereIn('status', ['assigned', 'confirmed'])
+                    ->first();
+                if (! $assignment) {
+                    $assignment = BookingAssignedPhotographerModel::create([
+                        'booking_id' => $recovery->booking_id,
+                        'studio_id' => $recovery->studio_id,
+                        'photographer_id' => $member->photographer_id,
+                        'assigned_by' => Auth::id(),
+                        'status' => 'assigned',
+                        'assigned_at' => now(),
+                        'response_deadline' => now()->addHours(24),
+                        'recovery_id' => $recovery->id,
+                    ]);
+                }
+            }
+
+            $recovery = app(BookingCancellationRecoveryService::class)->proposeReplacement($recovery, $assignment);
+            $this->createNotification(
+                $assignment->photographer_id,
+                'photographer_replacement_proposed',
+                'Replacement assignment proposed',
+                'You have been proposed as a replacement photographer. Confirm the assignment before the client is notified.',
+                ['booking_id' => $recovery->booking_id, 'recovery_id' => $recovery->id, 'route' => route('assigned.bookings', [], false)],
+                'user-plus',
+                'info'
+            );
+
+            return response()->json(['success' => true, 'recovery' => $recovery]);
+        } catch (\DomainException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 409);
+        }
+    }
+
+    public function cancellationRecoveryView($recoveryId)
+    {
+        $studioIds = StudiosModel::where('user_id', Auth::id())->pluck('id');
+        $recovery = BookingCancellationRecoveryModel::with(['booking', 'originalAssignment', 'replacementAssignment'])
+            ->whereIn('studio_id', $studioIds)->findOrFail($recoveryId);
+        $booking = $recovery->booking;
+        $replacementCandidates = BookingAssignedPhotographerModel::with('photographer:id,first_name,last_name')
+            ->where('booking_id', $recovery->booking_id)
+            ->where('studio_id', $recovery->studio_id)
+            ->whereNull('recovery_id')
+            ->whereIn('status', ['assigned', 'confirmed'])
+            ->get();
+        $replacementMembers = StudioPhotographersModel::with('photographer:id,first_name,last_name')
+            ->where('studio_id', $recovery->studio_id)->where('status', 'active')
+            ->whereNotIn('photographer_id', $booking->assignedPhotographers->pluck('photographer_id'))
+            ->get();
+
+        return view('owner.cancellation-recovery', compact('recovery', 'replacementCandidates', 'replacementMembers'));
+    }
+
+    public function escalatePhotographerCancellation(Request $request, $recoveryId)
+    {
+        try {
+            $studioIds = StudiosModel::where('user_id', Auth::id())->pluck('id');
+            $recovery = BookingCancellationRecoveryModel::whereIn('studio_id', $studioIds)->findOrFail($recoveryId);
+            $recovery = app(BookingCancellationRecoveryService::class)->ownerEscalate($recovery, $request->input('reason'));
+
+            return response()->json(['success' => true, 'recovery' => $recovery]);
+        } catch (\DomainException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 409);
         }
     }
 
@@ -1033,63 +1118,63 @@ class BookingController extends Controller
     {
         try {
             $userId = Auth::id();
-            
+
             // Get ALL studios owned by this user
             $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
-            
+
             if (empty($studioIds)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No studios found for this owner'
+                    'message' => 'No studios found for this owner',
                 ], 404);
             }
-            
+
             // Get the booking - check if it belongs to ANY of the owner's studios
             $booking = BookingModel::where('id', $id)
                 ->whereIn('provider_id', $studioIds)
                 ->where('booking_type', 'studio')
                 ->with(['packages.studioPackage', 'studioOnlineGallery'])
                 ->firstOrFail();
-            
+
             // Check if booking is in progress
             if ($booking->status !== 'in_progress') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Booking must be in progress before it can be completed.'
+                    'message' => 'Booking must be in progress before it can be completed.',
                 ]);
             }
-            
+
             // Check if fully paid
             $totalPaid = $booking->payments()->where('status', 'succeeded')->sum('amount');
             if ($totalPaid < $booking->total_amount) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Booking must be fully paid before it can be completed.'
+                    'message' => 'Booking must be fully paid before it can be completed.',
                 ]);
             }
-            
+
             // Check if all photographers have completed their assignments
-            $assignments = BookingAssignedPhotographerModel::where('booking_id', $id)->get();
-            
+            $assignments = BookingAssignedPhotographerModel::where('booking_id', $id)->where('status', '!=', 'cancelled')->get();
+
             // If there are no photographers assigned, that's fine
             if ($assignments->count() > 0) {
                 foreach ($assignments as $assignment) {
                     if ($assignment->status !== 'completed') {
                         return response()->json([
                             'success' => false,
-                            'message' => 'All assigned photographers must mark their assignments as completed before the owner can complete the booking.'
+                            'message' => 'All assigned photographers must mark their assignments as completed before the owner can complete the booking.',
                         ]);
                     }
                 }
             }
 
-            if (!$booking->isGalleryReadyForCompletion()) {
+            if (! $booking->isGalleryReadyForCompletion()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $booking->getGalleryCompletionBlockReason()
+                    'message' => $booking->getGalleryCompletionBlockReason(),
                 ], 403);
             }
-            
+
             // Update booking status to completed
             $booking->status = BookingModel::STATUS_COMPLETED;
             $booking->completed_at = now();
@@ -1103,13 +1188,13 @@ class BookingController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Booking completed successfully.',
-                'booking' => $booking
+                'booking' => $booking,
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error completing booking: ' . $e->getMessage()
+                'message' => 'Error completing booking: '.$e->getMessage(),
             ], 500);
         }
     }

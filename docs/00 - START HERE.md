@@ -1,5 +1,9 @@
 # 00 - START HERE
 
+## Current delivery evidence
+
+12 August 2026: Phase 6 lifecycles are implemented and verified on `codex/phase-6-lifecycles`. See the canonical Platinum Studio analysis and roadmap tracker for R-19/R-20 evidence; frozen MATERIAL remains unchanged.
+
 Next: [Platinum Studio Platform](ANALYSIS%20-%20PLATINUM%20STUDIO%20PLATFORM/00%20-%20START%20HERE.md)
 
 This is the front door for the documentation vault. The canonical analysis is [Platinum Studio Platform](ANALYSIS%20-%20PLATINUM%20STUDIO%20PLATFORM/00%20-%20START%20HERE.md). It follows Workflow Version 3 in prompt/WORKFLOW v3.

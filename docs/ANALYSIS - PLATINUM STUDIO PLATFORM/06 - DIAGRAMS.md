@@ -79,7 +79,7 @@ flowchart LR
     phase1 --> phase2 --> phase3 --> phase4 --> phase5 --> phase6
 ```
 
-**Reading this:** The order starts with evidence, defects, and boundaries. Later work depends on the booking and role foundations. Cancellation and renewal are last because their policy decisions and financial consequences are still open.
+**Reading this:** The order starts with evidence, defects, and boundaries. Later work depends on the booking and role foundations. Phase 6 now records the approved photographer-recovery and subscription lifecycle outcomes; ordinary cancellation and other policy questions remain separate.
 
 ## 5. The life story of a booking
 
@@ -100,7 +100,7 @@ stateDiagram-v2
     Cancelled --> [*]
 ```
 
-**Reading this:** A booking can fail before confirmation, move through assignment and gallery delivery, or end through an approved cancellation. The diagram does not invent the financial remedy for photographer cancellation; that is Q-01 and Q-11.
+**Reading this:** A booking can fail before confirmation, move through assignment and gallery delivery, or enter the approved photographer-recovery path. Rejection, escalation, or deadline expiry leads to a queued full manual refund; ordinary cancellation remains separate.
 
 ## 6. The proposed arrangement
 

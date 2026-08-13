@@ -48,7 +48,7 @@ The current audit covered application models, controllers, middleware, requests,
 
 1. Scheduled commands handle expiry and lifecycle notices.
 2. `EnforceStudioSubscriptionAccess.php` applies studio-scoped access decisions to owner and staff routes.
-3. The current record reports seven-day grace, expiry, delisting, blocked commercial writes, retained history, and paid-booking fulfilment behavior; renewal and reactivation remain outside the delivered slice.
+3. The current record reports seven-day grace, expiry, delisting, blocked commercial writes, retained history, and paid-booking fulfilment behavior. Phase 6 adds recurring renewal, provider retry handling, period-end cancellation/resume, and previous-plan reactivation.
 
 **Assistant conversation**
 
@@ -78,8 +78,8 @@ The current audit covered application models, controllers, middleware, requests,
 
 | # | Finding | Evidence |
 |---|---|---|
-| U-01 | A paid-booking photographer cancellation has no complete approved substitution, reschedule, refund, credit, notification, and audit outcome. | Frozen cancellation reference and current assignment code. |
-| U-02 | Renewal, failed-renewal webhook behavior, cancellation beyond the historical refund window, and reactivation remain planned. | Frozen subscription reference and current subscription controllers/commands. |
+| U-01 | ~~A paid-booking photographer cancellation has no complete approved substitution, reschedule, refund, credit, notification, and audit outcome.~~ **Resolved for the approved Phase 6 scope on 12 August 2026.** | Recovery model/service, owner/client/admin views, deadline command, payment evidence, revenue reversal, and focused tests. Rescheduling, credits, partial refunds, freelancer rescue, and automated refund APIs remain excluded. |
+| U-02 | ~~Renewal, failed-renewal webhook behavior, cancellation beyond the historical refund window, and reactivation remain planned.~~ **Resolved for the approved Phase 6 scope on 12 August 2026.** | Recurring Checkout, signed subscription webhooks, deferred ordering/idempotency, fixed grace, period-end cancel/resume, reactivation, and focused tests. |
 | U-03 | The historical Phase 3 task remains in progress even though several related routes and services already exist. | `MATERIAL/LEGACY DOCUMENTATION/tasks/02.md` and current source. |
 
 ## Things worth flagging
