@@ -280,6 +280,7 @@ class AssignmentLifecycleTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_studios', function (Blueprint $table) {
@@ -287,7 +288,8 @@ class AssignmentLifecycleTest extends TestCase
             $table->foreignId('user_id');
             $table->string('studio_name');
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_bookings', function (Blueprint $table) {
             $table->id();
@@ -369,7 +371,8 @@ class AssignmentLifecycleTest extends TestCase
             $table->boolean('online_gallery')->default(false);
             $table->integer('photographer_count')->default(0);
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_studio_online_gallery', function (Blueprint $table) {
             $table->id();
@@ -385,7 +388,8 @@ class AssignmentLifecycleTest extends TestCase
             $table->string('portal')->nullable();
             $table->string('status');
             $table->boolean('is_system')->default(false);
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_permissions', function (Blueprint $table) {
             $table->id();
@@ -393,7 +397,8 @@ class AssignmentLifecycleTest extends TestCase
             $table->string('portal')->nullable();
             $table->string('permission_string')->nullable();
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_role_permissions', function (Blueprint $table) {
             $table->id();

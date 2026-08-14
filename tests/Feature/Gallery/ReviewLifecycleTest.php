@@ -150,6 +150,7 @@ class ReviewLifecycleTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_studios', function (Blueprint $table) {
@@ -159,7 +160,8 @@ class ReviewLifecycleTest extends TestCase
             $table->decimal('avg_rating', 3, 2)->default(0);
             $table->unsignedInteger('total_reviews')->default(0);
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_bookings', function (Blueprint $table) {
             $table->id();

@@ -30,6 +30,7 @@ class PaidPhotographerCancellationTest extends TestCase
             $table->string('password')->nullable();
             $table->string('status')->default('active');
             $table->boolean('email_verified')->default(true);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_studios', function (Blueprint $table) {
@@ -37,7 +38,8 @@ class PaidPhotographerCancellationTest extends TestCase
             $table->foreignId('user_id');
             $table->string('studio_name');
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_bookings', function (Blueprint $table) {
             $table->id();

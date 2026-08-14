@@ -7,10 +7,11 @@ use App\Models\StudioPlanModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudiosModel extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'tbl_studios';
 
@@ -28,13 +29,16 @@ class StudiosModel extends Model
         'facebook_url',
         'instagram_url',
         'website_url',
+        'linkedin_url',
         'studio_name',
         'studio_type',
         'year_established',
         'studio_description',
         'studio_logo',
         'starting_price',
+        'maximum_price',
         'downpayment_percentage',
+        'requires_downpayment',
         'operating_days',
         'start_time',
         'end_time',
@@ -44,6 +48,8 @@ class StudiosModel extends Model
         'owner_id_document',
         'status',
         'rejection_note',
+        'permit_expiry_date',
+        'resubmission_count',
         // Removed: 'service_coverage_area',
     ];
 
@@ -55,6 +61,10 @@ class StudiosModel extends Model
         'attendance_longitude' => 'decimal:7',
         'attendance_radius_meters' => 'integer',
         'downpayment_percentage' => 'decimal:2',
+        'maximum_price' => 'decimal:2',
+        'requires_downpayment' => 'boolean',
+        'permit_expiry_date' => 'date',
+        'resubmission_count' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         // Removed: 'service_coverage_area' => 'array',
@@ -168,10 +178,14 @@ class StudiosModel extends Model
             'facebook_url' => 'nullable|url|max:255',
             'instagram_url' => 'nullable|url|max:255',
             'website_url' => 'nullable|url|max:255',
+            'linkedin_url' => 'nullable|url|max:255',
             'service_categories' => 'required|array|min:1', // Changed: Multiple categories allowed
             'service_categories.*' => 'exists:tbl_categories,id',
             'starting_price' => 'required|numeric|min:0',
+            'maximum_price' => 'nullable|numeric|gte:starting_price',
             'downpayment_percentage' => 'nullable|numeric|min:0|max:100',
+            'requires_downpayment' => 'sometimes|boolean',
+            'permit_expiry_date' => 'required|date',
             'operating_days' => 'required|array|min:1',
             'operating_days.*' => 'string|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
             'start_time' => 'required|date_format:H:i',
@@ -182,6 +196,22 @@ class StudiosModel extends Model
             'owner_id_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:3072',
             'owner_profile_photo' => 'required|image|mimes:jpg,jpeg,png|max:3072',
         ];
+    }
+
+    /**
+     * Check whether the business permit has expired.
+     */
+    public function isPermitExpired(): bool
+    {
+        return $this->permit_expiry_date !== null && $this->permit_expiry_date->lt(today());
+    }
+
+    /**
+     * Get the discount rules configured for the studio.
+     */
+    public function discountRules()
+    {
+        return $this->hasMany(DiscountRuleModel::class, 'studio_id');
     }
 
     /**

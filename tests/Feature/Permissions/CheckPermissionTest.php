@@ -113,6 +113,7 @@ class CheckPermissionTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_roles', function (Blueprint $table) {
@@ -121,7 +122,8 @@ class CheckPermissionTest extends TestCase
             $table->string('portal', 50)->default('studio');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_permissions', function (Blueprint $table) {
             $table->id();
@@ -129,7 +131,8 @@ class CheckPermissionTest extends TestCase
             $table->string('portal', 50)->default('studio');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_role_permissions', function (Blueprint $table) {
             $table->id();

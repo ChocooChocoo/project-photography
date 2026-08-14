@@ -28,6 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.studio.limit' => \App\Http\Middleware\CheckStudioRegistrationLimit::class,
             'permission' => \App\Http\Middleware\CheckPermissionMiddleware::class,
             'subscription.access' => \App\Http\Middleware\EnforceStudioSubscriptionAccess::class,
+            'permit.verified' => \App\Http\Middleware\PermitVerificationMiddleware::class,
+            'password.changed' => \App\Http\Middleware\EnsurePasswordChangedMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

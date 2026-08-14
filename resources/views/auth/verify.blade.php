@@ -31,6 +31,14 @@
                         </div>
                     </div>
 
+                    <div class="row mb-3">
+                        <div class="col">
+                            <a href="{{ route('onboarding') }}" class="btn btn-soft-primary w-100">
+                                <i data-lucide="rocket" class="me-2"></i> Start onboarding
+                            </a>
+                        </div>
+                    </div>
+
                     <div class="text-center">
                         <a href="{{ route('login') }}" class="text-primary">
                             <i data-lucide="arrow-left" class="me-1"></i> Back to Login Page

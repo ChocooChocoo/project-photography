@@ -79,7 +79,7 @@ flowchart LR
     phase1 --> phase2 --> phase3 --> phase4 --> phase5 --> phase6
 ```
 
-**Reading this:** The order starts with evidence, defects, and boundaries. Later work depends on the booking and role foundations. Phase 6 now records the approved photographer-recovery and subscription lifecycle outcomes; ordinary cancellation and other policy questions remain separate.
+ **Reading this:** The order starts with evidence, defects, and boundaries. Later work depends on the booking and role foundations. Phase 6 records the approved photographer-recovery and subscription lifecycle outcomes; ordinary cancellation (R-08) shares the refund queue with `cancelled_by='client'` and no recovery flow.
 
 ## 5. The life story of a booking
 
@@ -100,7 +100,7 @@ stateDiagram-v2
     Cancelled --> [*]
 ```
 
-**Reading this:** A booking can fail before confirmation, move through assignment and gallery delivery, or enter the approved photographer-recovery path. Rejection, escalation, or deadline expiry leads to a queued full manual refund; ordinary cancellation remains separate.
+ **Reading this:** A booking can fail before confirmation, move through assignment and gallery delivery, or enter the approved photographer-recovery path. Rejection, escalation, or deadline expiry leads to a queued full manual refund; ordinary client cancellation follows the same queue with no recovery flow.
 
 ## 6. The proposed arrangement
 

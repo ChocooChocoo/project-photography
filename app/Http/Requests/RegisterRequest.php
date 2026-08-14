@@ -27,10 +27,12 @@ class RegisterRequest extends FormRequest
             'firstName' => 'required|string|max:255',
             'middleName' => 'nullable|string|max:255',
             'lastName' => 'required|string|max:255',
+            'suffix' => 'nullable|string|max:20',
             'userEmail' => 'required|email|max:255|unique:tbl_users,email',
             'userMobile' => 'required|string|max:20',
             'userPassword' => 'required|string|min:8',
             'userConfirmPassword' => 'required|same:userPassword',
+            'orgRole' => 'nullable|in:Business Owner,HR Manager,Marketing Manager',
             'municipality' => [
                 'required',
                 'string',

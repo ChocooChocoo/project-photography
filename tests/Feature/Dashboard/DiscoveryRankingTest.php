@@ -143,6 +143,7 @@ class DiscoveryRankingTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_studios', function (Blueprint $table) {
@@ -153,7 +154,8 @@ class DiscoveryRankingTest extends TestCase
             $table->decimal('avg_rating', 3, 2)->default(0);
             $table->unsignedInteger('total_reviews')->default(0);
             $table->decimal('starting_price', 10, 2)->default(0);
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_freelancers', function (Blueprint $table) {
             $table->id();
@@ -168,19 +170,22 @@ class DiscoveryRankingTest extends TestCase
             $table->id();
             $table->string('municipality');
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_categories', function (Blueprint $table) {
             $table->id();
             $table->string('category_name')->unique();
             $table->text('description')->nullable();
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_packages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('studio_id');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('pvt_freelancer_categories', function (Blueprint $table) {
             $table->id();
@@ -200,7 +205,8 @@ class DiscoveryRankingTest extends TestCase
             $table->unsignedInteger('trial_days')->default(0);
             $table->unsignedInteger('priority_level')->default(0);
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_studio_plans', function (Blueprint $table) {
             $table->id();
@@ -216,6 +222,13 @@ class DiscoveryRankingTest extends TestCase
             $table->string('payment_status');
             $table->string('status');
             $table->timestamps();
+        });
+        Schema::create('tbl_client_favorites', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('client_id');
+            $table->foreignId('studio_id');
+            $table->timestamps();
+            $table->unique(['client_id', 'studio_id']);
         });
     }
 }

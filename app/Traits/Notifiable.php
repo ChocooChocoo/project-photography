@@ -173,6 +173,32 @@ trait Notifiable
     }
 
     /**
+     * Create a booking-cancelled-by-client notification.
+     *
+     * @param object $booking
+     * @param object $user
+     * @param string $reason
+     * @return NotificationModel|null
+     */
+    public function notifyBookingCancelledByClient($booking, $user, $reason)
+    {
+        return $this->createNotification(
+            $user->id,
+            'booking_cancelled_by_client',
+            'Booking Cancelled',
+            "Booking #{$booking->booking_reference} has been cancelled by the client. Reason: {$reason}.",
+            [
+                'booking_id' => $booking->id,
+                'booking_reference' => $booking->booking_reference,
+                'reason' => $reason,
+                'route' => route('owner.booking.index', [], false)
+            ],
+            'calendar-x',
+            'danger'
+        );
+    }
+
+    /**
      * Create a booking-expired notification.
      *
      * @param object $booking

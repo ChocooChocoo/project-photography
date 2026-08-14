@@ -238,6 +238,7 @@ class BookingStatusTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_studios', function (Blueprint $table) {
@@ -245,6 +246,7 @@ class BookingStatusTest extends TestCase
             $table->foreignId('user_id');
             $table->string('studio_name');
             $table->string('status');
+            $table->softDeletes();
             $table->timestamps();
         });
         Schema::create('tbl_freelancers', function (Blueprint $table) {

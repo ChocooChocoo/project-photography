@@ -12,6 +12,36 @@
                 </div>
             </div>
 
+            {{-- MY FAVORITES --}}
+            @if($favoriteStudios->isNotEmpty())
+                <div class="card mb-3 border-1 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3"><i class="ti ti-heart-filled text-danger me-1"></i> My Favorites</h5>
+                        <div class="row g-2">
+                            @foreach($favoriteStudios as $favorite)
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="d-flex align-items-center gap-2 border rounded p-2 h-100">
+                                        @php
+                                            $favoriteCover = $favorite->packages->first()?->cover_thumbnail;
+                                        @endphp
+                                        <img src="{{ $favoriteCover
+                                            ? asset('storage/' . $favoriteCover)
+                                            : ($favorite->studio_logo ? asset('storage/' . $favorite->studio_logo) : asset('assets/images/sellers/7.png')) }}"
+                                            alt="{{ $favorite->studio_name }}" class="rounded flex-shrink-0"
+                                            style="width: 60px; height: 60px; object-fit: cover;">
+                                        <div class="flex-grow-1" style="min-width: 0;">
+                                            <h6 class="mb-0 text-truncate" title="{{ $favorite->studio_name }}">{{ $favorite->studio_name }}</h6>
+                                            <small class="text-muted">{{ $favorite->location ? $favorite->location->municipality . ', Cavite' : 'Location not specified' }}</small>
+                                        </div>
+                                        <a class="btn btn-sm btn-soft-primary flex-shrink-0" href="{{ route('client.booking-details', ['type' => 'studio', 'id' => $favorite->id]) }}">Book</a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- FILTER TOGGLE - MOBILE VIEW --}}
             <div class="row mb-2">
                 <div class="col-lg-12">
@@ -160,16 +190,24 @@
                                 <div class="card-body pb-2">
                                     <div class="d-flex align-items-start">
                                         <div class="flex-shrink-0">
-                                            <img src="{{ $studio->studio_logo ? asset('storage/' . $studio->studio_logo) : asset('assets/images/sellers/7.png') }}" 
-                                                class="rounded" alt="{{ $studio->studio_name }}" 
+                                            @php
+                                                $studioCover = $studio->packages->first()?->cover_thumbnail;
+                                            @endphp
+                                            <img src="{{ $studioCover
+                                                ? asset('storage/' . $studioCover)
+                                                : ($studio->studio_logo ? asset('storage/' . $studio->studio_logo) : asset('assets/images/sellers/7.png')) }}"
+                                                class="rounded" alt="{{ $studio->studio_name }}"
                                                 style="width: 100px; height: 100px; object-fit: cover;">
-                                        </div>                                            
+                                        </div>
                                         <div class="flex-grow-1 ms-3" style="min-width: 0;">
                                             <div class="d-flex align-items-center gap-2">
                                                 <h4 class="card-title mb-1 text-truncate" title="{{ $studio->studio_name }}">{{ $studio->studio_name }}</h4>
                                                 @if($featuredStudioIds->contains($studio->id))
                                                     <span class="badge bg-warning text-dark flex-shrink-0" title="Featured studios are verified premium members">Featured</span>
                                                 @endif
+                                                <button type="button" class="btn btn-sm favorite-toggle-btn p-0 ms-2 flex-shrink-0" data-studio-id="{{ $studio->id }}" title="Add to favorites">
+                                                    <i class="ti {{ $favoriteStudioIds->contains($studio->id) ? 'ti-heart-filled text-danger' : 'ti-heart' }} fs-5"></i>
+                                                </button>
                                             </div>
                                             <p class="text-muted mb-1">Studio</p>
                                             <div class="mb-2">
@@ -316,6 +354,9 @@
                 }
             });
 
+            // Studio IDs already favorited by this client
+            const favoritedStudioIds = @json($favoriteStudioIds->all());
+
             // Filter variables
             let activeFilters = {
                 type: [],
@@ -339,6 +380,12 @@
                 $('#no-results').hide();
 
                 $.each(results, function(index, photographer) {
+                    const isFavorite = photographer.type === 'studio' && favoritedStudioIds.indexOf(photographer.id) > -1;
+                    const favoriteButton = photographer.type === 'studio'
+                        ? `<button type="button" class="btn btn-sm favorite-toggle-btn p-0 ms-2 flex-shrink-0" data-studio-id="${photographer.id}" title="Add to favorites">
+                            <i class="ti ${isFavorite ? 'ti-heart-filled text-danger' : 'ti-heart'} fs-5"></i>
+                        </button>`
+                        : '';
                     const cardHtml = `
                         <div class="col-xxl-4 col-lg-4 col-sm-6 col-12 mb-3">
                             <div class="card h-100 border-1 shadow-sm photographer-card" data-type="${photographer.type}" data-id="${photographer.id}" data-location-id="${photographer.location_id || ''}" data-rating="${photographer.rating}">
@@ -350,7 +397,10 @@
                                                 style="width: 100px; height: 100px; object-fit: cover;">
                                         </div>                                            
                                         <div class="flex-grow-1 ms-3">
-                                            <h4 class="card-title mb-1">${photographer.name}</h4>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <h4 class="card-title mb-1 text-truncate">${photographer.name}</h4>
+                                                ${favoriteButton}
+                                            </div>
                                             <p class="text-muted mb-1">${photographer.type_label}</p>
                                             <div class="mb-2">
                                                 <span class="text-muted small">
@@ -675,6 +725,58 @@
                     }
                 `)
                 .appendTo('head');
+
+            // Toggle studio favorites (works for server-rendered and AJAX-rendered cards)
+            $(document).on('click', '.favorite-toggle-btn', function(e) {
+                e.preventDefault();
+
+                const btn = $(this);
+                const studioId = btn.data('studio-id');
+
+                $.ajax({
+                    url: '{{ route("client.favorites.toggle") }}',
+                    type: 'POST',
+                    data: {
+                        studio_id: studioId,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            const icon = btn.find('i');
+                            if (response.favorited) {
+                                icon.removeClass('ti-heart').addClass('ti-heart-filled text-danger');
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Added to Favorites',
+                                    toast: true,
+                                    position: 'top-end',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                            } else {
+                                icon.removeClass('ti-heart-filled text-danger').addClass('ti-heart');
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: 'Removed from Favorites',
+                                    toast: true,
+                                    position: 'top-end',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                            }
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to update favorite.',
+                            confirmButtonColor: '#3475db'
+                        });
+                    }
+                });
+            });
         });
     </script>
 @endsection

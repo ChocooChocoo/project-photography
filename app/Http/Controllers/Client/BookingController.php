@@ -68,10 +68,21 @@ class BookingController extends Controller
             $downpaymentPercentage = $provider->downpayment_percentage ?? 30;
             
             // ========== STUDIO DEPOSIT INFO ==========
-            $depositPolicy = 'required'; // Studios always require downpayment
-            $depositType = 'percentage';
-            $depositAmount = $downpaymentPercentage;
-            $depositDisplay = $downpaymentPercentage . '% downpayment required';
+            if ($provider->requires_downpayment !== false) {
+                $depositPolicy = 'required';
+                $depositType = 'percentage';
+                $depositAmount = $downpaymentPercentage;
+                $depositDisplay = $downpaymentPercentage . '% downpayment required';
+            } else {
+                $depositPolicy = 'not_required';
+                $depositType = null;
+                $depositAmount = 0;
+                $downpaymentPercentage = 0;
+                $depositDisplay = 'No deposit required (full payment)';
+            }
+
+            // Active discount rules offered by this studio
+            $discounts = $provider->discountRules()->active()->get();
         } else {
             $provider = ProfileModel::with(['user', 'categories', 'schedule'])
                 ->whereHas('user', function($query) {
@@ -113,6 +124,9 @@ class BookingController extends Controller
                 $depositDisplay = 'No deposit required (full payment)';
             }
             // ========== End of Freelancer Deposit Logic ==========
+
+            // No discount rules apply to freelancer bookings
+            $discounts = collect();
         }
 
         // Get all active municipalities for dropdown
@@ -150,7 +164,8 @@ class BookingController extends Controller
             'depositType',
             'depositAmount',
             'depositDisplay',
-            'clientBudgets' // ADD THIS
+            'clientBudgets', // ADD THIS
+            'discounts' // ADD THIS
         ));
     }
 
@@ -461,13 +476,23 @@ class BookingController extends Controller
             
             // ========== FIX: Implement deposit logic based on provider type ==========
             if ($request->type === 'studio') {
-                // Studio logic (unchanged)
+                // Studio logic: percentage deposit unless downpayments are disabled
                 $studio = StudiosModel::subscriptionAccessible()->findOrFail($request->provider_id);
                 $downpaymentPercentage = $studio->downpayment_percentage ?? 30;
-                $paymentType = 'downpayment';
-                $downPayment = ($totalAmount * $downpaymentPercentage) / 100;
-                $remainingBalance = $totalAmount - $downPayment;
-                $depositPolicy = $downpaymentPercentage . '%';
+
+                if ($studio->requires_downpayment !== false) {
+                    $paymentType = 'downpayment';
+                    $downPayment = ($totalAmount * $downpaymentPercentage) / 100;
+                    $remainingBalance = $totalAmount - $downPayment;
+                    $depositPolicy = $downpaymentPercentage . '%';
+                } else {
+                    $paymentType = 'full_payment';
+                    $downPayment = $totalAmount;
+                    $remainingBalance = 0;
+                    $downpaymentPercentage = 100;
+                    $depositPolicy = '100% (Full payment)';
+                }
+
                 $paymentStatus = 'pending';
                 $bookingStatus = 'pending';
                 

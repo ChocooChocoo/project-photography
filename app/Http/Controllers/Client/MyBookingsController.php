@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Client\CancelBookingRequest;
 use App\Models\BookingCancellationRecoveryModel;
 use App\Models\BookingModel;
 use App\Models\Freelancer\FreelanceOnlineGalleryModel;
@@ -18,6 +19,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MyBookingsController extends Controller
 {
@@ -256,15 +258,22 @@ class MyBookingsController extends Controller
     /**
      * Cancel booking
      */
-    public function cancelBooking($id)
+    public function cancelBooking(CancelBookingRequest $request, $id)
     {
         try {
             $userId = Auth::id();
 
             $booking = BookingModel::where('client_id', $userId)
                 ->where('id', $id)
-                ->where('status', 'pending')
+                ->with('assignedPhotographers.photographer')
                 ->firstOrFail();
+
+            if (! in_array($booking->status, [BookingModel::STATUS_PENDING, BookingModel::STATUS_CONFIRMED], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This booking can no longer be cancelled.',
+                ], 409);
+            }
 
             $eventDate = Carbon::parse($booking->event_date);
             $now = Carbon::now();
@@ -276,15 +285,46 @@ class MyBookingsController extends Controller
                 ]);
             }
 
-            $booking->update([
-                'status' => 'cancelled',
-                'payment_status' => 'cancelled',
-                'cancelled_by' => 'client',
-            ]);
+            $reason = $request->cancellation_reason;
 
-            PaymentModel::where('booking_id', $id)
-                ->where('status', 'pending')
-                ->update(['status' => 'cancelled']);
+            $hasSucceededPayments = PaymentModel::where('booking_id', $id)
+                ->where('status', 'succeeded')
+                ->exists();
+
+            DB::transaction(function () use ($booking, $reason, $hasSucceededPayments) {
+                $update = [
+                    'status' => BookingModel::STATUS_CANCELLED,
+                    'cancelled_by' => 'client',
+                    'cancellation_reason' => $reason,
+                ];
+
+                if ($hasSucceededPayments) {
+                    $update['payment_status'] = BookingModel::PAYMENT_REFUND_PENDING;
+
+                    BookingCancellationRecoveryModel::create([
+                        'booking_id' => $booking->id,
+                        'studio_id' => $booking->booking_type === 'studio' ? $booking->provider_id : null,
+                        'status' => BookingCancellationRecoveryService::STATUS_REFUND_PENDING,
+                        'outcome_reason' => $reason,
+                    ]);
+                } else {
+                    PaymentModel::where('booking_id', $booking->id)
+                        ->where('status', 'pending')
+                        ->update(['status' => 'cancelled']);
+                }
+
+                $booking->update($update);
+
+                BookingAssignedPhotographerModel::where('booking_id', $booking->id)
+                    ->whereIn('status', ['assigned', 'confirmed', 'on_site', 'in_progress'])
+                    ->update([
+                        'status' => 'cancelled',
+                        'cancelled_at' => now(),
+                        'cancellation_reason' => $reason,
+                    ]);
+            });
+
+            $this->notifyProviderAndPhotographers($booking, $reason);
 
             return response()->json([
                 'success' => true,
@@ -295,6 +335,36 @@ class MyBookingsController extends Controller
                 'success' => false,
                 'message' => 'Error cancelling booking: '.$e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Notify the owner and assigned photographers that the client cancelled.
+     */
+    private function notifyProviderAndPhotographers(BookingModel $booking, string $reason): void
+    {
+        $recipients = [];
+
+        if ($booking->booking_type === 'studio') {
+            $studio = StudiosModel::find($booking->provider_id);
+            if ($studio && $studio->user) {
+                $recipients[] = $studio->user;
+            }
+        } else {
+            $freelancer = UserModel::find($booking->provider_id);
+            if ($freelancer) {
+                $recipients[] = $freelancer;
+            }
+        }
+
+        foreach ($booking->assignedPhotographers as $assignment) {
+            if ($assignment->photographer) {
+                $recipients[] = $assignment->photographer;
+            }
+        }
+
+        foreach ($recipients as $recipient) {
+            $this->notifyBookingCancelledByClient($booking, $recipient, $reason);
         }
     }
 

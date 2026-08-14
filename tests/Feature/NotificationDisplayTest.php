@@ -194,6 +194,7 @@ class NotificationDisplayTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_notifications', function (Blueprint $table) {

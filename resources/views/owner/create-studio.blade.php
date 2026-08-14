@@ -236,7 +236,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-12 col-md-4 mb-3">
+                                    <div class="col-12 col-md-3 mb-3">
                                         <label class="form-label">Facebook URL <span class="text-muted">(Optional)</span></label>
                                         <input type="url" class="form-control" placeholder="https://facebook.com/yourpage" name="facebook_url">
                                         <div class="invalid-feedback">
@@ -244,7 +244,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-12 col-md-4 mb-3">
+                                    <div class="col-12 col-md-3 mb-3">
                                         <label class="form-label">Instagram URL <span class="text-muted">(Optional)</span></label>
                                         <input type="url" class="form-control" placeholder="https://instagram.com/yourprofile" name="instagram_url">
                                         <div class="invalid-feedback">
@@ -252,7 +252,15 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-12 col-md-4 mb-3">
+                                    <div class="col-12 col-md-3 mb-3">
+                                        <label class="form-label">LinkedIn URL <span class="text-muted">(Optional)</span></label>
+                                        <input type="url" class="form-control" placeholder="https://linkedin.com/company/yourstudio" name="linkedin_url">
+                                        <div class="invalid-feedback">
+                                            Please enter a valid LinkedIn URL.
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-3 mb-3">
                                         <label class="form-label">Website URL <span class="text-muted">(Optional)</span></label>
                                         <input type="url" class="form-control" placeholder="https://yourwebsite.com" name="website_url">
                                         <div class="invalid-feedback">
@@ -437,6 +445,27 @@
                                     </div>
                                 </div>
 
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <label class="form-label">Maximum Price (PHP) <span class="text-muted">(Optional)</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" placeholder="Enter your maximum price" name="maximum_price" step="0.01" min="0">
+                                            <div class="invalid-feedback">
+                                                Please enter a valid maximum price at or above the starting price.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <div class="form-check form-switch mt-4">
+                                            <input type="hidden" name="requires_downpayment" value="0">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="requiresDownpayment" name="requires_downpayment" value="1" checked>
+                                            <label class="form-check-label" for="requiresDownpayment">Require Downpayment for Bookings</label>
+                                        </div>
+                                        <small class="form-text text-muted">Turn off to let clients pay in full without a downpayment.</small>
+                                    </div>
+                                </div>
+
                                 <div class="row">
                                     <h4 class="card-title text-primary mb-3">Operating Schedule</h4>
                                     <div class="col-12 mb-3">
@@ -521,6 +550,16 @@
                                             <div class="form-text">Upload a clear copy of your business registration document</div>
                                             <div class="invalid-feedback">
                                                 Please upload your business permit or registration document.
+                                            </div>
+                                        </div>
+
+                                        <!-- Permit Expiry Date -->
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Permit Expiry Date</label>
+                                            <input type="date" class="form-control" name="permit_expiry_date" required>
+                                            <div class="form-text">The date your business permit expires. You must re-verify before this date to keep your studio active.</div>
+                                            <div class="invalid-feedback">
+                                                Please enter your permit expiry date.
                                             </div>
                                         </div>
                                         

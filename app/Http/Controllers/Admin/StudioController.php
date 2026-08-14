@@ -15,6 +15,15 @@ class StudioController extends Controller
 {
     use Notifiable;
 
+    public const REJECTION_REASONS = [
+        'Incomplete documents',
+        'Expired permit',
+        'Unclear permit photo',
+        'Name mismatch',
+        'Invalid business type',
+        'Other',
+    ];
+
     public function index()
     {
         $studios = StudiosModel::with(['user', 'location', 'category', 'categories', 'schedules'])
@@ -71,14 +80,21 @@ class StudioController extends Controller
     {
         try {
             $request->validate([
-                'rejection_note' => 'required|string|min:10|max:500',
+                'rejection_note' => 'required|string|in:' . implode(',', self::REJECTION_REASONS),
+                'rejection_note_additional' => 'nullable|string|max:500',
             ]);
             
             $studio = StudiosModel::with('user')->findOrFail($id);
+
+            $note = $request->rejection_note;
+
+            if ($request->filled('rejection_note_additional')) {
+                $note .= ' - ' . $request->rejection_note_additional;
+            }
             
             $studio->update([
                 'status' => 'rejected',
-                'rejection_note' => $request->rejection_note,
+                'rejection_note' => $note,
             ]);
             
             // Send rejection email to studio owner

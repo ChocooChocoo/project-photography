@@ -7,6 +7,7 @@ use App\Models\StudioOwner\PermissionModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class PermissionController extends Controller
 {
@@ -110,7 +111,7 @@ class PermissionController extends Controller
         $request->validate([
             'resource' => 'required|string|max:100',
             'action' => 'required|string|max:50',
-            'permission_string' => 'required|string|max:150|unique:tbl_permissions,permission_string',
+            'permission_string' => ['required', 'string', 'max:150', Rule::unique('tbl_permissions', 'permission_string')->whereNull('deleted_at')],
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
         ], [
@@ -203,7 +204,7 @@ class PermissionController extends Controller
         $request->validate([
             'resource' => 'required|string|max:100',
             'action' => 'required|string|max:50',
-            'permission_string' => 'required|string|max:150|unique:tbl_permissions,permission_string,' . $id,
+            'permission_string' => ['required', 'string', 'max:150', Rule::unique('tbl_permissions', 'permission_string')->whereNull('deleted_at')->ignore($id)],
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
         ], [

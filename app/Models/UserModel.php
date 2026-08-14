@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
@@ -11,7 +12,7 @@ use App\Models\Admin\LocationModel;
 
 class UserModel extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected static array $permissionCache = [];
 
@@ -26,6 +27,8 @@ class UserModel extends Authenticatable
         'first_name',
         'middle_name',
         'last_name',
+        'suffix',
+        'org_role',
         'email',
         'mobile_number',
         'password',
@@ -35,7 +38,9 @@ class UserModel extends Authenticatable
         'status',
         'email_verified',
         'verification_token',
-        'token_expiry'
+        'token_expiry',
+        'must_change_password',
+        'onboarding_completed_at'
     ];
 
     protected $hidden = [
@@ -46,6 +51,9 @@ class UserModel extends Authenticatable
 
     protected $casts = [
         'email_verified' => 'boolean',
+        'must_change_password' => 'boolean',
+        'onboarding_completed_at' => 'datetime',
+        'deleted_at' => 'datetime',
         'token_expiry' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'

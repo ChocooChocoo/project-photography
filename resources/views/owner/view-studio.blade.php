@@ -93,6 +93,9 @@
                                                 @default
                                                     <span class="badge badge-soft-secondary fs-8 px-1 w-100">{{ strtoupper($studio->status) }}</span>
                                             @endswitch
+                                            @if(($studio->status === 'verified' || $studio->status === 'active') && $studio->isPermitExpired())
+                                                <span class="badge badge-soft-danger fs-8 px-1 w-100 mt-1">PERMIT EXPIRED</span>
+                                            @endif
                                         </td>
                                         <td>{{ $studio->created_at->format('F d, Y') }}</td>
                                         <td>
@@ -406,6 +409,27 @@
                                     </div>
                                     @endif
                                     
+                                    {{-- LinkedIn URL --}}
+                                    @if($studio->linkedin_url)
+                                    <div class="col-12 col-md-4">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="bg-light-primary rounded-circle p-2">
+                                                    <i data-lucide="linkedin" class="fs-20 text-primary"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <label class="text-muted small mb-1">LinkedIn</label>
+                                                <p class="mb-0 fw-medium">
+                                                    <a href="{{ $studio->linkedin_url }}" target="_blank" class="text-primary text-decoration-none">
+                                                        View LinkedIn Profile
+                                                    </a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+
                                     {{-- Website URL --}}
                                     @if($studio->website_url)
                                     <div class="col-12 col-md-4">
@@ -562,7 +586,39 @@
                                         </div>
                                         @endif
 
-                                        @if($studio->downpayment_percentage)
+                                        {{-- Maximum Price --}}
+                                        @if($studio->maximum_price)
+                                        <div class="col-12 col-md-6 mb-3">
+                                            <div class="d-flex align-items-start">
+                                                <div class="flex-shrink-0">
+                                                    <div class="bg-light-primary rounded-circle p-2">
+                                                        <i data-lucide="tag" class="fs-20 text-primary"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <label class="text-muted small mb-1">Maximum Price</label>
+                                                    <p class="mb-0 fw-medium">PHP {{ number_format($studio->maximum_price, 2) }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endif
+
+                                        @if($studio->requires_downpayment === false)
+                                        <div class="col-12 col-md-6 mb-3">
+                                            <div class="d-flex align-items-start">
+                                                <div class="flex-shrink-0">
+                                                    <div class="bg-light-primary rounded-circle p-2">
+                                                        <i data-lucide="percent" class="fs-20 text-primary"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <label class="text-muted small mb-1">Downpayment Requirement</label>
+                                                    <p class="mb-0 fw-medium">No downpayment required</p>
+                                                    <small class="text-muted">Clients can pay in full without a downpayment</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @elseif($studio->downpayment_percentage)
                                         <div class="col-12 col-md-6 mb-3">
                                             <div class="d-flex align-items-start">
                                                 <div class="flex-shrink-0">
@@ -718,6 +774,30 @@
                                                     <a href="{{ asset($studio->business_permit) }}" target="_blank" class="text-primary text-decoration-none">
                                                         View Business Permit
                                                     </a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    {{-- Permit Expiry Date --}}
+                                    @if($studio->permit_expiry_date)
+                                    <div class="col-12">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="bg-light-primary rounded-circle p-2">
+                                                    <i data-lucide="calendar-clock" class="fs-20 text-primary"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <label class="text-muted small mb-1">Permit Expiry Date</label>
+                                                <p class="mb-0 fw-medium">
+                                                    {{ $studio->permit_expiry_date->format('F d, Y') }}
+                                                    @if($studio->isPermitExpired())
+                                                        <span class="badge badge-soft-danger fs-8">EXPIRED</span>
+                                                    @else
+                                                        <span class="badge badge-soft-success fs-8">VALID</span>
+                                                    @endif
                                                 </p>
                                             </div>
                                         </div>

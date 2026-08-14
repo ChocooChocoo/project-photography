@@ -3,9 +3,11 @@
 namespace App\Models\Admin;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LocationModel extends Model
 {
+    use SoftDeletes;
     /**
      * The table associated with the model.
      *

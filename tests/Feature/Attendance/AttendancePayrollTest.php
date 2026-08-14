@@ -322,6 +322,7 @@ class AttendancePayrollTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_studios', function (Blueprint $table) {
@@ -332,7 +333,8 @@ class AttendancePayrollTest extends TestCase
             $table->decimal('attendance_latitude', 10, 7)->nullable();
             $table->decimal('attendance_longitude', 10, 7)->nullable();
             $table->unsignedInteger('attendance_radius_meters')->default(100);
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_roles', function (Blueprint $table) {
             $table->id();
@@ -340,7 +342,8 @@ class AttendancePayrollTest extends TestCase
             $table->string('portal', 50)->default('studio');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_permissions', function (Blueprint $table) {
             $table->id();
@@ -348,7 +351,8 @@ class AttendancePayrollTest extends TestCase
             $table->string('portal', 50)->default('studio');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_role_permissions', function (Blueprint $table) {
             $table->id();
@@ -374,7 +378,8 @@ class AttendancePayrollTest extends TestCase
             $table->time('end_time')->default('18:00:00');
             $table->boolean('is_active')->default(true);
             $table->text('notes')->nullable();
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_employee_attendance', function (Blueprint $table) {
             $table->id();

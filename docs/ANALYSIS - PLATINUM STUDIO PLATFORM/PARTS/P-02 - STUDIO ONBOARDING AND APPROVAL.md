@@ -92,4 +92,4 @@ The current source exposes validation, authorization, state checks, provider fal
 
 | # | Unclear point | Why it matters |
 |---|---|---|
-| Q-04 | Which core onboarding and permit requirements are approved for the final build order? | The part cannot safely promise this behavior until the decision is answered. |
+| Q-04 | ~~Which core onboarding and permit requirements are approved for the final build order?~~ **Resolved — the product owner approved the six-group dependency order on 14 August 2026; onboarding, permit expiry capture, verification gating, and re-verification were built under R-09.** | The part's onboarding and permit behavior is now built and covered by tests. |

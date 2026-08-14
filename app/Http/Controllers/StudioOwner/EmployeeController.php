@@ -168,6 +168,7 @@ class EmployeeController extends Controller
                 'first_name' => $request->first_name,
                 'middle_name' => $request->middle_name,
                 'last_name' => $request->last_name,
+                'suffix' => $request->suffix,
                 'user_type' => ucfirst($userType),
                 'email' => $request->email,
                 'mobile_number' => $request->mobile_number,
@@ -176,6 +177,7 @@ class EmployeeController extends Controller
                 'email_verified' => 1,
                 'verification_token' => null,
                 'token_expiry' => null,
+                'must_change_password' => true,
             ];
 
             // Add profile photo if uploaded
@@ -606,7 +608,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Delete employee.
+     * Delete employee (soft delete — record remains archived).
      */
     public function destroy($id)
     {
@@ -630,18 +632,7 @@ class EmployeeController extends Controller
                 })
                 ->firstOrFail();
             
-            // Delete user roles association first
-            DB::table('tbl_user_roles')->where('user_id', $employee->id)->delete();
-            
-            // Delete employee schedule
-            EmployeeScheduleModel::where('user_id', $employee->id)->delete();
-            
-            // Delete photographer record if exists
-            if ($employee->role === 'studio-photographer') {
-                StudioPhotographersModel::where('photographer_id', $employee->id)->delete();
-            }
-            
-            // Delete user
+            // Soft delete the employee record (archived via deleted_at)
             $employee->delete();
             
             DB::commit();

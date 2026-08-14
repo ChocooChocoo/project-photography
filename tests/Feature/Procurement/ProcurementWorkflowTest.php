@@ -264,6 +264,7 @@ class ProcurementWorkflowTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_studios', function (Blueprint $table) {
@@ -271,7 +272,8 @@ class ProcurementWorkflowTest extends TestCase
             $table->foreignId('user_id');
             $table->string('studio_name');
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_roles', function (Blueprint $table) {
             $table->id();
@@ -279,7 +281,8 @@ class ProcurementWorkflowTest extends TestCase
             $table->string('portal', 50)->default('studio');
             $table->text('description')->nullable();
             $table->string('status', 20)->default('active');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_permissions', function (Blueprint $table) {
             $table->id();
@@ -288,7 +291,8 @@ class ProcurementWorkflowTest extends TestCase
             $table->string('permission_string', 150)->nullable();
             $table->text('description')->nullable();
             $table->string('status', 20)->default('active');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_role_permissions', function (Blueprint $table) {
             $table->id();

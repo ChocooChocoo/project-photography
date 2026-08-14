@@ -258,7 +258,11 @@ class StudioController extends Controller
                 'studio_description'     => $validatedData['studio_description'],
                 'studio_logo'            => $studioLogoPath,
                 'starting_price'         => $validatedData['starting_price'],
+                'maximum_price'          => $validatedData['maximum_price'] ?? null,
+                'linkedin_url'           => $validatedData['linkedin_url'] ?? null,
                 'downpayment_percentage' => $validatedData['downpayment_percentage'] ?? 30.00,
+                'requires_downpayment'   => $validatedData['requires_downpayment'] ?? true,
+                'permit_expiry_date'     => $validatedData['permit_expiry_date'],
                 'operating_days'         => json_encode($validatedData['operating_days']),
                 'start_time'             => $validatedData['start_time'],
                 'end_time'               => $validatedData['end_time'],
@@ -375,7 +379,7 @@ class StudioController extends Controller
             $this->deleteFile($studio->business_permit);
             $this->deleteFile($studio->owner_id_document);
             
-            // Delete studio
+            // Soft delete studio
             $studio->delete();
             
             return response()->json([
@@ -389,6 +393,63 @@ class StudioController extends Controller
                 'success' => false,
                 'message' => 'Failed to cancel studio: ' . $e->getMessage(),
                 'alert_color' => '#DC3545' // Red for error
+            ], 500);
+        }
+    }
+
+    /**
+     * Show the permit verification notice with a resubmit form.
+     */
+    public function permitNotice()
+    {
+        $user = Auth::user();
+        $studios = StudiosModel::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('owner.permit-notice', compact('studios'));
+    }
+
+    /**
+     * Resubmit the business permit for re-verification.
+     */
+    public function resubmitPermit(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            $studio = StudiosModel::where('id', $id)->where('user_id', $user->id)->firstOrFail();
+
+            $request->validate([
+                'business_permit' => 'required|file|mimes:pdf,jpg,jpeg,png|max:3072',
+            ]);
+
+            // Replace the old permit file
+            $this->deleteFile($studio->business_permit);
+            $permitPath = $this->uploadFile($request->file('business_permit'), 'studio_documents');
+
+            $studio->update([
+                'business_permit' => $permitPath,
+                'status' => 'pending',
+                'resubmission_count' => ($studio->resubmission_count ?? 0) + 1,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Business permit resubmitted successfully. It will be reviewed by admin.',
+                'redirect' => route('owner.studio.permit.notice')
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to resubmit permit: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -465,6 +526,7 @@ class StudioController extends Controller
             $rules['studio_logo'] = 'nullable|image|mimes:jpg,jpeg,png|max:3072';
             $rules['business_permit'] = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:3072';
             $rules['owner_id_document'] = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:3072';
+            $rules['permit_expiry_date'] = 'nullable|date';
             
             $validatedData = $request->validate($rules);
 
@@ -537,13 +599,20 @@ class StudioController extends Controller
                 'year_established' => $validatedData['year_established'],
                 'studio_description' => $validatedData['studio_description'],
                 'starting_price' => $validatedData['starting_price'],
+                'maximum_price' => $validatedData['maximum_price'] ?? null,
+                'linkedin_url' => $validatedData['linkedin_url'] ?? null,
                 'downpayment_percentage' => $validatedData['downpayment_percentage'] ?? 30.00,
+                'requires_downpayment' => $validatedData['requires_downpayment'] ?? true,
                 'operating_days' => json_encode($validatedData['operating_days']),
                 'start_time' => $validatedData['start_time'],
                 'end_time' => $validatedData['end_time'],
                 'max_clients_per_day' => $validatedData['max_clients_per_day'],
                 'advance_booking_days' => $validatedData['advance_booking_days'],
             ]);
+
+            if (array_key_exists('permit_expiry_date', $validatedData) && $validatedData['permit_expiry_date'] !== null) {
+                $studio->permit_expiry_date = $validatedData['permit_expiry_date'];
+            }
 
             $studio->save();
 

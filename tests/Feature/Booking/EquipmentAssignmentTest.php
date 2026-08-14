@@ -223,6 +223,7 @@ class EquipmentAssignmentTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_studios', function (Blueprint $table) {
@@ -230,7 +231,8 @@ class EquipmentAssignmentTest extends TestCase
             $table->foreignId('user_id');
             $table->string('studio_name');
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_bookings', function (Blueprint $table) {
             $table->id();
@@ -310,7 +312,8 @@ class EquipmentAssignmentTest extends TestCase
             $table->boolean('online_gallery')->default(false);
             $table->integer('photographer_count')->default(0);
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_studio_online_gallery', function (Blueprint $table) {
             $table->id();

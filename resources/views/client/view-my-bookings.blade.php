@@ -163,7 +163,7 @@
                                                         @endif
                                                     @endif
                                                     
-                                                    @if($booking->status === 'pending')
+                                                    @if(in_array($booking->status, ['pending', 'confirmed']))
                                                     <button class="btn btn-sm cancel-booking-btn" 
                                                             data-booking-id="{{ $booking->id }}"
                                                             data-booking-reference="{{ $booking->booking_reference }}"
@@ -303,6 +303,7 @@
                 Swal.fire({
                     title: 'Cancel Booking',
                     html: `<p>Are you sure you want to cancel booking <strong>${bookingRef}</strong>?</p>
+                          <textarea id="cancellationReason" class="swal2-textarea" placeholder="Reason (required)"></textarea>
                           <p class="text-danger small">Note: Bookings can only be cancelled at least 24 hours before the event date.</p>`,
                     icon: 'warning',
                     showCancelButton: true,
@@ -312,7 +313,7 @@
                     cancelButtonText: 'No, keep it'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        cancelBooking(bookingId);
+                        cancelBooking(bookingId, $('#cancellationReason').val());
                     }
                 });
             });
@@ -1333,13 +1334,11 @@
             }
 
             // Cancel booking function
-            function cancelBooking(bookingId) {
+            function cancelBooking(bookingId, reason = '') {
                 $.ajax({
                     url: '{{ route("client.booking.cancel", ":id") }}'.replace(':id', bookingId),
                     type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}'
-                    },
+                    data: { cancellation_reason: reason, _token: '{{ csrf_token() }}' },
                     beforeSend: function() {
                         Swal.fire({
                             title: 'Cancelling...',
@@ -1372,10 +1371,11 @@
                         }
                     },
                     error: function(xhr) {
+                        const message = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'An error occurred while cancelling the booking. Please try again.';
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'An error occurred while cancelling the booking. Please try again.',
+                            text: message,
                             confirmButtonColor: '#3475db'
                         });
                     }

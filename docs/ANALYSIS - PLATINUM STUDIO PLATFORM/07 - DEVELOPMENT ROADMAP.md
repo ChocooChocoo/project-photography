@@ -97,6 +97,6 @@ The items are drawn from [02 - DOCUMENT FINDINGS](02%20-%20DOCUMENT%20FINDINGS.m
 
 | What | Why it is not an active roadmap commitment |
 |---|---|
-| Unapproved refund, credit, substitution, or reschedule rules | The material presents options, not a final decision. |
-| A guessed implementation order for every core-studio requirement | `tasks/10.md` requires documentation and refinement, not an implicit build authorization. |
+| Unapproved refund, credit, substitution, or reschedule rules beyond the approved full-refund path | Partial refunds, credits, and reschedule rules still present options without a final decision; the approved paths are photographer-cancellation recovery (Phase 6) and the full manual refund shared with ordinary cancellation (R-08). |
+| ~~A guessed implementation order for every core-studio requirement~~ **Approved on 14 August 2026 under Q-04** | ~~`tasks/10.md` requires documentation and refinement, not an implicit build authorization.~~ The six-group dependency order was approved and built as R-09; the requirement set is no longer only a planning source. |
 | Deleting the old documentation trees | Removal is a separate approval gate after coverage and hash checks. |

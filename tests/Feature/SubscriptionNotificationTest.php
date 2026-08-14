@@ -156,6 +156,7 @@ class SubscriptionNotificationTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_studios', function (Blueprint $table) {
@@ -163,7 +164,8 @@ class SubscriptionNotificationTest extends TestCase
             $table->foreignId('user_id');
             $table->string('studio_name');
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_subscription_plans', function (Blueprint $table) {
             $table->id();
@@ -176,7 +178,8 @@ class SubscriptionNotificationTest extends TestCase
             $table->decimal('commission_rate', 5, 2);
             $table->unsignedInteger('trial_days')->default(0);
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_studio_plans', function (Blueprint $table) {
             $table->id();

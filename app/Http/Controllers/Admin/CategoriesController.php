@@ -8,6 +8,7 @@ use App\Models\Admin\CategoriesModel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class CategoriesController extends Controller
 {
@@ -60,7 +61,7 @@ class CategoriesController extends Controller
     public function update(Request $request, string $id): JsonResponse
     {
         $request->validate([
-            'category_name' => 'required|string|max:255|unique:tbl_categories,category_name,' . $id,
+            'category_name' => ['required', 'string', 'max:255', Rule::unique('tbl_categories', 'category_name')->whereNull('deleted_at')->ignore($id)],
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
         ]);

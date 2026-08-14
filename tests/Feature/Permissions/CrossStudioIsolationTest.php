@@ -236,6 +236,7 @@ class CrossStudioIsolationTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_roles', function (Blueprint $table) {
@@ -244,7 +245,8 @@ class CrossStudioIsolationTest extends TestCase
             $table->string('portal', 50)->default('studio');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_permissions', function (Blueprint $table) {
             $table->id();
@@ -252,7 +254,8 @@ class CrossStudioIsolationTest extends TestCase
             $table->string('portal', 50)->default('studio');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_role_permissions', function (Blueprint $table) {
             $table->id();
@@ -274,7 +277,8 @@ class CrossStudioIsolationTest extends TestCase
             $table->foreignId('user_id');
             $table->string('studio_name');
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_studio_employee_schedule', function (Blueprint $table) {
             $table->id();
@@ -285,7 +289,8 @@ class CrossStudioIsolationTest extends TestCase
             $table->time('end_time')->nullable();
             $table->boolean('is_active')->default(true);
             $table->text('notes')->nullable();
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_studio_photographers', function (Blueprint $table) {
             $table->id();
@@ -296,11 +301,13 @@ class CrossStudioIsolationTest extends TestCase
             $table->unsignedBigInteger('specialization')->nullable();
             $table->unsignedInteger('years_of_experience')->nullable();
             $table->string('status')->nullable();
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_employee_payroll', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_generated_payrolls', function (Blueprint $table) {
             $table->id();
@@ -338,7 +345,8 @@ class CrossStudioIsolationTest extends TestCase
             $table->id();
             $table->string('category_name');
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_bookings', function (Blueprint $table) {
             $table->id();
@@ -404,7 +412,8 @@ class CrossStudioIsolationTest extends TestCase
             $table->decimal('package_price', 10, 2)->default(0);
             $table->boolean('online_gallery')->nullable();
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_payments', function (Blueprint $table) {
             $table->id();

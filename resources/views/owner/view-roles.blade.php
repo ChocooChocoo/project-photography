@@ -523,7 +523,18 @@
                             const permissionsByGroup = groupPermissions(response.data);
                             
                             for (const [group, permissions] of Object.entries(permissionsByGroup)) {
-                                container.append(`<div class="col-12"><h6 class="mt-2 mb-2 text-primary">${group}</h6><div class="row g-2 mb-3"></div></div>`);
+                                container.append(`
+                                    <div class="col-12">
+                                        <div class="d-flex align-items-center justify-content-between mt-2 mb-2">
+                                            <h6 class="mb-0 text-primary">${group}</h6>
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input permission-select-all" type="checkbox" data-group="${escapeAttr(group)}" id="select_all_${escapeAttr(group)}">
+                                                <label class="form-check-label small text-muted" for="select_all_${escapeAttr(group)}">Select All</label>
+                                            </div>
+                                        </div>
+                                        <div class="row g-2 mb-3"></div>
+                                    </div>
+                                `);
                                 const rowContainer = container.children().last().find('.row');
                                 
                                 permissions.forEach(permission => {
@@ -531,7 +542,7 @@
                                     rowContainer.append(`
                                         <div class="col-md-4">
                                             <div class="form-check">
-                                                <input class="form-check-input permission-checkbox" type="checkbox" name="permissions[]" value="${permission.id}" id="perm_${permission.id}" ${isChecked ? 'checked' : ''}>
+                                                <input class="form-check-input permission-checkbox" type="checkbox" name="permissions[]" value="${permission.id}" data-group="${escapeAttr(group)}" id="perm_${permission.id}" ${isChecked ? 'checked' : ''}>
                                                 <label class="form-check-label" for="perm_${permission.id}">
                                                     ${permission.display_label || permission.permission_string || permission.name}
                                                     <small class="text-muted d-block">${permission.portal_display || ''}</small>
@@ -564,6 +575,23 @@
 
                 return groupedPermissions;
             }
+
+            function escapeAttr(value) {
+                return String(value).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+
+            // ==================== SELECT ALL PER CATEGORY GROUP ====================
+            $(document).on('change', '.permission-select-all', function() {
+                const group = $(this).data('group');
+                $('.permission-checkbox[data-group="' + group + '"]').prop('checked', $(this).is(':checked'));
+            });
+
+            $(document).on('change', '.permission-checkbox', function() {
+                const group = $(this).data('group');
+                const $checkboxes = $('.permission-checkbox[data-group="' + group + '"]');
+                const $selectAll = $('.permission-select-all[data-group="' + group + '"]');
+                $selectAll.prop('checked', $checkboxes.length > 0 && $checkboxes.filter(':checked').length === $checkboxes.length);
+            });
 
             
             $('#saveRoleBtn').on('click', function() {

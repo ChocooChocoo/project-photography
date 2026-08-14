@@ -25,6 +25,7 @@ class CategorySeeder extends Seeder
             ['Food Photography', 'Makes dishes and drinks look appealing for menus, ads, or social media.'],
             ['Real Estate Photography', 'Highlights properties and interiors for listings and marketing.'],
             ['Pet Photography', 'Focuses on animals in domestic or stylized environments.'],
+            ['Others', 'General photography services that do not fit into the listed categories.'],
         ];
 
         foreach ($categories as [$name, $description]) {

@@ -325,9 +325,20 @@
                                             
                                             <input class="btn-check" type="radio" name="payment_type" id="payment_type_full" value="full_payment">
                                             <label class="btn btn-outline-primary" for="payment_type_full">
-                                                <i class="ti ti-discount-2 me-1"></i> Full Payment (5% OFF)
+                                                <i class="ti ti-discount-2 me-1"></i> Full Payment
                                             </label>
                                         </div>
+
+                                        @if(!empty($discounts) && $discounts->count() > 0)
+                                            <div class="mt-2">
+                                                <i class="ti ti-tag me-1 text-success"></i>
+                                                <span class="fw-medium">Discounts available:</span>
+                                                @foreach($discounts as $discount)
+                                                    <span class="badge badge-soft-success ms-1">{{ $discount->name }} ({{ rtrim(rtrim(number_format($discount->percentage, 2), '0'), '.') }}% OFF)</span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
                                     @else
                                         {{-- Freelancer dynamic display based on deposit policy --}}
                                         @if($depositPolicy === 'required')

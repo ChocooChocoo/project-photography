@@ -93,13 +93,15 @@ class AuthController extends Controller
             $tokenExpiry = now()->addHours(24);
 
             // Create user
-            $user = UserModel::create([
+            $user = UserModel::forceCreate([
                 'uuid' => Str::uuid(),
                 'role' => $role,
                 'user_type' => $userType,
                 'first_name' => $request->firstName,
                 'middle_name' => $request->middleName,
                 'last_name' => $request->lastName,
+                'suffix' => $request->suffix,
+                'org_role' => $request->orgRole,
                 'email' => $request->userEmail,
                 'mobile_number' => $request->userMobile,
                 'password' => Hash::make($request->userPassword),

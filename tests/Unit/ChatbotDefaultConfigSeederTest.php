@@ -171,6 +171,7 @@ class ChatbotDefaultConfigSeederTest extends TestCase
             $table->boolean('email_verified')->default(false);
             $table->string('verification_token')->nullable();
             $table->timestamp('token_expiry')->nullable();
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
 
@@ -192,7 +193,8 @@ class ChatbotDefaultConfigSeederTest extends TestCase
             $table->string('owner_id_document')->nullable();
             $table->string('status')->default('active');
             $table->text('rejection_note')->nullable();
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
 
         Schema::create('tbl_chatbot_configs', function (Blueprint $table) {

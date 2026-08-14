@@ -55,6 +55,12 @@
                                                         <span class="fw-medium">Studio Owner:</span>
                                                         <span class="text-muted">{{ $studio->user->first_name }} {{ $studio->user->last_name }}</span>
                                                     </p>
+                                                    @if(($studio->resubmission_count ?? 0) > 0)
+                                                    <p class="mb-0 fs-xxs">
+                                                        <span class="fw-medium">Resubmissions:</span>
+                                                        <span class="text-muted">{{ $studio->resubmission_count }}</span>
+                                                    </p>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </td>
@@ -610,6 +616,37 @@
                                         </div>
                                     </div>
                                     @endif
+                                    {{-- Permit Expiry Date --}}
+                                    @if($studio->permit_expiry_date)
+                                    <div class="col-12 col-md-6">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="bg-light-primary rounded-circle p-2">
+                                                    <i data-lucide="calendar-x" class="fs-20 text-primary"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <label class="text-muted small mb-1">Permit Expiry Date</label>
+                                                <p class="mb-0 fw-medium">{{ \Carbon\Carbon::parse($studio->permit_expiry_date)->format('F d, Y') }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    {{-- Resubmission Count --}}
+                                    <div class="col-12 col-md-6">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="bg-light-primary rounded-circle p-2">
+                                                    <i data-lucide="rotate-ccw" class="fs-20 text-primary"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <label class="text-muted small mb-1">Resubmission Count</label>
+                                                <p class="mb-0 fw-medium">{{ $studio->resubmission_count ?? 0 }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

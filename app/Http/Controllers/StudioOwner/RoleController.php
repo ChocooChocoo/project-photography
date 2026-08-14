@@ -4,9 +4,14 @@ namespace App\Http\Controllers\StudioOwner;
 
 use App\Http\Controllers\Controller;
 use App\Models\StudioOwner\RoleModel;
+use App\Models\StudioOwner\StudioMemberModel;
+use App\Models\StudioOwner\StudioPhotographersModel;
+use App\Models\StudioOwner\StudiosModel;
+use App\Models\UserModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class RoleController extends Controller
 {
@@ -16,6 +21,110 @@ class RoleController extends Controller
     public function index()
     {
         return view('owner.view-roles');
+    }
+
+    /**
+     * Display the studio user roles assignment page.
+     */
+    public function userRoles(Request $request)
+    {
+        $studios = StudiosModel::where('user_id', auth()->id())->get();
+        $studioId = $request->filled('studio_id')
+            ? (int) $request->input('studio_id')
+            : ($studios->first()->id ?? null);
+
+        $users = collect();
+
+        if ($studioId !== null) {
+            $users = UserModel::whereIn('id', $this->getStudioUserIds($studioId))
+                ->with(['roles' => function ($query) use ($studioId) {
+                    $query->wherePivot('studio_id', $studioId);
+                }])
+                ->orderBy('first_name')
+                ->get();
+        }
+
+        $roles = RoleModel::whereIn('portal', ['owner', 'studio-hr', 'studio-finance', 'studio-photographer'])
+            ->orderBy('name')
+            ->get();
+
+        return view('owner.user-roles', compact('users', 'roles', 'studios', 'studioId'));
+    }
+
+    /**
+     * Sync the studio roles assigned to the selected users.
+     */
+    public function updateUserRoles(Request $request)
+    {
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'required|integer',
+            'role_ids' => 'nullable|array',
+            'role_ids.*' => 'required|integer',
+        ]);
+
+        $studioIds = StudiosModel::where('user_id', auth()->id())->pluck('id');
+        $studioId = $request->filled('studio_id')
+            ? (int) $request->input('studio_id')
+            : ($studioIds->first() ?? null);
+
+        if ($studioId === null || !$studioIds->contains($studioId)) {
+            return redirect()->back()->withErrors(['studio_id' => 'The selected studio is invalid.']);
+        }
+
+        $roleIds = RoleModel::whereIn('id', $request->input('role_ids', []))
+            ->whereIn('portal', ['owner', 'studio-hr', 'studio-finance', 'studio-photographer'])
+            ->pluck('id');
+
+        if ($roleIds->count() !== count($request->input('role_ids', []))) {
+            return redirect()->back()->withErrors(['role_ids' => 'One or more selected roles are not available for this studio.']);
+        }
+
+        $roleNames = RoleModel::whereIn('id', $roleIds)->pluck('name')->all();
+
+        $userIds = collect($request->input('user_ids'))
+            ->map(fn ($id) => (int) $id)
+            ->intersect($this->getStudioUserIds($studioId))
+            ->values();
+
+        if ($userIds->isEmpty()) {
+            return redirect()->back()->withErrors(['user_ids' => 'No valid studio users were selected.']);
+        }
+
+        foreach (UserModel::whereIn('id', $userIds)->get() as $user) {
+            $user->syncRoles($roleNames, $studioId);
+        }
+
+        return redirect()->back()->with('success', 'User roles updated successfully.');
+    }
+
+    /**
+     * Collect the ids of users that belong to the given studio
+     * (employees, studio photographers and approved studio members).
+     */
+    private function getStudioUserIds(int $studioId)
+    {
+        $employeeIds = UserModel::whereIn('role', ['studio-hr', 'studio-finance', 'studio-photographer'])
+            ->whereExists(function ($query) use ($studioId) {
+                $query->select(DB::raw(1))
+                    ->from('tbl_user_roles')
+                    ->whereColumn('tbl_user_roles.user_id', 'tbl_users.id')
+                    ->where('tbl_user_roles.studio_id', $studioId);
+            })
+            ->pluck('id');
+
+        $photographerIds = StudioPhotographersModel::where('studio_id', $studioId)
+            ->pluck('photographer_id');
+
+        $memberIds = StudioMemberModel::where('studio_id', $studioId)
+            ->approved()
+            ->pluck('freelancer_id');
+
+        return $employeeIds
+            ->merge($photographerIds)
+            ->merge($memberIds)
+            ->unique()
+            ->values();
     }
 
     /**
@@ -71,7 +180,7 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:100|unique:tbl_roles,name',
+            'name' => ['required', 'string', 'max:100', Rule::unique('tbl_roles', 'name')->whereNull('deleted_at')],
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
             'is_system' => 'nullable|boolean',
@@ -151,7 +260,7 @@ class RoleController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|string|max:100|unique:tbl_roles,name,' . $id,
+            'name' => ['required', 'string', 'max:100', Rule::unique('tbl_roles', 'name')->whereNull('deleted_at')->ignore($id)],
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
             'is_system' => 'nullable|boolean',
@@ -252,7 +361,6 @@ class RoleController extends Controller
                 ], 422);
             }
             
-            $role->permissions()->detach();
             $role->delete();
 
             DB::commit();

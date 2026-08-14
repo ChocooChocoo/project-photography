@@ -231,6 +231,7 @@ class RecurringBookingTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_studios', function (Blueprint $table) {
@@ -239,7 +240,8 @@ class RecurringBookingTest extends TestCase
             $table->string('studio_name');
             $table->string('status');
             $table->decimal('downpayment_percentage', 5, 2)->nullable();
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_studio_plans', function (Blueprint $table) {
             $table->id();
@@ -261,7 +263,8 @@ class RecurringBookingTest extends TestCase
             $table->id();
             $table->string('category_name');
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_packages', function (Blueprint $table) {
             $table->id();
@@ -278,7 +281,8 @@ class RecurringBookingTest extends TestCase
             $table->boolean('allow_multiple_locations')->default(false);
             $table->integer('max_locations')->default(1);
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_bookings', function (Blueprint $table) {
             $table->id();

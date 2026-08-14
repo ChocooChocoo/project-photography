@@ -133,7 +133,7 @@
                             </div>
                         </div>
                         <div class="row g-3 mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="firstName" class="form-label">First Name</label>
                                     <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter First Name" required>
@@ -142,7 +142,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="middleName" class="form-label">Middle Name</label>
                                     <input type="text" class="form-control" id="middleName" name="middleName" placeholder="Enter Middle Name">
@@ -151,7 +151,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="lastName" class="form-label">Last Name</label>
                                     <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter Last Name" required>
@@ -159,6 +159,28 @@
                                         Please enter a valid last name.
                                     </div>
                                 </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="suffix" class="form-label">Suffix <span class="text-muted">(Optional)</span></label>
+                                    <input type="text" class="form-control" id="suffix" name="suffix" placeholder="e.g. Jr., Sr., III">
+                                    <div class="invalid-feedback">
+                                        Please enter a valid suffix.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3" id="orgRoleGroup" style="display: none;">
+                            <label for="orgRole" class="form-label">Organizational Role</label>
+                            <select class="form-select" id="orgRole" name="orgRole">
+                                <option value="" disabled selected>Select your role in the organization</option>
+                                <option value="Business Owner">Business Owner</option>
+                                <option value="HR Manager">HR Manager</option>
+                                <option value="Marketing Manager">Marketing Manager</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select your organizational role.
                             </div>
                         </div>
 
@@ -571,7 +593,13 @@
             // Real-time user type validation
             $('input[name="userType"]').on('change', function() {
                 $('#userTypeError').hide();
+                $('#orgRoleGroup').toggle($(this).val() === 'owner');
             });
+            
+            // Show organizational role only for studio owners on load
+            if ($('input[name="userType"]:checked').val() === 'owner') {
+                $('#orgRoleGroup').show();
+            }
             
             // Real-time validation for required fields
             $('input[required], select[required]').on('input change', function() {

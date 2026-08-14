@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Admin\LocationModel;
 use App\Http\Requests\Admin\LocationStoreRequest;
+use Illuminate\Validation\Rule;
 
 class LocationController extends Controller
 {
@@ -103,10 +104,10 @@ class LocationController extends Controller
     {
         try {
             $request->validate([
-                'municipality' => 'required|string|max:255|unique:tbl_locations,municipality,' . $id,
+                'municipality' => ['required', 'string', 'max:255', Rule::unique('tbl_locations', 'municipality')->whereNull('deleted_at')->ignore($id)],
                 'barangay' => 'required|array|min:1',
                 'barangay.*' => 'required|string|max:255',
-                'zip_code' => 'required|string|max:10|unique:tbl_locations,zip_code,' . $id,
+                'zip_code' => ['required', 'string', 'max:10', Rule::unique('tbl_locations', 'zip_code')->whereNull('deleted_at')->ignore($id)],
                 'status' => 'required|in:active,inactive',
             ]);
 

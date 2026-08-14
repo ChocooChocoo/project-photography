@@ -133,6 +133,7 @@ class OwnerServicesTest extends TestCase
             $table->string('password');
             $table->string('status');
             $table->boolean('email_verified')->default(false);
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_studios', function (Blueprint $table) {
@@ -140,14 +141,16 @@ class OwnerServicesTest extends TestCase
             $table->foreignId('user_id');
             $table->string('studio_name');
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_categories', function (Blueprint $table) {
             $table->id();
             $table->string('category_name')->unique();
             $table->text('description')->nullable();
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_services', function (Blueprint $table) {
             $table->id();
@@ -155,7 +158,8 @@ class OwnerServicesTest extends TestCase
             $table->foreignId('category_id');
             $table->text('service_name');
             $table->decimal('starting_from', 10, 2)->nullable();
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_roles', function (Blueprint $table) {
             $table->id();
@@ -164,7 +168,8 @@ class OwnerServicesTest extends TestCase
             $table->text('description')->nullable();
             $table->string('status');
             $table->boolean('is_system')->default(false);
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_permissions', function (Blueprint $table) {
             $table->id();
@@ -175,7 +180,8 @@ class OwnerServicesTest extends TestCase
             $table->string('permission_string');
             $table->text('description')->nullable();
             $table->string('status');
-            $table->timestamps();
+            
+            $table->softDeletes();$table->timestamps();
         });
         Schema::create('tbl_user_roles', function (Blueprint $table) {
             $table->id();

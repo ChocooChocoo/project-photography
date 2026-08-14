@@ -2,22 +2,22 @@
 
 [Back to start](00%20-%20START%20HERE.md) · Previous: [07 - DEVELOPMENT ROADMAP](07%20-%20DEVELOPMENT%20ROADMAP.md) · Next: [09 - TASK TRACKER](09%20-%20TASK%20TRACKER.md)
 
-**Last checked:** 12 August 2026
+**Last checked:** 14 August 2026
 
 ## Where everything stands
 
 | Status | How many |
 |---|---:|
-| ✅ Finished | 16 |
+| ✅ Finished | 18 |
 | 🟨 Being worked on | 0 |
 | ⭕ Not started | 0 |
-| ❌ Blocked | 2 |
+| ❌ Blocked | 0 |
 | 🔵 Already there | 2 |
 | ⬜ Dropped | 0 |
 | ❓ Unclear | 0 |
 | **Total** | **20** |
 
-The platform has fourteen finished items, two already present, and four blocked by policy or approval questions.
+The platform has eighteen finished items and two already present; nothing is currently blocked.
 
 ## Phase 1 — Make the foundations dependable
 
@@ -35,13 +35,13 @@ The platform has fourteen finished items, two already present, and four blocked 
 | R-05 | Align booking expiry and status transitions | ✅ Finished | `cancelled_by` accepts `system`, the expiry command records it and notifies freelancers, and the transition matrix and expiry command are covered by tests. |
 | R-06 | Finish assignment lifecycle | ✅ Finished | Owner assignment-status route repaired, deadline warnings scheduled, owner notified on accept/cancel/complete, and cancellation cascades to open assignments; lifecycle covered by tests. |
 | R-07 | Finish gallery and review delivery | ✅ Finished | Draft, upload, publish, portfolio, and review surfaces are exercised by gallery and review lifecycle tests. |
-| R-08 | Add ordinary booking cancellation path | ❌ Blocked | Must be distinguished from photographer cancellation and Q-11. |
+| R-08 | Add ordinary booking cancellation path | ✅ Finished | Client-initiated cancellation of pending and confirmed bookings with at least 24 hours notice, required reason (min 20 chars), `cancelled_by='client'`, assignment cascade, and notifications; paid bookings enter the existing Phase 6 manual refund queue with per-payment provider evidence; the `payment_status='cancelled'` collision is removed. Ordinary cancellation stays distinct from photographer cancellation and Q-11. Covered by 9 focused tests delivered 14 August 2026. |
 
 ## Phase 3 — Make each role’s daily work complete
 
 | # | What gets built | Status | Notes |
 |---|---|---|---|
-| R-09 | Complete approved studio-management requirements | ❌ Blocked | Q-04 has no final build order. |
+| R-09 | Complete approved studio-management requirements | ✅ Finished | Q-04 approved the six-group dependency order on 14 August 2026 and the gaps were built: registration/commercial fields (suffix, org role, max price, down-payment toggle, LinkedIn, Others category, owner discount rules), permit expiry capture with verification gate and re-verification resubmit flow, admin email-OTP login with in-app document review, standardized rejection reasons and resubmission counts, optional Next/Skip onboarding, forced first-login password change, combined user roles with category Select All, soft-delete/archive everywhere instead of hard delete, client favorites, and package-image visibility. Covered by 100+ focused tests delivered 14 August 2026. |
 | R-10 | Complete attendance, leave, overtime, schedules, and payroll | ✅ Finished | Check-in/out with geolocation, leave approval, and payroll generation with finance approval are covered by lifecycle tests. |
 | R-11 | Complete procurement lifecycle | ✅ Finished | The audit timeline action mismatch was repaired and the full request-to-completion state machine is covered by an integration test. |
 | R-12 | Enforce and test scoped role permissions | ✅ Finished | Cross-studio isolation is proven by tests for HR employees, finance payroll, and photographer assignments. |
@@ -71,10 +71,7 @@ The platform has fourteen finished items, two already present, and four blocked 
 
 ## What is blocked
 
-| # | What is stopping it | What would clear it |
-|---|---|---|
-| R-08 | Ordinary cancellation policy is not fully reconciled with historical options. | Approve the final rule and financial outcome. |
-| R-09 | Core studio-management requirements lack one approved order. | Approve scope and sequence under Q-04. |
+Nothing is currently blocked. R-08 was unblocked by the approved ordinary-cancellation rule and financial outcome, and R-09 by the Q-04-approved build order (both 14 August 2026).
 
 ## Status legend
 

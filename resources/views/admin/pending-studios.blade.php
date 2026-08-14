@@ -55,6 +55,12 @@
                                                         <span class="fw-medium">ID:</span>
                                                         <span class="text-muted">{{ $studio->id }}</span>
                                                     </p>
+                                                    @if(($studio->resubmission_count ?? 0) > 0)
+                                                    <p class="mb-0 fs-xxs">
+                                                        <span class="fw-medium">Resubmissions:</span>
+                                                        <span class="text-muted">{{ $studio->resubmission_count }}</span>
+                                                    </p>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </td>
@@ -666,7 +672,7 @@
                                             <div class="flex-grow-1 ms-3">
                                                 <label class="text-muted small mb-1">Business Permit</label>
                                                 <p class="mb-0 fw-medium">
-                                                    <a href="{{ asset('storage/' . $studio->business_permit) }}" target="_blank" class="text-primary text-decoration-none">
+                                                    <a href="javascript:void(0)" class="text-primary text-decoration-none doc-viewer-trigger" data-studio-id="{{ $studio->id }}" data-doc-src="{{ asset('storage/' . $studio->business_permit) }}" data-bs-toggle="modal" data-bs-target="#documentModal{{ $studio->id }}">
                                                         View Business Permit
                                                     </a>
                                                 </p>
@@ -687,7 +693,7 @@
                                             <div class="flex-grow-1 ms-3">
                                                 <label class="text-muted small mb-1">Valid ID (Owner)</label>
                                                 <p class="mb-0 fw-medium">
-                                                    <a href="{{ asset('storage/' . $studio->owner_id_document) }}" target="_blank" class="text-primary text-decoration-none">
+                                                    <a href="javascript:void(0)" class="text-primary text-decoration-none doc-viewer-trigger" data-studio-id="{{ $studio->id }}" data-doc-src="{{ asset('storage/' . $studio->owner_id_document) }}" data-bs-toggle="modal" data-bs-target="#documentModal{{ $studio->id }}">
                                                         View ID Document
                                                     </a>
                                                 </p>
@@ -695,6 +701,38 @@
                                         </div>
                                     </div>
                                     @endif
+
+                                    {{-- Permit Expiry Date --}}
+                                    @if($studio->permit_expiry_date)
+                                    <div class="col-12 col-md-6">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="bg-light-primary rounded-circle p-2">
+                                                    <i data-lucide="calendar-x" class="fs-20 text-primary"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <label class="text-muted small mb-1">Permit Expiry Date</label>
+                                                <p class="mb-0 fw-medium">{{ \Carbon\Carbon::parse($studio->permit_expiry_date)->format('F d, Y') }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    {{-- Resubmission Count --}}
+                                    <div class="col-12 col-md-6">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="bg-light-primary rounded-circle p-2">
+                                                    <i data-lucide="rotate-ccw" class="fs-20 text-primary"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <label class="text-muted small mb-1">Resubmission Count</label>
+                                                <p class="mb-0 fw-medium">{{ $studio->resubmission_count ?? 0 }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 @if($studio->status === 'pending')
@@ -716,6 +754,24 @@
             </div>
         </div>
 
+        {{-- Document Viewer Modal --}}
+        <div class="modal fade" id="documentModal{{ $studio->id }}" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-semibold">Document Viewer - {{ $studio->studio_name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <iframe id="documentFrame{{ $studio->id }}" src="" class="w-100" style="height: 70vh; border: 0;" title="Document Viewer"></iframe>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" id="documentFallback{{ $studio->id }}" target="_blank" rel="noopener" class="btn btn-primary">Open in New Tab</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Rejection Modal --}}
         <div class="modal fade" id="rejectModal{{ $studio->id }}" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -731,8 +787,17 @@
                             
                             <div class="mb-3">
                                 <label class="form-label">Rejection Reason <span class="text-danger">*</span></label>
-                                <textarea class="form-control" name="rejection_note" rows="4" placeholder="Please explain why this studio registration is being rejected..." required minlength="10"></textarea>
-                                <div class="form-text">Minimum 10 characters required.</div>
+                                <select class="form-select" name="rejection_note" required>
+                                    <option value="" selected disabled>Select a reason</option>
+                                    @foreach(\App\Http\Controllers\Admin\StudioController::REJECTION_REASONS as $reason)
+                                        <option value="{{ $reason }}">{{ $reason }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Additional Note <span class="text-muted">(optional)</span></label>
+                                <textarea class="form-control" name="rejection_note_additional" rows="3" placeholder="Optional details to help the owner fix the submission..."></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -750,6 +815,15 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            // Document viewer
+            $(document).on('click', '.doc-viewer-trigger', function() {
+                const studioId = $(this).data('studio-id');
+                const src = $(this).data('doc-src');
+
+                $('#documentFrame' + studioId).attr('src', src);
+                $('#documentFallback' + studioId).attr('href', src);
+            });
+
             // Approve studio
             $(document).on('click', '.approve-studio', function(e) {
                 e.preventDefault();

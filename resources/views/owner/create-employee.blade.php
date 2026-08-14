@@ -56,6 +56,10 @@
                                                     Please enter a valid last name.
                                                 </div>
                                             </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Suffix</label>
+                                                <input type="text" class="form-control" name="suffix" placeholder="e.g., Jr., Sr., III">
+                                            </div>
                                         </div>
                                     </div>
 

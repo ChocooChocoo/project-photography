@@ -92,4 +92,4 @@ The current source exposes validation, authorization, state checks, provider fal
 
 | # | Unclear point | Why it matters |
 |---|---|---|
-| Q-07 and Q-11 | Which provider events and paid-cancellation financial outcome are authoritative? | Phase 6 resolves Q-11 for photographer cancellation: one queued full manual refund requires unique provider evidence per succeeded payment before local reversal. Q-07 remains open for broader provider policy. |
+| Q-07 and Q-11 | Which provider events and paid-cancellation financial outcome are authoritative? | Q-11 is resolved for both cancellation paths: photographer cancellation (Phase 6) and ordinary client cancellation (R-08, 14 August 2026) each queue one full manual refund requiring unique provider evidence per succeeded payment before local reversal; ordinary cancellation records `cancelled_by='client'` with no recovery flow. Q-07 remains open for broader provider policy. |

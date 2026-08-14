@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\ClientFavoriteModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\Freelancer\ProfileModel;
 use App\Models\Admin\CategoriesModel;
@@ -55,7 +56,23 @@ class DashboardController extends Controller
             ->orderBy('municipality', 'asc')
             ->get();
 
-        return view('client.dashboard', compact('studios', 'freelancers', 'categories', 'locations', 'featuredStudioIds'));
+        // Fetch the client's favorited studios (with cover images where available)
+        $favoriteStudioIds = collect();
+        $favoriteStudios = collect();
+
+        if (auth()->check() && auth()->user()->isClient()) {
+            $favoriteStudioIds = ClientFavoriteModel::where('client_id', auth()->id())
+                ->pluck('studio_id');
+
+            $favoriteStudios = StudiosModel::whereIn('id', $favoriteStudioIds)
+                ->whereIn('status', ['verified', 'active'])
+                ->subscriptionAccessible()
+                ->with(['location', 'packages'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
+        return view('client.dashboard', compact('studios', 'freelancers', 'categories', 'locations', 'featuredStudioIds', 'favoriteStudioIds', 'favoriteStudios'));
     }
 
     /**

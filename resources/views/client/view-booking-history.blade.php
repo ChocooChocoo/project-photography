@@ -70,11 +70,22 @@
                                                     $paymentBadge = [
                                                         'paid' => 'badge-soft-success',
                                                         'partially_paid' => 'badge-soft-primary',
+                                                        'refund_pending' => 'badge-soft-warning',
                                                         'refunded' => 'badge-soft-secondary',
                                                         'cancelled' => 'badge-soft-danger'
                                                     ][$booking->payment_status] ?? 'badge-soft-primary';
                                                 @endphp
                                                 <span class="badge {{ $paymentBadge }} fs-8 px-2 w-100 text-uppercase">{{ strtoupper(str_replace('_', ' ', $booking->payment_status)) }}</span>
+                                                @if($booking->status === 'cancelled')
+                                                    <small class="text-danger d-block mt-1 text-center">
+                                                        Cancelled by {{ ucfirst($booking->cancelled_by ?? 'system') }}
+                                                    </small>
+                                                    @if($booking->cancellation_reason)
+                                                        <small class="text-muted d-block text-center" title="{{ $booking->cancellation_reason }}">
+                                                            {{ \Illuminate\Support\Str::limit($booking->cancellation_reason, 48) }}
+                                                        </small>
+                                                    @endif
+                                                @endif
                                                 @php
                                                     $totalPaid = $booking->payments->where('status', 'succeeded')->sum('amount');
                                                     $refunded = $booking->payments->where('status', 'refunded')->sum('amount');

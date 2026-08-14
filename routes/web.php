@@ -27,8 +27,26 @@ Route::prefix('auth')->group(function () {
 
 });
 
+// Admin login (dedicated interface with email OTP) =======================================================================================================================
+Route::prefix('admin')->middleware('guest')->group(function () {
+
+    Route::get('/login', [\App\Http\Controllers\Admin\AdminAuthController::class, 'showLogin'])->name('admin.login');
+    Route::post('/login', [\App\Http\Controllers\Admin\AdminAuthController::class, 'login'])->name('admin.login.authenticate')->middleware('throttle:5,1');
+    Route::get('/otp', [\App\Http\Controllers\Admin\AdminAuthController::class, 'showOtp'])->name('admin.otp');
+    Route::post('/otp', [\App\Http\Controllers\Admin\AdminAuthController::class, 'verifyOtp'])->name('admin.otp.verify')->middleware('throttle:5,1');
+
+});
+
 // Authenticated Routes ================================================================================================================================================
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'password.changed'])->group(function () {
+
+    // Onboarding (optional cross-portal, Next/Skip)
+    Route::get('/onboarding', [\App\Http\Controllers\OnboardingController::class, 'show'])->name('onboarding');
+    Route::post('/onboarding/complete', [\App\Http\Controllers\OnboardingController::class, 'complete'])->name('onboarding.complete');
+
+    // First-login password change (exempt from the gate)
+    Route::get('/password/change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'show'])->name('password.change')->withoutMiddleware('password.changed');
+    Route::post('/password/change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'store'])->name('password.change.store')->withoutMiddleware('password.changed');
 
     // Notifications Routes ================================================================================================================================================
     Route::prefix('notifications')->group(function () {
@@ -131,30 +149,40 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Studio Owner Routes =================================================================================================================================================
-    Route::prefix('owner')->middleware([OwnerMiddleware::class, 'subscription.access:manage'])->group(function () {
+    Route::prefix('owner')->middleware([OwnerMiddleware::class, 'subscription.access:manage', 'permit.verified'])->group(function () {
 
         // Profile
-        Route::get('/profile', [\App\Http\Controllers\GeneralProfileController::class, 'owner'])->name('owner.profile');
+        Route::get('/profile', [\App\Http\Controllers\GeneralProfileController::class, 'owner'])->name('owner.profile')->withoutMiddleware('permit.verified');
 
         // Dashboard
-        Route::get('/dashboard', [\App\Http\Controllers\StudioOwner\DashboardController::class, 'index'])->name('owner.dashboard');
-        Route::get('/dashboard/filter', [\App\Http\Controllers\StudioOwner\DashboardController::class, 'filter'])->name('owner.dashboard.filter');
-        Route::get('/dashboard/export', [\App\Http\Controllers\StudioOwner\DashboardController::class, 'export'])->name('owner.dashboard.export');
+        Route::get('/dashboard', [\App\Http\Controllers\StudioOwner\DashboardController::class, 'index'])->name('owner.dashboard')->withoutMiddleware('permit.verified');
+        Route::get('/dashboard/filter', [\App\Http\Controllers\StudioOwner\DashboardController::class, 'filter'])->name('owner.dashboard.filter')->withoutMiddleware('permit.verified');
+        Route::get('/dashboard/export', [\App\Http\Controllers\StudioOwner\DashboardController::class, 'export'])->name('owner.dashboard.export')->withoutMiddleware('permit.verified');
 
         // Manage Studio - Limit
         Route::middleware(['check.studio.limit'])->group(function () {
 
-            Route::get('/create/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'create'])->name('owner.studio.create');
-            Route::post('/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'store'])->name('owner.studio.store');
+            Route::get('/create/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'create'])->name('owner.studio.create')->withoutMiddleware('permit.verified');
+            Route::post('/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'store'])->name('owner.studio.store')->withoutMiddleware('permit.verified');
 
         });
 
         // Manage Studio
-        Route::get('/view/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'index'])->middleware('permission:owner.studios.manage')->name('owner.studio.index');
-        Route::get('/edit/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'edit'])->middleware('permission:owner.studios.manage')->name('owner.studio.edit');
-        Route::put('/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'update'])->middleware('permission:owner.studios.manage')->name('owner.studio.update');
-        Route::get('/studio/barangays/{municipality}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'getBarangays'])->middleware('permission:owner.studios.manage')->name('owner.studio.get-barangays');
-        Route::delete('/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'destroy'])->middleware('permission:owner.studios.manage')->name('owner.studio.destroy');
+        Route::get('/view/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'index'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.index');
+        Route::get('/edit/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'edit'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.edit');
+        Route::put('/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'update'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.update');
+        Route::get('/studio/barangays/{municipality}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'getBarangays'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.get-barangays');
+        Route::delete('/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'destroy'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.destroy');
+
+        // Permit verification (exempt from the gate so owners can resolve permit issues)
+        Route::post('/studio/{id}/permit/resubmit', [\App\Http\Controllers\StudioOwner\StudioController::class, 'resubmitPermit'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.permit.resubmit');
+        Route::get('/studio/permit-notice', [\App\Http\Controllers\StudioOwner\StudioController::class, 'permitNotice'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.permit.notice');
+
+        // Manage Discount Rules
+        Route::get('/discounts', [\App\Http\Controllers\StudioOwner\DiscountRuleController::class, 'index'])->middleware('permission:owner.studios.manage')->name('owner.discounts.index');
+        Route::post('/discounts', [\App\Http\Controllers\StudioOwner\DiscountRuleController::class, 'store'])->middleware('permission:owner.studios.manage')->name('owner.discounts.store');
+        Route::put('/discounts/{rule}', [\App\Http\Controllers\StudioOwner\DiscountRuleController::class, 'update'])->middleware('permission:owner.studios.manage')->name('owner.discounts.update');
+        Route::delete('/discounts/{rule}', [\App\Http\Controllers\StudioOwner\DiscountRuleController::class, 'destroy'])->middleware('permission:owner.studios.manage')->name('owner.discounts.destroy');
 
         // Manage Bookings
         Route::get('/view/bookings', [\App\Http\Controllers\StudioOwner\BookingController::class, 'index'])->middleware('permission:owner.bookings.manage')->name('owner.booking.index');
@@ -275,6 +303,10 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/roles/{id}/permissions', [\App\Http\Controllers\StudioOwner\RoleController::class, 'updatePermissions'])->middleware('permission:owner.roles.manage')->name('owner.role.update-permissions');
         Route::delete('/roles/{id}', [\App\Http\Controllers\StudioOwner\RoleController::class, 'destroy'])->middleware('permission:owner.roles.manage')->name('owner.role.destroy');
         Route::post('/roles/{id}/toggle-status', [\App\Http\Controllers\StudioOwner\RoleController::class, 'toggleStatus'])->middleware('permission:owner.roles.manage')->name('owner.role.toggle-status');
+
+        // Manage User Roles (combined roles per studio user)
+        Route::get('/user-roles', [\App\Http\Controllers\StudioOwner\RoleController::class, 'userRoles'])->middleware('permission:owner.roles.manage')->name('owner.user-roles.index');
+        Route::post('/user-roles', [\App\Http\Controllers\StudioOwner\RoleController::class, 'updateUserRoles'])->middleware('permission:owner.roles.manage')->name('owner.user-roles.update');
 
         // Manage Permissions
         Route::get('/view/permissions', [\App\Http\Controllers\StudioOwner\PermissionController::class, 'index'])->middleware('permission:owner.permissions.manage')->name('owner.permission.index');
@@ -599,6 +631,9 @@ Route::middleware(['auth'])->group(function () {
         // Dashboard
         Route::get('/dashboard', [\App\Http\Controllers\Client\DashboardController::class, 'index'])->name('client.dashboard');
         Route::post('/dashboard/filter', [\App\Http\Controllers\Client\DashboardController::class, 'filter'])->name('client.dashboard.filter');
+
+        // Favorites
+        Route::post('/favorites/toggle', [\App\Http\Controllers\Client\FavoritesController::class, 'toggle'])->name('client.favorites.toggle');
 
         // Booking Details
         Route::get('/booking-details/{type}/{id}', [\App\Http\Controllers\Client\BookingDetailsController::class, 'index'])->name('client.booking-details');
