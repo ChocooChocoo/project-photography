@@ -651,6 +651,11 @@
                                                                 <i data-lucide="check-circle" class="me-1"></i>Complete Booking
                                                             </button>
                                                         ` : ''}
+                                                        ${booking.status !== 'cancelled' && booking.status !== 'completed' ? `
+                                                            <button class="btn btn-sm btn-warning update-status-btn" data-booking-id="${booking.id}">
+                                                                <i data-lucide="settings" class="me-1"></i>Update Status
+                                                            </button>
+                                                        ` : ''}
                                                     </div>
                                                     ${booking.status === 'in_progress' && !data.can_owner_complete ? `
                                                         <small class="text-muted d-block mt-1">

@@ -891,24 +891,41 @@ class BookingController extends Controller
                 $booking->cancellation_reason = $request->cancellation_reason;
                 $booking->cancelled_by = 'studio';
 
+                $hasSucceededPayments = $booking->payments->where('status', 'succeeded')->isNotEmpty();
+
                 // Flag for manual refund review if the client had already paid.
                 // No auto-refund yet — that's a later automation phase.
-                if ($booking->payments->where('status', 'succeeded')->isNotEmpty()) {
+                if ($hasSucceededPayments) {
                     $booking->payment_status = 'refund_pending';
                 }
-            }
 
-            $booking->save();
+                DB::transaction(function () use ($booking, $hasSucceededPayments) {
+                    $booking->save();
 
-            // Cascade: cancel open assignments (completed/cancelled ones are left untouched)
-            if ($newStatus === BookingModel::STATUS_CANCELLED) {
-                BookingAssignedPhotographerModel::where('booking_id', $booking->id)
-                    ->whereIn('status', ['assigned', 'confirmed', 'on_site', 'in_progress'])
-                    ->update([
-                        'status' => 'cancelled',
-                        'cancelled_at' => now(),
-                        'cancellation_reason' => $booking->cancellation_reason ?: 'Booking cancelled by the studio.',
-                    ]);
+                    if ($hasSucceededPayments) {
+                        // Queue the manual refund in the admin queue so the client can
+                        // actually be refunded after a studio-initiated cancellation.
+                        BookingCancellationRecoveryModel::updateOrCreate(
+                            ['booking_id' => $booking->id],
+                            [
+                                'studio_id' => $booking->provider_id,
+                                'status' => BookingCancellationRecoveryService::STATUS_REFUND_PENDING,
+                                'outcome_reason' => $booking->cancellation_reason,
+                            ]
+                        );
+                    }
+
+                    // Cascade: cancel open assignments (completed/cancelled ones are left untouched)
+                    BookingAssignedPhotographerModel::where('booking_id', $booking->id)
+                        ->whereIn('status', ['assigned', 'confirmed', 'on_site', 'in_progress'])
+                        ->update([
+                            'status' => 'cancelled',
+                            'cancelled_at' => now(),
+                            'cancellation_reason' => $booking->cancellation_reason ?: 'Booking cancelled by the studio.',
+                        ]);
+                });
+            } else {
+                $booking->save();
             }
 
             if ($newStatus === BookingModel::STATUS_CANCELLED && $booking->client) {
