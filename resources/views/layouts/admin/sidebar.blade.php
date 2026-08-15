@@ -50,6 +50,17 @@
                 </a>
             </li>
 
+            {{-- Booking Refunds --}}
+            @php
+                $isBookingRefundsActive = Route::is('admin.booking-refunds.view');
+            @endphp
+            <li class="side-nav-item {{ $isBookingRefundsActive ? 'active' : '' }}">
+                <a href="{{ route('admin.booking-refunds.view') }}" class="side-nav-link {{ $isBookingRefundsActive ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-receipt-2"></i></span>
+                    <span class="menu-text" data-lang="booking-refunds">Booking Refunds</span>
+                </a>
+            </li>
+
             {{-- Manage Users --}}
             @php
                 $manageUsersRoutes  = Route::is('admin.user.index');

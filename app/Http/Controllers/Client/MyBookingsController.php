@@ -70,6 +70,32 @@ class MyBookingsController extends Controller
     }
 
     /**
+     * Display the client's refunds (cancelled paid bookings awaiting or completed refunds).
+     */
+    public function refunds(Request $request)
+    {
+        $userId = Auth::id();
+
+        $recoveries = BookingCancellationRecoveryModel::whereHas('booking', function ($query) use ($userId) {
+            $query->where('client_id', $userId);
+        })
+            ->whereIn('status', [
+                BookingCancellationRecoveryService::STATUS_REFUND_PENDING,
+                BookingCancellationRecoveryService::STATUS_REFUNDED,
+            ])
+            ->with(['booking' => function ($query) {
+                $query->with([
+                    'category:id,category_name',
+                    'payments:id,booking_id,amount,status,refunded_at',
+                ]);
+            }])
+            ->orderBy('updated_at', 'desc')
+            ->paginate(10);
+
+        return view('client.view-refunds', compact('recoveries'));
+    }
+
+    /**
      * Hydrate provider details for paginated bookings in batches.
      */
     private function hydrateBookingProviders(LengthAwarePaginator $bookings, bool $includePaymentDisplay = false): void

@@ -641,6 +641,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         // Client Bookings
         Route::get('/view/my-bookings', [\App\Http\Controllers\Client\MyBookingsController::class, 'index'])->name('client.my-bookings.index');
         Route::get('/view/bookings-history', [\App\Http\Controllers\Client\MyBookingsController::class, 'history'])->name('client.my-bookings.history');
+        Route::get('/view/refunds', [\App\Http\Controllers\Client\MyBookingsController::class, 'refunds'])->name('client.refunds.index');
         Route::get('/bookings/{id}/details', [\App\Http\Controllers\Client\MyBookingsController::class, 'getBookingDetails'])->name('client.booking.details');
         Route::post('/bookings/{id}/cancel', [\App\Http\Controllers\Client\MyBookingsController::class, 'cancelBooking'])->name('client.booking.cancel');
         Route::post('/cancellation-recoveries/{recoveryId}/response', [\App\Http\Controllers\Client\MyBookingsController::class, 'respondToPhotographerReplacement'])->name('client.booking.recovery.response');

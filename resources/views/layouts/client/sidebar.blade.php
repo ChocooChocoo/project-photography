@@ -43,15 +43,16 @@
             @php
                 $myBookingsRoutes = Route::is('client.my-bookings.index');
                 $bookingHistoryRoutes = Route::is('client.my-bookings.history');
+                $refundsRoutes = Route::is('client.refunds.index');
             @endphp
             
-            <li class="side-nav-item {{ $myBookingsRoutes || $bookingHistoryRoutes ? 'active' : '' }}">
-                <a data-bs-toggle="collapse" href="#sidebarMyBookings" aria-expanded="{{ $myBookingsRoutes || $bookingHistoryRoutes ? 'true' : 'false' }}" aria-controls="sidebarMyBookings" class="side-nav-link {{ $myBookingsRoutes || $bookingHistoryRoutes ? 'active' : '' }}">
+            <li class="side-nav-item {{ $myBookingsRoutes || $bookingHistoryRoutes || $refundsRoutes ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarMyBookings" aria-expanded="{{ $myBookingsRoutes || $bookingHistoryRoutes || $refundsRoutes ? 'true' : 'false' }}" aria-controls="sidebarMyBookings" class="side-nav-link {{ $myBookingsRoutes || $bookingHistoryRoutes || $refundsRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-notebook"></i></span>
                     <span class="menu-text" data-lang="manage-bookings">My Bookings</span>
                     <span class="menu-arrow"></span>
                 </a>
-                <div class="collapse {{ $myBookingsRoutes || $bookingHistoryRoutes ? 'show' : '' }}" id="sidebarMyBookings">
+                <div class="collapse {{ $myBookingsRoutes || $bookingHistoryRoutes || $refundsRoutes ? 'show' : '' }}" id="sidebarMyBookings">
                     <ul class="sub-menu">
                         <li class="side-nav-item">
                             <a href="{{ route('client.my-bookings.index') }}" class="side-nav-link {{ $myBookingsRoutes ? 'active' : '' }}">
@@ -61,6 +62,11 @@
                         <li class="side-nav-item">
                             <a href="{{ route('client.my-bookings.history') }}" class="side-nav-link {{ $bookingHistoryRoutes ? 'active' : '' }}">
                                 <span class="menu-text" data-lang="booking-history">Booking History</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('client.refunds.index') }}" class="side-nav-link {{ $refundsRoutes ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="refunds">Refunds</span>
                             </a>
                         </li>
                     </ul>
