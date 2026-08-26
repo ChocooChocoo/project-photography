@@ -63,6 +63,11 @@ class StripeSubscriptionWebhookController extends Controller
             return true;
         }
 
+        // A late checkout event must not resurrect a row cancelled locally.
+        if ($subscription->status === 'cancelled') {
+            return true;
+        }
+
         $subscription->update([
             'status' => 'active',
             'payment_status' => 'paid',
@@ -196,11 +201,18 @@ class StripeSubscriptionWebhookController extends Controller
             'scheduled_cancellation_at' => data_get($stripeSubscription, 'cancel_at_period_end') && $periodEnd
                 ? $periodEnd : null,
         ];
+        if ($subscription->status === 'cancelled') {
+            // Do not let an out-of-order active event erase the local cancellation.
+            unset($updates['scheduled_cancellation_at']);
+        }
         if ($periodEnd) {
             $updates['end_date'] = $periodEnd->toDateString();
             $updates['next_billing_date'] = $periodEnd->toDateString();
         }
+        // Webhooks can arrive out of order. A locally cancelled row is authoritative
+        // until the owner explicitly resumes it; never let an active event restore access.
         if (data_get($stripeSubscription, 'status') === 'active'
+            && $subscription->status !== 'cancelled'
             && ! $subscription->first_failure_at
             && $subscription->status !== 'grace') {
             $updates['status'] = 'active';

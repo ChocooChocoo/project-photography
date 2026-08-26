@@ -11,11 +11,13 @@ class BookingCancellationRecoveryModel extends Model
 
     protected $fillable = [
         'booking_id', 'studio_id', 'original_assignment_id', 'replacement_assignment_id',
-        'status', 'deadline', 'replacement_proposed_at', 'replacement_confirmed_at',
+        'status', 'refund_percentage', 'refund_amount', 'deadline', 'replacement_proposed_at', 'replacement_confirmed_at',
         'client_responded_at', 'resolved_at', 'outcome_reason', 'photographer_reason',
     ];
 
     protected $casts = [
+        'refund_percentage' => 'decimal:2',
+        'refund_amount' => 'decimal:2',
         'deadline' => 'datetime',
         'replacement_proposed_at' => 'datetime',
         'replacement_confirmed_at' => 'datetime',

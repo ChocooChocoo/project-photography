@@ -34,7 +34,11 @@ class StudioController extends Controller
     {
         $categories = CategoriesModel::where('status', 'active')->get();
         $user = Auth::user();
-        $municipalities = LocationModel::select('municipality')->distinct()->pluck('municipality');
+        $municipalities = LocationModel::active()
+            ->select('municipality')
+            ->distinct()
+            ->orderBy('municipality')
+            ->pluck('municipality');
         
         return view('owner.create-studio', compact('categories', 'user', 'municipalities'));
     }
@@ -44,32 +48,29 @@ class StudioController extends Controller
      */
     public function getBarangays($municipality)
     {
-        $location = LocationModel::where('municipality', $municipality)->first();
-        
-        if (!$location) {
+        $location = LocationModel::active()
+            ->where('municipality', $municipality)
+            ->orderBy('id')
+            ->first();
+
+        if (! $location) {
             return response()->json(['barangays' => [], 'zip_code' => null]);
         }
-        
-        // Get barangays array from the location
-        $barangays = $location->barangay;
-        
-        // Handle JSON string or array
-        if (is_string($barangays)) {
-            $barangaysArray = json_decode($barangays, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                // If not valid JSON, treat as a single item array
-                $barangaysArray = [$barangays];
-            }
-        } else {
-            $barangaysArray = $barangays;
-        }
-        
-        // Ensure it's an array
-        $barangaysArray = is_array($barangaysArray) ? $barangaysArray : [];
-        
+
+        $barangays = is_array($location->barangay)
+            ? $location->barangay
+            : (json_decode((string) $location->barangay, true) ?: [(string) $location->barangay]);
+
+        $barangays = collect($barangays)
+            ->filter(fn ($barangay) => is_string($barangay) && $barangay !== '')
+            ->unique()
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+            ->values()
+            ->all();
+
         return response()->json([
-            'barangays' => $barangaysArray,
-            'zip_code' => $location->zip_code
+            'barangays' => $barangays,
+            'zip_code' => $location->zip_code,
         ]);
     }
 
@@ -98,10 +99,8 @@ class StudioController extends Controller
                 if (!empty($userStudioIds)) {
                     $activeSubscription = StudioPlanModel::whereIn('studio_id', $userStudioIds)
                         ->with('plan')
-                        ->where('status', 'active')
-                        ->where('payment_status', 'paid')
-                        ->where('end_date', '>=', now()->toDateString())
-                        ->latest()           // most recent active one
+                        ->currentlyAccessible()
+                        ->latest()           // most recent accessible one
                         ->first();
                 }
 
@@ -177,7 +176,7 @@ class StudioController extends Controller
             ]);
 
             // First, find the location by municipality
-            $location = LocationModel::where('municipality', $municipality)->first();
+            $location = LocationModel::active()->where('municipality', $municipality)->orderBy('id')->first();
 
             if (!$location) {
                 // Debug: Municipality not found
@@ -498,7 +497,11 @@ class StudioController extends Controller
             ->firstOrFail();
         
         $categories = CategoriesModel::where('status', 'active')->get();
-        $municipalities = LocationModel::select('municipality')->distinct()->pluck('municipality');
+        $municipalities = LocationModel::active()
+            ->select('municipality')
+            ->distinct()
+            ->orderBy('municipality')
+            ->pluck('municipality');
         
         return view('owner.edit-studio', compact('studio', 'categories', 'municipalities'));
     }
@@ -554,7 +557,7 @@ class StudioController extends Controller
             $municipality = $validatedData['municipality'];
             $barangay = $validatedData['barangay'];
 
-            $location = LocationModel::where('municipality', $municipality)->first();
+            $location = LocationModel::active()->where('municipality', $municipality)->orderBy('id')->first();
 
             if (!$location) {
                 DB::rollBack();

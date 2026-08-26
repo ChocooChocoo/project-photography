@@ -22,7 +22,7 @@ return new class extends Migration
                 'status' => 'active',
                 'is_system' => true,
                 'updated_at' => $now,
-                'created_at' => DB::raw('COALESCE(created_at, CURRENT_TIMESTAMP)'),
+                'created_at' => $now,
             ]
         );
 
@@ -63,7 +63,7 @@ return new class extends Migration
                     'description' => ucwords(str_replace(['.', '-'], ' ', $permissionString)),
                     'status' => 'active',
                     'updated_at' => $now,
-                    'created_at' => DB::raw('COALESCE(created_at, CURRENT_TIMESTAMP)'),
+                    'created_at' => $now,
                 ]
             );
         }
@@ -79,7 +79,7 @@ return new class extends Migration
                 ],
                 [
                     'updated_at' => $now,
-                    'created_at' => DB::raw('COALESCE(created_at, CURRENT_TIMESTAMP)'),
+                    'created_at' => $now,
                 ]
             );
         }
@@ -98,7 +98,7 @@ return new class extends Migration
                 ],
                 [
                     'updated_at' => $now,
-                    'created_at' => DB::raw('COALESCE(created_at, CURRENT_TIMESTAMP)'),
+                    'created_at' => $now,
                 ]
             );
         }

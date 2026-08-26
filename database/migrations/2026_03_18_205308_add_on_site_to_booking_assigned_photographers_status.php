@@ -12,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // MySQL doesn't support direct ENUM modification, so we need to alter the column
         DB::statement("ALTER TABLE `tbl_booking_assigned_photographers` MODIFY COLUMN `status` ENUM('assigned', 'confirmed', 'on_site', 'in_progress', 'completed', 'cancelled') NOT NULL DEFAULT 'assigned'");
     }
@@ -21,6 +25,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Revert to original ENUM values
         DB::statement("ALTER TABLE `tbl_booking_assigned_photographers` MODIFY COLUMN `status` ENUM('assigned', 'confirmed', 'in_progress', 'completed', 'cancelled') NOT NULL DEFAULT 'assigned'");
     }

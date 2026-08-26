@@ -64,6 +64,10 @@ return new class extends Migration
      */
     private function foreignKeyExists(string $tableName, string $constraintName): bool
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return false;
+        }
+
         return DB::table('information_schema.TABLE_CONSTRAINTS')
             ->where('TABLE_SCHEMA', DB::getDatabaseName())
             ->where('TABLE_NAME', $tableName)
@@ -76,6 +80,10 @@ return new class extends Migration
      */
     private function indexExists(string $tableName, string $indexName): bool
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return Schema::hasIndex($tableName, $indexName);
+        }
+
         return DB::table('information_schema.STATISTICS')
             ->where('TABLE_SCHEMA', DB::getDatabaseName())
             ->where('TABLE_NAME', $tableName)

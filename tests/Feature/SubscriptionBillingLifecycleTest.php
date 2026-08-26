@@ -368,13 +368,95 @@ class SubscriptionBillingLifecycleTest extends TestCase
 
         $response = $controller->cancel(request(), (string) $subscription->id);
         $this->assertSame(200, $response->status());
-        $this->assertNotNull($subscription->fresh()->scheduled_cancellation_at);
-        $this->assertSame('2026-09-12 23:59:59', $subscription->fresh()->scheduled_cancellation_at->format('Y-m-d H:i:s'));
-        $this->assertSame('active', $subscription->fresh()->status);
+        $cancelled = $subscription->fresh();
+        $this->assertNotNull($cancelled->cancelled_at);
+        $this->assertNotNull($cancelled->scheduled_cancellation_at);
+        $this->assertSame('2026-09-12 23:59:59', $cancelled->scheduled_cancellation_at->format('Y-m-d H:i:s'));
+        $this->assertSame('cancelled', $cancelled->status);
+        $this->assertFalse($cancelled->isActive());
+        $this->assertFalse($cancelled->hasAccess());
+        $this->assertSame(0, StudioPlanModel::query()->currentlyActive()->count());
+        $this->assertSame(0, StudioPlanModel::query()->currentlyAccessible()->count());
+
+        $repeat = $controller->cancel(request(), (string) $subscription->id);
+        $this->assertSame(400, $repeat->status());
 
         $response = $controller->resume(request(), (string) $subscription->id);
         $this->assertSame(200, $response->status());
-        $this->assertNull($subscription->fresh()->scheduled_cancellation_at);
+        $resumed = $subscription->fresh();
+        $this->assertSame('active', $resumed->status);
+        $this->assertSame('paid', $resumed->payment_status);
+        $this->assertNull($resumed->cancelled_at);
+        $this->assertNull($resumed->scheduled_cancellation_at);
+    }
+
+    public function test_provider_cancellation_failure_leaves_local_state_unchanged(): void
+    {
+        [$owner] = $this->ownerStudio();
+        Auth::setUser($owner);
+        $subscription = $this->subscription($this->plan(), ['stripe_subscription_id' => 'sub_failure']);
+        $stripe = Mockery::mock(StripeService::class);
+        $stripe->shouldReceive('cancelSubscriptionAtPeriodEnd')->once()->with('sub_failure')->andReturn(false);
+
+        $response = (new SubscriptionController($stripe))->cancel(request(), (string) $subscription->id);
+
+        $this->assertSame(502, $response->status());
+        $fresh = $subscription->fresh();
+        $this->assertSame('active', $fresh->status);
+        $this->assertNull($fresh->cancelled_at);
+        $this->assertNull($fresh->scheduled_cancellation_at);
+    }
+
+    public function test_cancelled_subscription_does_not_block_subscribing_to_another_plan(): void
+    {
+        [$owner] = $this->ownerStudio();
+        Auth::setUser($owner);
+        $old = $this->subscription($this->plan(), [
+            'stripe_subscription_id' => 'sub_cancelled',
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+            'scheduled_cancellation_at' => now()->addMonth(),
+        ]);
+        $newPlan = $this->plan(['name' => 'Starter']);
+        $stripe = Mockery::mock(StripeService::class);
+        $stripe->shouldReceive('createSubscriptionCheckoutSession')->once()->andReturn([
+            'id' => 'cs_new_plan', 'url' => 'https://checkout.test/new-plan',
+        ]);
+
+        $response = (new SubscriptionController($stripe))->subscribe(
+            SubscribeRequest::create('/owner/subscription/subscribe', 'POST', ['plan_id' => $newPlan->id])
+        );
+
+        $this->assertSame(200, $response->status());
+        $this->assertSame('cancelled', $old->fresh()->status);
+        $this->assertSame(1, StudioPlanModel::where('stripe_session_id', 'cs_new_plan')->count());
+    }
+
+    public function test_active_webhook_cannot_resurrect_locally_cancelled_subscription(): void
+    {
+        $plan = $this->plan();
+        $subscription = $this->subscription($plan, [
+            'stripe_subscription_id' => 'sub_out_of_order_cancel',
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+            'scheduled_cancellation_at' => '2026-09-12 23:59:59',
+            'cancellation_reason' => 'No longer needed',
+        ]);
+        $payload = $this->event('customer.subscription.updated', [
+            'id' => 'sub_out_of_order_cancel', 'customer' => 'cus_cancel', 'status' => 'active',
+            'cancel_at_period_end' => false,
+            'current_period_end' => Carbon::parse('2026-09-12')->timestamp,
+        ]);
+
+        $this->postJson('/webhook/stripe/subscriptions', $payload, [
+            'Stripe-Signature' => $this->signature($payload),
+        ])->assertOk();
+
+        $fresh = $subscription->fresh();
+        $this->assertSame('cancelled', $fresh->status);
+        $this->assertNotNull($fresh->cancelled_at);
+        $this->assertSame('No longer needed', $fresh->cancellation_reason);
+        $this->assertNotNull($fresh->scheduled_cancellation_at);
     }
 
     public function test_subscription_deleted_ends_access_and_resume_reactivates_previous_plan(): void

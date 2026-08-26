@@ -70,6 +70,8 @@
                 const client = booking.client || {};
                 const payments = (booking.payments || []).filter(payment => payment.status === 'succeeded');
 
+                const target = Number(item.refund_amount ?? payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0));
+                const percentage = item.refund_percentage == null ? 100 : Number(item.refund_percentage);
                 const paymentInputs = payments.map(payment => `
                     <div class="mb-3">
                         <label class="form-label mb-1">Provider refund reference — ${esc(payment.payment_reference)} (${money(payment.amount)})</label>
@@ -91,14 +93,15 @@
                             </div>
                             ${paymentStatusBadge(booking.payment_status)}
                         </div>
-                        <div class="small text-muted mb-3"><i class="ti ti-info-circle me-1"></i>Reason: ${esc(reason)}</div>
+                        <div class="small text-muted mb-2"><i class="ti ti-info-circle me-1"></i>Reason: ${esc(reason)}</div>
+                        <div class="alert alert-info py-2 mb-3">Target refund: <strong>${money(target)}</strong> (${percentage.toFixed(2)}% of succeeded payments). This is not necessarily a full refund.</div>
                         ${paymentInputs || '<div class="text-danger small mb-3">No succeeded payments found for this booking.</div>'}
                         <div class="mb-3">
                             <label class="form-label mb-1">Processor fee or evidence notes</label>
                             <textarea name="notes" class="form-control" rows="2" placeholder="Optional notes about the refund"></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="ti ti-receipt-refund me-1"></i>Record full refund
+                            <i class="ti ti-receipt-refund me-1"></i>Record target refund
                         </button>
                     </form>
                 `;

@@ -649,14 +649,18 @@ class SubscriptionController extends Controller
             $scheduledAt = is_numeric($providerPeriodEnd)
                 ? now()->setTimestamp((int) $providerPeriodEnd)
                 : ($subscription->end_date?->copy()->endOfDay() ?? now());
+            // Once Stripe has accepted the cancellation, revoke local access immediately.
+            // Keep the provider's period end so the record remains an accurate billing history.
             $subscription->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
                 'scheduled_cancellation_at' => $scheduledAt,
                 'cancellation_reason' => $reason,
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Subscription will cancel at the end of the paid period.',
+                'message' => 'Subscription cancelled successfully.',
             ]);
 
         } catch (\Throwable $e) {
@@ -689,7 +693,14 @@ class SubscriptionController extends Controller
                 && ! $this->stripeService->resumeSubscription($subscription->stripe_subscription_id)) {
                 return response()->json(['success' => false, 'message' => 'Stripe could not resume the subscription.'], 502);
             }
-            $subscription->update(['scheduled_cancellation_at' => null, 'cancellation_reason' => null]);
+            // A successful provider resume makes the existing paid period active again.
+            $subscription->update([
+                'status' => 'active',
+                'payment_status' => 'paid',
+                'cancelled_at' => null,
+                'scheduled_cancellation_at' => null,
+                'cancellation_reason' => null,
+            ]);
 
             return response()->json(['success' => true, 'message' => 'Subscription cancellation was resumed.']);
         }

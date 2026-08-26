@@ -20,6 +20,13 @@ return new class extends Migration
         });
 
         Schema::table('tbl_services', function (Blueprint $table) {
+            // SQLite cannot rebuild the table while an index still references a
+            // column being removed. The original migration dropped `status`
+            // without first removing its generated index.
+            if (Schema::hasIndex('tbl_services', 'tbl_services_status_index')) {
+                $table->dropIndex('tbl_services_status_index');
+            }
+
             foreach (['service_description', 'status'] as $column) {
                 if (Schema::hasColumn('tbl_services', $column)) {
                     $table->dropColumn($column);

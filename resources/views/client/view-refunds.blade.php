@@ -44,7 +44,8 @@
                                                 ? ($booking->studio->studio_name ?? 'Studio')
                                                 : ($booking->freelancer->brand_name ?? 'Freelancer');
                                             $paidAmount = $booking->payments->where('status', 'succeeded')->sum('amount');
-                                            $refundedAmount = $booking->payments->where('status', 'refunded')->sum('amount');
+                                            $refundedAmount = $booking->payments->where('status', 'refunded')->sum(fn ($payment) => $payment->refunded_amount ?? $payment->amount);
+                                             $targetAmount = $recovery->refund_amount ?? $paidAmount;
                                             $isRefunded = $recovery->status === 'refunded';
                                             $statusBadge = $isRefunded ? 'badge-soft-success' : 'badge-soft-warning';
                                             $statusText = $isRefunded ? 'Refunded' : 'Refund Pending';
@@ -61,7 +62,8 @@
                                                 <small class="text-muted d-block">{{ $booking->start_time }}</small>
                                             </td>
                                             <td>
-                                                <span class="fw-semibold">₱{{ number_format($paidAmount, 2) }}</span>
+                                                <span class="fw-semibold">Target: ₱{{ number_format($targetAmount, 2) }}</span>
+                                                 <small class="text-muted d-block">Paid: ₱{{ number_format($paidAmount, 2) }}</small>
                                                 @if($isRefunded)
                                                     <small class="text-warning d-block">Refunded: ₱{{ number_format($refundedAmount, 2) }}</small>
                                                 @endif

@@ -12,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Modify the ENUM to include new roles
         DB::statement("ALTER TABLE tbl_users MODIFY COLUMN role ENUM(
             'admin', 
@@ -30,6 +34,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Revert back to original ENUM
         DB::statement("ALTER TABLE tbl_users MODIFY COLUMN role ENUM(
             'admin', 

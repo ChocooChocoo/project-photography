@@ -421,8 +421,9 @@ class BookingController extends Controller
         }
         // ==== END: Conditional validation based on location type ====
 
-        // ==== FIXED: Conditional payment_type validation for freelancers ====
-        // For studios, payment_type is always required
+        // ==== Conditional payment_type validation for freelancers ====
+        // Studios accept the client's selected payment option; freelancer policy
+        // continues to determine the payment type server-side.
         if ($request->type === 'studio') {
             $rules['payment_type'] = 'required|in:downpayment,full_payment';
         } else {
@@ -480,7 +481,7 @@ class BookingController extends Controller
                 $studio = StudiosModel::subscriptionAccessible()->findOrFail($request->provider_id);
                 $downpaymentPercentage = $studio->downpayment_percentage ?? 30;
 
-                if ($studio->requires_downpayment !== false) {
+                if ($studio->requires_downpayment !== false && $request->payment_type === 'downpayment') {
                     $paymentType = 'downpayment';
                     $downPayment = ($totalAmount * $downpaymentPercentage) / 100;
                     $remainingBalance = $totalAmount - $downPayment;
@@ -1633,18 +1634,25 @@ class BookingController extends Controller
      */
     public function getSummary(Request $request)
     {
-        $request->validate([
+        $rules = [
             'package_id' => 'required|integer',
             'type' => 'required|in:studio,freelancer',
-            // payment_type no longer required for freelancer
-        ]);
+        ];
+
+        if ($request->type === 'studio') {
+            $rules['payment_type'] = 'required|in:downpayment,full_payment';
+        }
+
+        $request->validate($rules);
 
         if ($request->type === 'studio') {
             $package = StudioPackagesModel::findOrFail($request->package_id);
-            // Get downpayment percentage
+            // Get downpayment percentage and honor the selected payment option.
             $studio = StudiosModel::subscriptionAccessible()->findOrFail($package->studio_id);
             $downpaymentPercentage = $studio->downpayment_percentage ?? 30;
-            $paymentType = 'downpayment';
+            $paymentType = $studio->requires_downpayment !== false
+                ? $request->payment_type
+                : 'full_payment';
         } else {
             $package = FreelancerPackagesModel::findOrFail($request->package_id);
             

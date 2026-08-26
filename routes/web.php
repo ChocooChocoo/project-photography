@@ -162,8 +162,8 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         // Manage Studio - Limit
         Route::middleware(['check.studio.limit'])->group(function () {
 
-            Route::get('/create/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'create'])->name('owner.studio.create')->withoutMiddleware('permit.verified');
-            Route::post('/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'store'])->name('owner.studio.store')->withoutMiddleware('permit.verified');
+            Route::get('/create/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'create'])->name('owner.studio.create')->withoutMiddleware(['permit.verified', \App\Http\Middleware\EnforceStudioSubscriptionAccess::class]);
+            Route::post('/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'store'])->name('owner.studio.store')->withoutMiddleware(['permit.verified', \App\Http\Middleware\EnforceStudioSubscriptionAccess::class]);
 
         });
 
@@ -171,7 +171,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/view/studio', [\App\Http\Controllers\StudioOwner\StudioController::class, 'index'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.index');
         Route::get('/edit/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'edit'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.edit');
         Route::put('/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'update'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.update');
-        Route::get('/studio/barangays/{municipality}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'getBarangays'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.get-barangays');
+        Route::get('/studio/barangays/{municipality}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'getBarangays'])->withoutMiddleware('permit.verified')->name('owner.studio.get-barangays');
         Route::delete('/studio/{id}', [\App\Http\Controllers\StudioOwner\StudioController::class, 'destroy'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.destroy');
 
         // Permit verification (exempt from the gate so owners can resolve permit issues)

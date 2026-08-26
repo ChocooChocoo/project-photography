@@ -555,6 +555,10 @@
                             <span class="fw-medium" id="packagePrice">₱0</span>
                         </div>
 
+                        <div class="d-flex justify-content-between mb-2" id="paymentTypeRow" style="display: none;">
+                            <span>Payment Type:</span>
+                            <span class="fw-medium text-success" id="paymentTypeDisplay">Full Payment</span>
+                        </div>
                         <div class="d-flex justify-content-between mb-2" id="downPaymentRow">
                             <span id="downPaymentLabel">Down Payment (30%):</span>
                             <span class="fw-medium" id="downPayment">₱0</span>
@@ -2391,6 +2395,7 @@
                     data: {
                         package_id: packageData.id,
                         type: $('#bookingType').val(),
+                        payment_type: $('input[name="payment_type"]:checked').val() || $('input[name="payment_type"][type="hidden"]').val(),
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
@@ -2562,11 +2567,14 @@
                         $('#downPaymentLabel').text(`Down Payment (${downpaymentPercentage}%):`);
                     @endif
 
-                    // Show/hide rows based on payment type
+                    // Show the selected payment type and hide deposit rows for full payment.
                     if (window.bookingSummary.payment_type === 'full_payment') {
+                        $('#paymentTypeDisplay').text('Full Payment');
+                        $('#paymentTypeRow').show();
                         $('#downPaymentRow').hide();
                         $('#remainingBalanceRow').hide();
                     } else {
+                        $('#paymentTypeRow').hide();
                         $('#downPaymentRow').show();
                         $('#remainingBalanceRow').show();
                     }
@@ -2889,11 +2897,14 @@
                     $('#downPaymentLabel').text(`Down Payment (${downpaymentPercentage}%):`);
                 @endif
                 
-                // Show/hide rows based on payment type
+                // Show the selected payment type and hide deposit rows for full payment.
                 if (summary.payment_type === 'full_payment') {
+                    $('#paymentTypeDisplay').text('Full Payment');
+                    $('#paymentTypeRow').show();
                     $('#downPaymentRow').hide();
                     $('#remainingBalanceRow').hide();
                 } else {
+                    $('#paymentTypeRow').hide();
                     $('#downPaymentRow').show();
                     $('#remainingBalanceRow').show();
                 }

@@ -12,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Modify the ENUM to include Staff and Manager
         DB::statement("ALTER TABLE tbl_users MODIFY COLUMN user_type ENUM(
             'Photographer',
@@ -27,6 +31,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Revert back to original ENUM
         DB::statement("ALTER TABLE tbl_users MODIFY COLUMN user_type ENUM(
             'Photographer',

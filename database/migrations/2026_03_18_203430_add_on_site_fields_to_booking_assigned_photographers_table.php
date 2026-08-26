@@ -22,8 +22,10 @@ return new class extends Migration
             // We'll use 'confirmed' -> 'in_progress' with on_site_at as a marker
         });
 
-        // Add comment for documentation
-        DB::statement("ALTER TABLE `tbl_booking_assigned_photographers` COMMENT 'on_site_at: When photographer marked on-site, client_confirmed_at: When client verified presence'");
+        // MySQL supports table comments; SQLite does not.
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE `tbl_booking_assigned_photographers` COMMENT 'on_site_at: When photographer marked on-site, client_confirmed_at: When client verified presence'");
+        }
     }
 
     /**

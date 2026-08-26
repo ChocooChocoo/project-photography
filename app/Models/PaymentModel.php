@@ -34,6 +34,7 @@ class PaymentModel extends Model
         'payment_details',
         'paid_at',
         'refund_reference',
+        'refunded_amount',
         'refund_notes',
         'refunded_at',
     ];
@@ -45,6 +46,7 @@ class PaymentModel extends Model
      */
     protected $casts = [
         'amount' => 'decimal:2',
+        'refunded_amount' => 'decimal:2',
         'payment_details' => 'array',
         'paid_at' => 'datetime',
         'refunded_at' => 'datetime',

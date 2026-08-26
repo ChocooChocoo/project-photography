@@ -58,9 +58,7 @@
                             // Get the most recent active subscription from any of the user's studios
                             $activeSubscription = \App\Models\StudioPlanModel::whereIn('studio_id', $userStudioIds)
                                 ->with('plan')
-                                ->where('status', 'active')
-                                ->where('payment_status', 'paid')
-                                ->where('end_date', '>=', now()->toDateString())
+                                ->currentlyAccessible()
                                 ->latest()
                                 ->first();
                                 
@@ -756,7 +754,7 @@
                 
                 // Fetch barangays and zip code
                 $.ajax({
-                    url: '{{ route("owner.studio.get-barangays", ["municipality" => "__MUNICIPALITY__"]) }}'.replace('__MUNICIPALITY__', municipality),
+                    url: '{{ route("owner.studio.get-barangays", ["municipality" => "__MUNICIPALITY__"]) }}'.replace('__MUNICIPALITY__', encodeURIComponent(municipality)),
                     type: 'GET',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

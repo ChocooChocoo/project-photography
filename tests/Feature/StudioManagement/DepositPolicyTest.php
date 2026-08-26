@@ -32,6 +32,7 @@ class DepositPolicyTest extends TestCase
         $this->client = $this->createUser('client');
 
         Route::post('/_test/client/booking', [BookingController::class, 'store']);
+        Route::post('/_test/client/booking-summary', [BookingController::class, 'getSummary']);
         Route::get('/_test/owner/bookings', fn () => 'ok')->name('owner.booking.index');
     }
 
@@ -50,6 +51,43 @@ class DepositPolicyTest extends TestCase
         $this->assertSame(10000, $booking->getRawOriginal('down_payment'));
         $this->assertSame(0, $booking->getRawOriginal('remaining_balance'));
         $this->assertSame('100% (Full payment)', $booking->deposit_policy);
+    }
+
+    public function test_studio_summary_honors_full_payment_selection(): void
+    {
+        $studio = $this->createStudio(['requires_downpayment' => true, 'downpayment_percentage' => 30]);
+        $payload = $this->bookingPayload($studio);
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking-summary', [
+                'package_id' => $payload['package_id'],
+                'type' => 'studio',
+                'payment_type' => 'full_payment',
+            ])
+            ->assertOk()
+            ->assertJsonPath('summary.payment_type', 'full_payment')
+            ->assertJsonPath('summary.down_payment', '10,000.00')
+            ->assertJsonPath('summary.remaining_balance', '0.00');
+    }
+
+    public function test_studio_full_payment_selection_persists_and_creates_full_initial_payment(): void
+    {
+        $studio = $this->createStudio(['requires_downpayment' => true, 'downpayment_percentage' => 30]);
+        $payload = $this->bookingPayload($studio);
+        $payload['payment_type'] = 'full_payment';
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', $payload)
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $booking = BookingModel::latest('id')->first();
+        $payment = PaymentModel::latest('id')->first();
+
+        $this->assertSame('full_payment', $booking->payment_type);
+        $this->assertSame(10000, $booking->getRawOriginal('down_payment'));
+        $this->assertSame(0, $booking->getRawOriginal('remaining_balance'));
+        $this->assertSame(10000, $payment->getRawOriginal('amount'));
     }
 
     public function test_studio_with_downpayment_keeps_the_percentage_deposit(): void

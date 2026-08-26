@@ -227,10 +227,15 @@ class BookingCancellationRecoveryService
             }
 
             $booking = BookingModel::query()->lockForUpdate()->findOrFail($recovery->booking_id);
+            $succeededTotal = (float) PaymentModel::where('booking_id', $booking->id)
+                ->where('status', 'succeeded')->sum('amount');
+            $percentage = $this->refundPercentage($booking);
+            $target = round($succeededTotal * $percentage / 100, 2);
+
             $booking->update([
                 'status' => BookingModel::STATUS_CANCELLED,
-                'cancelled_by' => 'photographer',
-                'cancellation_reason' => 'The assigned photographer became unavailable.',
+                'cancelled_by' => $booking->cancelled_by ?: 'photographer',
+                'cancellation_reason' => $booking->cancellation_reason ?: 'The assigned photographer became unavailable.',
                 'payment_status' => BookingModel::PAYMENT_REFUND_PENDING,
             ]);
 
@@ -238,37 +243,45 @@ class BookingCancellationRecoveryService
                 ->whereIn('status', ['assigned', 'confirmed', 'on_site', 'in_progress'])
                 ->update(['status' => 'cancelled', 'cancelled_at' => now(), 'cancellation_reason' => 'Booking cancelled while resolving photographer availability.']);
 
-            $recovery->update(['status' => self::STATUS_REFUND_PENDING, 'resolved_at' => now(), 'outcome_reason' => $reason]);
+            $recoveryUpdate = [
+                'status' => self::STATUS_REFUND_PENDING,
+                'resolved_at' => now(),
+                'outcome_reason' => $reason,
+            ];
+            if (Schema::hasColumn('tbl_booking_cancellation_recoveries', 'refund_percentage')) {
+                $recoveryUpdate['refund_percentage'] = $percentage;
+            }
+            if (Schema::hasColumn('tbl_booking_cancellation_recoveries', 'refund_amount')) {
+                $recoveryUpdate['refund_amount'] = $target;
+            }
+            $recovery->update($recoveryUpdate);
         });
     }
 
     public function completeRefund(BookingCancellationRecoveryModel $recovery, string|array $providerReferences, ?string $notes = null): bool
     {
-        if ($recovery->status === self::STATUS_REFUNDED) {
-            return true;
-        }
-        if ($recovery->status !== self::STATUS_REFUND_PENDING) {
-            return false;
-        }
-
         return DB::transaction(function () use ($recovery, $providerReferences, $notes) {
             $recovery = BookingCancellationRecoveryModel::query()->lockForUpdate()->findOrFail($recovery->id);
-            $payments = PaymentModel::where('booking_id', $recovery->booking_id)->where('status', 'succeeded')->lockForUpdate()->get();
-            if ($payments->isEmpty()) {
+            if ($recovery->status === self::STATUS_REFUNDED) {
+                return true;
+            }
+            if ($recovery->status !== self::STATUS_REFUND_PENDING) {
                 return false;
             }
 
-            if ($payments->count() > 1 && ! is_array($providerReferences)) {
+            $payments = PaymentModel::where('booking_id', $recovery->booking_id)
+                ->where('status', 'succeeded')->lockForUpdate()->get();
+            if ($payments->isEmpty() || ($payments->count() > 1 && ! is_array($providerReferences))) {
                 return false;
             }
 
             $references = [];
-
             foreach ($payments as $payment) {
                 $reference = is_array($providerReferences)
                     ? ($providerReferences[$payment->id] ?? $providerReferences[$payment->payment_reference] ?? null)
                     : $providerReferences;
-                if (! $reference || ($payment->refund_reference && $payment->refund_reference !== $reference) || PaymentModel::where('refund_reference', $reference)->whereKey('!=', $payment->id)->exists()) {
+                if (! $reference || ($payment->refund_reference && $payment->refund_reference !== $reference)
+                    || PaymentModel::where('refund_reference', $reference)->whereKey('!=', $payment->id)->exists()) {
                     return false;
                 }
                 $references[$payment->id] = $reference;
@@ -277,16 +290,43 @@ class BookingCancellationRecoveryService
                 return false;
             }
 
-            foreach ($payments as $payment) {
-                $payment->update(['status' => 'refunded', 'refund_reference' => $references[$payment->id], 'refund_notes' => $notes, 'refunded_at' => now()]);
+            $target = (float) ($recovery->refund_amount ?? $payments->sum('amount'));
+            $remaining = round($target, 2);
+            foreach ($payments as $index => $payment) {
+                $amount = $index === $payments->count() - 1
+                    ? $remaining
+                    : min((float) $payment->amount, $remaining);
+                $amount = max(0, round($amount, 2));
+                $remaining = round($remaining - $amount, 2);
+                $paymentUpdate = [
+                    'status' => 'refunded',
+                    'refund_reference' => $references[$payment->id],
+                    'refund_notes' => $notes,
+                    'refunded_at' => now(),
+                ];
+                if (Schema::hasColumn('tbl_payments', 'refunded_amount')) {
+                    $paymentUpdate['refunded_amount'] = $amount;
+                }
+                $payment->update($paymentUpdate);
                 SystemRevenueModel::where('payment_id', $payment->id)->update(['status' => 'refunded']);
             }
 
             BookingModel::whereKey($recovery->booking_id)->update(['payment_status' => BookingModel::PAYMENT_REFUNDED]);
             $recovery->update(['status' => self::STATUS_REFUNDED, 'resolved_at' => now()]);
-
             return true;
         });
+    }
+
+    private function refundPercentage(BookingModel $booking): float
+    {
+        if ($booking->cancelled_by === 'client' && $booking->payment_type === 'full_payment') {
+            $downpayment = $booking->booking_type === 'studio'
+                ? (float) (optional($booking->studio)->downpayment_percentage ?: 30)
+                : 30;
+            return max(0, min(100, 100 - $downpayment));
+        }
+
+        return 100.0;
     }
 
     private function deadline(BookingModel $booking): Carbon

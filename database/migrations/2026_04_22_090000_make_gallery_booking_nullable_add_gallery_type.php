@@ -15,6 +15,16 @@ return new class extends Migration
 
     private function makeIndependent(string $table, string $bookingFk, string $clientFk): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            if (Schema::hasTable($table) && ! Schema::hasColumn($table, 'gallery_type')) {
+                Schema::table($table, function (Blueprint $tableBlueprint) {
+                    $tableBlueprint->string('gallery_type')->default('booking')->after('client_id');
+                });
+            }
+
+            return;
+        }
+
         DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$bookingFk}`");
         DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$clientFk}`");
         DB::statement("ALTER TABLE `{$table}` MODIFY `booking_id` BIGINT UNSIGNED NULL");

@@ -25,9 +25,11 @@ return new class extends Migration
             $table->unique(['category_name', 'deleted_at'], 'tbl_categories_category_name_deleted_at_unique');
         });
 
-        Schema::table('tbl_locations', function (Blueprint $table) {
-            $table->softDeletes()->after('updated_at');
-        });
+        if (! Schema::hasColumn('tbl_locations', 'deleted_at')) {
+            Schema::table('tbl_locations', function (Blueprint $table) {
+                $table->softDeletes()->after('updated_at');
+            });
+        }
     }
 
     /**

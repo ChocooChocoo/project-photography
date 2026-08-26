@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class MyBookingsController extends Controller
 {
@@ -86,7 +87,7 @@ class MyBookingsController extends Controller
             ->with(['booking' => function ($query) {
                 $query->with([
                     'category:id,category_name',
-                    'payments:id,booking_id,amount,status,refunded_at',
+                    'payments:id,booking_id,amount,status,refunded_amount,refunded_at',
                 ]);
             }])
             ->orderBy('updated_at', 'desc')
@@ -316,23 +317,44 @@ class MyBookingsController extends Controller
             $hasSucceededPayments = PaymentModel::where('booking_id', $id)
                 ->where('status', 'succeeded')
                 ->exists();
+            // Preserve the existing freelancer refund queue. The new customer
+            // policy applies only to studio bookings: a studio down-payment is
+            // non-refundable, while a studio full payment receives the configured
+            // partial refund.
+            $refundEligible = $hasSucceededPayments
+                && ($booking->booking_type !== 'studio' || $booking->payment_type === 'full_payment');
 
-            DB::transaction(function () use ($booking, $reason, $hasSucceededPayments) {
+            DB::transaction(function () use ($booking, $reason, $hasSucceededPayments, $refundEligible) {
                 $update = [
                     'status' => BookingModel::STATUS_CANCELLED,
                     'cancelled_by' => 'client',
                     'cancellation_reason' => $reason,
                 ];
 
-                if ($hasSucceededPayments) {
+                if ($refundEligible) {
                     $update['payment_status'] = BookingModel::PAYMENT_REFUND_PENDING;
 
-                    BookingCancellationRecoveryModel::create([
+                    $paidAmount = (float) PaymentModel::where('booking_id', $booking->id)
+                        ->where('status', 'succeeded')->sum('amount');
+                    $isStudio = $booking->booking_type === 'studio';
+                    $downpayment = $isStudio
+                        ? (float) (StudiosModel::whereKey($booking->provider_id)
+                            ->value('downpayment_percentage') ?: 30)
+                        : 0.0;
+                    $refundPercentage = max(0, min(100, 100 - $downpayment));
+                    $recoveryData = [
                         'booking_id' => $booking->id,
-                        'studio_id' => $booking->booking_type === 'studio' ? $booking->provider_id : null,
+                        'studio_id' => $isStudio ? $booking->provider_id : null,
                         'status' => BookingCancellationRecoveryService::STATUS_REFUND_PENDING,
                         'outcome_reason' => $reason,
-                    ]);
+                    ];
+                    if (Schema::hasColumn('tbl_booking_cancellation_recoveries', 'refund_percentage')) {
+                        $recoveryData['refund_percentage'] = $refundPercentage;
+                    }
+                    if (Schema::hasColumn('tbl_booking_cancellation_recoveries', 'refund_amount')) {
+                        $recoveryData['refund_amount'] = round($paidAmount * $refundPercentage / 100, 2);
+                    }
+                    BookingCancellationRecoveryModel::create($recoveryData);
                 } else {
                     PaymentModel::where('booking_id', $booking->id)
                         ->where('status', 'pending')
