@@ -7,12 +7,15 @@ use Illuminate\Http\Request;
 use App\Models\BookingModel;
 use App\Models\StudioOwner\StudioOnlineGalleryModel;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
+use App\Traits\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class OnlineGalleryController extends Controller
 {
+    use Notifiable;
+
     /**
      * Display list of in-progress or completed bookings assigned to this photographer.
      */
@@ -381,6 +384,54 @@ class OnlineGalleryController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating gallery: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Publish a draft gallery so the client can view it (only if assigned to this booking).
+     */
+    public function publish($galleryId)
+    {
+        try {
+            $userId = Auth::id();
+
+            // Get gallery and check if photographer is assigned to the booking
+            $gallery = StudioOnlineGalleryModel::where('id', $galleryId)
+                ->with('booking')
+                ->firstOrFail();
+
+            $assignment = BookingAssignedPhotographerModel::where('photographer_id', $userId)
+                ->where('booking_id', $gallery->booking_id)
+                ->whereIn('status', ['on_site', 'in_progress', 'completed'])
+                ->first();
+
+            if (!$assignment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not authorized to publish this gallery.'
+                ], 403);
+            }
+
+            $gallery->update([
+                'gallery_status' => 'published',
+                'published_at' => now(),
+            ]);
+
+            if ($gallery->client) {
+                $this->notifyGalleryPublished($gallery, $gallery->client);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Gallery published to client successfully.',
+                'gallery' => $gallery
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error publishing gallery: ' . $e->getMessage()
             ], 500);
         }
     }

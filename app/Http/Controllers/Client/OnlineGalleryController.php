@@ -18,9 +18,10 @@ class OnlineGalleryController extends Controller
     {
         $clientId = Auth::id();
         
-        // Get all completed bookings for this client
+        // Gallery delivery starts once the booking is In Progress; completed bookings stay visible.
+        // Draft galleries are still hidden because each lookup below requires gallery_status = published.
         $bookings = BookingModel::where('client_id', $clientId)
-            ->where('status', 'completed')
+            ->whereIn('status', [BookingModel::STATUS_IN_PROGRESS, BookingModel::STATUS_COMPLETED])
             ->with([
                 'category:id,category_name',
                 'packages'

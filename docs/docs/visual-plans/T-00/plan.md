@@ -1,0 +1,474 @@
+﻿---
+# Visual plan: open https://plan.agent-native.com/plans/plan-2b762059438344e0 in a browser for the canvas and review UI.
+visualUrl: "https://plan.agent-native.com/plans/plan-2b762059438344e0"
+title: "T-00 â€” Fix reported bugs, issues, and recommendations"
+brief: "Twelve reported defects with verified root causes, eight parallel workstreams, and a visual before/after review surface."
+version: 2
+---
+
+<RichText id="section-1" title="Objective and success criteria" editable>
+
+## Objective
+
+Fix all twelve reported bugs, issues, and recommendations so the platform works as reported and promised. The work covers login, layout, plans, booking payment, venue confirmation, galleries, booking validation, permissions, the AI assistant, and refunds.
+
+### Done means these success criteria pass
+
+1. Login works on the first attempt with valid credentials.
+2. The sidebar does not overlap the "No Active Subscription" notification.
+3. After a user cancels and subscribes again, the system routes them to the payment gateway instead of giving another free trial.
+4. The customer can confirm the photographer is at the venue after the photographer marks the booking as On Site or In Progress.
+5. Clicking the logo routes to the home page and does not show a 404 error.
+6. After full payment, the booking appears in the business owner's account without a manual reload, and the payment status is not Pending.
+7. The online gallery shows on the customer's account, and the business owner can update the booking status from In Progress to Complete Booking.
+8. The system blocks Proceed to Summary unless Terms and Conditions are checked.
+9. The system detects timeslot conflicts at booking time, not only at the payment gateway.
+10. The business owner can add permissions to an employee, such as update, view, and manage the online gallery for an HR Manager.
+11. The Update button works, and the AI Chat icon does not overlap it.
+12. AI Chat works and processes requests after the Groq API key is replaced.
+13. Refunds follow the tech adviser rules: 100% refund when the business cancels, the down payment is non-refundable when the client cancels, and a partial refund of a full payment is at the business owner's discretion.
+
+### Scope and non-goals
+
+**In scope:** the twelve findings in this plan, their regression tests, and documentation updates that keep the task trackers correct.
+
+**Out of scope:** new product features, redesigns, new payment integrations, automated refund flows, and anything the roadmap trackers already mark finished.
+
+The system is server-rendered. Every fix goes into an existing controller, model, service, request, route, or Blade file. No SPA and no duplicate workflow.
+
+</RichText>
+
+<Callout id="b-decisions" tone="decision">
+
+**Product decisions (approved):**
+
+- Logo links go to `url('/')`; the guest root routes signed-in users to their portal dashboard and guests to the landing page.
+- The client-cancel rule "down payment is non-refundable" applies to all booking types, including freelancer bookings.
+- For a client who paid in full and cancelled, the owner sets the refund amount in the cancellation screen; the amount becomes the refund target the admin queue executes. No payment-API automation is added.
+- RBAC is fixed end to end: owner-granted permissions resolve across portals, and studio HR staff get their own online-gallery routes so granted rights are usable.
+
+**Execution inputs (approved):**
+
+- **Groq key:** the product owner pastes a fresh key into `.env`; workstream H's `ai:health` command verifies it. The agent never handles the key.
+- **Launch shape:** all eight workstreams launch at once; file ownership keeps edits disjoint.
+- **Execution model:** the session switches to DeepSeek v4.1 Flash High Effort before execution; planning stays on Max Effort.
+- **Gallery publishing:** the photographer can upload and publish; studio staff complete delivery end to end.
+
+</Callout>
+
+## How the fixed flows behave
+
+The venue-confirmation and payment chains are where one status mistake cascades into several reported bugs. These diagrams show target behavior after the fix.
+
+<Diagram id="b-flow-venue" caption="Venue confirmation and gallery delivery after the fix." frame="show">
+
+```html
+<div class="diagram-panel" data-rough><div class="diagram-box"><b>Photographer</b><div class="diagram-muted">Marks assignment On Site, writes on_site_at, and moves the booking to In Progress.</div></div><div class="diagram-box"><b>Client</b><div class="diagram-muted">Sees the pending confirmation card and confirms the photographer is at the venue.</div></div><div class="diagram-box"><b>System</b><div class="diagram-muted">Writes client_confirmed_at and unlocks the assignment for In Progress and Completed.</div></div><div class="diagram-box"><b>Gallery</b><div class="diagram-muted">The client gallery shows once the booking is In Progress and the studio publishes it; the owner then completes the booking.</div></div></div>
+```
+
+```css
+.diagram-panel{display:flex;gap:12px;flex-wrap:wrap}.diagram-box{flex:1 1 180px;min-width:180px;padding:12px;display:flex;flex-direction:column;gap:6px}.diagram-box b{color:var(--wf-ink)}
+```
+
+</Diagram>
+
+<Diagram id="b-flow-payment" caption="Full payment to owner visibility after the fix." frame="show">
+
+```html
+<div class="diagram-panel" data-rough><div class="diagram-box"><b>Checkout</b><div class="diagram-muted">Client pays in full; the Stripe session completes.</div></div><div class="diagram-box"><b>Webhook</b><div class="diagram-muted">The payment row becomes succeeded and the booking becomes paid, with the signature verified.</div></div><div class="diagram-box"><b>Owner list</b><div class="diagram-muted">Bookings and the bell refresh on a short interval, so the booking and its Paid badge appear without a manual reload.</div></div><div class="diagram-box"><b>Gallery</b><div class="diagram-muted">The studio uploads and publishes; the client sees the gallery; the owner completes the booking.</div></div></div>
+```
+
+```css
+.diagram-panel{display:flex;gap:12px;flex-wrap:wrap}.diagram-box{flex:1 1 180px;min-width:180px;padding:12px;display:flex;flex-direction:column;gap:6px}.diagram-box b{color:var(--wf-ink)}
+```
+
+</Diagram>
+
+### Workstreams
+
+Eight workstreams run concurrently. Each owns a disjoint file set so parallel editors never collide. Every step names the real file and behavior it changes.
+
+### A - Login and layout fixes
+
+**Reuses:** the AJAX login flow, SweetAlert toasts, the shared layout partial pattern, and the correct url('/') target already present in layouts/shared/app.blade.php.
+
+1. Give #loginForm a real action and send X-CSRF-TOKEN from the meta tag on the AJAX post; handle 419 and other non-2xx responses with a visible error.
+2. Keep entered values after a failed attempt and mark the invalid fields.
+3. Wrap the subscription banner include in a container with the same 240px offset as .content-page in the owner, studio-photographer, studio-HR, and studio-finance layouts.
+4. Replace href="index.html" with url('/') in all seven portal sidebars.
+5. Fix the missing #loadingOverlay reference in the login script.
+
+**Tests:** first-attempt login test; logo link rendering test per layout; banner offset markup test.
+
+### B - Subscription trial guard
+
+**Reuses:** StudioPlanModel::currentlyActive(), the existing paid branch in subscribe(), and StripeService::createSubscriptionCheckoutSession() with trial days omitted.
+
+1. Before the trial branch in app/Http/Controllers/StudioOwner/SubscriptionController.php, check for prior trial history: any tbl_studio_plans row for this studio with a non-null trial_ends_at or a non-zero plan_snapshot.trial_days.
+2. When history exists, skip the trial branch and fall through to the pending row plus Stripe checkout path.
+3. Return an honest message telling the user the trial was already used and they are continuing to payment.
+4. Cover cancel-then-resubscribe and expired-trial paths.
+
+**Tests:** resubscribe after cancellation goes to checkout; first-ever subscription still starts the trial.
+
+### C - Venue confirmation flow
+
+**Reuses:** BookingAssignedPhotographerModel status helpers, the existing confirm endpoint, the pending-confirmations query, and the client booking-details AJAX.
+
+1. Break the circular gate: when the photographer marks a studio booking On Site, also move the booking to In Progress while it is still Confirmed.
+2. Include on_site in the pending-confirmation query list and drop the on-location-only filter for studio bookings.
+3. Keep the location gate only where the booking truly is on-location.
+4. After the client confirms, store client_confirmed_at and let the photographer finish In Progress and Completed.
+5. Fix canMarkAsInProgress() so it accepts the On Site state, matching the assignment status enum.
+
+**Tests:** the full chain (On Site, client confirm, assignment complete, booking completed), plus an in-studio case and a second-client isolation case.
+
+### D - Payment visibility, gallery delivery, and completion
+
+**Reuses:** BookingModel::updatePaymentStatus(), the Stripe and PayMongo webhooks, the owner gallery publish action, and existing notification records.
+
+1. Make the webhook and the verify redirect both call updatePaymentStatus() so a full payment becomes paid, not pending; neutralize the dead handlers that hardcode partially_paid.
+2. Poll the owner bookings list and notification bell on a short interval so a new paid booking appears without a manual reload.
+3. Add a scheduled reconciliation command that re-checks bookings still pending after two minutes and settles them from the gateway.
+4. Show the client gallery once the booking is In Progress or Completed, still requiring a published gallery row.
+5. Let the studio photographer publish a gallery, and fix the owner gallery list so In Progress bookings appear there.
+6. Keep completion blocker messages visible to the owner.
+
+**Tests:** webhook-to-paid-to-owner-visible test; client gallery visibility for In Progress; owner completion after publishing.
+
+### E - Booking validation: terms and timeslot
+
+**Reuses:** the overlap query in Client/BookingController::checkAvailability(), the availability endpoint, and the form step validation.
+
+1. Add a terms_agree check to validateBookingForm() in resources/views/client/booking-forms.blade.php and show the existing invalid-feedback message.
+2. Add a server rule so store() rejects submissions without terms_agree.
+3. Extract the overlap query into a reusable method and call it from store() and checkDateAvailability() so conflicts are rejected at booking time.
+4. Re-run the availability check when the form loads with prefilled values.
+5. Broaden the JS rejection list to include the overlap message from the availability endpoint.
+
+**Tests:** terms required in UI and server; overlapping timeslot rejected at booking with the overlap message; a clean booking still passes.
+
+### F - RBAC: employee permissions that work
+
+**Reuses:** the existing roles, the permission pivot, and portal columns; the owner permissions modal; the owner gallery controller; and CheckPermissionMiddleware.
+
+1. Fix UserModel::getAllPermissions() so a permission granted to the user's role resolves even when its portal differs from the user's portal. The portal column groups the picker; it must not block grants.
+2. Seed studio-facing gallery permissions (view and manage) and add matching studio-HR routes that map to the existing gallery actions behind permission middleware.
+3. Add gallery links to the studio-HR sidebar, visible only when the permission is present.
+4. Keep the owner grant flow role-wide, as approved.
+
+**Tests:** cross-portal grant resolves and is enforced; HR reaches the gallery after the grant; denied without it.
+
+### G - Update button, chat overlap, and refund discretion
+
+**Reuses:** the cancellation recovery service and admin refund queue; the chat widget; the owner cancellation screens.
+
+1. Move the Update Studio footer action out from under the fixed chat launcher by adding bottom clearance on owner settings pages.
+2. Give the profile update form a real action and method so it works without JavaScript, keeping the AJAX path.
+3. Extend the client-cancel rule: the down payment is not refunded for any booking type. For a client who paid in full, the owner sets the refund amount instead of an automatic split.
+4. Add the owner refund amount input to the owner cancellation confirmation, validated against the paid amount, stored as the refund target.
+5. Let the admin refund queue accept an amount override at or below the paid total.
+
+**Tests:** freelancer down payment not refunded; owner partial amount flows to the queue; admin override validated; business-cancel 100% refund unchanged.
+
+### H - AI assistant key
+
+**Reuses:** GroqClient as the single key reader, the guarded fallback, and the env-only configuration rule.
+
+1. Replace the expired GROQ_API_KEY in .env with a fresh key, then run php artisan config:clear.
+2. Log a distinct key-invalid warning on 401 or 403 responses while keeping the guarded fallback message.
+3. Add php artisan ai:health that pings the provider and prints key status without exposing the key.
+
+**Tests:** valid key path returns a response; invalid key path returns the fallback.
+
+<TabsBlock
+  id="b-code-tabs"
+  tabs={[
+    {
+      id: "tab-trial",
+      label: "SubscriptionController.php",
+      blocks: [
+        {
+          id: "tab-trial-r",
+          type: "rich-text",
+          data: {
+            markdown:
+              "Skip the trial branch when this studio already used a trial; fall through to the Stripe checkout path.",
+          },
+        },
+        {
+          id: "tab-trial-c",
+          type: "code",
+          data: {
+            code: "// Before: any plan with trial_days grants a fresh trial.\nif ($plan->trial_days > 0) { /* create trial row + trial checkout */ }\n\n// After: a studio that already used a trial goes straight to paid checkout.\n$usedTrial = StudioPlanModel::where('studio_id', $studio->id)\n    ->whereNotNull('trial_ends_at')\n    ->exists();\n\nif (! $usedTrial && $plan->trial_days > 0) {\n    // unchanged trial path\n}\n\n// paid path: pending row + Stripe checkout, trial days omitted",
+            language: "php",
+            filename:
+              "app/Http/Controllers/StudioOwner/SubscriptionController.php",
+          },
+        },
+      ],
+    },
+    {
+      id: "tab-perm",
+      label: "UserModel.php",
+      blocks: [
+        {
+          id: "tab-perm-r",
+          type: "rich-text",
+          data: {
+            markdown:
+              "Granted role permissions must resolve regardless of portal; the portal column groups the picker only.",
+          },
+        },
+        {
+          id: "tab-perm-c",
+          type: "code",
+          data: {
+            code: "// Before: drops owner-portal permissions granted to an employee role.\n$query->where('tbl_permissions.portal', $portal)\n\n// After: granted permissions resolve; portal stays metadata for the UI.\n// Same query without the portal restriction, or unioned with\n// the user's own-portal permissions.",
+            language: "php",
+            filename: "app/Models/UserModel.php",
+          },
+        },
+      ],
+    },
+    {
+      id: "tab-webhook",
+      label: "Booking payment settlement",
+      blocks: [
+        {
+          id: "tab-webhook-r",
+          type: "rich-text",
+          data: {
+            markdown:
+              "One settlement call for the webhook and the verify redirect; the status must leave pending for a full payment.",
+          },
+        },
+        {
+          id: "tab-webhook-c",
+          type: "code",
+          data: {
+            code: "// Webhook and verify both converge on the same settlement.\n$payment->update(['status' => 'succeeded']);\n$booking->updatePaymentStatus();   // pending / partially_paid / paid\n$booking->update(['status' => BookingModel::STATUS_CONFIRMED]);\n\n// A reconciliation command re-settles bookings that stayed pending\n// for more than two minutes.",
+            language: "php",
+            filename: "app/Http/Controllers/Client/BookingController.php",
+          },
+        },
+      ],
+    },
+  ]}
+/>
+
+<FileTree
+  id="b-files"
+  title="Files touched by this plan"
+  entries={[
+    {
+      path: "resources/views/auth/login.blade.php",
+      change: "modified",
+      note: "Real form action, CSRF header on AJAX, visible errors, values kept.",
+    },
+    {
+      path: "resources/views/partials/subscription-access-banner.blade.php",
+      change: "modified",
+      note: "Sidebar offset wrapper.",
+    },
+    {
+      path: "resources/views/layouts/owner/sidebar.blade.php",
+      change: "modified",
+      note: "Logo link to url('/'). Same fix in six sibling sidebars.",
+    },
+    {
+      path: "app/Http/Controllers/StudioOwner/SubscriptionController.php",
+      change: "modified",
+      note: "Prior-trial guard before the trial branch.",
+    },
+    {
+      path: "app/Http/Controllers/StudioPhotographer/AssignedBookingController.php",
+      change: "modified",
+      note: "On Site moves the booking to In Progress, then client confirmation.",
+    },
+    {
+      path: "app/Http/Controllers/Client/MyBookingsController.php",
+      change: "modified",
+      note: "Pending confirmation query includes on_site and studio bookings.",
+    },
+    {
+      path: "app/Models/StudioOwner/BookingAssignedPhotographerModel.php",
+      change: "modified",
+      note: "canMarkAsInProgress accepts On Site.",
+    },
+    {
+      path: "app/Http/Controllers/Client/BookingController.php",
+      change: "modified",
+      note: "Terms rule, overlap check at store, payment settlement reuse.",
+    },
+    {
+      path: "resources/views/client/booking-forms.blade.php",
+      change: "modified",
+      note: "Terms validation and overlap message in step validation.",
+    },
+    {
+      path: "app/Http/Controllers/Client/OnlineGalleryController.php",
+      change: "modified",
+      note: "Gallery visible from In Progress.",
+    },
+    {
+      path: "app/Http/Controllers/StudioOwner/OnlineGalleryController.php",
+      change: "modified",
+      note: "In Progress bookings listed; publish accessible.",
+    },
+    {
+      path: "app/Http/Controllers/StudioOwner/BookingController.php",
+      change: "modified",
+      note: "Refund amount input and completion blockers.",
+    },
+    {
+      path: "app/Models/UserModel.php",
+      change: "modified",
+      note: "Cross-portal permission resolution.",
+    },
+    {
+      path: "routes/web.php",
+      change: "modified",
+      note: "Studio-HR gallery routes and the ai:health command route.",
+    },
+    {
+      path: "app/Services/BookingCancellationRecoveryService.php",
+      change: "modified",
+      note: "Freelancer down payment non-refundable; owner amount target.",
+    },
+    {
+      path: "app/Http/Controllers/Client/BookingController.php",
+      change: "modified",
+      note: "Webhook settlement and reconciliation hook.",
+    },
+  ]}
+/>
+
+<Callout id="b-risks" tone="risk">
+
+**Risks and guards**
+
+- Eight workstreams touch many files. The file map is disjoint by design; the orchestrator rejects any step that edits a file owned by another stream.
+- Existing tests encode old behavior. The freelancer refund test and some gallery expectations change on purpose; update them inside the same stream.
+- A legacy subscription row without trial_ends_at or a snapshot may look trial-free; add one extra history check.
+- The Groq key is external. Code can land without it; the AI Chat criterion passes only after a real key is in place.
+- A wrong STRIPE_WEBHOOK_SECRET still fails signature checks and must be verified during smoke testing.
+
+</Callout>
+
+## Execution and verification
+
+**Phase 1 - planning.** Main thread on Deepseek v4.1 Flash Max Effort with high reasoning; exploration sub-agents on Deepseek v4.1 Flash High Effort; this visual plan plus its export under docs/docs/visual-plans.
+
+**Phase 2 - build (parallel).** The orchestrator spawns the eight workstreams at the same time, each on Deepseek v4.1 Flash High Effort, each writing only its own files and running its own focused tests while others edit.
+
+**Phase 3 - verify (parallel).** Test agents write and run the cross-cutting suites against the frozen build while a third verifier runs the full suite.
+
+**Phase 4 - handoff.** Update docs/tasks/T-00.md, the task tracker, and this plan status. Nothing merges before the full suite is green.
+
+**Commands**
+
+- php artisan test --compact - full suite, expected green including new tests.
+- php artisan route:list - confirm the new studio-HR gallery routes and the health command.
+- npm run build - no asset regressions.
+
+**Manual smoke (seeded accounts)**
+
+1. Sign in as a studio owner on the first attempt; fail once on purpose and check the message and kept values.
+2. Open an owner page with no active subscription; confirm the banner is fully visible.
+3. Cancel a trial and subscribe again; confirm Stripe checkout opens.
+4. Photographer marks On Site; client confirms the venue; assignment reaches Completed.
+5. Complete a full payment in Stripe test mode; the booking and Paid status appear in the owner list without a manual reload.
+6. Publish a gallery; the client sees it; the owner moves the booking to Completed.
+7. Proceed to Summary without the terms box is blocked; an overlapping timeslot is blocked at the booking step.
+8. Grant an HR Manager gallery view and manage; the HR account can open and use the gallery.
+9. Studio settings: Update works and the chat icon does not cover it.
+10. Send an AI Chat message; a real answer returns after the Groq key is replaced.
+11. Cancel a paid booking as the client; the owner sets a partial refund; the admin queue shows that amount.
+
+## Where each bug lives
+
+Root cause and fix location per reported issue, from a full exploration pass over the current working tree.
+
+<HtmlBlock
+  id="b-matrix"
+  html={
+    '<div class="mx"><div class="hr"><div>#</div><div>Reported issue</div><div>Root cause</div><div>Fix area</div></div><div class="rw"><div class="n">1</div><div class="issue">Login fails on the first attempt</div><div>The form has no action; the AJAX post sends _token but not as a CSRF token; the failure path clears the fields and shows no message</div><div class="area">A - Login and layout</div></div><div class="rw"><div class="n">2</div><div class="issue">Sidebar covers the no-active-plan banner</div><div>The banner sits outside .content-page, the only element with the 240px sidebar offset; the sidebar is fixed at z-index 1005</div><div class="area">A - Login and layout</div></div><div class="rw"><div class="n">3</div><div class="issue">Repeat subscriber gets another trial</div><div>subscribe() grants trial_days whenever trial_days > 0; there is no prior-trial check</div><div class="area">B - Trial guard</div></div><div class="rw"><div class="n">4</div><div class="issue">Client cannot confirm the photographer at the venue</div><div>The confirmation list needs on_site_at and on-location; the booking In Progress step needs client confirmation first, a circular gate</div><div class="area">C - Venue confirmation</div></div><div class="rw"><div class="n">5</div><div class="issue">Logo shows a 404</div><div>All seven portal sidebars link to a missing index page.</div><div class="area">A - Login and layout</div></div><div class="rw"><div class="n">6</div><div class="issue">Full payment: booking late, status stays Pending</div><div>The owner list and bell never refresh; confirmation depends on a webhook with no reconciliation; legacy handlers hardcode partially_paid</div><div class="area">D - Payment and gallery</div></div><div class="rw"><div class="n">7</div><div class="issue">Gallery is hidden and the owner cannot complete the booking</div><div>The client gallery lists only completed bookings; uploads stay draft with no publish route; completion gates on the gallery, assignment completion, and full payment</div><div class="area">D - Payment and gallery</div></div><div class="rw"><div class="n">8</div><div class="issue">Terms unchecked passes; timeslot conflict appears late</div><div>There is no terms rule in the browser checks or on the server; the overlap query runs only in checkAvailability(); the browser filter misses the overlap message</div><div class="area">E - Booking validation</div></div><div class="rw"><div class="n">9</div><div class="issue">The owner cannot add an employee permission</div><div>Permissions filter by the user\'s own portal; owner-portal permissions granted to HR roles are dropped, and no HR gallery routes exist</div><div class="area">F - RBAC</div></div><div class="rw"><div class="n">10</div><div class="issue">The Update button is dead and the chat icon overlaps it</div><div>The chat launcher is fixed bottom-right at z-index 1035; the bottom-right submit sits under it; the profile form is a plain post with no action</div><div class="area">G - Actions and refunds</div></div><div class="rw"><div class="n">11</div><div class="issue">AI Chat is unavailable</div><div>GROQ_API_KEY expired; the key is env-only by design</div><div class="area">H - AI assistant</div></div><div class="rw"><div class="n">12</div><div class="issue">Refund rules are incomplete</div><div>Freelancer down payments refund 100%; there is no owner discretion input; the admin refund form has no amount field</div><div class="area">G - Actions and refunds</div></div></div>'
+  }
+  css={
+    ".mx{font:13px/1.5 ui-sans-serif,system-ui,sans-serif;color:#191918;border:1px solid #eceae5;border-radius:10px;padding:4px 14px 10px}\n.rw,.hr{display:grid;grid-template-columns:30px 190px 1fr 150px;gap:12px;padding:9px 0;border-bottom:1px solid #eceae5;align-items:start}\n.hr{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6a6560;border-bottom:2px solid #d9d6d0}\n.rw:last-child{border-bottom:none}\n.n{font-weight:700;color:#6a6560}\n.issue{font-weight:650}\n.area{font-weight:600;color:#3f7cff}"
+  }
+  caption="Twelve reported issues with root cause and owning workstream."
+/>
+
+## Review surface: before and after
+
+Six states show the reported failure next to the fixed behavior: login, the no-active-plan banner, and the chat-launcher overlap.
+
+<HtmlBlock
+  id="w-login-before"
+  html={
+    '<div class="wf"><div class="col"><div class="label">Sign in</div><div class="ttl">Platinum Studio</div><div class="muted">Registered email</div><div class="field">maria.santos@gmail.com</div><div class="muted">Password</div><div class="field">â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢</div><div class="btn">Sign in</div><div class="msg bad">No error appears. Fields clear after the attempt.</div></div></div>'
+  }
+  css={
+    ".wf{display:flex;gap:10px;align-items:stretch;font-size:12px}\n.col{flex:1;border:1px solid #d9d6d0;border-radius:10px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:8px;min-width:0}\n.col.narrow{flex:0 0 140px}\n.rail.between{justify-content:space-between}\n.label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6a6560}\n.ttl{font-weight:700;color:#191918;font-size:13px}\n.muted{color:#6a6560}\n.field{border:1px solid #d9d6d0;border-radius:7px;padding:7px 9px;background:#fbfaf8;color:#191918}\n.field.err{border-color:#b23a2f}\n.btn{background:#3f7cff;color:#fff;border-radius:7px;padding:7px 10px;text-align:center;font-weight:600}\n.msg{border:1px solid #d9d6d0;border-left:4px solid #b8860b;border-radius:7px;padding:8px 10px;background:#fbfaf8}\n.msg.ok{border-left-color:#2e7d4f}\n.msg.bad{border-left-color:#b23a2f}\n.rail{display:flex;gap:8px;align-items:center}\n.nav{border:1px solid #d9d6d0;border-radius:6px;padding:4px 7px;color:#6a6560;font-size:11px;background:#fbfaf8}\n.nav.on{border-color:#3f7cff;color:#191918;font-weight:600}\n.fab{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;background:#3f7cff;color:#fff;font-size:10px}\n.cover{display:flex;justify-content:flex-end;position:relative}\n.cover .fab{position:absolute;right:0;bottom:-8px}\n.hit{outline:2px dashed #b23a2f;outline-offset:2px;border-radius:8px}"
+  }
+  caption="Reported: valid credentials, fields clear, no message, second attempt succeeds."
+/>
+
+<HtmlBlock
+  id="w-login-after"
+  html={
+    '<div class="wf"><div class="col"><div class="label">Sign in</div><div class="ttl">Platinum Studio</div><div class="muted">Registered email</div><div class="field err">maria.santos@gmail.com</div><div class="muted">Password</div><div class="field err">â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢</div><div class="msg">We could not sign you in. Check your email and password, then try again.</div><div class="btn">Sign in</div><div class="muted">The email stays filled in so you can correct the password.</div></div></div>'
+  }
+  css={
+    ".wf{display:flex;gap:10px;align-items:stretch;font-size:12px}\n.col{flex:1;border:1px solid #d9d6d0;border-radius:10px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:8px;min-width:0}\n.col.narrow{flex:0 0 140px}\n.rail.between{justify-content:space-between}\n.label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6a6560}\n.ttl{font-weight:700;color:#191918;font-size:13px}\n.muted{color:#6a6560}\n.field{border:1px solid #d9d6d0;border-radius:7px;padding:7px 9px;background:#fbfaf8;color:#191918}\n.field.err{border-color:#b23a2f}\n.btn{background:#3f7cff;color:#fff;border-radius:7px;padding:7px 10px;text-align:center;font-weight:600}\n.msg{border:1px solid #d9d6d0;border-left:4px solid #b8860b;border-radius:7px;padding:8px 10px;background:#fbfaf8}\n.msg.ok{border-left-color:#2e7d4f}\n.msg.bad{border-left-color:#b23a2f}\n.rail{display:flex;gap:8px;align-items:center}\n.nav{border:1px solid #d9d6d0;border-radius:6px;padding:4px 7px;color:#6a6560;font-size:11px;background:#fbfaf8}\n.nav.on{border-color:#3f7cff;color:#191918;font-weight:600}\n.fab{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;background:#3f7cff;color:#fff;font-size:10px}\n.cover{display:flex;justify-content:flex-end;position:relative}\n.cover .fab{position:absolute;right:0;bottom:-8px}\n.hit{outline:2px dashed #b23a2f;outline-offset:2px;border-radius:8px}"
+  }
+  caption="Fixed: real action, CSRF token, visible feedback, values kept."
+/>
+
+<HtmlBlock
+  id="w-banner-before"
+  html={
+    '<div class="wf"><div class="col narrow"><div class="label">Sidebar</div><div class="nav">Dashboard</div><div class="nav on">My Staff</div><div class="nav">Gallery</div></div><div class="col"><div class="rail"><div class="nav">Owner</div><div class="nav">Studio</div></div><div class="msg bad">Platinum Studio has no active plan. Subscribe now.</div><div class="muted">Banner text sits behind the fixed sidebar.</div></div></div>'
+  }
+  css={
+    ".wf{display:flex;gap:10px;align-items:stretch;font-size:12px}\n.col{flex:1;border:1px solid #d9d6d0;border-radius:10px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:8px;min-width:0}\n.col.narrow{flex:0 0 140px}\n.rail.between{justify-content:space-between}\n.label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6a6560}\n.ttl{font-weight:700;color:#191918;font-size:13px}\n.muted{color:#6a6560}\n.field{border:1px solid #d9d6d0;border-radius:7px;padding:7px 9px;background:#fbfaf8;color:#191918}\n.field.err{border-color:#b23a2f}\n.btn{background:#3f7cff;color:#fff;border-radius:7px;padding:7px 10px;text-align:center;font-weight:600}\n.msg{border:1px solid #d9d6d0;border-left:4px solid #b8860b;border-radius:7px;padding:8px 10px;background:#fbfaf8}\n.msg.ok{border-left-color:#2e7d4f}\n.msg.bad{border-left-color:#b23a2f}\n.rail{display:flex;gap:8px;align-items:center}\n.nav{border:1px solid #d9d6d0;border-radius:6px;padding:4px 7px;color:#6a6560;font-size:11px;background:#fbfaf8}\n.nav.on{border-color:#3f7cff;color:#191918;font-weight:600}\n.fab{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;background:#3f7cff;color:#fff;font-size:10px}\n.cover{display:flex;justify-content:flex-end;position:relative}\n.cover .fab{position:absolute;right:0;bottom:-8px}\n.hit{outline:2px dashed #b23a2f;outline-offset:2px;border-radius:8px}"
+  }
+  caption="Reported: the fixed sidebar paints over the plan banner."
+/>
+
+<HtmlBlock
+  id="w-banner-after"
+  html={
+    '<div class="wf"><div class="col narrow"><div class="label">Sidebar</div><div class="nav">Dashboard</div><div class="nav on">My Staff</div><div class="nav">Gallery</div></div><div class="col"><div class="rail"><div class="nav">Owner</div><div class="nav">Studio</div></div><div class="msg ok">Platinum Studio has no active plan. Subscribe now.</div><div class="muted">Banner keeps its own row above the page content.</div></div></div>'
+  }
+  css={
+    ".wf{display:flex;gap:10px;align-items:stretch;font-size:12px}\n.col{flex:1;border:1px solid #d9d6d0;border-radius:10px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:8px;min-width:0}\n.col.narrow{flex:0 0 140px}\n.rail.between{justify-content:space-between}\n.label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6a6560}\n.ttl{font-weight:700;color:#191918;font-size:13px}\n.muted{color:#6a6560}\n.field{border:1px solid #d9d6d0;border-radius:7px;padding:7px 9px;background:#fbfaf8;color:#191918}\n.field.err{border-color:#b23a2f}\n.btn{background:#3f7cff;color:#fff;border-radius:7px;padding:7px 10px;text-align:center;font-weight:600}\n.msg{border:1px solid #d9d6d0;border-left:4px solid #b8860b;border-radius:7px;padding:8px 10px;background:#fbfaf8}\n.msg.ok{border-left-color:#2e7d4f}\n.msg.bad{border-left-color:#b23a2f}\n.rail{display:flex;gap:8px;align-items:center}\n.nav{border:1px solid #d9d6d0;border-radius:6px;padding:4px 7px;color:#6a6560;font-size:11px;background:#fbfaf8}\n.nav.on{border-color:#3f7cff;color:#191918;font-weight:600}\n.fab{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;background:#3f7cff;color:#fff;font-size:10px}\n.cover{display:flex;justify-content:flex-end;position:relative}\n.cover .fab{position:absolute;right:0;bottom:-8px}\n.hit{outline:2px dashed #b23a2f;outline-offset:2px;border-radius:8px}"
+  }
+  caption="Fixed: the banner gets the sidebar offset and stays fully readable."
+/>
+
+<HtmlBlock
+  id="w-chat-before"
+  html={
+    '<div class="wf"><div class="col"><div class="label">Studio settings</div><div class="ttl">Studio details</div><div class="field">Wedding and debut coverage.</div><div class="cover"><div class="hit"><div class="btn">Update Studio</div></div><div class="fab">AI</div></div><div class="muted">The launcher swallows the click.</div></div></div>'
+  }
+  css={
+    ".wf{display:flex;gap:10px;align-items:stretch;font-size:12px}\n.col{flex:1;border:1px solid #d9d6d0;border-radius:10px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:8px;min-width:0}\n.col.narrow{flex:0 0 140px}\n.rail.between{justify-content:space-between}\n.label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6a6560}\n.ttl{font-weight:700;color:#191918;font-size:13px}\n.muted{color:#6a6560}\n.field{border:1px solid #d9d6d0;border-radius:7px;padding:7px 9px;background:#fbfaf8;color:#191918}\n.field.err{border-color:#b23a2f}\n.btn{background:#3f7cff;color:#fff;border-radius:7px;padding:7px 10px;text-align:center;font-weight:600}\n.msg{border:1px solid #d9d6d0;border-left:4px solid #b8860b;border-radius:7px;padding:8px 10px;background:#fbfaf8}\n.msg.ok{border-left-color:#2e7d4f}\n.msg.bad{border-left-color:#b23a2f}\n.rail{display:flex;gap:8px;align-items:center}\n.nav{border:1px solid #d9d6d0;border-radius:6px;padding:4px 7px;color:#6a6560;font-size:11px;background:#fbfaf8}\n.nav.on{border-color:#3f7cff;color:#191918;font-weight:600}\n.fab{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;background:#3f7cff;color:#fff;font-size:10px}\n.cover{display:flex;justify-content:flex-end;position:relative}\n.cover .fab{position:absolute;right:0;bottom:-8px}\n.hit{outline:2px dashed #b23a2f;outline-offset:2px;border-radius:8px}"
+  }
+  caption="Reported: the fixed chat launcher covers the Update button."
+/>
+
+<HtmlBlock
+  id="w-chat-after"
+  html={
+    '<div class="wf"><div class="col"><div class="label">Studio settings</div><div class="ttl">Studio details</div><div class="field">Wedding and debut coverage.</div><div class="cover"><div class="btn">Update Studio</div></div><div class="rail between"><div class="muted">The AI assistant stays bottom-right and clears the footer action.</div><div class="fab">AI</div></div></div></div>'
+  }
+  css={
+    ".wf{display:flex;gap:10px;align-items:stretch;font-size:12px}\n.col{flex:1;border:1px solid #d9d6d0;border-radius:10px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:8px;min-width:0}\n.col.narrow{flex:0 0 140px}\n.rail.between{justify-content:space-between}\n.label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6a6560}\n.ttl{font-weight:700;color:#191918;font-size:13px}\n.muted{color:#6a6560}\n.field{border:1px solid #d9d6d0;border-radius:7px;padding:7px 9px;background:#fbfaf8;color:#191918}\n.field.err{border-color:#b23a2f}\n.btn{background:#3f7cff;color:#fff;border-radius:7px;padding:7px 10px;text-align:center;font-weight:600}\n.msg{border:1px solid #d9d6d0;border-left:4px solid #b8860b;border-radius:7px;padding:8px 10px;background:#fbfaf8}\n.msg.ok{border-left-color:#2e7d4f}\n.msg.bad{border-left-color:#b23a2f}\n.rail{display:flex;gap:8px;align-items:center}\n.nav{border:1px solid #d9d6d0;border-radius:6px;padding:4px 7px;color:#6a6560;font-size:11px;background:#fbfaf8}\n.nav.on{border-color:#3f7cff;color:#191918;font-weight:600}\n.fab{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;background:#3f7cff;color:#fff;font-size:10px}\n.cover{display:flex;justify-content:flex-end;position:relative}\n.cover .fab{position:absolute;right:0;bottom:-8px}\n.hit{outline:2px dashed #b23a2f;outline-offset:2px;border-radius:8px}"
+  }
+  caption="Fixed: the launcher clears the footer, so Update Studio is clickable."
+/>
+---
+Live plan: /plans/plan-2b762059438344e0

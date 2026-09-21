@@ -1,6 +1,6 @@
 <div class="sidenav-menu">
     {{-- Logo --}}
-    <a href="index.html" class="logo">
+    <a href="{{ url('/') }}" class="logo">
         <span class="logo logo-light">
             <span class="logo-lg"><img src="{{ asset('assets/images/logo.png') }}" alt="logo"></span>
             <span class="logo-sm"><img src="{{ asset('assets/images/logo-sm.png') }}" alt="small logo"></span>
@@ -45,6 +45,9 @@
                     || ($hrUser?->hasPermission('studio-hr.payroll.create') ?? false);
                 $canViewAttendance = $hrUser?->hasPermission('studio-hr.attendance.view') ?? false;
                 $canManageProcurement = $hrUser?->hasPermission('studio-hr.procurement.manage') ?? false;
+                $canViewOnlineGallery = ($hrUser?->hasPermission('studio-hr.online-gallery.view') ?? false)
+                    || ($hrUser?->hasPermission('studio-hr.online-gallery.manage') ?? false)
+                    || ($hrUser?->hasPermission('owner.online-gallery.manage') ?? false);
             @endphp
             
             @if($canViewDashboard)
@@ -227,6 +230,20 @@
                         </li>
                     </ul>
                 </div>
+            </li>
+            @endif
+
+            {{-- Online Gallery --}}
+            @php
+                $onlineGalleryRoutes = Route::is('studio-hr.online-gallery.*');
+            @endphp
+
+            @if($canViewOnlineGallery)
+            <li class="side-nav-item {{ $onlineGalleryRoutes ? 'active' : '' }}">
+                <a href="{{ route('studio-hr.online-gallery.index') }}" class="side-nav-link {{ $onlineGalleryRoutes ? 'active' : '' }}">
+                    <span class="menu-icon"><i class="ti ti-photo"></i></span>
+                    <span class="menu-text" data-lang="online-gallery">Online Gallery</span>
+                </a>
             </li>
             @endif
         </ul>

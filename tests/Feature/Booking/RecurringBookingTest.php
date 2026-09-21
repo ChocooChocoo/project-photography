@@ -100,6 +100,7 @@ class RecurringBookingTest extends TestCase
             'email' => 'jane@example.com',
             'booking_frequency' => 'recurring',
             'recurrence_pattern' => ['frequency' => 'weekly', 'interval' => 1, 'sessions' => 4],
+            'terms_agree' => 1,
         ]);
 
         $response->assertOk()->assertJson(['success' => true]);
@@ -190,6 +191,7 @@ class RecurringBookingTest extends TestCase
             'full_name' => 'Jane Client',
             'contact_number' => '09170000000',
             'email' => 'jane@example.com',
+            'terms_agree' => 1,
         ]);
 
         $response->assertOk()->assertJson(['success' => true]);

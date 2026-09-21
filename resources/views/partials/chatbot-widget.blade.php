@@ -20,6 +20,16 @@
 
 @if($assistantOwnerId)
     @if($assistantLauncher)
+        @once
+            <style>
+                /* The launcher is fixed at the bottom right. Reserve space at the end
+                   of the page so bottom-right footer actions stay clickable. */
+                .content-page {
+                    padding-bottom: 6rem;
+                }
+            </style>
+        @endonce
+
         <button type="button" class="btn btn-primary rounded-circle shadow"
             data-bs-toggle="modal" data-bs-target="#studioChatbotModal"
             style="position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; z-index: 1035;"

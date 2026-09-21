@@ -78,6 +78,13 @@
                                                         data-booking-id="{{ $booking->id }}" title="Manage Gallery">
                                                         <i class="ti ti-library-photo fs-5" aria-hidden="true"></i>
                                                     </button>
+                                                    @if ($booking->gallery->gallery_status !== 'published')
+                                                        <button class="btn btn-sm publish-gallery"
+                                                            data-gallery-id="{{ $booking->gallery->id }}"
+                                                            title="Publish to Client">
+                                                            <i class="ti ti-send fs-5" aria-hidden="true"></i>
+                                                        </button>
+                                                    @endif
                                                 @else
                                                     <button class="btn btn-sm create-gallery"
                                                         data-booking-id="{{ $booking->id }}" title="Create Gallery">
@@ -144,8 +151,9 @@
                                     <div class="flex-grow-1 ms-md-4 text-center text-md-start">
                                         <h2 class="mb-1 h3 h3-md" id="galleryNameDisplay">Loading...</h2>
                                         <div
-                                            class="d-flex align-items-center justify-content-center justify-content-md-start mb-2 flex-wrap">
+                                            class="d-flex align-items-center justify-content-center justify-content-md-start mb-2 flex-wrap gap-1">
                                             <span id="galleryStatusBadge">Loading...</span>
+                                            <span id="galleryReviewBadge"></span>
                                         </div>
 
                                         <p class="text-muted mb-0" id="bookingReferenceDisplay">
@@ -153,6 +161,11 @@
                                         </p>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
+                                <button type="button" class="btn btn-primary d-none" id="publishGalleryBtn">
+                                    <i class="ti ti-send me-1"></i> Publish to Client
+                                </button>
                             </div>
                         </div>
 
@@ -545,6 +558,18 @@
                                     '<span class="badge badge-soft-danger p-1"><i class="ti ti-x me-1"></i>Inactive</span>';
                                 $('#galleryStatusBadge').html(statusBadge);
 
+                                if (response.gallery.gallery_status === 'published') {
+                                    $('#galleryReviewBadge').html(
+                                        '<span class="badge badge-soft-success p-1"><i class="ti ti-photo-check me-1"></i>Published</span>'
+                                    );
+                                    $('#publishGalleryBtn').addClass('d-none');
+                                } else {
+                                    $('#galleryReviewBadge').html(
+                                        '<span class="badge badge-soft-info p-1"><i class="ti ti-clock-hour-4 me-1"></i>Pending Review</span>'
+                                    );
+                                    $('#publishGalleryBtn').removeClass('d-none');
+                                }
+
                                 // Gallery info table
                                 $('#galleryReference').text(response.gallery.gallery_reference);
                                 $('#galleryName').text(response.gallery.gallery_name);
@@ -569,6 +594,8 @@
                                 $('#galleryInfo').hide();
                                 $('#galleryImagesSection').hide();
                                 $('#manageLoadingSpinner').hide();
+                                $('#galleryReviewBadge').empty();
+                                $('#publishGalleryBtn').addClass('d-none');
 
                                 // Show empty header
                                 $('#galleryNameDisplay').text('No Gallery Yet');
@@ -989,6 +1016,49 @@
                             icon: 'error',
                             title: 'Error',
                             text: message
+                        });
+                    }
+                });
+            });
+
+            // Publish gallery to client (from the table row action or the manage-gallery modal)
+            $(document).on('click', '.publish-gallery, #publishGalleryBtn', function() {
+                const galleryId = $(this).data('gallery-id') || currentGalleryId;
+
+                Swal.fire({
+                    title: 'Publish Gallery',
+                    text: 'The client will be notified and able to view this gallery. Continue?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, publish it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `{{ url('studio-photographer/online-gallery') }}/${galleryId}/publish`,
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Published!',
+                                        text: response.message,
+                                        showConfirmButton: false,
+                                        timer: 2000,
+                                        timerProgressBar: true
+                                    }).then(() => location.reload());
+                                } else {
+                                    Swal.fire('Error', response.message, 'error');
+                                }
+                            },
+                            error: function(xhr) {
+                                Swal.fire('Error', xhr.responseJSON?.message ||
+                                    'Failed to publish gallery.', 'error');
+                            }
                         });
                     }
                 });

@@ -138,8 +138,11 @@ class SubscriptionController extends Controller
             // Generate subscription reference
             $subscriptionReference = StudioPlanModel::generateSubscriptionReference();
 
+            // A studio may only ever use one free trial, even after cancelling.
+            $trialAlreadyUsed = $this->hasUsedTrial($studio->id);
+
             // Free trial plans activate immediately with no charge
-            if ($plan->trial_days > 0) {
+            if ($plan->trial_days > 0 && ! $trialAlreadyUsed) {
                 $startsAt = now();
                 $trialEndsAt = $startsAt->copy()->addDays($plan->trial_days);
 
@@ -219,7 +222,9 @@ class SubscriptionController extends Controller
             return response()->json([
                 'success' => true,
                 'trial' => false,
-                'message' => 'Redirecting to payment...',
+                'message' => ($plan->trial_days > 0 && $trialAlreadyUsed)
+                    ? 'Your free trial has already been used. Continuing to payment...'
+                    : 'Redirecting to payment...',
                 'checkout_url' => $checkoutSession['url'],
             ]);
 
@@ -748,5 +753,30 @@ class SubscriptionController extends Controller
         $user = auth()->user();
 
         return $user?->studio ?: StudiosModel::where('user_id', $user?->id)->first();
+    }
+
+    /**
+     * Determine whether the studio has ever consumed a free trial.
+     *
+     * Trial history is recorded either on the trial_ends_at column or, for
+     * legacy rows, inside the plan_snapshot captured at subscription time.
+     */
+    private function hasUsedTrial(int $studioId): bool
+    {
+        $subscriptions = StudioPlanModel::where('studio_id', $studioId)
+            ->get(['id', 'trial_ends_at', 'plan_snapshot']);
+
+        foreach ($subscriptions as $subscription) {
+            if ($subscription->trial_ends_at !== null) {
+                return true;
+            }
+
+            $snapshot = $subscription->plan_snapshot;
+            if (is_array($snapshot) && (int) ($snapshot['trial_days'] ?? 0) > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

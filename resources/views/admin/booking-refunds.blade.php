@@ -70,7 +70,9 @@
                 const client = booking.client || {};
                 const payments = (booking.payments || []).filter(payment => payment.status === 'succeeded');
 
-                const target = Number(item.refund_amount ?? payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0));
+                const paidTotal = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+                const ownerTarget = item.refund_amount == null ? null : Number(item.refund_amount);
+                const target = ownerTarget ?? paidTotal;
                 const percentage = item.refund_percentage == null ? 100 : Number(item.refund_percentage);
                 const paymentInputs = payments.map(payment => `
                     <div class="mb-3">
@@ -94,7 +96,15 @@
                             ${paymentStatusBadge(booking.payment_status)}
                         </div>
                         <div class="small text-muted mb-2"><i class="ti ti-info-circle me-1"></i>Reason: ${esc(reason)}</div>
-                        <div class="alert alert-info py-2 mb-3">Target refund: <strong>${money(target)}</strong> (${percentage.toFixed(2)}% of succeeded payments). This is not necessarily a full refund.</div>
+                        <div class="alert alert-info py-2 mb-3">
+                            ${ownerTarget == null ? 'Refund target' : 'Owner refund target'}: <strong>${money(target)}</strong>
+                            (${percentage.toFixed(2)}% of succeeded payments). You may override this amount at or below the total paid (${money(paidTotal)}).
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label mb-1" for="refund_amount_${item.id}">Refund amount to record</label>
+                            <input type="number" step="0.01" min="0" max="${paidTotal}" id="refund_amount_${item.id}"
+                                name="refund_amount" class="form-control" value="${target.toFixed(2)}">
+                        </div>
                         ${paymentInputs || '<div class="text-danger small mb-3">No succeeded payments found for this booking.</div>'}
                         <div class="mb-3">
                             <label class="form-label mb-1">Processor fee or evidence notes</label>

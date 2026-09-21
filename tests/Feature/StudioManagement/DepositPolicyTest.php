@@ -205,6 +205,7 @@ class DepositPolicyTest extends TestCase
             'email' => 'client-deposit@example.com',
             'payment_type' => 'downpayment',
             'booking_frequency' => 'one_time',
+            'terms_agree' => 1,
         ];
     }
 

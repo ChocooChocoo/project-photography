@@ -234,13 +234,6 @@ class AssignedBookingController extends Controller
 
                     // On-site status
                 case 'on_site':
-                    if (! $requiresLocationConfirmation) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'On-site confirmation is only required for on-location bookings.',
-                        ], 403);
-                    }
-
                     // Check if photographer has confirmed first
                     if ($assignment->status !== 'confirmed') {
                         return response()->json([
@@ -251,39 +244,40 @@ class AssignedBookingController extends Controller
 
                     $updateData['on_site_at'] = now();
 
+                    // A studio booking that is still Confirmed advances to In Progress
+                    // once the photographer is on site. This breaks the circular gate:
+                    // the client can then confirm the photographer before work starts.
+                    if ($booking->booking_type === 'studio' && $booking->status === BookingModel::STATUS_CONFIRMED) {
+                        $booking->status = BookingModel::STATUS_IN_PROGRESS;
+                        $booking->save();
+                    }
+
                     // Create notification for client to confirm on-site presence
                     $this->createClientConfirmationNotification($assignment);
                     break;
 
                 case 'in_progress':
-                    if ($requiresLocationConfirmation) {
-                        // Check if client has confirmed on-site presence
-                        if (! $assignment->on_site_at) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => 'You must mark as on-site first before starting work.',
-                            ]);
-                        }
-
-                        // Check if client has confirmed
-                        if (! $assignment->client_confirmed_at) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => 'Waiting for client to confirm your on-site presence. Please ask the client to confirm via their dashboard before starting work.',
-                            ]);
-                        }
-                    } elseif ($assignment->status !== 'confirmed') {
+                    // Every booking type passes through On Site and client
+                    // confirmation before the photographer may start work.
+                    if (! $assignment->on_site_at) {
                         return response()->json([
                             'success' => false,
-                            'message' => 'You must confirm the assignment first before starting work.',
+                            'message' => 'You must mark as on-site first before starting work.',
+                        ]);
+                    }
+
+                    if (! $assignment->client_confirmed_at) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Waiting for client to confirm your on-site presence. Please ask the client to confirm via their dashboard before starting work.',
                         ]);
                     }
 
                     $updateData['started_at'] = now();
 
                     // Make sure booking is in_progress
-                    if ($booking->status !== 'in_progress') {
-                        $booking->status = 'in_progress';
+                    if ($booking->status !== BookingModel::STATUS_IN_PROGRESS) {
+                        $booking->status = BookingModel::STATUS_IN_PROGRESS;
                         $booking->save();
                     }
                     break;

@@ -62,14 +62,22 @@ class GroqClient
             return $this->failure('transport_error');
         }
 
-        if ($response->status() === 429) {
+        $status = $response->status();
+
+        if ($this->isAuthFailure($status)) {
+            $this->logAuthFailure($status);
+
+            return $this->failure('invalid_credentials');
+        }
+
+        if ($status === 429) {
             Log::warning('Groq assistant rate limited by provider.', ['status' => 429]);
 
             return $this->failure('provider_rate_limited');
         }
 
         if (! $response->successful()) {
-            Log::error('Groq assistant returned an error status.', ['status' => $response->status()]);
+            Log::error('Groq assistant returned an error status.', ['status' => $status]);
 
             return $this->failure('provider_error');
         }
@@ -89,6 +97,81 @@ class GroqClient
             'tokens' => (int) data_get($payload, 'usage.total_tokens', 0),
             'reason' => null,
         ];
+    }
+
+    /**
+     * Confirm the configured credential works with a minimal request.
+     *
+     * Used by the ai:health command. Returns only a status code and a short
+     * reason code; the response body is never inspected, returned, or logged.
+     *
+     * @return array{ok: bool, status: int|null, reason: string|null}
+     */
+    public function ping(): array
+    {
+        $apiKey = (string) config('services.groq.api_key');
+
+        if ($apiKey === '') {
+            Log::warning('Groq assistant is not configured.');
+
+            return ['ok' => false, 'status' => null, 'reason' => 'not_configured'];
+        }
+
+        try {
+            $response = Http::withToken($apiKey)
+                ->acceptJson()
+                ->timeout((int) config('services.groq.timeout', 20))
+                ->retry(1, 500, throw: false)
+                ->post(rtrim((string) config('services.groq.base_url'), '/').'/chat/completions', [
+                    'model' => (string) config('services.groq.model'),
+                    'messages' => [['role' => 'user', 'content' => 'ping']],
+                    'max_tokens' => 1,
+                    'temperature' => 0,
+                    'stream' => false,
+                ]);
+        } catch (\Throwable $e) {
+            Log::error('Groq assistant request failed.', ['exception' => $e::class]);
+
+            return ['ok' => false, 'status' => null, 'reason' => 'transport_error'];
+        }
+
+        $status = $response->status();
+
+        if ($this->isAuthFailure($status)) {
+            $this->logAuthFailure($status);
+
+            return ['ok' => false, 'status' => $status, 'reason' => 'invalid_credentials'];
+        }
+
+        if ($status === 429) {
+            Log::warning('Groq assistant rate limited by provider.', ['status' => 429]);
+
+            return ['ok' => false, 'status' => $status, 'reason' => 'provider_rate_limited'];
+        }
+
+        if (! $response->successful()) {
+            Log::error('Groq assistant returned an error status.', ['status' => $status]);
+
+            return ['ok' => false, 'status' => $status, 'reason' => 'provider_error'];
+        }
+
+        return ['ok' => true, 'status' => $status, 'reason' => null];
+    }
+
+    /**
+     * A 401 or 403 means the credential was rejected, not a transient outage.
+     */
+    protected function isAuthFailure(int $status): bool
+    {
+        return $status === 401 || $status === 403;
+    }
+
+    /**
+     * Log a rejected credential without ever recording the key itself.
+     */
+    protected function logAuthFailure(int $status): void
+    {
+        Log::warning('Groq assistant rejected the API key; it is invalid or expired.', ['status' => $status]);
     }
 
     /**

@@ -14,6 +14,7 @@ class RbacSeeder extends Seeder
         $this->call([
             StudioOwnerRolesSeeder::class,
             StudioOwnerPermissionsSeeder::class,
+            StudioOnlineGalleryPermissionSeeder::class,
             StudioOwnerRolePermissionSeeder::class,
             StudioUserRoleAssignmentsSeeder::class,
         ]);

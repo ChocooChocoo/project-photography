@@ -7,6 +7,7 @@ use App\Http\Requests\StudioOwner\AssignBookingPhotographersRequest;
 use App\Http\Requests\StudioOwner\UpdateBookingStatusRequest;
 use App\Models\BookingCancellationRecoveryModel;
 use App\Models\BookingModel;
+use App\Models\PaymentModel;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
 use App\Models\StudioOwner\StudioPhotographersModel;
 use App\Models\StudioOwner\StudiosModel;
@@ -129,20 +130,16 @@ class BookingController extends Controller
             // Get available statuses for dropdown
             $availableStatuses = $booking->getAvailableStatuses();
 
-            // Check if all photographers have completed their assignments
-            $allPhotographersCompleted = true;
-            $hasAssignedPhotographers = $booking->assignedPhotographers->where('status', '!=', 'cancelled')->count() > 0;
-
-            foreach ($booking->assignedPhotographers->where('status', '!=', 'cancelled') as $assignment) {
-                if ($assignment->status !== 'completed') {
-                    $allPhotographersCompleted = false;
-                    break;
-                }
-            }
+            // At least one non-cancelled assignment is required, and every one of
+            // them must be delivered before the owner can complete the booking.
+            $activeAssignments = $booking->assignedPhotographers->where('status', '!=', 'cancelled');
+            $hasAssignedPhotographers = $activeAssignments->count() > 0;
+            $allPhotographersCompleted = $hasAssignedPhotographers
+                && $activeAssignments->every(fn ($assignment) => $assignment->status === 'completed');
 
             $requiresOnlineGallery = $booking->requiresOnlineGalleryUpload();
             $hasUploadedGalleryContent = $booking->hasUploadedGalleryContent();
-            $galleryBlockReason = $booking->getGalleryCompletionBlockReason();
+            $galleryBlockReason = $this->getGalleryCompletionBlockReason($booking);
 
             // Get maximum photographers allowed based on package
             $maxPhotographers = $this->getMaxPhotographersFromPackage($booking);
@@ -158,16 +155,20 @@ class BookingController extends Controller
 
             // Owner can only complete booking if:
             // 1. Booking is in 'in_progress' status
-            // 2. All assigned photographers have marked as completed
-            // 3. Booking is fully paid
-            // 4. Required gallery images have been uploaded
+            // 2. At least one photographer is assigned
+            // 3. All assigned photographers have marked as completed
+            // 4. The balance is settled (no outstanding payment)
+            // 5. Required gallery images have been published
             $canOwnerComplete = $booking->status === 'in_progress' &&
+                                $hasAssignedPhotographers &&
                                 $allPhotographersCompleted &&
-                                $totalPaid >= $booking->total_amount &&
-                                $booking->isGalleryReadyForCompletion();
+                                ! $this->isPaymentOverdue($booking, (float) $totalPaid) &&
+                                ! $this->hasOutstandingBalance($booking, (float) $totalPaid) &&
+                                $this->isGalleryReadyForCompletion($booking);
 
             $completionBlockers = $this->getOwnerCompletionBlockers(
                 $booking,
+                $hasAssignedPhotographers,
                 $allPhotographersCompleted,
                 $totalPaid
             );
@@ -206,7 +207,7 @@ class BookingController extends Controller
     /**
      * Get the current completion blockers for an owner-facing booking flow.
      */
-    private function getOwnerCompletionBlockers(BookingModel $booking, bool $allPhotographersCompleted, float $totalPaid): array
+    private function getOwnerCompletionBlockers(BookingModel $booking, bool $hasAssignedPhotographers, bool $allPhotographersCompleted, float $totalPaid): array
     {
         $blockers = [];
 
@@ -214,19 +215,84 @@ class BookingController extends Controller
             $blockers[] = 'Booking must be in progress before it can be completed.';
         }
 
-        if ($totalPaid < (float) $booking->total_amount) {
-            $blockers[] = 'Booking must be fully paid before it can be completed.';
+        if (! $hasAssignedPhotographers) {
+            $blockers[] = 'Assign at least one photographer before completing the booking.';
+        }
+
+        if ($this->isPaymentOverdue($booking, $totalPaid)) {
+            $blockers[] = 'The remaining balance is overdue. Settle the payment before completing this booking.';
+        }
+
+        if ($this->hasOutstandingBalance($booking, $totalPaid)) {
+            $blockers[] = 'The booking is not fully paid. Settle the remaining balance before completing the booking.';
         }
 
         if (! $allPhotographersCompleted) {
             $blockers[] = 'All assigned photographers must mark their assignments as completed before the owner can complete the booking.';
         }
 
-        if (! $booking->isGalleryReadyForCompletion()) {
-            $blockers[] = $booking->getGalleryCompletionBlockReason();
+        if (! $this->isGalleryReadyForCompletion($booking)) {
+            $blockers[] = $this->getGalleryCompletionBlockReason($booking);
         }
 
         return $blockers;
+    }
+
+    /**
+     * A booking with any unpaid balance cannot be completed.
+     */
+    private function hasOutstandingBalance(BookingModel $booking, float $totalPaid): bool
+    {
+        return $totalPaid < (float) $booking->total_amount;
+    }
+
+    /**
+     * Completion requires the online gallery to be published, not merely
+     * uploaded: the client only sees the gallery once gallery_status is
+     * 'published', so a draft gallery must keep blocking completion.
+     */
+    private function isGalleryReadyForCompletion(BookingModel $booking): bool
+    {
+        if (! $booking->requiresOnlineGalleryUpload()) {
+            return true;
+        }
+
+        $gallery = $booking->relationLoaded('studioOnlineGallery')
+            ? $booking->studioOnlineGallery
+            : $booking->studioOnlineGallery()->first();
+
+        return $gallery !== null && $gallery->isPublished();
+    }
+
+    /**
+     * Blocking reason when the required gallery is not yet published.
+     */
+    private function getGalleryCompletionBlockReason(BookingModel $booking): ?string
+    {
+        if ($this->isGalleryReadyForCompletion($booking)) {
+            return null;
+        }
+
+        return 'Cannot mark as completed until the client\'s online gallery is published.';
+    }
+
+    /**
+     * A booking payment is overdue only when money is still owed after the event
+     * day. A partial payment on an upcoming event is not overdue, so it does not
+     * block completion by itself.
+     */
+    private function isPaymentOverdue(BookingModel $booking, float $totalPaid): bool
+    {
+        if ($totalPaid >= (float) $booking->total_amount) {
+            return false;
+        }
+
+        $eventDate = $booking->event_date;
+        if (! $eventDate instanceof \Carbon\CarbonInterface) {
+            $eventDate = \Carbon\Carbon::parse($eventDate);
+        }
+
+        return $eventDate->lt(now('Asia/Manila')->startOfDay());
     }
 
     /**
@@ -861,21 +927,27 @@ class BookingController extends Controller
                 ->firstOrFail();
 
             $newStatus = $request->status;
+            $isCompletion = $newStatus === BookingModel::STATUS_COMPLETED;
 
-            if (! $booking->canTransitionTo($newStatus) && $newStatus !== BookingModel::STATUS_CANCELLED) {
+            // Completion uses the owner-specific gate below instead of the model
+            // transition guard, so a not-yet-overdue balance does not block it.
+            if (! $isCompletion
+                && $newStatus !== BookingModel::STATUS_CANCELLED
+                && ! $booking->canTransitionTo($newStatus)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid booking status transition.',
                 ], 422);
             }
 
-            if ($newStatus === BookingModel::STATUS_COMPLETED) {
+            if ($isCompletion) {
                 $totalPaid = (float) $booking->payments->where('status', 'succeeded')->sum('amount');
-                $allPhotographersCompleted = $booking->assignedPhotographers->where('status', '!=', 'cancelled')->every(function ($assignment) {
-                    return $assignment->status === 'completed';
-                });
+                $activeAssignments = $booking->assignedPhotographers->where('status', '!=', 'cancelled');
+                $hasAssignedPhotographers = $activeAssignments->count() > 0;
+                $allPhotographersCompleted = $hasAssignedPhotographers
+                    && $activeAssignments->every(fn ($assignment) => $assignment->status === 'completed');
 
-                $blockers = $this->getOwnerCompletionBlockers($booking, $allPhotographersCompleted, $totalPaid);
+                $blockers = $this->getOwnerCompletionBlockers($booking, $hasAssignedPhotographers, $allPhotographersCompleted, $totalPaid);
 
                 if (! empty($blockers)) {
                     return response()->json([
@@ -1112,19 +1184,54 @@ class BookingController extends Controller
             ->whereNotIn('photographer_id', $booking->assignedPhotographers->pluck('photographer_id'))
             ->get();
 
-        return view('owner.cancellation-recovery', compact('recovery', 'replacementCandidates', 'replacementMembers'));
+        // A client who paid in full and cancelled leaves the refund amount to the
+        // owner. Only then does the owner get the amount input on this screen.
+        $paidTotal = (float) PaymentModel::where('booking_id', $recovery->booking_id)
+            ->where('status', 'succeeded')->sum('amount');
+        $canSetRefundTarget = $recovery->status === BookingCancellationRecoveryService::STATUS_REFUND_PENDING
+            && $booking
+            && $booking->cancelled_by === 'client'
+            && $paidTotal > 0
+            && $paidTotal >= (float) $booking->total_amount;
+
+        return view('owner.cancellation-recovery', compact(
+            'recovery',
+            'replacementCandidates',
+            'replacementMembers',
+            'paidTotal',
+            'canSetRefundTarget'
+        ));
     }
 
     public function escalatePhotographerCancellation(Request $request, $recoveryId)
     {
+        $data = $request->validate([
+            'reason' => 'nullable|string|max:2000',
+            'refund_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        $refundAmount = $data['refund_amount'] ?? null;
+
         try {
             $studioIds = StudiosModel::where('user_id', Auth::id())->pluck('id');
             $recovery = BookingCancellationRecoveryModel::whereIn('studio_id', $studioIds)->findOrFail($recoveryId);
-            $recovery = app(BookingCancellationRecoveryService::class)->ownerEscalate($recovery, $request->input('reason'));
+            $recovery = app(BookingCancellationRecoveryService::class)->ownerEscalate(
+                $recovery,
+                $data['reason'] ?? null,
+                $refundAmount !== null ? (float) $refundAmount : null
+            );
 
-            return response()->json(['success' => true, 'recovery' => $recovery]);
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'recovery' => $recovery]);
+            }
+
+            return redirect()->back()->with('success', 'Refund target saved.');
         } catch (\DomainException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 409);
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 409);
+            }
+
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
@@ -1158,37 +1265,51 @@ class BookingController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Booking must be in progress before it can be completed.',
-                ]);
+                ], 403);
             }
 
-            // Check if fully paid
-            $totalPaid = $booking->payments()->where('status', 'succeeded')->sum('amount');
-            if ($totalPaid < $booking->total_amount) {
+            // Payment may be partial, but a balance left unpaid after the event
+            // day is overdue and must be settled before completion.
+            $totalPaid = (float) $booking->payments()->where('status', 'succeeded')->sum('amount');
+            if ($this->isPaymentOverdue($booking, $totalPaid)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Booking must be fully paid before it can be completed.',
-                ]);
+                    'message' => 'The remaining balance is overdue. Settle the payment before completing this booking.',
+                ], 403);
             }
 
-            // Check if all photographers have completed their assignments
+            // The booking must be fully paid before it can be completed.
+            if ($this->hasOutstandingBalance($booking, $totalPaid)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The booking is not fully paid. Settle the remaining balance before completing the booking.',
+                ], 403);
+            }
+
+            // At least one non-cancelled assignment is required, and each must be
+            // delivered before completion.
             $assignments = BookingAssignedPhotographerModel::where('booking_id', $id)->where('status', '!=', 'cancelled')->get();
 
-            // If there are no photographers assigned, that's fine
-            if ($assignments->count() > 0) {
-                foreach ($assignments as $assignment) {
-                    if ($assignment->status !== 'completed') {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'All assigned photographers must mark their assignments as completed before the owner can complete the booking.',
-                        ]);
-                    }
+            if ($assignments->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Assign at least one photographer before completing the booking.',
+                ], 403);
+            }
+
+            foreach ($assignments as $assignment) {
+                if ($assignment->status !== 'completed') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'All assigned photographers must mark their assignments as completed before the owner can complete the booking.',
+                    ], 403);
                 }
             }
 
-            if (! $booking->isGalleryReadyForCompletion()) {
+            if (! $this->isGalleryReadyForCompletion($booking)) {
                 return response()->json([
                     'success' => false,
-                    'message' => $booking->getGalleryCompletionBlockReason(),
+                    'message' => $this->getGalleryCompletionBlockReason($booking),
                 ], 403);
             }
 

@@ -16,3 +16,4 @@ Schedule::command('notifications:prune')->daily()->withoutOverlapping()->environ
 Schedule::command('subscriptions:notify-lifecycle')->daily()->withoutOverlapping()->environments(['production']);
 Schedule::command('subscriptions:expire')->hourly()->withoutOverlapping()->environments(['production']);
 Schedule::command('bookings:escalate-photographer-cancellations')->hourly()->withoutOverlapping()->environments(['production']);
+Schedule::command('bookings:reconcile-payments')->everyFiveMinutes()->withoutOverlapping()->environments(['production']);

@@ -501,12 +501,13 @@ class UserModel extends Authenticatable
 
         $permissions = collect();
 
-        $roles = $this->activeRoles($portal, $studioId)->with(['permissions' => function ($query) use ($portal) {
+        // The permission's own portal column only groups the picker in the owner
+        // UI. It must never drop a grant: an owner can attach any permission to
+        // an employee role, regardless of the portal the permission was filed
+        // under. Role resolution stays portal-aware; permission resolution does
+        // not.
+        $roles = $this->activeRoles($portal, $studioId)->with(['permissions' => function ($query) {
             $query->where('tbl_permissions.status', 'active');
-
-            if ($portal !== null) {
-                $query->where('tbl_permissions.portal', $portal);
-            }
         }])->get();
 
         foreach ($roles as $role) {

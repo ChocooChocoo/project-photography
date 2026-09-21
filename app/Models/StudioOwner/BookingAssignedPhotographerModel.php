@@ -291,7 +291,7 @@ class BookingAssignedPhotographerModel extends Model
     {
         return ! is_null($this->on_site_at) &&
             ! is_null($this->client_confirmed_at) &&
-            $this->status === 'confirmed';
+            in_array($this->status, ['confirmed', 'on_site'], true);
     }
 
     /**
@@ -322,6 +322,10 @@ class BookingAssignedPhotographerModel extends Model
             }
 
             return 'start_work';
+        }
+
+        if ($this->status === 'on_site') {
+            return ! $this->client_confirmed_at ? 'waiting_client' : 'start_work';
         }
 
         if ($this->status === 'in_progress') {

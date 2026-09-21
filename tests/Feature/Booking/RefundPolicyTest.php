@@ -5,28 +5,44 @@ namespace Tests\Feature\Booking;
 use App\Models\BookingModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Services\BookingCancellationRecoveryService;
-use Illuminate\Database\Eloquent\Model;
 use Tests\TestCase;
 
 class RefundPolicyTest extends TestCase
 {
-    public function test_downpayment_customer_cancellation_has_no_refund_recovery_policy(): void
+    public function test_client_downpayment_cancellation_is_not_refundable_for_studio_bookings(): void
     {
         $booking = new BookingModel(['booking_type' => 'studio', 'cancelled_by' => 'client', 'payment_type' => 'downpayment']);
-        $this->assertSame(100.0, $this->refundPercentage($booking));
-        $this->assertFalse($booking->payment_type === 'full_payment');
+
+        // The down payment is not refundable, so no automatic cash refund target is set.
+        $this->assertSame(0.0, $this->refundPercentage($booking));
     }
 
-    public function test_full_payment_customer_cancellation_targets_seventy_percent_by_default(): void
+    public function test_client_downpayment_cancellation_is_not_refundable_for_freelancer_bookings(): void
+    {
+        $booking = new BookingModel(['booking_type' => 'freelancer', 'cancelled_by' => 'client', 'payment_type' => 'downpayment']);
+
+        // The rule covers every booking type, including freelancer bookings.
+        $this->assertSame(0.0, $this->refundPercentage($booking));
+    }
+
+    public function test_client_full_payment_cancellation_leaves_the_amount_to_owner_discretion(): void
     {
         $booking = new BookingModel(['booking_type' => 'studio', 'cancelled_by' => 'client', 'payment_type' => 'full_payment']);
         $booking->setRelation('studio', new StudiosModel(['downpayment_percentage' => 30]));
-        $this->assertSame(70.0, $this->refundPercentage($booking));
+
+        // No automatic split is applied; the owner sets the refund target instead.
+        $this->assertSame(0.0, $this->refundPercentage($booking));
     }
 
     public function test_studio_cancellation_targets_full_provider_refund(): void
     {
         $booking = new BookingModel(['booking_type' => 'studio', 'cancelled_by' => 'studio', 'payment_type' => 'full_payment']);
+        $this->assertSame(100.0, $this->refundPercentage($booking));
+    }
+
+    public function test_freelancer_cancellation_by_business_targets_full_refund(): void
+    {
+        $booking = new BookingModel(['booking_type' => 'freelancer', 'cancelled_by' => 'studio', 'payment_type' => 'downpayment']);
         $this->assertSame(100.0, $this->refundPercentage($booking));
     }
 

@@ -4,7 +4,16 @@
 {{-- CONTENTS --}}
 @section('content')
     <div class="content-page">
-        <div class="container-fluid">                  
+        <div class="container-fluid">
+            @php
+                // The owner recovery screen is addressed by recovery id, so gather the
+                // still-pending refunds for the bookings on this page in one query.
+                $refundPendingRecoveries = \App\Models\BookingCancellationRecoveryModel::with('booking')
+                    ->whereIn('booking_id', $bookings->pluck('id'))
+                    ->where('status', \App\Services\BookingCancellationRecoveryService::STATUS_REFUND_PENDING)
+                    ->orderByDesc('id')
+                    ->get();
+            @endphp
             <div class="row mt-3">
                 <div class="col-12">
                     {{-- TABLE --}}
@@ -20,10 +29,32 @@
                                     <i data-lucide="search" class="app-search-icon text-muted"></i>
                                 </div>
                             </div>
+                            @if($refundPendingRecoveries->isNotEmpty())
+                                <div class="d-flex gap-2">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-warning dropdown-toggle" type="button"
+                                                id="refundQueueButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i data-lucide="rotate-ccw" class="me-1"></i>
+                                            Refund Queue ({{ $refundPendingRecoveries->count() }})
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="refundQueueButton">
+                                            @foreach($refundPendingRecoveries as $recovery)
+                                                <li>
+                                                    <a class="dropdown-item d-flex justify-content-between align-items-center gap-3"
+                                                       href="{{ route('owner.booking.recovery.view', $recovery->id) }}">
+                                                        <span>{{ $recovery->booking->booking_reference ?? ('Recovery #'.$recovery->id) }}</span>
+                                                        <span class="badge badge-soft-warning fs-8 text-uppercase">{{ str_replace('_', ' ', $recovery->status) }}</span>
+                                                    </a>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-custom table-centered table-select table-hover table-bordered w-100 mb-0">
+                            <table id="bookingsTable" class="table table-custom table-centered table-select table-hover table-bordered w-100 mb-0">
                                 <thead class="bg-light align-middle bg-opacity-25 thead-sm">
                                     <tr class="text-uppercase fs-xxs">
                                         <th data-table-sort>Client Name</th>
@@ -1500,5 +1531,129 @@
             // Initialize icons on page load
             loadIcons();
         });
+    </script>
+
+    {{-- LIVE REFRESH: poll for new/updated bookings and the notification bell every 25s. --}}
+    <script>
+        (function() {
+            var POLL_INTERVAL = 25000;
+            // Scope every lookup to the bookings table so a second table elsewhere
+            // on the page can never be mistaken for this one.
+            var BOOKINGS_TABLE = '#bookingsTable tbody';
+            var pollTimer = null;
+            var pollInFlight = false;
+
+            // Keep the bell badge current using the shared notifications endpoint.
+            function refreshNotificationBell() {
+                var $dropdown = $('#notificationDropdown');
+                var url = $dropdown.length ? $dropdown.data('unread-url') : null;
+                if (!url) {
+                    return;
+                }
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    dataType: 'json'
+                }).done(function(response) {
+                    if (!response || !response.success) {
+                        return;
+                    }
+                    var count = parseInt(response.count, 10) || 0;
+                    var $badge = $('#notificationBadge');
+                    if (count > 0) {
+                        $badge.text(count).show();
+                    } else {
+                        $badge.hide();
+                    }
+                });
+            }
+
+            // Refresh the bookings table in place so filters and pagination keep working.
+            function refreshBookings() {
+                if (pollInFlight) {
+                    return;
+                }
+                pollInFlight = true;
+
+                $.ajax({
+                    url: window.location.href,
+                    type: 'GET',
+                    dataType: 'html'
+                }).done(function(html) {
+                    var parsed = new DOMParser().parseFromString(html, 'text/html');
+                    var incomingTable = parsed.querySelector(BOOKINGS_TABLE);
+                    if (!incomingTable) {
+                        return;
+                    }
+
+                    var incomingRows = incomingTable.querySelectorAll('tr[data-booking-id]');
+
+                    // Empty server list: swap in the server-rendered empty state.
+                    if (incomingRows.length === 0) {
+                        document.querySelector(BOOKINGS_TABLE).innerHTML = incomingTable.innerHTML;
+                        return;
+                    }
+
+                    var seen = {};
+
+                    incomingRows.forEach(function(incoming) {
+                        var id = incoming.getAttribute('data-booking-id');
+                        seen[id] = true;
+
+                        var current = document.querySelector(BOOKINGS_TABLE + ' tr[data-booking-id="' + id + '"]');
+                        if (current) {
+                            // Status (4), payment status (5), remaining balance (6), total (7).
+                            [4, 5, 6, 7].forEach(function(index) {
+                                var incomingCell = incoming.children[index];
+                                var currentCell = current.children[index];
+                                if (incomingCell && currentCell) {
+                                    currentCell.innerHTML = incomingCell.innerHTML;
+                                }
+                            });
+                            return;
+                        }
+
+                        // New booking: drop the empty-state row and append it.
+                        var emptyRow = document.querySelector(BOOKINGS_TABLE + ' tr td[colspan]');
+                        if (emptyRow) {
+                            emptyRow.closest('tr').remove();
+                        }
+                        document.querySelector(BOOKINGS_TABLE).appendChild(incoming.cloneNode(true));
+                    });
+
+                    // Remove rows that no longer exist in the refreshed list.
+                    document.querySelectorAll(BOOKINGS_TABLE + ' tr[data-booking-id]').forEach(function(row) {
+                        if (!seen[row.getAttribute('data-booking-id')]) {
+                            row.remove();
+                        }
+                    });
+                }).always(function() {
+                    pollInFlight = false;
+                });
+            }
+
+            function poll() {
+                if (document.hidden) {
+                    return;
+                }
+                refreshNotificationBell();
+                refreshBookings();
+            }
+
+            $(function() {
+                if (pollTimer) {
+                    return;
+                }
+                pollTimer = setInterval(poll, POLL_INTERVAL);
+            });
+
+            // Refresh immediately when the tab becomes visible again after being hidden.
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    poll();
+                }
+            });
+        })();
     </script>
 @endsection

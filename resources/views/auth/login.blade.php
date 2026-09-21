@@ -78,12 +78,15 @@
                         </div>
                     @endif
 
-                    <form id="loginForm" method="POST" novalidate>
+                    {{-- Visible error message for failed or blocked attempts --}}
+                    <div class="alert alert-danger d-none mb-3" id="loginErrorAlert" role="alert"></div>
+
+                    <form id="loginForm" method="POST" action="{{ route('auth.login.store') }}" novalidate>
                         @csrf
                         
                         <div class="form-group mb-2">
                             <label for="email" class="form-label">Email address</label>
-                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter Email Address" required>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" placeholder="Enter Email Address" required>
                             <div class="invalid-feedback">
                                 Please enter a valid email address.
                             </div>
@@ -118,6 +121,13 @@
             </div>
         </div>
     </div>
+
+    {{-- Loading overlay shown while the sign-in request is in flight --}}
+    <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
+        <div class="loading-spinner" role="status">
+            <span class="visually-hidden">Signing in...</span>
+        </div>
+    </div>
 @endsection
 
 {{-- SCRIPTS --}}
@@ -145,6 +155,34 @@
                 }
             });
             
+            // Show a message above the form so a failed attempt is never silent.
+            function showLoginError(message) {
+                $('#loginErrorAlert').removeClass('d-none').text(message);
+            }
+
+            function hideLoginError() {
+                $('#loginErrorAlert').addClass('d-none').text('');
+            }
+
+            // Mark the fields the server rejected and show their messages.
+            function markInvalidFields(errors) {
+                if (!errors) {
+                    return;
+                }
+
+                $.each(errors, function(field, messages) {
+                    var input = $('#' + field);
+                    if (!input.length) {
+                        input = $('[name="' + field + '"]');
+                    }
+
+                    input.addClass('is-invalid');
+                    if (messages && messages.length) {
+                        input.siblings('.invalid-feedback').text(messages[0]);
+                    }
+                });
+            }
+
             // Form validation
             $('#loginForm').on('submit', function(e) {
                 e.preventDefault();
@@ -156,17 +194,23 @@
                     $(this).addClass('was-validated');
                     return false;
                 }
-                
+
+                hideLoginError();
+
                 // Show loading state
                 $('#loadingOverlay').show();
                 $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Signing in...');
                 
                 // Submit form via AJAX
                 $.ajax({
-                    url: '{{ route("auth.login.store") }}',
+                    url: $(this).attr('action'),
                     method: 'POST',
                     data: $(this).serialize(),
                     dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Accept': 'application/json'
+                    },
                     success: function(response) {
                         if (response.success) {
                             // Show success SweetAlert
@@ -182,57 +226,75 @@
                                     window.location.href = response.redirect;
                                 }
                             });
-                        } else {
+                        } else if (response.needs_verification) {
                             // Check if email needs verification
-                            if (response.needs_verification) {
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'Email Verification Required',
-                                    text: response.message,
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Go to Verification',
-                                    cancelButtonText: 'OK',
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        // Redirect to verification page
-                                        window.location.href = '{{ route("verify") }}';
-                                    }
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Login Failed',
-                                    text: response.message,
-                                    confirmButtonColor: '#DC3545',
-                                });
-                            }
-                        }
-                        
-                        // Reset loading state
-                        $('#loadingOverlay').hide();
-                        $('#submitBtn').prop('disabled', false).html('Sign In');
-                    },
-                    error: function(xhr) {
-                        // Reset loading state
-                        $('#loadingOverlay').hide();
-                        $('#submitBtn').prop('disabled', false).html('Sign In');
-                        
-                        var errors = xhr.responseJSON?.errors;
-                        var errorMessage = xhr.responseJSON?.message || 'Login failed. Please try again.';
-                        
-                        if (errors) {
-                            errorMessage = '';
-                            $.each(errors, function(key, value) {
-                                errorMessage += value[0] + '\n';
+                            showLoginError(response.message);
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Email Verification Required',
+                                text: response.message,
+                                showCancelButton: true,
+                                confirmButtonText: 'Go to Verification',
+                                cancelButtonText: 'OK',
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Redirect to verification page
+                                    window.location.href = '{{ route("verify") }}';
+                                }
+                            });
+                        } else {
+                            // Keep the entered email so the user can correct the password.
+                            showLoginError(response.message || 'Login failed. Please try again.');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Login Failed',
+                                text: response.message || 'Login failed. Please try again.',
+                                confirmButtonColor: '#DC3545',
                             });
                         }
-                        
+                    },
+                    error: function(xhr) {
+                        var response = xhr.responseJSON || {};
+                        var errorMessage = response.message || 'Login failed. Please try again.';
+
+                        if (xhr.status === 419) {
+                            errorMessage = 'Your session expired. Please refresh the page and try again.';
+                            showLoginError(errorMessage);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Session Expired',
+                                text: errorMessage,
+                                confirmButtonText: 'Reload Page',
+                                confirmButtonColor: '#DC3545',
+                                allowOutsideClick: false,
+                            }).then(function() {
+                                window.location.reload();
+                            });
+                            return;
+                        }
+
+                        if (xhr.status === 422) {
+                            errorMessage = response.message || 'Please check the highlighted fields and try again.';
+                            markInvalidFields(response.errors);
+                            showLoginError(errorMessage);
+                        } else if (xhr.status >= 500) {
+                            errorMessage = response.message || 'Server error. Please try again later.';
+                            showLoginError(errorMessage);
+                        } else {
+                            showLoginError(errorMessage);
+                        }
+
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error!',
+                            title: 'Login Failed',
                             text: errorMessage,
                             confirmButtonColor: '#DC3545',
                         });
+                    },
+                    complete: function() {
+                        // Always reset the loading state.
+                        $('#loadingOverlay').hide();
+                        $('#submitBtn').prop('disabled', false).html('Sign In');
                     }
                 });
             });
@@ -240,7 +302,7 @@
             // Real-time form validation
             $('#loginForm input').on('input', function() {
                 $(this).removeClass('is-invalid');
-                $(this).siblings('.invalid-feedback').hide();
+                $(this).siblings('.invalid-feedback').show();
             });
             
             // Remove validation on focus

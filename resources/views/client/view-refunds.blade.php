@@ -44,7 +44,9 @@
                                                 ? ($booking->studio->studio_name ?? 'Studio')
                                                 : ($booking->freelancer->brand_name ?? 'Freelancer');
                                             $paidAmount = $booking->payments->where('status', 'succeeded')->sum('amount');
-                                            $refundedAmount = $booking->payments->where('status', 'refunded')->sum(fn ($payment) => $payment->refunded_amount ?? $payment->amount);
+                                            $refundedAmount = $booking->payments
+                                                ->whereIn('status', ['refunded', 'partially_refunded'])
+                                                ->sum(fn ($payment) => $payment->refunded_amount ?? $payment->amount);
                                              $targetAmount = $recovery->refund_amount ?? $paidAmount;
                                             $isRefunded = $recovery->status === 'refunded';
                                             $statusBadge = $isRefunded ? 'badge-soft-success' : 'badge-soft-warning';

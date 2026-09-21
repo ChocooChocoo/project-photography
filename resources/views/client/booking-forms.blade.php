@@ -1725,6 +1725,7 @@
                     full_name: $('#fullName').val(),
                     contact_number: $('#contactNumber').val(),
                     email: $('#email').val(),
+                    terms_agree: $('#termsCheck').is(':checked') ? 1 : 0,
                     _token: '{{ csrf_token() }}'
                 };
 
@@ -2098,6 +2099,7 @@
                 
                 if (dateStatusText.includes('fully booked') || 
                     dateStatusText.includes('not available') || 
+                    dateStatusText.includes('overlap') ||
                     dateStatusText.includes('error') ||
                     dateStatusText.includes('not an operating day') ||
                     dateStatusText.includes('duration mismatch')) {
@@ -2381,6 +2383,20 @@
                 }
                 // ========== END PAYMENT TYPE VALIDATION ==========
                 
+                // ========== TERMS AND CONDITIONS ==========
+                if (!$('#termsCheck').is(':checked')) {
+                    $('#termsCheck').addClass('is-invalid');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Terms Required',
+                        text: 'You must agree to the terms and conditions.',
+                        confirmButtonColor: '#0d6efd'
+                    });
+                    return false;
+                }
+                $('#termsCheck').removeClass('is-invalid');
+                // ========== END TERMS AND CONDITIONS ==========
+
                 console.log('========== VALIDATION PASSED ==========');
                 return true;
             }
@@ -3456,6 +3472,19 @@
                 
                 console.log('All locations validated successfully');
                 return true;
+            }
+
+            // Clear the terms invalid state as soon as the client agrees.
+            $('#termsCheck').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+
+            // Re-run the availability check when the form loads with a prefilled date/time.
+            // The change handler above fills in the status and blocks submit on overlap.
+            if ($('#eventDate').val()) {
+                $('#eventDate').trigger('change');
             }
         });
     </script>

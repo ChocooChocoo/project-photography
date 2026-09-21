@@ -27,6 +27,12 @@ class BookingController extends Controller
 {
     use Notifiable;
 
+    /**
+     * Client-facing message for an overlapping timeslot. Kept in one place so the
+     * availability endpoint and store() reject with identical wording.
+     */
+    private const TIMESLOT_CONFLICT_MESSAGE = 'The selected time slot overlaps with an existing booking.';
+
     protected $stripeService;
     protected $paymongoService;
 
@@ -301,34 +307,19 @@ class BookingController extends Controller
         }
 
         // Check time overlap against existing bookings on the same date
-        $hasTimeOverlap = BookingModel::where('booking_type', $request->type)
-            ->where('provider_id', $request->provider_id)
-            ->where('event_date', $request->date)
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->where(function ($query) use ($request) {
-                $query->where(function ($q) use ($request) {
-                    // New booking starts during an existing booking
-                    $q->where('start_time', '<=', $request->start_time)
-                    ->where('end_time', '>', $request->start_time);
-                })->orWhere(function ($q) use ($request) {
-                    // New booking ends during an existing booking
-                    $q->where('start_time', '<', $request->end_time)
-                    ->where('end_time', '>=', $request->end_time);
-                })->orWhere(function ($q) use ($request) {
-                    // New booking completely covers an existing booking
-                    $q->where('start_time', '>=', $request->start_time)
-                    ->where('end_time', '<=', $request->end_time);
-                });
-            })
-            ->exists();
-
-        if ($hasTimeOverlap) {
+        if ($this->hasTimeslotConflict(
+            $request->type,
+            $request->provider_id,
+            $request->date,
+            $request->start_time,
+            $request->end_time
+        )) {
             return response()->json([
                 'success'           => false,
                 'available'         => false,
                 'existing_bookings' => $existingBookingsCount,
                 'max_bookings'      => $maxBookings,
-                'message'           => 'The selected time slot overlaps with an existing booking.',
+                'message'           => self::TIMESLOT_CONFLICT_MESSAGE,
                 'time_overlap'      => true,
             ]);
         }
@@ -341,6 +332,40 @@ class BookingController extends Controller
             'operating_day'     => true,
             'message'           => 'Available (' . $existingBookingsCount . '/' . $maxBookings . ' bookings)',
         ]);
+    }
+
+    /**
+     * Determine whether a requested timeslot overlaps an active booking.
+     *
+     * Shared by the availability endpoint and store() so a conflict is caught at
+     * booking time instead of waiting for the payment gateway.
+     */
+    private function hasTimeslotConflict($type, $providerId, $date, $startTime, $endTime): bool
+    {
+        if (!$type || !$providerId || !$date || !$startTime || !$endTime) {
+            return false;
+        }
+
+        return BookingModel::where('booking_type', $type)
+            ->where('provider_id', $providerId)
+            ->where('event_date', $date)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->where(function ($query) use ($startTime, $endTime) {
+                $query->where(function ($q) use ($startTime) {
+                    // New booking starts during an existing booking
+                    $q->where('start_time', '<=', $startTime)
+                        ->where('end_time', '>', $startTime);
+                })->orWhere(function ($q) use ($endTime) {
+                    // New booking ends during an existing booking
+                    $q->where('start_time', '<', $endTime)
+                        ->where('end_time', '>=', $endTime);
+                })->orWhere(function ($q) use ($startTime, $endTime) {
+                    // New booking completely covers an existing booking
+                    $q->where('start_time', '>=', $startTime)
+                        ->where('end_time', '<=', $endTime);
+                });
+            })
+            ->exists();
     }
 
     /**
@@ -367,6 +392,7 @@ class BookingController extends Controller
             'recurrence_pattern.frequency' => 'nullable|in:weekly,monthly',
             'recurrence_pattern.interval' => 'nullable|integer|min:1|max:52',
             'recurrence_pattern.sessions' => 'nullable|integer|min:1|max:52',
+            'terms_agree' => 'required|accepted',
         ];
 
         // ==== FIXED: Conditional validation based on location type ====
@@ -438,9 +464,27 @@ class BookingController extends Controller
         }
         // ==== END: Conditional payment_type validation ====
 
-        $request->validate($rules);
+        $request->validate($rules, [
+            'terms_agree.required' => 'You must agree to the booking terms and conditions.',
+            'terms_agree.accepted' => 'You must agree to the booking terms and conditions.',
+        ]);
 
         try {
+            // Reject overlapping timeslots before anything is persisted.
+            if ($this->hasTimeslotConflict(
+                $request->type,
+                $request->provider_id,
+                $request->event_date,
+                $request->start_time,
+                $request->end_time
+            )) {
+                return response()->json([
+                    'success' => false,
+                    'message' => self::TIMESLOT_CONFLICT_MESSAGE,
+                    'time_overlap' => true,
+                ], 400);
+            }
+
             // 1. Validate date availability first
             $availabilityCheck = $this->checkDateAvailability($request);
             if (!$availabilityCheck['success'] || !$availabilityCheck['available']) {
@@ -868,6 +912,21 @@ class BookingController extends Controller
                 ->count();
 
             $available = $existingBookings < $maxBookings;
+
+            // A full day can still be open time-wise; reject when the exact slot overlaps.
+            if ($available && $this->hasTimeslotConflict(
+                $request->type,
+                $request->provider_id,
+                $request->event_date,
+                $request->start_time ?? null,
+                $request->end_time ?? null
+            )) {
+                return [
+                    'success' => true,
+                    'available' => false,
+                    'message' => self::TIMESLOT_CONFLICT_MESSAGE,
+                ];
+            }
 
             return [
                 'success' => true,
@@ -1585,13 +1644,17 @@ class BookingController extends Controller
             ),
         ]);
         
-        // Update booking status
-        $payment->booking()->update([
-            'payment_status' => 'partially_paid',
-            'status' => 'confirmed',
-        ]);
+        // Update booking status via the single settlement entry point.
+        $booking = $payment->booking;
+        if ($booking) {
+            $booking->updatePaymentStatus();
 
-        $this->updateClientBudgetSpending($payment->booking()->first(), $payment);
+            if ($booking->status === BookingModel::STATUS_PENDING) {
+                $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
+            }
+
+            $this->updateClientBudgetSpending($booking, $payment);
+        }
 
         \Log::info('Payment marked as successful via callback', [
             'payment_id' => $payment->id,
@@ -1743,11 +1806,13 @@ class BookingController extends Controller
             
             if ($payment && $payment->status !== 'succeeded') {
                 $payment->markAsPaid();
-                $payment->booking()->update([
-                    'payment_status' => 'partially_paid',
-                    'status' => 'confirmed',
-                ]);
-                
+
+                // markAsPaid() applies BookingModel::updatePaymentStatus().
+                $booking = $payment->booking;
+                if ($booking && $booking->status === BookingModel::STATUS_PENDING) {
+                    $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
+                }
+
                 Log::info('Payment marked as paid via webhook', [
                     'payment_id' => $payment->id,
                     'booking_id' => $payment->booking_id,
@@ -1766,7 +1831,12 @@ class BookingController extends Controller
             
             if ($payment) {
                 $payment->markAsPaid();
-                $payment->booking()->update(['payment_status' => 'partially_paid']);
+
+                // markAsPaid() applies BookingModel::updatePaymentStatus().
+                $booking = $payment->booking;
+                if ($booking && $booking->status === BookingModel::STATUS_PENDING) {
+                    $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
+                }
             }
         }
     }
@@ -2003,19 +2073,14 @@ class BookingController extends Controller
                         'payment_method' => $sessionData['attributes']['payment_method_used'] ?? 'card',
                     ]);
 
-                    // Update booking
+                    // Update booking via the single settlement entry point.
                     $booking = $payment->booking;
                     if ($booking) {
-                        if ($booking->payment_type === 'full_payment') {
-                            $paymentStatus = 'paid';
-                        } else {
-                            $paymentStatus = 'partially_paid';
-                        }
+                        $booking->updatePaymentStatus();
 
-                        $booking->update([
-                            'payment_status' => $paymentStatus,
-                            'status' => 'confirmed',
-                        ]);
+                        if ($booking->status === BookingModel::STATUS_PENDING) {
+                            $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
+                        }
 
                         $this->createRevenueRecord($booking, $payment);
                         $this->updateClientBudgetSpending($booking, $payment);
@@ -2119,19 +2184,13 @@ class BookingController extends Controller
                     'status' => 'succeeded',
                     'paid_at' => now(),
                 ]);
-                
-                // Update booking
-                if ($booking->payment_type === 'full_payment') {
-                    $paymentStatus = 'paid';
-                } else {
-                    $paymentStatus = 'partially_paid';
+
+                // Settle via the single entry point, then confirm if still pending.
+                $booking->updatePaymentStatus();
+                if ($booking->status === BookingModel::STATUS_PENDING) {
+                    $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
                 }
-                
-                $booking->update([
-                    'payment_status' => $paymentStatus,
-                    'status' => 'confirmed',
-                ]);
-                
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Payment successful',
@@ -2151,19 +2210,13 @@ class BookingController extends Controller
                     'status' => 'succeeded',
                     'paid_at' => now(),
                 ]);
-                
-                // Update booking
-                if ($booking->payment_type === 'full_payment') {
-                    $paymentStatus = 'paid';
-                } else {
-                    $paymentStatus = 'partially_paid';
+
+                // Settle via the single entry point, then confirm if still pending.
+                $booking->updatePaymentStatus();
+                if ($booking->status === BookingModel::STATUS_PENDING) {
+                    $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
                 }
-                
-                $booking->update([
-                    'payment_status' => $paymentStatus,
-                    'status' => 'confirmed',
-                ]);
-                
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Payment successful',
@@ -2236,17 +2289,11 @@ class BookingController extends Controller
                         'payment_details' => $paymentDetails, // Will be cast to JSON
                     ]);
                     
-                    // Update booking status
-                    if ($booking->payment_type === 'full_payment') {
-                        $paymentStatus = 'paid';
-                    } else {
-                        $paymentStatus = 'partially_paid';
+                    // Update booking status via the single settlement entry point
+                    $booking->updatePaymentStatus();
+                    if ($booking->status === BookingModel::STATUS_PENDING) {
+                        $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
                     }
-                    
-                    $booking->update([
-                        'payment_status' => $paymentStatus,
-                        'status' => 'confirmed',
-                    ]);
                     
                     return response()->json([
                         'success' => true,

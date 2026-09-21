@@ -207,7 +207,7 @@
                                     <p class="mt-2 text-muted">Loading profile data...</p>
                                 </div>
 
-                                <form id="profileForm" style="display: none;" class="needs-validation" novalidate enctype="multipart/form-data">
+                                <form id="profileForm" action="{{ route('profile.update') }}" method="POST" style="display: none;" class="needs-validation" novalidate enctype="multipart/form-data">
                                     @csrf
                                     <div class="row g-3">
                                         <div class="col-12">

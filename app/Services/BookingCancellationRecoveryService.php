@@ -191,10 +191,31 @@ class BookingCancellationRecoveryService
         return $result;
     }
 
-    public function ownerEscalate(BookingCancellationRecoveryModel $recovery, ?string $reason = null): BookingCancellationRecoveryModel
+    public function ownerEscalate(BookingCancellationRecoveryModel $recovery, ?string $reason = null, ?float $refundAmount = null): BookingCancellationRecoveryModel
     {
-        DB::transaction(function () use ($recovery, $reason) {
+        DB::transaction(function () use ($recovery, $reason, $refundAmount) {
             $recovery = BookingCancellationRecoveryModel::query()->lockForUpdate()->findOrFail($recovery->id);
+
+            // A client-cancelled recovery is already in the refund queue. Here the
+            // owner only records the refund target they are willing to return.
+            if ($recovery->status === self::STATUS_REFUND_PENDING) {
+                if ($refundAmount === null) {
+                    throw new \DomainException('This recovery is already in the refund queue. Enter a refund amount to change the target.');
+                }
+
+                // Only a client-initiated cancellation leaves the refund amount to
+                // the owner. A business-initiated cancellation refunds the client
+                // in full and the owner cannot reduce it.
+                $booking = BookingModel::query()->find($recovery->booking_id);
+                if ($booking && $booking->cancelled_by !== 'client') {
+                    throw new \DomainException('A business-initiated cancellation refunds the client in full and cannot be reduced.');
+                }
+
+                $this->applyRefundTarget($recovery, $refundAmount, $reason);
+
+                return;
+            }
+
             if (! in_array($recovery->status, [self::STATUS_AWAITING_REPLACEMENT, self::STATUS_REPLACEMENT_PROPOSED, self::STATUS_AWAITING_CLIENT], true)) {
                 throw new \DomainException('This recovery can no longer be escalated.');
             }
@@ -204,6 +225,55 @@ class BookingCancellationRecoveryService
         });
 
         return $recovery->fresh();
+    }
+
+    /**
+     * Record the refund amount the business owner chose for a client-cancelled
+     * full payment, expressed as the admin queue's refund target.
+     */
+    public function setRefundTarget(BookingCancellationRecoveryModel $recovery, float $amount, ?string $reason = null): BookingCancellationRecoveryModel
+    {
+        DB::transaction(function () use ($recovery, $amount, $reason) {
+            $recovery = BookingCancellationRecoveryModel::query()->lockForUpdate()->findOrFail($recovery->id);
+            $this->applyRefundTarget($recovery, $amount, $reason);
+        });
+
+        return $recovery->fresh();
+    }
+
+    /**
+     * Validate and persist an owner or admin refund target within a transaction.
+     */
+    private function applyRefundTarget(BookingCancellationRecoveryModel $recovery, float $amount, ?string $reason = null): void
+    {
+        if ($recovery->status !== self::STATUS_REFUND_PENDING) {
+            throw new \DomainException('The refund target can only be set while the refund is pending.');
+        }
+
+        $booking = BookingModel::query()->lockForUpdate()->findOrFail($recovery->booking_id);
+        $paidTotal = (float) PaymentModel::where('booking_id', $booking->id)
+            ->where('status', 'succeeded')->sum('amount');
+
+        $amount = round($amount, 2);
+        if ($amount < 0 || $amount > $paidTotal) {
+            throw new \DomainException('The refund amount must be between 0 and the total amount paid.');
+        }
+
+        $percentage = $paidTotal > 0 ? round($amount / $paidTotal * 100, 2) : 0.0;
+
+        $update = [];
+        if (Schema::hasColumn('tbl_booking_cancellation_recoveries', 'refund_percentage')) {
+            $update['refund_percentage'] = $percentage;
+        }
+        if (Schema::hasColumn('tbl_booking_cancellation_recoveries', 'refund_amount')) {
+            $update['refund_amount'] = $amount;
+        }
+        if ($reason !== null && $reason !== '') {
+            $update['outcome_reason'] = $reason;
+        }
+        if (! empty($update)) {
+            $recovery->update($update);
+        }
     }
 
     public function escalateExpired(): int
@@ -258,6 +328,59 @@ class BookingCancellationRecoveryService
         });
     }
 
+    /**
+     * Record a client-initiated cancellation and return the refund recovery, if
+     * one should be queued.
+     *
+     * The down payment is non-refundable for every booking type, so a booking
+     * that was only paid down (or not paid at all) queues nothing. A booking the
+     * client paid in full enters the refund queue with no target set: the owner
+     * chooses the amount on the cancellation screen and the admin queue defaults
+     * to it, capped by the total paid.
+     */
+    public function clientCancelled(BookingModel $booking, ?string $reason = null): ?BookingCancellationRecoveryModel
+    {
+        return DB::transaction(function () use ($booking, $reason) {
+            $booking = BookingModel::query()->lockForUpdate()->findOrFail($booking->id);
+
+            $paidTotal = (float) PaymentModel::where('booking_id', $booking->id)
+                ->where('status', 'succeeded')->sum('amount');
+
+            $existing = BookingCancellationRecoveryModel::query()
+                ->where('booking_id', $booking->id)
+                ->lockForUpdate()
+                ->first();
+
+            // Down payment not refundable: no target is queued for the owner or
+            // the admin queue, for any booking type including freelancer.
+            if ($paidTotal <= 0 || ! $booking->isFullyPaid()) {
+                return $existing;
+            }
+
+            if ($existing) {
+                if (! in_array($existing->status, [self::STATUS_REFUND_PENDING, self::STATUS_REFUNDED], true)) {
+                    $existing->update([
+                        'status' => self::STATUS_REFUND_PENDING,
+                        'resolved_at' => now(),
+                        'outcome_reason' => $reason,
+                    ]);
+                }
+
+                return $existing->fresh();
+            }
+
+            // No automatic split is derived from the down payment percentage. The
+            // refund_amount stays unset until the owner sets the target.
+            return BookingCancellationRecoveryModel::create([
+                'booking_id' => $booking->id,
+                'studio_id' => $booking->booking_type === 'studio' ? $booking->provider_id : null,
+                'status' => self::STATUS_REFUND_PENDING,
+                'resolved_at' => now(),
+                'outcome_reason' => $reason,
+            ]);
+        });
+    }
+
     public function completeRefund(BookingCancellationRecoveryModel $recovery, string|array $providerReferences, ?string $notes = null): bool
     {
         return DB::transaction(function () use ($recovery, $providerReferences, $notes) {
@@ -290,16 +413,29 @@ class BookingCancellationRecoveryService
                 return false;
             }
 
-            $target = (float) ($recovery->refund_amount ?? $payments->sum('amount'));
-            $remaining = round($target, 2);
+            $totalPaid = round((float) $payments->sum('amount'), 2);
+            $target = round((float) ($recovery->refund_amount ?? $totalPaid), 2);
+            $remaining = $target;
+
+            // Allocate the target across the succeeded payments. A payment is only
+            // marked refunded when its own refunded amount covers its full value;
+            // otherwise the partial amount is recorded against an honest status so
+            // the paid total is not quietly zeroed out.
             foreach ($payments as $index => $payment) {
+                $owed = round((float) $payment->amount, 2);
                 $amount = $index === $payments->count() - 1
                     ? $remaining
-                    : min((float) $payment->amount, $remaining);
+                    : min($owed, $remaining);
                 $amount = max(0, round($amount, 2));
                 $remaining = round($remaining - $amount, 2);
+
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $fullyRefunded = $amount >= $owed - 0.001;
                 $paymentUpdate = [
-                    'status' => 'refunded',
+                    'status' => $fullyRefunded ? 'refunded' : 'partially_refunded',
                     'refund_reference' => $references[$payment->id],
                     'refund_notes' => $notes,
                     'refunded_at' => now(),
@@ -308,25 +444,38 @@ class BookingCancellationRecoveryService
                     $paymentUpdate['refunded_amount'] = $amount;
                 }
                 $payment->update($paymentUpdate);
-                SystemRevenueModel::where('payment_id', $payment->id)->update(['status' => 'refunded']);
+
+                // Revenue is only reversed to the extent the client was actually
+                // refunded, so a partial payment leaves its revenue untouched.
+                if ($fullyRefunded) {
+                    SystemRevenueModel::where('payment_id', $payment->id)->update(['status' => 'refunded']);
+                }
             }
 
-            BookingModel::whereKey($recovery->booking_id)->update(['payment_status' => BookingModel::PAYMENT_REFUNDED]);
+            // The booking is only fully refunded when the whole paid total went back.
+            BookingModel::whereKey($recovery->booking_id)->update([
+                'payment_status' => $target >= $totalPaid - 0.001
+                    ? BookingModel::PAYMENT_REFUNDED
+                    : BookingModel::PAYMENT_REFUND_PENDING,
+            ]);
             $recovery->update(['status' => self::STATUS_REFUNDED, 'resolved_at' => now()]);
+
             return true;
         });
     }
 
     private function refundPercentage(BookingModel $booking): float
     {
-        if ($booking->cancelled_by === 'client' && $booking->payment_type === 'full_payment') {
-            $downpayment = $booking->booking_type === 'studio'
-                ? (float) (optional($booking->studio)->downpayment_percentage ?: 30)
-                : 30;
-            return max(0, min(100, 100 - $downpayment));
+        // A business-initiated cancellation always refunds the client in full.
+        if ($booking->cancelled_by !== 'client') {
+            return 100.0;
         }
 
-        return 100.0;
+        // When the client cancels, the down payment is not refundable for any
+        // booking type, including freelancer bookings. A booking paid in full is
+        // refunded only by the amount the business owner chooses, so no automatic
+        // percentage is derived here; the owner (or admin) sets the target.
+        return 0.0;
     }
 
     private function deadline(BookingModel $booking): Carbon

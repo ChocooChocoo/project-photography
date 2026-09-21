@@ -20,7 +20,6 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class MyBookingsController extends Controller
 {
@@ -314,47 +313,21 @@ class MyBookingsController extends Controller
 
             $reason = $request->cancellation_reason;
 
-            $hasSucceededPayments = PaymentModel::where('booking_id', $id)
-                ->where('status', 'succeeded')
-                ->exists();
-            // Preserve the existing freelancer refund queue. The new customer
-            // policy applies only to studio bookings: a studio down-payment is
-            // non-refundable, while a studio full payment receives the configured
-            // partial refund.
-            $refundEligible = $hasSucceededPayments
-                && ($booking->booking_type !== 'studio' || $booking->payment_type === 'full_payment');
-
-            DB::transaction(function () use ($booking, $reason, $hasSucceededPayments, $refundEligible) {
+            DB::transaction(function () use ($booking, $reason) {
                 $update = [
                     'status' => BookingModel::STATUS_CANCELLED,
                     'cancelled_by' => 'client',
                     'cancellation_reason' => $reason,
                 ];
 
-                if ($refundEligible) {
-                    $update['payment_status'] = BookingModel::PAYMENT_REFUND_PENDING;
+                // The recovery service owns the client-cancel refund policy: the
+                // down payment is non-refundable for every booking type, and a
+                // fully paid booking is queued with no target until the owner sets
+                // one on the cancellation screen.
+                $recovery = app(BookingCancellationRecoveryService::class)->clientCancelled($booking, $reason);
 
-                    $paidAmount = (float) PaymentModel::where('booking_id', $booking->id)
-                        ->where('status', 'succeeded')->sum('amount');
-                    $isStudio = $booking->booking_type === 'studio';
-                    $downpayment = $isStudio
-                        ? (float) (StudiosModel::whereKey($booking->provider_id)
-                            ->value('downpayment_percentage') ?: 30)
-                        : 0.0;
-                    $refundPercentage = max(0, min(100, 100 - $downpayment));
-                    $recoveryData = [
-                        'booking_id' => $booking->id,
-                        'studio_id' => $isStudio ? $booking->provider_id : null,
-                        'status' => BookingCancellationRecoveryService::STATUS_REFUND_PENDING,
-                        'outcome_reason' => $reason,
-                    ];
-                    if (Schema::hasColumn('tbl_booking_cancellation_recoveries', 'refund_percentage')) {
-                        $recoveryData['refund_percentage'] = $refundPercentage;
-                    }
-                    if (Schema::hasColumn('tbl_booking_cancellation_recoveries', 'refund_amount')) {
-                        $recoveryData['refund_amount'] = round($paidAmount * $refundPercentage / 100, 2);
-                    }
-                    BookingCancellationRecoveryModel::create($recoveryData);
+                if ($recovery) {
+                    $update['payment_status'] = BookingModel::PAYMENT_REFUND_PENDING;
                 } else {
                     PaymentModel::where('booking_id', $booking->id)
                         ->where('status', 'pending')
@@ -662,13 +635,6 @@ class MyBookingsController extends Controller
                 ], 403);
             }
 
-            if (! $assignment->booking->requiresLocationConfirmation()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Arrival confirmation is only required for on-location bookings.',
-                ], 403);
-            }
-
             if (! $assignment->on_site_at) {
                 return response()->json([
                     'success' => false,
@@ -676,10 +642,12 @@ class MyBookingsController extends Controller
                 ]);
             }
 
+            // Idempotent: a repeated confirmation keeps the existing record.
             if ($assignment->client_confirmed_at) {
                 return response()->json([
-                    'success' => false,
+                    'success' => true,
                     'message' => 'You have already confirmed this photographer\'s presence.',
+                    'assignment' => $assignment,
                 ]);
             }
 
@@ -717,9 +685,9 @@ class MyBookingsController extends Controller
 
             $pendingConfirmations = BookingAssignedPhotographerModel::whereHas('booking', function ($query) use ($userId) {
                 $query->where('client_id', $userId)
-                    ->where('location_type', 'on-location')
                     ->whereIn('status', ['confirmed', 'in_progress']);
             })
+                ->whereIn('status', ['on_site', 'in_progress'])
                 ->whereNotNull('on_site_at')
                 ->whereNull('client_confirmed_at')
                 ->with([

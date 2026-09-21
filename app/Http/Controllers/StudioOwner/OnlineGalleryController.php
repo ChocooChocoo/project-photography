@@ -27,36 +27,74 @@ class OnlineGalleryController extends Controller
         // Get ALL studios owned by this user
         $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
         
-        $bookings = collect([]);
-        
-        if (!empty($studioIds)) {
-            // Get in-progress or completed bookings where packages have online_gallery = true
-            $bookings = BookingModel::whereIn('provider_id', $studioIds)
-                ->where('booking_type', 'studio')
-                ->whereIn('status', ['in_progress', 'completed'])
-                ->whereHas('packages', function($q) {
-                    $q->where('package_type', 'studio')
-                      ->whereHas('studioPackage', function($p) {
-                          $p->where('online_gallery', 1);
-                      });
-                })
-                ->with([
-                    'client:id,first_name,last_name,email',
-                    'packages.studioPackage:id,package_name,online_gallery',
-                    'category:id,category_name'
-                ])
-                ->orderBy('created_at', 'desc')
-                ->get();
-
-            // Check if each booking has an existing gallery
-            foreach ($bookings as $booking) {
-                $booking->has_gallery = StudioOnlineGalleryModel::where('booking_id', $booking->id)->exists();
-                $booking->gallery = StudioOnlineGalleryModel::where('booking_id', $booking->id)->first();
-                $booking->formatted_event_date = \Carbon\Carbon::parse($booking->event_date)->format('M d, Y');
-            }
-        }
+        $bookings = $this->galleryBookingsFor($studioIds);
         
         return view('owner.view-online-gallery', compact('bookings'));
+    }
+
+    /**
+     * AJAX endpoint: the same in-progress or completed gallery bookings as index(), as JSON.
+     */
+    public function getCompletedBookings()
+    {
+        $userId = Auth::id();
+        $studioIds = StudiosModel::where('user_id', $userId)->pluck('id')->toArray();
+
+        $bookings = $this->galleryBookingsFor($studioIds)->map(function ($booking) {
+            return [
+                'id' => $booking->id,
+                'booking_reference' => $booking->booking_reference,
+                'client_name' => trim(($booking->client->first_name ?? '') . ' ' . ($booking->client->last_name ?? '')),
+                'event_name' => $booking->event_name,
+                'event_date' => $booking->formatted_event_date,
+                'status' => $booking->status,
+                'has_gallery' => (bool) $booking->has_gallery,
+                'gallery_status' => $booking->gallery->gallery_status ?? null,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'bookings' => $bookings,
+        ]);
+    }
+
+    /**
+     * Base query: In Progress onward studio bookings that include the online gallery feature,
+     * each annotated with its gallery state for the list view.
+     */
+    private function galleryBookingsFor(array $studioIds)
+    {
+        if (empty($studioIds)) {
+            return collect([]);
+        }
+
+        $bookings = BookingModel::whereIn('provider_id', $studioIds)
+            ->where('booking_type', 'studio')
+            // In Progress onward: owners must manage galleries before a booking can be completed.
+            ->whereIn('status', [BookingModel::STATUS_IN_PROGRESS, BookingModel::STATUS_COMPLETED])
+            ->whereHas('packages', function($q) {
+                $q->where('package_type', 'studio')
+                  ->whereHas('studioPackage', function($p) {
+                      $p->where('online_gallery', 1);
+                  });
+            })
+            ->with([
+                'client:id,first_name,last_name,email',
+                'packages.studioPackage:id,package_name,online_gallery',
+                'category:id,category_name'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Annotate each booking with gallery state for the view.
+        foreach ($bookings as $booking) {
+            $booking->gallery = StudioOnlineGalleryModel::where('booking_id', $booking->id)->first();
+            $booking->has_gallery = (bool) $booking->gallery;
+            $booking->formatted_event_date = \Carbon\Carbon::parse($booking->event_date)->format('M d, Y');
+        }
+
+        return $bookings;
     }
 
     /**

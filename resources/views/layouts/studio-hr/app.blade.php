@@ -30,7 +30,10 @@
     <div class="wrapper">
         @include('layouts.studio-hr.sidebar')
         @include('layouts.studio-hr.topbar')
-        @include('partials.subscription-access-banner')
+        {{-- Keep the banner aligned with the sidebar offset used by .content-page --}}
+        <div class="content-page" style="min-height: auto;">
+            @include('partials.subscription-access-banner')
+        </div>
         @yield('content')
         @include('layouts.studio-hr.theme')
     </div>

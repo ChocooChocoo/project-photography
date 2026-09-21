@@ -434,6 +434,21 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::put('/procurement/{id}', [\App\Http\Controllers\StudioHR\ProcurementRequestController::class, 'update'])->middleware('permission:studio-hr.procurement.manage')->name('studio-hr.procurement.update');
         Route::post('/procurement/{id}/cancel', [\App\Http\Controllers\StudioHR\ProcurementRequestController::class, 'cancel'])->middleware('permission:studio-hr.procurement.manage')->name('studio-hr.procurement.cancel');
         Route::post('/procurement/{id}/confirm-receipt', [\App\Http\Controllers\StudioHR\ProcurementRequestController::class, 'confirmReceipt'])->middleware('permission:studio-hr.procurement.manage')->name('studio-hr.procurement.confirm-receipt');
+
+        // Online Gallery
+        // Accepts the studio-HR gallery permissions and the owner gallery
+        // permission, so an owner grant of either portal's permission works for
+        // the employee's HR account.
+        $galleryViewPermissions = 'permission:studio-hr.online-gallery.view,studio-hr.online-gallery.manage,owner.online-gallery.manage';
+        $galleryManagePermissions = 'permission:studio-hr.online-gallery.manage,owner.online-gallery.manage';
+
+        Route::get('/view/online-gallery', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'index'])->middleware($galleryViewPermissions)->name('studio-hr.online-gallery.index');
+        Route::get('/online-gallery/{bookingId}/details', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'getGalleryDetails'])->middleware($galleryViewPermissions)->name('studio-hr.online-gallery.details');
+        Route::post('/online-gallery/{bookingId}/upload', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'uploadImages'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.upload');
+        Route::delete('/online-gallery/{galleryId}/image', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'deleteImage'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.delete-image');
+        Route::delete('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'deleteGallery'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.delete');
+        Route::put('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'updateGallery'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.update');
+        Route::post('/online-gallery/{galleryId}/publish', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'publish'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.publish');
     });
 
     // Studio Finance Routes ===============================================================================================================================================
@@ -609,6 +624,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::delete('/online-gallery/{galleryId}/image', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'deleteImage'])->middleware('permission:studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.delete-image');
         Route::delete('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'deleteGallery'])->middleware('permission:studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.delete');
         Route::put('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'updateGallery'])->middleware('permission:studio-photographer.online_gallery.update')->name('studio-photographer.online-gallery.update');
+        Route::post('/online-gallery/{galleryId}/publish', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'publish'])->middleware('permission:studio-photographer.online_gallery.update')->name('studio-photographer.online-gallery.publish');
 
         // Procurement
         Route::get('/procurement/create', [\App\Http\Controllers\StudioPhotographer\ProcurementRequestController::class, 'create'])->middleware('permission:studio-photographer.procurement.manage')->name('studio-photographer.procurement.create');

@@ -365,19 +365,7 @@
                         requiresLocationConfirmation
                     });
                     
-                    if (!requiresLocationConfirmation) {
-                        // In-studio bookings can start directly after photographer acceptance.
-                        statusActions = `
-                            ${cancelAllowed && assignment.status === 'confirmed' ?
-                                `<button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
-                                    <i data-lucide="x" class="me-1"></i> Cancel Assignment
-                                </button>` : ''
-                            }
-                            <button class="btn btn-primary" id="startAssignmentBtn">
-                                <i data-lucide="play" class="me-1"></i> Mark as In Progress
-                            </button>
-                        `;
-                    } else if (!hasOnSite) {
+                    if (!hasOnSite) {
                         // Not marked on-site yet - cancel still allowed (status is 'confirmed')
                         statusActions = `
                             ${cancelAllowed ? 
@@ -496,7 +484,7 @@
                 
                 // On-site status HTML
                 let onSiteStatusHtml = '';
-                if (requiresLocationConfirmation && assignment.on_site_at) {
+                if (assignment.on_site_at) {
                     const onSiteDate = new Date(assignment.on_site_at);
                     const formattedOnSite = onSiteDate.toLocaleDateString('en-US', { 
                         year: 'numeric', 
