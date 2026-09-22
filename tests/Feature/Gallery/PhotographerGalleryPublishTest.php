@@ -42,10 +42,11 @@ class PhotographerGalleryPublishTest extends TestCase
         $this->assignPhotographer($this->booking, $this->photographer);
 
         Route::post('/_test/photographer/gallery/{booking}/upload', [PhotographerOnlineGalleryController::class, 'uploadImages']);
+        Route::post('/_test/photographer/gallery/{gallery}/submit', [PhotographerOnlineGalleryController::class, 'submitForApproval']);
         Route::post('/_test/photographer/gallery/{gallery}/publish', [PhotographerOnlineGalleryController::class, 'publish']);
     }
 
-    public function test_assigned_photographer_can_upload_then_publish_gallery(): void
+    public function test_assigned_photographer_cannot_publish_while_approval_is_pending(): void
     {
         Storage::fake('public');
 
@@ -61,6 +62,53 @@ class PhotographerGalleryPublishTest extends TestCase
         $gallery = StudioOnlineGalleryModel::where('booking_id', $this->booking->id)->firstOrFail();
         $this->assertSame('draft', $gallery->gallery_status);
         $this->assertCount(1, $gallery->images);
+
+        $this->actingAs($this->photographer)
+            ->post("/_test/photographer/gallery/{$gallery->id}/submit")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('gallery.approval_status', 'pending');
+
+        $gallery->refresh();
+        $this->assertSame('pending', $gallery->approval_status);
+        $this->assertSame($this->photographer->id, $gallery->submitted_by);
+        $this->assertNotNull($gallery->submitted_at);
+
+        $this->actingAs($this->photographer)
+            ->post("/_test/photographer/gallery/{$gallery->id}/publish")
+            ->assertStatus(403)
+            ->assertJsonPath('success', false);
+
+        $gallery->refresh();
+        $this->assertSame('draft', $gallery->gallery_status);
+        $this->assertNull($gallery->published_at);
+    }
+
+    public function test_assigned_photographer_can_publish_after_owner_approval(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->photographer)
+            ->post("/_test/photographer/gallery/{$this->booking->id}/upload", [
+                'images' => [$this->fakePng('photo1.png')],
+                'gallery_name' => 'Wedding Gallery',
+            ])
+            ->assertOk();
+
+        $gallery = StudioOnlineGalleryModel::where('booking_id', $this->booking->id)->firstOrFail();
+
+        $this->actingAs($this->photographer)
+            ->post("/_test/photographer/gallery/{$gallery->id}/submit")
+            ->assertOk()
+            ->assertJsonPath('gallery.approval_status', 'pending');
+
+        // The owner approves the request.
+        $gallery->refresh();
+        $gallery->update([
+            'approval_status' => StudioOnlineGalleryModel::APPROVAL_APPROVED,
+            'approved_by' => $this->owner->id,
+            'approved_at' => now(),
+        ]);
 
         $this->actingAs($this->photographer)
             ->post("/_test/photographer/gallery/{$gallery->id}/publish")
@@ -257,6 +305,14 @@ class PhotographerGalleryPublishTest extends TestCase
             $table->integer('total_photos')->default(0);
             $table->timestamp('published_at')->nullable();
             $table->enum('gallery_status', ['draft', 'published'])->default('draft');
+            $table->enum('approval_status', ['pending', 'approved', 'rejected', 'cancelled'])->nullable();
+            $table->text('rejection_reason')->nullable();
+            $table->unsignedBigInteger('submitted_by')->nullable();
+            $table->timestamp('submitted_at')->nullable();
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->unsignedBigInteger('rejected_by')->nullable();
+            $table->timestamp('rejected_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_booking_assigned_photographers', function (Blueprint $table) {

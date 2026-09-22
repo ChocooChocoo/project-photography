@@ -76,6 +76,7 @@ class CrossStudioIsolationTest extends TestCase
         $financeRole = $this->createRole('studio-finance-manager', 'studio-finance');
         $permission = PermissionModel::create([
             'name' => 'studio-finance.payroll.view',
+            'permission_string' => 'studio-finance.payroll.view',
             'portal' => 'studio-finance',
             'status' => 'active',
         ]);
@@ -251,6 +252,7 @@ class CrossStudioIsolationTest extends TestCase
         Schema::create('tbl_permissions', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100)->unique();
+            $table->string('permission_string')->nullable();
             $table->string('portal', 50)->default('studio');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');

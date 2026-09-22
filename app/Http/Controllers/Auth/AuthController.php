@@ -166,10 +166,16 @@ class AuthController extends Controller
                 ], 401);
             }
             
-            // Attempt authentication
+            // Attempt authentication.
+            // The guard draws a new session id and a new CSRF token on login.
+            // Keep the token that the login page rendered, so the page and the
+            // reply use one token. The new session id still stops a session
+            // fixation attack.
+            $sessionToken = $request->session()->token();
+
             if (Auth::attempt($credentials, $request->filled('remember'))) {
-                $request->session()->regenerate();
-                
+                $request->session()->put('_token', $sessionToken);
+
                 // Store user role in session for easy access
                 session(['user_role' => $user->role]);
                 

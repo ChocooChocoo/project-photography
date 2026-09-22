@@ -23,6 +23,24 @@ class PermissionModel extends Model
     ];
 
     /**
+     * Portal names that the canonical format accepts as the first segment.
+     *
+     * The list is the portal part of the stored permission string. A value whose
+     * first segment is not in this list gets the placeholder prefix "portal.".
+     *
+     * @var array<int, string>
+     */
+    protected const KNOWN_PORTALS = [
+        'owner',
+        'studio-hr',
+        'studio-finance',
+        'studio-photographer',
+        'admin',
+        'client',
+        'freelancer',
+    ];
+
+    /**
      * Friendly resource labels keyed by stored resource names.
      *
      * @var array<string, string>
@@ -103,38 +121,127 @@ class PermissionModel extends Model
     ];
 
     /**
-     * Build possible legacy and protocol permission identifiers.
+     * Build the canonical permission string from its three parts.
+     *
+     * The result is lowercase, uses hyphens inside the portal, resource, and
+     * action segments, and joins the parts with dots. Example for the parts
+     * "studio-hr", "online gallery", and "manage": "studio-hr.online-gallery.manage".
+     */
+    public static function canonicalString(string $portal, string $resource, string $action): string
+    {
+        $segments = array_filter([
+            static::normalizeCanonicalSegment($portal),
+            static::normalizeCanonicalSegment($resource),
+            static::normalizeCanonicalSegment($action),
+        ], static fn (string $segment) => $segment !== '');
+
+        return implode('.', $segments);
+    }
+
+    /**
+     * Normalize one permission identifier into the canonical match form.
+     *
+     * The value is lowercased, a colon becomes a dot, and an underscore and a
+     * hyphen both become a hyphen. When the first segment is not a known portal
+     * name, the placeholder prefix "portal." is added. A value that already
+     * carries the placeholder prefix is left alone.
+     */
+    public static function normalizeIdentifier(string $value): string
+    {
+        $normalizedValue = strtolower(trim($value));
+
+        if ($normalizedValue === '') {
+            return '';
+        }
+
+        $normalizedValue = str_replace(':', '.', $normalizedValue);
+        $normalizedValue = preg_replace('/[^a-z0-9.]+/', '-', $normalizedValue) ?? '';
+        $normalizedValue = preg_replace('/-+/', '-', $normalizedValue) ?? '';
+        $normalizedValue = preg_replace('/\.+/', '.', $normalizedValue) ?? '';
+        $normalizedValue = trim($normalizedValue, '.-');
+
+        if ($normalizedValue === '') {
+            return '';
+        }
+
+        $segments = explode('.', $normalizedValue);
+        $firstSegment = $segments[0] ?? '';
+
+        if ($firstSegment !== 'portal' && !in_array($firstSegment, static::KNOWN_PORTALS, true)) {
+            array_unshift($segments, 'portal');
+        }
+
+        return implode('.', $segments);
+    }
+
+    /**
+     * Decide whether a requested permission identifier grants a stored value.
+     *
+     * The compare accepts a missing portal prefix on either side and treats an
+     * underscore and a hyphen as the same character. Two values that both carry
+     * a real portal must carry the same portal to match.
+     */
+    public static function identifierMatches(string $requested, ?string $stored): bool
+    {
+        if ($stored === null || $stored === '') {
+            return false;
+        }
+
+        $requestedIdentifier = static::normalizeIdentifier($requested);
+        $storedIdentifier = static::normalizeIdentifier($stored);
+
+        if ($requestedIdentifier === '' || $storedIdentifier === '') {
+            return false;
+        }
+
+        if ($requestedIdentifier === $storedIdentifier) {
+            return true;
+        }
+
+        $requestedHasPortal = static::hasKnownPortalPrefix($requestedIdentifier);
+        $storedHasPortal = static::hasKnownPortalPrefix($storedIdentifier);
+
+        if ($requestedHasPortal && $storedHasPortal) {
+            return false;
+        }
+
+        if (static::resourceActionKey($requestedIdentifier) === static::resourceActionKey($storedIdentifier)) {
+            return true;
+        }
+
+        // Legacy grants store the action before the resource, for example
+        // "manage_employees". Accept that order when at least one side has no
+        // real portal.
+        return static::tokenKey($requestedIdentifier) === static::tokenKey($storedIdentifier);
+    }
+
+    /**
+     * Build possible identifiers for a requested permission.
+     *
+     * The list holds the canonical form, the resource and action part, and the
+     * original value. Role checks use the list in one query.
      *
      * @return array<int, string>
      */
     public static function buildPermissionIdentifiers(string $permissionIdentifier): array
     {
-        $trimmedPermissionIdentifier = trim(strtolower($permissionIdentifier));
+        $canonical = static::normalizeIdentifier($permissionIdentifier);
 
-        if ($trimmedPermissionIdentifier === '') {
+        if ($canonical === '') {
             return [];
         }
 
-        $identifiers = [$trimmedPermissionIdentifier];
+        $identifiers = [$canonical];
+        $resourceActionKey = static::resourceActionKey($canonical);
 
-        if (str_contains($trimmedPermissionIdentifier, '.')) {
-            $segments = array_values(array_filter(explode('.', $trimmedPermissionIdentifier), static fn ($segment) => $segment !== ''));
+        if ($resourceActionKey !== '' && $resourceActionKey !== $canonical) {
+            $identifiers[] = $resourceActionKey;
+        }
 
-            if (count($segments) >= 2) {
-                $action = array_pop($segments);
-                $resource = array_pop($segments);
+        $originalValue = strtolower(trim($permissionIdentifier));
 
-                if ($resource && $action) {
-                    $identifiers[] = $action.'_'.$resource;
-                    $identifiers[] = $resource.':'.$action;
-                }
-            }
-        } elseif (str_contains($trimmedPermissionIdentifier, ':')) {
-            [$resource, $action] = array_pad(explode(':', $trimmedPermissionIdentifier, 2), 2, '');
-            $identifiers[] = $action.'_'.$resource;
-        } elseif (str_contains($trimmedPermissionIdentifier, '_')) {
-            [$action, $resource] = array_pad(explode('_', $trimmedPermissionIdentifier, 2), 2, '');
-            $identifiers[] = $resource.':'.$action;
+        if ($originalValue !== '') {
+            $identifiers[] = $originalValue;
         }
 
         return array_values(array_unique(array_filter($identifiers)));
@@ -248,6 +355,54 @@ class PermissionModel extends Model
     private static function normalizeSegment(?string $value): string
     {
         return strtolower(trim(str_replace('-', '_', (string) $value)));
+    }
+
+    /**
+     * Normalize a permission segment for the canonical string.
+     */
+    private static function normalizeCanonicalSegment(?string $value): string
+    {
+        $normalizedValue = strtolower(trim((string) $value));
+        $normalizedValue = preg_replace('/[^a-z0-9]+/', '-', $normalizedValue) ?? '';
+
+        return trim($normalizedValue, '-');
+    }
+
+    /**
+     * Ask whether the identifier starts with a real portal name.
+     */
+    private static function hasKnownPortalPrefix(string $identifier): bool
+    {
+        $firstSegment = explode('.', $identifier)[0] ?? '';
+
+        return in_array($firstSegment, static::KNOWN_PORTALS, true);
+    }
+
+    /**
+     * Drop the portal segment from an identifier and keep the resource and action.
+     */
+    private static function resourceActionKey(string $identifier): string
+    {
+        $segments = explode('.', $identifier);
+        $firstSegment = $segments[0] ?? '';
+
+        if ($firstSegment === 'portal' || in_array($firstSegment, static::KNOWN_PORTALS, true)) {
+            array_shift($segments);
+        }
+
+        return implode('.', $segments);
+    }
+
+    /**
+     * Order the resource and action tokens so the old action-first form can match.
+     */
+    private static function tokenKey(string $identifier): string
+    {
+        $tokens = preg_split('/[.\-]+/', static::resourceActionKey($identifier)) ?: [];
+        $tokens = array_values(array_filter($tokens));
+        sort($tokens);
+
+        return implode('.', $tokens);
     }
 
     /**

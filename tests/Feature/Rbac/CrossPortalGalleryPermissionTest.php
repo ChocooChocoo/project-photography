@@ -131,6 +131,164 @@ class CrossPortalGalleryPermissionTest extends TestCase
         $this->assertStringNotContainsString(route('studio-hr.online-gallery.index'), $htmlWithout);
     }
 
+    public function test_canonical_string_and_normalizer_own_the_format(): void
+    {
+        $this->assertSame(
+            'studio-hr.online-gallery.manage',
+            PermissionModel::canonicalString('studio-hr', 'online_gallery', 'manage')
+        );
+        $this->assertSame('portal.online-gallery.view', PermissionModel::normalizeIdentifier('online_gallery.view'));
+        $this->assertSame(
+            'studio-hr.online-gallery.manage',
+            PermissionModel::normalizeIdentifier('Studio-HR.Online_Gallery.Manage')
+        );
+        $this->assertSame(
+            'owner.online-gallery.manage',
+            PermissionModel::normalizeIdentifier('owner:online-gallery:manage')
+        );
+    }
+
+    public function test_missing_portal_prefix_matches_the_stored_photographer_grant(): void
+    {
+        $studio = $this->createStudio('Cross Portal Studio');
+        $role = $this->createRole('studio-photographer', 'studio-photographer');
+        $permission = $this->createPermission(
+            'studio-photographer.online-gallery.view',
+            'studio-photographer',
+            'online-gallery',
+            'view'
+        );
+        $role->permissions()->attach($permission->id);
+
+        $photographer = $this->createUser('studio-photographer', 'Pia', 'pia@example.com');
+        $photographer->roles()->attach($role->id, ['studio_id' => $studio->id]);
+
+        $photographer->refresh();
+        $this->assertTrue($photographer->hasPermission('online_gallery.view'));
+        $this->assertTrue($photographer->hasPermission('studio-photographer.online-gallery.view'));
+    }
+
+    public function test_underscore_and_hyphen_are_the_same_character(): void
+    {
+        $studio = $this->createStudio('Cross Portal Studio');
+        $role = $this->createRole('studio-hr-manager', 'studio-hr');
+        $permission = $this->createPermission('studio-hr.online_gallery.manage', 'studio-hr', 'online_gallery', 'manage');
+        $role->permissions()->attach($permission->id);
+
+        $hr = $this->createUser('studio-hr', 'Hana', 'hana-underscore@example.com');
+        $hr->roles()->attach($role->id, ['studio_id' => $studio->id]);
+
+        $hr->refresh();
+        $this->assertTrue($hr->hasPermission('studio-hr.online-gallery.manage'));
+        $this->assertTrue($hr->hasPermission('online-gallery.manage'));
+        // Two real portals must stay apart.
+        $this->assertFalse($hr->hasPermission('studio-finance.online-gallery.manage'));
+    }
+
+    public function test_middleware_accepts_a_legacy_underscore_permission(): void
+    {
+        Route::middleware(['studio.hr', 'permission:studio-hr.online_gallery.manage'])
+            ->get('/_test/rbac/studio-hr/online-gallery-legacy', [OnlineGalleryController::class, 'index'])
+            ->name('_test.studio-hr.online-gallery.legacy');
+
+        $studio = $this->createStudio('Cross Portal Studio');
+        $role = $this->createRole('studio-hr-manager', 'studio-hr');
+        $permission = $this->createPermission('studio-hr.online-gallery.manage', 'studio-hr', 'online-gallery', 'manage');
+        $role->permissions()->attach($permission->id);
+
+        $hr = $this->createUser('studio-hr', 'Hana', 'hana-legacy@example.com');
+        $hr->roles()->attach($role->id, ['studio_id' => $studio->id]);
+
+        $this->actingAs($hr)
+            ->get('/_test/rbac/studio-hr/online-gallery-legacy')
+            ->assertOk();
+    }
+
+    public function test_legacy_name_only_grant_does_not_match_a_canonical_permission(): void
+    {
+        $studio = $this->createStudio('Cross Portal Studio');
+        $role = $this->createRole('studio-hr-manager', 'studio-hr');
+
+        // The old seeds stored an action-first "name" and left the permission
+        // string empty. The name is not the permission identity, so it must not
+        // grant the canonical gallery permission in any portal.
+        $permission = $this->createPermissionRow('manage_online_gallery', '', 'studio-hr', 'online-gallery', 'manage');
+        $role->permissions()->attach($permission->id);
+
+        $hr = $this->createUser('studio-hr', 'Hana', 'hana-name-only@example.com');
+        $hr->roles()->attach($role->id, ['studio_id' => $studio->id]);
+
+        $hr->refresh();
+        $this->assertFalse($hr->hasPermission('owner.online-gallery.manage'));
+        $this->assertFalse($hr->hasPermission('studio-hr.online-gallery.manage'));
+    }
+
+    public function test_legacy_action_first_permission_string_still_matches(): void
+    {
+        $studio = $this->createStudio('Cross Portal Studio');
+        $role = $this->createRole('studio-hr-manager', 'studio-hr');
+
+        // A legacy permission string has no portal and stores the action before
+        // the resource. This tolerance must stay.
+        $permission = $this->createPermissionRow('manage_employees_legacy', 'manage_employees', 'owner', 'employees', 'manage');
+        $role->permissions()->attach($permission->id);
+
+        $hr = $this->createUser('studio-hr', 'Hana', 'hana-legacy-string@example.com');
+        $hr->roles()->attach($role->id, ['studio_id' => $studio->id]);
+
+        $hr->refresh();
+        $this->assertTrue($hr->hasPermission('owner.employees.manage'));
+    }
+
+    public function test_real_portal_grant_stays_inside_its_own_portal(): void
+    {
+        $studio = $this->createStudio('Cross Portal Studio');
+        $role = $this->createRole('studio-hr-manager', 'studio-hr');
+        $permission = $this->createPermission('studio-hr.online-gallery.manage', 'studio-hr', 'online-gallery', 'manage');
+        $role->permissions()->attach($permission->id);
+
+        $hr = $this->createUser('studio-hr', 'Hana', 'hana-real-portal@example.com');
+        $hr->roles()->attach($role->id, ['studio_id' => $studio->id]);
+
+        $hr->refresh();
+        $this->assertTrue($hr->hasPermission('studio-hr.online-gallery.manage'));
+        $this->assertFalse($hr->hasPermission('owner.online-gallery.manage'));
+    }
+
+    public function test_repair_migration_rewrites_and_merges_collisions(): void
+    {
+        $role = $this->createRole('studio-hr-manager', 'studio-hr');
+
+        $legacy = $this->createPermissionRow(
+            'studio_hr_online_gallery_view_legacy',
+            'studio-hr.online_gallery.view',
+            'studio-hr',
+            'online_gallery',
+            'view'
+        );
+        $canonical = $this->createPermissionRow(
+            'studio_hr_online_gallery_view_canonical',
+            'studio-hr.online-gallery.view',
+            'studio-hr',
+            'online-gallery',
+            'view'
+        );
+        $role->permissions()->attach($legacy->id);
+        $role->permissions()->attach($canonical->id);
+
+        $migration = require database_path('migrations/2026_09_22_090200_normalize_permission_strings.php');
+        $migration->up();
+
+        $strings = DB::table('tbl_permissions')->whereNull('deleted_at')->pluck('permission_string')->all();
+        $this->assertSame(count($strings), count(array_unique($strings)));
+        $this->assertSame(['studio-hr.online-gallery.view'], array_values($strings));
+        $this->assertTrue($role->refresh()->hasPermission('studio-hr.online-gallery.view'));
+
+        // A second run finds nothing left to change.
+        $migration->up();
+        $this->assertSame(1, DB::table('tbl_permissions')->whereNull('deleted_at')->count());
+    }
+
     private function createUser(string $role, string $firstName, string $email): UserModel
     {
         return UserModel::create([
@@ -171,6 +329,18 @@ class CrossPortalGalleryPermissionTest extends TestCase
     {
         return PermissionModel::create([
             'name' => str_replace(['.', '-'], '_', $string),
+            'portal' => $portal,
+            'resource' => $resource,
+            'action' => $action,
+            'permission_string' => $string,
+            'status' => 'active',
+        ]);
+    }
+
+    private function createPermissionRow(string $name, string $string, string $portal, string $resource, string $action): PermissionModel
+    {
+        return PermissionModel::create([
+            'name' => $name,
             'portal' => $portal,
             'resource' => $resource,
             'action' => $action,

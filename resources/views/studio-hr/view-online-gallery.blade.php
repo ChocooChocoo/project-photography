@@ -58,9 +58,18 @@
                                                 <td>
                                                     @if($booking->has_gallery)
                                                         @php($status = optional($booking->gallery)->gallery_status ?? 'draft')
-                                                        <span class="badge {{ $status === 'published' ? 'bg-success' : 'bg-warning' }}">
-                                                            {{ ucfirst($status) }}
-                                                        </span>
+                                                        @php($approval = optional($booking->gallery)->approval_status)
+                                                        @if($status === 'published')
+                                                            <span class="badge bg-success">Published</span>
+                                                        @elseif($approval === 'pending')
+                                                            <span class="badge bg-info">Pending Approval</span>
+                                                        @elseif($approval === 'rejected')
+                                                            <span class="badge bg-danger">Rejected</span>
+                                                        @elseif($approval === 'approved')
+                                                            <span class="badge bg-success">Approved</span>
+                                                        @else
+                                                            <span class="badge bg-warning">Draft</span>
+                                                        @endif
                                                     @else
                                                         <span class="badge bg-secondary">Not started</span>
                                                     @endif
@@ -133,6 +142,9 @@
                         <button type="button" class="btn btn-secondary" id="galleryPublishBtn" disabled>
                             <i class="ti ti-send me-1"></i> Publish
                         </button>
+                        <button type="button" class="btn btn-primary" id="gallerySubmitBtn" disabled>
+                            <i class="ti ti-check me-1"></i> Submit for approval
+                        </button>
                         <button type="button" class="btn btn-primary" id="gallerySaveBtn">
                             <i class="ti ti-device-floppy me-1"></i> Save
                         </button>
@@ -146,7 +158,46 @@
 @section('scripts')
     <script>
         (function () {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            // Read the token at request time. A retry must not reuse an old value.
+            function csrfToken() {
+                if (window.PlatinumSession && typeof window.PlatinumSession.token === 'function') {
+                    return window.PlatinumSession.token();
+                }
+
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                return meta ? (meta.getAttribute('content') || '') : '';
+            }
+
+            // Ask the server for a fresh token.
+            function refreshToken() {
+                if (window.PlatinumSession && typeof window.PlatinumSession.refresh === 'function') {
+                    return window.PlatinumSession.refresh();
+                }
+
+                return Promise.resolve();
+            }
+
+            // Send one request. Retry it one time after a 419 response.
+            async function send(url, options) {
+                const settings = Object.assign({}, options);
+                settings.headers = Object.assign({}, options && options.headers);
+
+                let response = await fetch(url, settings);
+
+                if (response.status === 419 && window.PlatinumSession) {
+                    try {
+                        await refreshToken();
+                    } catch (error) {
+                        return response;
+                    }
+
+                    settings.headers['X-CSRF-TOKEN'] = csrfToken();
+                    response = await fetch(url, settings);
+                }
+
+                return response;
+            }
+
             const modalEl = document.getElementById('galleryModal');
             const modal = new bootstrap.Modal(modalEl);
             const alertBox = document.getElementById('galleryModalAlert');
@@ -157,6 +208,7 @@
             const photoCount = document.getElementById('galleryPhotoCount');
             const saveBtn = document.getElementById('gallerySaveBtn');
             const publishBtn = document.getElementById('galleryPublishBtn');
+            const submitBtn = document.getElementById('gallerySubmitBtn');
             const deleteBtn = document.getElementById('galleryDeleteBtn');
 
             let currentBookingId = null;
@@ -166,6 +218,7 @@
                 details: @json(route('studio-hr.online-gallery.details', ['bookingId' => '__ID__'])),
                 upload: @json(route('studio-hr.online-gallery.upload', ['bookingId' => '__ID__'])),
                 update: @json(route('studio-hr.online-gallery.update', ['galleryId' => '__ID__'])),
+                submit: @json(route('studio-hr.online-gallery.submit', ['galleryId' => '__ID__'])),
                 publish: @json(route('studio-hr.online-gallery.publish', ['galleryId' => '__ID__'])),
                 delete: @json(route('studio-hr.online-gallery.delete', ['galleryId' => '__ID__'])),
                 deleteImage: @json(route('studio-hr.online-gallery.delete-image', ['galleryId' => '__ID__'])),
@@ -195,6 +248,15 @@
                 alertBox.innerHTML = '<div class="alert alert-' + type + ' py-2">' + message + '</div>';
             }
 
+            function updateActionButtons() {
+                const gallery = currentGallery;
+                const approval = gallery ? (gallery.approval_status || null) : null;
+                const isPublished = !!gallery && gallery.gallery_status === 'published';
+
+                submitBtn.disabled = !gallery || isPublished || !(approval === null || approval === 'rejected');
+                publishBtn.disabled = !gallery || isPublished || approval !== 'approved';
+            }
+
             async function openGallery(bookingId, bookingName) {
                 currentBookingId = bookingId;
                 currentGallery = null;
@@ -202,6 +264,7 @@
                 imagesInput.value = '';
                 photoGrid.innerHTML = '';
                 photoCount.textContent = '0';
+                submitBtn.disabled = true;
                 publishBtn.disabled = true;
                 deleteBtn.disabled = true;
                 document.getElementById('galleryModalTitle').textContent = 'Manage Gallery - ' + bookingName;
@@ -209,7 +272,7 @@
                 modal.show();
 
                 try {
-                    const response = await fetch(routes.details.replace('__ID__', bookingId), {
+                    const response = await send(routes.details.replace('__ID__', bookingId), {
                         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     });
                     const data = await response.json();
@@ -225,7 +288,7 @@
                     paintPhotoGrid(currentGallery);
 
                     const hasGallery = !!currentGallery;
-                    publishBtn.disabled = !hasGallery || currentGallery.gallery_status === 'published';
+                    updateActionButtons();
                     deleteBtn.disabled = !hasGallery;
                 } catch (error) {
                     showAlert('Unable to load gallery.', 'danger');
@@ -250,9 +313,9 @@
 
                 try {
                     if (hasNewImages) {
-                        const response = await fetch(routes.upload.replace('__ID__', currentBookingId), {
+                        const response = await send(routes.upload.replace('__ID__', currentBookingId), {
                             method: 'POST',
-                            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                            headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
                             body: formData,
                         });
                         const data = await response.json();
@@ -265,11 +328,11 @@
                     }
 
                     if (currentGallery) {
-                        const response = await fetch(routes.update.replace('__ID__', currentGallery.id), {
+                        const response = await send(routes.update.replace('__ID__', currentGallery.id), {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken,
+                                'X-CSRF-TOKEN': csrfToken(),
                                 'Accept': 'application/json',
                             },
                             body: JSON.stringify({
@@ -287,11 +350,35 @@
                     }
 
                     paintPhotoGrid(currentGallery);
-                    publishBtn.disabled = !currentGallery || currentGallery.gallery_status === 'published';
+                    updateActionButtons();
                     deleteBtn.disabled = !currentGallery;
                     showAlert('Gallery saved successfully.', 'success');
                 } catch (error) {
                     showAlert('Unable to save gallery.', 'danger');
+                }
+            });
+
+            submitBtn.addEventListener('click', async function () {
+                if (!currentGallery) {
+                    return;
+                }
+                clearAlert();
+
+                try {
+                    const response = await send(routes.submit.replace('__ID__', currentGallery.id), {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
+                    });
+                    const data = await response.json();
+                    if (!data.success) {
+                        showAlert(data.message || 'Submit failed.', 'danger');
+                        return;
+                    }
+                    currentGallery = data.gallery;
+                    updateActionButtons();
+                    showAlert('Gallery submitted for owner approval.', 'success');
+                } catch (error) {
+                    showAlert('Unable to submit gallery.', 'danger');
                 }
             });
 
@@ -302,9 +389,9 @@
                 clearAlert();
 
                 try {
-                    const response = await fetch(routes.publish.replace('__ID__', currentGallery.id), {
+                    const response = await send(routes.publish.replace('__ID__', currentGallery.id), {
                         method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                        headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
                     });
                     const data = await response.json();
                     if (!data.success) {
@@ -312,7 +399,7 @@
                         return;
                     }
                     currentGallery = data.gallery;
-                    publishBtn.disabled = true;
+                    updateActionButtons();
                     showAlert(data.message || 'Gallery published.', 'success');
                 } catch (error) {
                     showAlert('Unable to publish gallery.', 'danger');
@@ -326,9 +413,9 @@
                 clearAlert();
 
                 try {
-                    const response = await fetch(routes.delete.replace('__ID__', currentGallery.id), {
+                    const response = await send(routes.delete.replace('__ID__', currentGallery.id), {
                         method: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                        headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
                     });
                     const data = await response.json();
                     if (!data.success) {
@@ -337,7 +424,7 @@
                     }
                     currentGallery = null;
                     paintPhotoGrid(null);
-                    publishBtn.disabled = true;
+                    updateActionButtons();
                     deleteBtn.disabled = true;
                     showAlert('Gallery deleted successfully.', 'success');
                 } catch (error) {

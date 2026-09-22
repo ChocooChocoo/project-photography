@@ -301,6 +301,7 @@ class AttendancePayrollTest extends TestCase
         $permissionRow = PermissionModel::create([
             'name' => $permission,
             'portal' => $portal,
+            'permission_string' => $permission,
             'status' => 'active',
         ]);
 
@@ -348,6 +349,7 @@ class AttendancePayrollTest extends TestCase
         Schema::create('tbl_permissions', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100)->unique();
+            $table->string('permission_string', 150)->nullable();
             $table->string('portal', 50)->default('studio');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');

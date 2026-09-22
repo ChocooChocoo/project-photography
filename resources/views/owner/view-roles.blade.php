@@ -614,7 +614,21 @@
                 const $btn = $('#saveRoleBtn');
                 const $text = $('#saveRoleText');
                 const $spinner = $('#saveRoleSpinner');
-                
+
+                const finishSave = function() {
+                    $btn.prop('disabled', false);
+                    $text.text('Save Changes');
+                    $spinner.addClass('d-none');
+                };
+
+                const saveErrorMessage = function(xhr, fallback) {
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        return xhr.responseJSON.message;
+                    }
+
+                    return fallback;
+                };
+
                 $btn.prop('disabled', true);
                 $text.text('Saving...');
                 $spinner.removeClass('d-none');
@@ -630,56 +644,53 @@
                         _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
-                        if (response.success) {
-                            $.ajax({
-                                url: `/owner/roles/${roleId}/permissions`,
-                                method: 'PUT',
-                                data: {
-                                    permissions: permissions,
-                                    _token: $('meta[name="csrf-token"]').attr('content')
-                                },
-                                success: function(permResponse) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success!',
-                                        text: 'Role updated successfully.',
-                                        showConfirmButton: false,
-                                        timer: 2000,
-                                        timerProgressBar: true,
-                                        didClose: () => {
-                                            $('#editRoleModal').modal('hide');
-                                            loadRoles();
-                                        }
-                                    });
-                                },
-                                error: function() {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success!',
-                                        text: 'Role details updated, but permissions may need review.',
-                                        showConfirmButton: false,
-                                        timer: 2000,
-                                        timerProgressBar: true,
-                                        didClose: () => {
-                                            $('#editRoleModal').modal('hide');
-                                            loadRoles();
-                                        }
-                                    });
-                                }
-                            });
+                        if (!response.success) {
+                            finishSave();
+                            Swal.fire({ icon: 'error', title: 'Error!', text: response.message || 'Failed to update role.' });
+                            return;
                         }
+
+                        // Send JSON so the permissions key stays in the body
+                        // when the owner clears every checkbox. Form encoding
+                        // drops an empty array and the removal never saves.
+                        $.ajax({
+                            url: `/owner/roles/${roleId}/permissions`,
+                            method: 'PUT',
+                            contentType: 'application/json',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            data: JSON.stringify({ permissions: permissions }),
+                            success: function(permResponse) {
+                                finishSave();
+
+                                if (permResponse.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success!',
+                                        text: permResponse.message || 'Role updated successfully.',
+                                        showConfirmButton: false,
+                                        timer: 2000,
+                                        timerProgressBar: true,
+                                        didClose: () => {
+                                            $('#editRoleModal').modal('hide');
+                                            loadRoles();
+                                        }
+                                    });
+                                    return;
+                                }
+
+                                Swal.fire({ icon: 'error', title: 'Error!', text: permResponse.message || 'Failed to update role permissions.' });
+                            },
+                            error: function(xhr) {
+                                finishSave();
+                                Swal.fire({ icon: 'error', title: 'Error!', text: saveErrorMessage(xhr, 'Failed to update role permissions.') });
+                            }
+                        });
                     },
                     error: function(xhr) {
-                        let errorMessage = 'Failed to update role.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        }
-                        Swal.fire({ icon: 'error', title: 'Error!', text: errorMessage });
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false);
-                        $text.text('Save Changes');
-                        $spinner.addClass('d-none');
+                        finishSave();
+                        Swal.fire({ icon: 'error', title: 'Error!', text: saveErrorMessage(xhr, 'Failed to update role.') });
                     }
                 });
             });

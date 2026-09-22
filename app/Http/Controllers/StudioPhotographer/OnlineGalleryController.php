@@ -389,7 +389,64 @@ class OnlineGalleryController extends Controller
     }
 
     /**
-     * Publish a draft gallery so the client can view it (only if assigned to this booking).
+     * Send a draft gallery to the studio owner for approval (only if assigned to this booking).
+     */
+    public function submitForApproval($galleryId)
+    {
+        try {
+            $userId = Auth::id();
+
+            // Get gallery and check if photographer is assigned to the booking
+            $gallery = StudioOnlineGalleryModel::where('id', $galleryId)
+                ->with('booking')
+                ->firstOrFail();
+
+            $assignment = BookingAssignedPhotographerModel::where('photographer_id', $userId)
+                ->where('booking_id', $gallery->booking_id)
+                ->whereIn('status', ['on_site', 'in_progress', 'completed'])
+                ->first();
+
+            if (!$assignment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not authorized to submit this gallery for approval.'
+                ], 403);
+            }
+
+            if ($gallery->isPublished()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This gallery is already published to the client.'
+                ], 400);
+            }
+
+            $gallery->update([
+                'approval_status' => StudioOnlineGalleryModel::APPROVAL_PENDING,
+                'submitted_by' => $userId,
+                'submitted_at' => now(),
+                'approved_by' => null,
+                'approved_at' => null,
+                'rejected_by' => null,
+                'rejected_at' => null,
+                'rejection_reason' => null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Gallery submitted for owner approval.',
+                'gallery' => $gallery
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error submitting gallery for approval: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Publish an approved gallery so the client can view it (only if assigned to this booking).
      */
     public function publish($galleryId)
     {
@@ -413,8 +470,15 @@ class OnlineGalleryController extends Controller
                 ], 403);
             }
 
+            if (!$gallery->canPublish()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This gallery needs owner approval before you can publish it.'
+                ], 403);
+            }
+
             $gallery->update([
-                'gallery_status' => 'published',
+                'gallery_status' => StudioOnlineGalleryModel::GALLERY_STATUS_PUBLISHED,
                 'published_at' => now(),
             ]);
 

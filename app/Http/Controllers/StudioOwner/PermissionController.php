@@ -111,6 +111,7 @@ class PermissionController extends Controller
         $request->validate([
             'resource' => 'required|string|max:100',
             'action' => 'required|string|max:50',
+            'portal' => 'nullable|string|max:50',
             'permission_string' => ['required', 'string', 'max:150', Rule::unique('tbl_permissions', 'permission_string')->whereNull('deleted_at')],
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
@@ -204,6 +205,7 @@ class PermissionController extends Controller
         $request->validate([
             'resource' => 'required|string|max:100',
             'action' => 'required|string|max:50',
+            'portal' => 'nullable|string|max:50',
             'permission_string' => ['required', 'string', 'max:150', Rule::unique('tbl_permissions', 'permission_string')->whereNull('deleted_at')->ignore($id)],
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
@@ -331,72 +333,117 @@ class PermissionController extends Controller
     /**
      * Prepare normalized permission data for storage.
      *
-     * @param Request $request
+     * The saved permission string is the canonical "portal.resource.action"
+     * value. The portal comes from the request when the request supplies one.
+     *
      * @return array<string, string>
      */
     private function preparePermissionData(Request $request): array
     {
-        $normalizedPermissionString = $this->normalizePermissionString($request->input('permission_string'));
-        $segments = array_values(array_filter(explode('.', str_replace(':', '.', $normalizedPermissionString))));
-        $action = end($segments) ?: $this->normalizePermissionSegment($request->input('action'));
-        $resourceSegments = array_slice($segments, 0, -1);
-        $resource = !empty($resourceSegments)
-            ? implode('_', $resourceSegments)
-            : $this->normalizePermissionSegment($request->input('resource'));
+        $parsed = $this->parsePermissionString((string) $request->input('permission_string'));
+
+        $portal = $this->normalizePortal($request->input('portal'));
+
+        if ($portal === '') {
+            $portal = $parsed['portal'];
+        }
+
+        if ($portal === '') {
+            $portal = $this->inferPortalFromPermissionString((string) $request->input('permission_string'));
+        }
+
+        $resource = $this->normalizeCanonicalSegment($request->input('resource'));
+        $action = $this->normalizeCanonicalSegment($request->input('action'));
+
+        if ($resource === '') {
+            $resource = $parsed['resource'];
+        }
+
+        if ($action === '') {
+            $action = $parsed['action'];
+        }
+
+        $permissionString = PermissionModel::canonicalString($portal, $resource, $action);
 
         return [
-            'name' => $this->buildPermissionName($segments, $resource, $action),
+            'name' => $this->buildPermissionName($permissionString),
             'resource' => $resource,
             'action' => $action,
-            'permission_string' => $normalizedPermissionString,
-            'portal' => $this->inferPortalFromPermissionString($normalizedPermissionString),
+            'permission_string' => $permissionString,
+            'portal' => $portal,
         ];
     }
 
     /**
-     * Normalize a permission resource or action segment.
+     * Normalize one canonical permission segment. An underscore becomes a hyphen.
      *
      * @param string|null $value
      * @return string
      */
-    private function normalizePermissionSegment(?string $value): string
+    private function normalizeCanonicalSegment(?string $value): string
     {
         $normalizedValue = strtolower(trim((string) $value));
-        $normalizedValue = preg_replace('/[^a-z0-9]+/', '_', $normalizedValue) ?? '';
+        $normalizedValue = preg_replace('/[^a-z0-9]+/', '-', $normalizedValue) ?? '';
+        $normalizedValue = preg_replace('/-+/', '-', $normalizedValue) ?? '';
 
-        return trim($normalizedValue, '_');
+        return trim($normalizedValue, '-');
     }
 
     /**
-     * Normalize a permission string while preserving dot notation.
-     */
-    private function normalizePermissionString(?string $value): string
-    {
-        $normalizedValue = strtolower(trim((string) $value));
-        $normalizedValue = str_replace(':', '.', $normalizedValue);
-        $normalizedValue = preg_replace('/[^a-z0-9.]+/', '_', $normalizedValue) ?? '';
-        $normalizedValue = preg_replace('/_+/', '_', $normalizedValue) ?? '';
-        $normalizedValue = preg_replace('/\.+/', '.', $normalizedValue) ?? '';
-
-        return trim($normalizedValue, '._');
-    }
-
-    /**
-     * Build a stable permission name from parsed segments.
+     * Normalize a portal name. A hyphen stays a hyphen.
      *
-     * @param array<int, string> $segments
+     * @param string|null $value
+     * @return string
      */
-    private function buildPermissionName(array $segments, string $resource, string $action): string
+    private function normalizePortal(?string $value): string
     {
-        if (!empty($segments)) {
-            return implode('_', $segments);
+        $normalizedValue = strtolower(trim((string) $value));
+        $normalizedValue = preg_replace('/[^a-z-]+/', '-', $normalizedValue) ?? '';
+        $normalizedValue = preg_replace('/-+/', '-', $normalizedValue) ?? '';
+
+        return trim($normalizedValue, '-');
+    }
+
+    /**
+     * Split a permission string into its portal, resource, and action parts.
+     *
+     * The shared normalizer owns the format. The placeholder portal prefix is
+     * dropped from the returned portal.
+     *
+     * @return array<string, string>
+     */
+    private function parsePermissionString(string $value): array
+    {
+        $normalizedValue = PermissionModel::normalizeIdentifier($value);
+
+        if ($normalizedValue === '') {
+            return ['portal' => '', 'resource' => '', 'action' => ''];
         }
 
-        return trim($action . '_' . $resource, '_');
+        $segments = array_values(array_filter(explode('.', $normalizedValue)));
+        $action = array_pop($segments) ?? '';
+        $resource = array_pop($segments) ?? '';
+        $portal = $segments[0] ?? '';
+
+        if ($portal === 'portal') {
+            $portal = '';
+        }
+
+        return ['portal' => $portal, 'resource' => $resource, 'action' => $action];
+    }
+
+    /**
+     * Build a stable permission name from the canonical string.
+     */
+    private function buildPermissionName(string $permissionString): string
+    {
+        return str_replace(['.', '-'], '_', $permissionString);
     }
 
     /**
      * Infer the RBAC portal from a permission string.
+     *
+     * This runs only when the request does not supply a portal.
      */
     private function inferPortalFromPermissionString(string $permissionString): string
     {

@@ -457,6 +457,14 @@ class OwnerCompletionGateTest extends TestCase
             $table->integer('total_photos')->default(0);
             $table->timestamp('published_at')->nullable();
             $table->string('gallery_status')->default('draft');
+            $table->enum('approval_status', ['pending', 'approved', 'rejected', 'cancelled'])->nullable();
+            $table->text('rejection_reason')->nullable();
+            $table->unsignedBigInteger('submitted_by')->nullable();
+            $table->timestamp('submitted_at')->nullable();
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->unsignedBigInteger('rejected_by')->nullable();
+            $table->timestamp('rejected_at')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_notifications', function (Blueprint $table) {

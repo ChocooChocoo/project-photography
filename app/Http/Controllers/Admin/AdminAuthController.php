@@ -115,8 +115,14 @@ class AdminAuthController extends Controller
             return back()->withErrors(['code' => 'Invalid verification code.']);
         }
 
+        // The guard draws a new session id and a new CSRF token on login.
+        // Keep the token that the verification page rendered, so the page and
+        // the reply use one token. The new session id still stops a session
+        // fixation attack.
+        $sessionToken = $request->session()->token();
+
         Auth::login($user, false);
-        $request->session()->regenerate();
+        $request->session()->put('_token', $sessionToken);
         session(['user_role' => 'admin']);
         session()->forget('admin_otp');
 

@@ -57,13 +57,26 @@
                                             </td>
                                             <td class="text-center">
                                                 @if ($booking->has_gallery)
+                                                    @php($approvalStatus = $booking->gallery->approval_status ?? null)
                                                     @if ($booking->gallery->gallery_status === 'published')
                                                         <span class="badge badge-soft-success w-100">
                                                             <i class="ti ti-photo-check me-1"></i> Published
                                                         </span>
-                                                    @else
+                                                    @elseif ($approvalStatus === 'pending')
                                                         <span class="badge badge-soft-info w-100">
                                                             <i class="ti ti-clock-hour-4 me-1"></i> Pending Owner Review
+                                                        </span>
+                                                    @elseif ($approvalStatus === 'rejected')
+                                                        <span class="badge badge-soft-danger w-100">
+                                                            <i class="ti ti-x me-1"></i> Rejected
+                                                        </span>
+                                                    @elseif ($approvalStatus === 'approved')
+                                                        <span class="badge badge-soft-success w-100">
+                                                            <i class="ti ti-check me-1"></i> Approved
+                                                        </span>
+                                                    @else
+                                                        <span class="badge badge-soft-secondary w-100">
+                                                            <i class="ti ti-photo me-1"></i> Draft
                                                         </span>
                                                     @endif
                                                 @else
@@ -74,11 +87,19 @@
                                             </td>
                                             <td class="text-center">
                                                 @if ($booking->has_gallery)
+                                                    @php($approvalStatus = $booking->gallery->approval_status ?? null)
                                                     <button class="btn btn-sm manage-gallery"
                                                         data-booking-id="{{ $booking->id }}" title="Manage Gallery">
                                                         <i class="ti ti-library-photo fs-5" aria-hidden="true"></i>
                                                     </button>
-                                                    @if ($booking->gallery->gallery_status !== 'published')
+                                                    @if ($booking->gallery->gallery_status !== 'published' && ($approvalStatus === null || $approvalStatus === 'rejected'))
+                                                        <button class="btn btn-sm submit-gallery"
+                                                            data-gallery-id="{{ $booking->gallery->id }}"
+                                                            title="Submit for approval">
+                                                            <i class="ti ti-check fs-5" aria-hidden="true"></i>
+                                                        </button>
+                                                    @endif
+                                                    @if ($booking->gallery->gallery_status !== 'published' && $approvalStatus === 'approved')
                                                         <button class="btn btn-sm publish-gallery"
                                                             data-gallery-id="{{ $booking->gallery->id }}"
                                                             title="Publish to Client">
@@ -163,6 +184,9 @@
                                 </div>
                             </div>
                             <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
+                                <button type="button" class="btn btn-primary d-none" id="submitGalleryBtn">
+                                    <i class="ti ti-check me-1"></i> Submit for approval
+                                </button>
                                 <button type="button" class="btn btn-primary d-none" id="publishGalleryBtn">
                                     <i class="ti ti-send me-1"></i> Publish to Client
                                 </button>
@@ -558,16 +582,36 @@
                                     '<span class="badge badge-soft-danger p-1"><i class="ti ti-x me-1"></i>Inactive</span>';
                                 $('#galleryStatusBadge').html(statusBadge);
 
+                                const approvalStatus = response.gallery.approval_status || null;
+
                                 if (response.gallery.gallery_status === 'published') {
                                     $('#galleryReviewBadge').html(
                                         '<span class="badge badge-soft-success p-1"><i class="ti ti-photo-check me-1"></i>Published</span>'
                                     );
+                                    $('#submitGalleryBtn, #publishGalleryBtn').addClass('d-none');
+                                } else if (approvalStatus === 'approved') {
+                                    $('#galleryReviewBadge').html(
+                                        '<span class="badge badge-soft-success p-1"><i class="ti ti-check me-1"></i>Approved</span>'
+                                    );
+                                    $('#submitGalleryBtn').addClass('d-none');
+                                    $('#publishGalleryBtn').removeClass('d-none');
+                                } else if (approvalStatus === 'pending') {
+                                    $('#galleryReviewBadge').html(
+                                        '<span class="badge badge-soft-info p-1"><i class="ti ti-clock-hour-4 me-1"></i>Pending Owner Review</span>'
+                                    );
+                                    $('#submitGalleryBtn, #publishGalleryBtn').addClass('d-none');
+                                } else if (approvalStatus === 'rejected') {
+                                    $('#galleryReviewBadge').html(
+                                        '<span class="badge badge-soft-danger p-1"><i class="ti ti-x me-1"></i>Rejected</span>'
+                                    );
+                                    $('#submitGalleryBtn').removeClass('d-none');
                                     $('#publishGalleryBtn').addClass('d-none');
                                 } else {
                                     $('#galleryReviewBadge').html(
-                                        '<span class="badge badge-soft-info p-1"><i class="ti ti-clock-hour-4 me-1"></i>Pending Review</span>'
+                                        '<span class="badge badge-soft-secondary p-1"><i class="ti ti-photo me-1"></i>Draft</span>'
                                     );
-                                    $('#publishGalleryBtn').removeClass('d-none');
+                                    $('#submitGalleryBtn').removeClass('d-none');
+                                    $('#publishGalleryBtn').addClass('d-none');
                                 }
 
                                 // Gallery info table
@@ -595,7 +639,7 @@
                                 $('#galleryImagesSection').hide();
                                 $('#manageLoadingSpinner').hide();
                                 $('#galleryReviewBadge').empty();
-                                $('#publishGalleryBtn').addClass('d-none');
+                                $('#submitGalleryBtn, #publishGalleryBtn').addClass('d-none');
 
                                 // Show empty header
                                 $('#galleryNameDisplay').text('No Gallery Yet');
@@ -1016,6 +1060,49 @@
                             icon: 'error',
                             title: 'Error',
                             text: message
+                        });
+                    }
+                });
+            });
+
+            // Submit gallery for owner approval (from the table row action or the manage-gallery modal)
+            $(document).on('click', '.submit-gallery, #submitGalleryBtn', function() {
+                const galleryId = $(this).data('gallery-id') || currentGalleryId;
+
+                Swal.fire({
+                    title: 'Submit for approval',
+                    text: 'The studio owner must approve this gallery before it can be published to the client. Continue?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, submit it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `{{ route('studio-photographer.online-gallery.submit', ['__ID__']) }}`.replace('__ID__', galleryId),
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Submitted!',
+                                        text: 'Gallery submitted for owner approval.',
+                                        showConfirmButton: false,
+                                        timer: 2000,
+                                        timerProgressBar: true
+                                    }).then(() => location.reload());
+                                } else {
+                                    Swal.fire('Error', response.message, 'error');
+                                }
+                            },
+                            error: function(xhr) {
+                                Swal.fire('Error', xhr.responseJSON?.message ||
+                                    'Failed to submit gallery.', 'error');
+                            }
                         });
                     }
                 });

@@ -33,6 +33,8 @@ class GalleryLifecycleTest extends TestCase
 
         Route::post('/_test/owner/gallery/{booking}/upload', [OwnerOnlineGalleryController::class, 'uploadImages']);
         Route::post('/_test/owner/gallery/{gallery}/publish', [OwnerOnlineGalleryController::class, 'publish']);
+        Route::post('/_test/owner/gallery/{gallery}/approve', [OwnerOnlineGalleryController::class, 'approve']);
+        Route::post('/_test/owner/gallery/{gallery}/reject', [OwnerOnlineGalleryController::class, 'reject']);
         Route::get('/_test/client/gallery/{id}/{type}', [ClientOnlineGalleryController::class, 'getGalleryDetails']);
     }
 
@@ -79,6 +81,143 @@ class GalleryLifecycleTest extends TestCase
             ->assertJsonPath('gallery.total_photos', 1);
     }
 
+    public function test_owner_can_approve_a_pending_gallery(): void
+    {
+        $gallery = $this->createPendingGallery();
+
+        Auth::setUser($this->owner);
+
+        $this->post("/_test/owner/gallery/{$gallery->id}/approve")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.approval_status', 'approved');
+
+        $gallery->refresh();
+        $this->assertSame('approved', $gallery->approval_status);
+        $this->assertSame($this->owner->id, $gallery->approved_by);
+        $this->assertNotNull($gallery->approved_at);
+        $this->assertNull($gallery->rejected_at);
+    }
+
+    public function test_owner_can_reject_a_pending_gallery_with_a_reason(): void
+    {
+        $gallery = $this->createPendingGallery();
+
+        Auth::setUser($this->owner);
+
+        $this->post("/_test/owner/gallery/{$gallery->id}/reject", [
+            'rejection_reason' => 'The photos are not edited yet.',
+        ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.approval_status', 'rejected');
+
+        $gallery->refresh();
+        $this->assertSame('rejected', $gallery->approval_status);
+        $this->assertSame($this->owner->id, $gallery->rejected_by);
+        $this->assertSame('The photos are not edited yet.', $gallery->rejection_reason);
+        $this->assertNotNull($gallery->rejected_at);
+        $this->assertNull($gallery->approved_at);
+    }
+
+    public function test_owner_rejection_requires_a_reason(): void
+    {
+        $gallery = $this->createPendingGallery();
+
+        Auth::setUser($this->owner);
+
+        $this->postJson("/_test/owner/gallery/{$gallery->id}/reject")
+            ->assertStatus(422);
+
+        $gallery->refresh();
+        $this->assertSame('pending', $gallery->approval_status);
+    }
+
+    public function test_owner_cannot_process_a_gallery_that_is_not_pending(): void
+    {
+        $gallery = $this->createPendingGallery([
+            'approval_status' => 'approved',
+            'approved_by' => $this->owner->id,
+            'approved_at' => now(),
+        ]);
+
+        Auth::setUser($this->owner);
+
+        $this->post("/_test/owner/gallery/{$gallery->id}/approve")
+            ->assertStatus(422)
+            ->assertJsonPath('success', false);
+    }
+
+    public function test_publishing_a_pending_gallery_records_the_owner_approval(): void
+    {
+        $gallery = $this->createPendingGallery();
+
+        Auth::setUser($this->owner);
+
+        $this->post("/_test/owner/gallery/{$gallery->id}/publish")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('gallery.gallery_status', 'published')
+            ->assertJsonPath('gallery.approval_status', 'approved');
+
+        $gallery->refresh();
+        $this->assertSame('published', $gallery->gallery_status);
+        $this->assertSame('approved', $gallery->approval_status);
+        $this->assertSame($this->owner->id, $gallery->approved_by);
+        $this->assertNotNull($gallery->approved_at);
+        $this->assertNotNull($gallery->published_at);
+    }
+
+    public function test_publishing_a_rejected_gallery_clears_the_stale_rejection(): void
+    {
+        $gallery = $this->createPendingGallery([
+            'approval_status' => 'rejected',
+            'rejected_by' => $this->owner->id,
+            'rejected_at' => now(),
+            'rejection_reason' => 'The photos are not edited yet.',
+        ]);
+
+        Auth::setUser($this->owner);
+
+        $this->post("/_test/owner/gallery/{$gallery->id}/publish")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('gallery.gallery_status', 'published')
+            ->assertJsonPath('gallery.approval_status', 'approved');
+
+        $gallery->refresh();
+        $this->assertSame('published', $gallery->gallery_status);
+        $this->assertSame('approved', $gallery->approval_status);
+        $this->assertSame($this->owner->id, $gallery->approved_by);
+        $this->assertNull($gallery->rejection_reason);
+        $this->assertNull($gallery->rejected_by);
+        $this->assertNull($gallery->rejected_at);
+    }
+
+    public function test_publishing_an_approved_gallery_stays_approved(): void
+    {
+        $approvedAt = now()->subDay();
+
+        $gallery = $this->createPendingGallery([
+            'approval_status' => 'approved',
+            'approved_by' => $this->owner->id,
+            'approved_at' => $approvedAt,
+        ]);
+
+        Auth::setUser($this->owner);
+
+        $this->post("/_test/owner/gallery/{$gallery->id}/publish")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('gallery.gallery_status', 'published')
+            ->assertJsonPath('gallery.approval_status', 'approved');
+
+        $gallery->refresh();
+        $this->assertSame('published', $gallery->gallery_status);
+        $this->assertSame('approved', $gallery->approval_status);
+        $this->assertSame($this->owner->id, $gallery->approved_by);
+    }
+
     public function test_gallery_upload_rejected_for_non_active_booking(): void
     {
         $client = $this->createUser('client', 'gallery-client-2@example.com');
@@ -93,6 +232,28 @@ class GalleryLifecycleTest extends TestCase
         ])->assertStatus(500)->assertJsonPath('success', false);
 
         $this->assertSame(0, StudioOnlineGalleryModel::count());
+    }
+
+    private function createPendingGallery(array $overrides = []): StudioOnlineGalleryModel
+    {
+        $client = $this->createUser('client', 'gallery-pending-client@example.com');
+        $studio = $this->createStudio();
+        $booking = $this->createBooking($studio, $client, 'in_progress');
+
+        return StudioOnlineGalleryModel::create(array_merge([
+            'booking_id' => $booking->id,
+            'studio_id' => $studio->id,
+            'client_id' => $client->id,
+            'gallery_reference' => StudioOnlineGalleryModel::generateGalleryReference(),
+            'gallery_name' => 'Pending Gallery',
+            'images' => ['studio-online-galleries/1/photo.png'],
+            'total_photos' => 1,
+            'status' => 'active',
+            'gallery_status' => 'draft',
+            'approval_status' => 'pending',
+            'submitted_by' => $this->owner->id,
+            'submitted_at' => now(),
+        ], $overrides));
     }
 
     private function fakePng(string $name): UploadedFile
@@ -241,6 +402,14 @@ class GalleryLifecycleTest extends TestCase
             $table->integer('total_photos')->default(0);
             $table->timestamp('published_at')->nullable();
             $table->enum('gallery_status', ['draft', 'published'])->default('draft');
+            $table->enum('approval_status', ['pending', 'approved', 'rejected', 'cancelled'])->nullable();
+            $table->text('rejection_reason')->nullable();
+            $table->unsignedBigInteger('submitted_by')->nullable();
+            $table->timestamp('submitted_at')->nullable();
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->unsignedBigInteger('rejected_by')->nullable();
+            $table->timestamp('rejected_at')->nullable();
             $table->timestamps();
         });
     }

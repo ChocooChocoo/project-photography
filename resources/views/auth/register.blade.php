@@ -478,7 +478,8 @@
                 }
                 
                 // Check email
-                if (!$('#userEmail').val().trim()) {
+                var userEmail = $('#userEmail').val().trim();
+                if (!window.PlatinumEmail.isValid(userEmail)) {
                     $('#userEmail').addClass('is-invalid');
                     isValid = false;
                 }

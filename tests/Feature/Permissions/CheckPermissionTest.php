@@ -76,6 +76,7 @@ class CheckPermissionTest extends TestCase
 
         $permission = PermissionModel::create([
             'name' => 'owner.services.manage',
+            'permission_string' => 'owner.services.manage',
             'portal' => 'owner',
             'status' => 'active',
         ]);
@@ -128,6 +129,7 @@ class CheckPermissionTest extends TestCase
         Schema::create('tbl_permissions', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100)->unique();
+            $table->string('permission_string')->nullable();
             $table->string('portal', 50)->default('studio');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');

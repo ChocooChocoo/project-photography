@@ -95,6 +95,8 @@ class RoleController extends Controller
             $user->syncRoles($roleNames, $studioId);
         }
 
+        $this->clearPermissionCache();
+
         return redirect()->back()->with('success', 'User roles updated successfully.');
     }
 
@@ -303,8 +305,11 @@ class RoleController extends Controller
      */
     public function updatePermissions(Request $request, $id)
     {
+        // "present" lets an empty list through, so removing every permission
+        // saves. "required" would reject the empty list and the removal would
+        // never reach the pivot table.
         $request->validate([
-            'permissions' => 'required|array',
+            'permissions' => 'present|array',
             'permissions.*' => 'exists:tbl_permissions,id',
         ]);
 
@@ -312,15 +317,33 @@ class RoleController extends Controller
 
         try {
             $role = RoleModel::findOrFail($id);
-            $role->permissions()->sync($request->permissions);
+            $role->permissions()->sync($request->input('permissions', []));
 
             DB::commit();
+
+            $this->clearPermissionCache();
+
+            $role->load(['permissions' => function ($query) {
+                $query->orderBy('name');
+            }]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Role permissions updated successfully.',
                 'data' => [
-                    'permissions_count' => $role->permissions()->count()
+                    'permissions_count' => $role->permissions->count(),
+                    'permissions' => $role->permissions->map(function ($permission) {
+                        return [
+                            'id' => $permission->id,
+                            'name' => $permission->name,
+                            'permission_string' => $permission->permission_string,
+                            'display_label' => $permission->display_label,
+                            'resource_display' => $permission->resource_display,
+                            'action_display' => $permission->action_display,
+                            'portal_display' => $permission->portal_display,
+                            'description' => $permission->description,
+                        ];
+                    })->values(),
                 ]
             ]);
 
@@ -412,6 +435,20 @@ class RoleController extends Controller
                 'message' => 'Failed to update role status: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Reset the shared permission cache.
+     *
+     * UserModel keeps the cache in a protected static property and exposes no
+     * public reset method, so reach it through reflection. Every save clears
+     * the whole cache because one role change can affect many users.
+     */
+    private function clearPermissionCache(): void
+    {
+        $property = new \ReflectionProperty(UserModel::class, 'permissionCache');
+        $property->setAccessible(true);
+        $property->setValue(null, []);
     }
 
     /**

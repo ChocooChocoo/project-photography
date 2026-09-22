@@ -31,15 +31,22 @@ class OnlineGalleryController extends Controller
 
         $galleries = collect([]);
 
+        // Only an approved gallery can reach the client. A legacy row has no approval record,
+        // so a null approval_status stays visible.
+        $approvalFilter = function ($query) {
+            $query->where('approval_status', 'approved')->orWhereNull('approval_status');
+        };
+
         foreach ($bookings as $booking) {
             $gallery = null;
             $galleryType = null;
-            
+
             // Check for studio gallery
             if ($booking->booking_type === 'studio') {
                 $gallery = StudioOnlineGalleryModel::where('booking_id', $booking->id)
                     ->where('status', 'active')
                     ->where('gallery_status', 'published')
+                    ->where($approvalFilter)
                     ->first();
                 
                 if ($gallery) {
@@ -52,6 +59,7 @@ class OnlineGalleryController extends Controller
                 $gallery = FreelanceOnlineGalleryModel::where('booking_id', $booking->id)
                     ->where('status', 'active')
                     ->where('gallery_status', 'published')
+                    ->where($approvalFilter)
                     ->first();
                 
                 if ($gallery) {
@@ -99,6 +107,9 @@ class OnlineGalleryController extends Controller
                     ->where('client_id', $clientId)
                     ->where('status', 'active')
                     ->where('gallery_status', 'published')
+                    ->where(function ($query) {
+                        $query->where('approval_status', 'approved')->orWhereNull('approval_status');
+                    })
                     ->with(['studio', 'booking.client'])
                     ->firstOrFail();
 
@@ -109,6 +120,9 @@ class OnlineGalleryController extends Controller
                     ->where('client_id', $clientId)
                     ->where('status', 'active')
                     ->where('gallery_status', 'published')
+                    ->where(function ($query) {
+                        $query->where('approval_status', 'approved')->orWhereNull('approval_status');
+                    })
                     ->with(['freelancer', 'booking.client'])
                     ->firstOrFail();
                 

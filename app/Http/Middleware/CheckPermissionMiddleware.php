@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\StudioOwner\PermissionModel;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,8 +21,12 @@ class CheckPermissionMiddleware
 
         $user = Auth::user();
         $studioId = $this->resolveStudioId($request);
+        // Normalize the required permission. UserModel::hasPermission normalizes
+        // the granted permission with the same helper before the compare.
         $resolvedPermissions = collect($permissions)
             ->flatMap(fn (string $permission) => array_filter(array_map('trim', explode(',', $permission))))
+            ->map(fn (string $permission) => PermissionModel::normalizeIdentifier($permission))
+            ->filter()
             ->values();
 
         if ($resolvedPermissions->isEmpty()) {

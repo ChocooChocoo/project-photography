@@ -13,6 +13,24 @@ class StudioOnlineGalleryModel extends Model
     use HasFactory;
 
     /**
+     * Gallery delivery states.
+     */
+    public const GALLERY_STATUS_DRAFT = 'draft';
+
+    public const GALLERY_STATUS_PUBLISHED = 'published';
+
+    /**
+     * Owner approval states for a gallery.
+     */
+    public const APPROVAL_PENDING = 'pending';
+
+    public const APPROVAL_APPROVED = 'approved';
+
+    public const APPROVAL_REJECTED = 'rejected';
+
+    public const APPROVAL_CANCELLED = 'cancelled';
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -44,6 +62,14 @@ class StudioOnlineGalleryModel extends Model
         'total_photos',
         'published_at',
         'gallery_status',
+        'approval_status',
+        'rejection_reason',
+        'submitted_by',
+        'submitted_at',
+        'approved_by',
+        'approved_at',
+        'rejected_by',
+        'rejected_at',
     ];
 
     /**
@@ -54,6 +80,9 @@ class StudioOnlineGalleryModel extends Model
     protected $casts = [
         'images' => 'array',
         'published_at' => 'datetime',
+        'submitted_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -153,7 +182,44 @@ class StudioOnlineGalleryModel extends Model
      */
     public function isPublished()
     {
-        return $this->gallery_status === 'published';
+        return $this->gallery_status === self::GALLERY_STATUS_PUBLISHED;
+    }
+
+    /**
+     * Check if the gallery waits for owner approval.
+     */
+    public function isPendingApproval(): bool
+    {
+        return $this->approval_status === self::APPROVAL_PENDING;
+    }
+
+    /**
+     * Check if the owner approved the gallery.
+     */
+    public function isApproved(): bool
+    {
+        return $this->approval_status === self::APPROVAL_APPROVED;
+    }
+
+    /**
+     * Check if the gallery may be published to the client.
+     */
+    public function canPublish(): bool
+    {
+        return $this->isApproved();
+    }
+
+    /**
+     * Gallery statuses the model accepts.
+     *
+     * @return array<int, string>
+     */
+    public static function allowedGalleryStatuses(): array
+    {
+        return [
+            self::GALLERY_STATUS_DRAFT,
+            self::GALLERY_STATUS_PUBLISHED,
+        ];
     }
 
     /**
@@ -161,7 +227,7 @@ class StudioOnlineGalleryModel extends Model
      */
     public function scopePublished($query)
     {
-        return $query->where('gallery_status', 'published');
+        return $query->where('gallery_status', self::GALLERY_STATUS_PUBLISHED);
     }
 
     /**
@@ -169,6 +235,6 @@ class StudioOnlineGalleryModel extends Model
      */
     public function scopeDraft($query)
     {
-        return $query->where('gallery_status', 'draft');
+        return $query->where('gallery_status', self::GALLERY_STATUS_DRAFT);
     }
 }

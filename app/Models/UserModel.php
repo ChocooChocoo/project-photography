@@ -523,15 +523,17 @@ class UserModel extends Authenticatable
 
     /**
      * Check if user has a specific permission.
+     *
+     * Both the requested value and the stored value go through the shared
+     * permission normalizer in PermissionModel. The compare accepts a missing
+     * portal prefix and treats an underscore and a hyphen as the same character.
      */
     public function hasPermission(string $permissionName, ?int $studioId = null): bool
     {
-        $permissionIdentifiers = \App\Models\StudioOwner\PermissionModel::buildPermissionIdentifiers($permissionName);
         $portal = $this->getPortalName();
 
-        return $this->getAllPermissions($studioId, $portal)->contains(function ($permission) use ($permissionIdentifiers) {
-            return in_array($permission->name, $permissionIdentifiers, true)
-                || in_array($permission->permission_string, $permissionIdentifiers, true);
+        return $this->getAllPermissions($studioId, $portal)->contains(function ($permission) use ($permissionName) {
+            return \App\Models\StudioOwner\PermissionModel::identifierMatches($permissionName, $permission->permission_string);
         });
     }
 

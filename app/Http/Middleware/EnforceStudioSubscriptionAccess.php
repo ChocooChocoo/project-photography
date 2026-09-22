@@ -27,8 +27,14 @@ class EnforceStudioSubscriptionAccess
         $user = Auth::user();
         $this->sharePortalSubscriptionState($user);
 
+        // A role row has no studio column, so a role write cannot name one
+        // studio. Keep role, permission, and user role writes exempt or the
+        // gate sends a multi studio owner to a 403 on save.
         if ($request->input('type') === 'freelancer'
             || str_starts_with($routeName, 'owner.subscription.')
+            || str_starts_with($routeName, 'owner.role.')
+            || str_starts_with($routeName, 'owner.permission.')
+            || str_starts_with($routeName, 'owner.user-roles.')
             || $routeName === 'owner.profile') {
             return $next($request);
         }

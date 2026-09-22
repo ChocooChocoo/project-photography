@@ -101,14 +101,26 @@
                                     <form id="createPermissionForm" class="needs-validation" novalidate>
                                         @csrf
                                         <div class="row">
-                                            <div class="col-md-6 mb-3">
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Portal <span class="text-danger">*</span></label>
+                                                <select class="form-select" name="portal" id="createPermissionPortal" required>
+                                                    <option value="owner">Owner Portal</option>
+                                                    <option value="studio-hr">HR Portal</option>
+                                                    <option value="studio-finance">Finance Portal</option>
+                                                    <option value="studio-photographer">Photographer Portal</option>
+                                                </select>
+                                                <div class="invalid-feedback">
+                                                    Portal is required.
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
                                                 <label class="form-label">Access Area <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="resource" id="createPermissionResource" placeholder="e.g., user, invoice" required>
                                                 <div class="invalid-feedback">
                                                     Resource is required.
                                                 </div>
                                             </div>
-                                            <div class="col-md-6 mb-3">
+                                            <div class="col-md-4 mb-3">
                                                 <label class="form-label">Allowed Action <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="action" id="createPermissionAction" placeholder="e.g., create, read" required>
                                                 <div class="invalid-feedback">
@@ -178,14 +190,26 @@
                         <form id="editPermissionForm">
                             <input type="hidden" name="permission_id" id="editPermissionId">
                             <div class="row">
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Portal <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="portal" id="editPermissionPortal" required>
+                                        <option value="owner">Owner Portal</option>
+                                        <option value="studio-hr">HR Portal</option>
+                                        <option value="studio-finance">Finance Portal</option>
+                                        <option value="studio-photographer">Photographer Portal</option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Portal is required.
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
                                     <label class="form-label">Access Area <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="resource" id="editPermissionResource" required>
                                     <div class="invalid-feedback">
                                         Resource is required.
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-4 mb-3">
                                     <label class="form-label">Allowed Action <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="action" id="editPermissionAction" required>
                                     <div class="invalid-feedback">
@@ -241,18 +265,20 @@
             let totalPages = 1;
 
             // ==================== PERMISSION STRING HELPERS ====================
-            function normalizePermissionSegment(value) {
-                return value
+            function normalizeCanonicalSegment(value) {
+                return String(value || '')
                     .toLowerCase()
                     .trim()
-                    .replace(/[^a-z0-9]+/g, '_')
-                    .replace(/^_+|_+$/g, '');
+                    .replace(/[^a-z0-9-]+/g, '-')
+                    .replace(/-+/g, '-')
+                    .replace(/^-+|-+$/g, '');
             }
 
-            function buildPermissionString(resourceSelector, actionSelector, permissionStringSelector) {
-                const resource = normalizePermissionSegment($(resourceSelector).val() || '');
-                const action = normalizePermissionSegment($(actionSelector).val() || '');
-                const permissionString = resource && action ? `${resource}:${action}` : '';
+            function buildPermissionString(portalSelector, resourceSelector, actionSelector, permissionStringSelector) {
+                const portal = normalizeCanonicalSegment($(portalSelector).val() || '') || 'owner';
+                const resource = normalizeCanonicalSegment($(resourceSelector).val() || '');
+                const action = normalizeCanonicalSegment($(actionSelector).val() || '');
+                const permissionString = resource && action ? `${portal}.${resource}.${action}` : '';
 
                 $(resourceSelector).val(resource);
                 $(actionSelector).val(action);
@@ -409,19 +435,19 @@
 
             // ==================== PERMISSION STRING GENERATION ====================
             $('#createPermissionResource, #createPermissionAction').on('input', function() {
-                buildPermissionString('#createPermissionResource', '#createPermissionAction', '#createPermissionString');
+                buildPermissionString('#createPermissionPortal', '#createPermissionResource', '#createPermissionAction', '#createPermissionString');
                 buildPermissionLabel('#createPermissionResource', '#createPermissionAction', '#createPermissionLabel');
             });
 
             $('#editPermissionResource, #editPermissionAction').on('input', function() {
-                buildPermissionString('#editPermissionResource', '#editPermissionAction', '#editPermissionString');
+                buildPermissionString('#editPermissionPortal', '#editPermissionResource', '#editPermissionAction', '#editPermissionString');
                 buildPermissionLabel('#editPermissionResource', '#editPermissionAction', '#editPermissionLabel');
             });
 
             // ==================== CREATE PERMISSION ====================
             $('#createPermissionForm').on('submit', function(e) {
                 e.preventDefault();
-                buildPermissionString('#createPermissionResource', '#createPermissionAction', '#createPermissionString');
+                buildPermissionString('#createPermissionPortal', '#createPermissionResource', '#createPermissionAction', '#createPermissionString');
                 
                 if (!this.checkValidity()) {
                     e.stopPropagation();
@@ -498,6 +524,7 @@
                         if (response.success) {
                             const permission = response.data;
                             $('#editPermissionId').val(permission.id);
+                            $('#editPermissionPortal').val(permission.portal || 'owner');
                             $('#editPermissionResource').val(permission.resource || '');
                             $('#editPermissionAction').val(permission.action || '');
                             $('#editPermissionString').val(permission.permission_string || '');
@@ -518,7 +545,7 @@
             
             $('#savePermissionBtn').on('click', function() {
                 const permissionId = $('#editPermissionId').val();
-                buildPermissionString('#editPermissionResource', '#editPermissionAction', '#editPermissionString');
+                buildPermissionString('#editPermissionPortal', '#editPermissionResource', '#editPermissionAction', '#editPermissionString');
                 const permissionResource = $('#editPermissionResource').val();
                 const permissionAction = $('#editPermissionAction').val();
                 const permissionString = $('#editPermissionString').val();

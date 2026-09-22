@@ -301,7 +301,44 @@ class OnlineGalleryController extends Controller
     }
 
     /**
-     * Publish a draft gallery inside the HR account's studios.
+     * Send a draft gallery to the studio owner for approval inside the HR account's studios.
+     */
+    public function submitForApproval($galleryId)
+    {
+        try {
+            $gallery = $this->findGalleryInScope($galleryId);
+
+            if (! $gallery) {
+                return $this->errorResponse('Gallery not found.', 404);
+            }
+
+            if ($gallery->isPublished()) {
+                return $this->errorResponse('This gallery is already published to the client.', 400);
+            }
+
+            $gallery->update([
+                'approval_status' => StudioOnlineGalleryModel::APPROVAL_PENDING,
+                'submitted_by' => Auth::id(),
+                'submitted_at' => now(),
+                'approved_by' => null,
+                'approved_at' => null,
+                'rejected_by' => null,
+                'rejected_at' => null,
+                'rejection_reason' => null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Gallery submitted for owner approval.',
+                'gallery' => $gallery,
+            ]);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Error submitting gallery for approval: '.$e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Publish an approved gallery inside the HR account's studios.
      */
     public function publish($galleryId)
     {
@@ -312,8 +349,12 @@ class OnlineGalleryController extends Controller
                 return $this->errorResponse('Gallery not found.', 404);
             }
 
+            if (! $gallery->canPublish()) {
+                return $this->errorResponse('This gallery needs owner approval before you can publish it.', 403);
+            }
+
             $gallery->update([
-                'gallery_status' => 'published',
+                'gallery_status' => StudioOnlineGalleryModel::GALLERY_STATUS_PUBLISHED,
                 'published_at' => now(),
             ]);
 

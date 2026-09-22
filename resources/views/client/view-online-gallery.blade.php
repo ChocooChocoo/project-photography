@@ -131,7 +131,7 @@
                             <div class="card-body text-center py-5">
                                 <i class="ti ti-photo-off fs-1 text-muted mb-3 d-block"></i>
                                 <h5>No Galleries Available</h5>
-                                <p class="text-muted">You don't have any online galleries yet. Galleries will appear here once your booking is in progress or completed and the studio has published your photos.</p>
+                                <p class="text-muted">You do not have any online galleries yet. Galleries will appear here after the studio owner approves the gallery and the studio publishes your photos.</p>
                             </div>
                         </div>
                     </div>

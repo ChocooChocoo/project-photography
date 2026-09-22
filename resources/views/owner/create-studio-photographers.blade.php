@@ -65,7 +65,7 @@
                                 <div class="row mb-3 g-2">
                                     <div class="form-group">
                                         <label class="form-label">Email Address</label>
-                                        <input type="email" class="form-control" name="email" placeholder="Enter email address" required>
+                                        <input type="text" inputmode="email" class="form-control" name="email" placeholder="Enter email address" required>
                                         <div class="invalid-feedback">
                                             Please enter a valid email address.
                                         </div>
@@ -208,6 +208,15 @@
                 const $submitText = $('#submitText');
                 const $spinner = $('#spinner');
                 
+                // Use the shared email format rule.
+                const $emailInput = $form.find('input[name="email"]');
+                if (!window.PlatinumEmail.isValid(($emailInput.val() || '').trim())) {
+                    $emailInput.addClass('is-invalid');
+                    $form.addClass('was-validated');
+                    return;
+                }
+                $emailInput.removeClass('is-invalid');
+
                 // Validate form
                 if (!$form[0].checkValidity()) {
                     e.stopPropagation();

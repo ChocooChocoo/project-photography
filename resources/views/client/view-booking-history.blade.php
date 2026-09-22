@@ -39,7 +39,7 @@
                                 <tbody>
                                     @forelse($bookings as $booking)
                                         <tr data-booking-id="{{ $booking->id }}" data-booking-status="{{ $booking->status }}">
-                                            <td>
+                                            <td data-sort-value="{{ $booking->booking_reference }}">
                                                 <span class="fw-medium">{{ $booking->booking_reference }}</span>
                                                 <small class="text-muted d-block">{{ ucfirst($booking->booking_type) }}</small>
                                             </td>
@@ -51,7 +51,7 @@
                                                 @endif
                                             </td>
                                             <td>{{ $booking->category->category_name ?? 'N/A' }}</td>
-                                            <td>
+                                            <td data-sort-value="{{ \Carbon\Carbon::parse($booking->event_date)->format('Y-m-d') }}">
                                                 {{ \Carbon\Carbon::parse($booking->event_date)->format('M d, Y') }}
                                                 <small class="text-muted d-block">{{ $booking->start_time }}</small>
                                             </td>
@@ -97,7 +97,7 @@
                                                     ₱{{ strtoupper(number_format($finalAmount, 2)) }}
                                                 </small>
                                             </td>
-                                            <td>
+                                            <td data-sort-value="{{ $booking->total_amount }}">
                                                 <span class="fw-semibold">₱{{ number_format($booking->total_amount, 2) }}</span>
                                                 @if($booking->payment_status === 'refunded')
                                                     <small class="text-warning d-block">Fully refunded</small>

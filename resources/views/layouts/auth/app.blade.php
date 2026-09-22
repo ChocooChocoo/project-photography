@@ -41,6 +41,12 @@
     {{-- APP JS --}}
     <script src="{{ asset('assets/js/app.js') }}"></script>
 
+    {{-- SESSION TOKEN --}}
+    <script src="{{ asset('assets/js/pages/session-token.js') }}"></script>
+
+    {{-- EMAIL FORMAT --}}
+    <script src="{{ asset('assets/js/pages/email-format.js') }}"></script>
+
     {{-- PASSWORD METER --}}
     <script src="{{ asset('assets/js/pages/misc-pass-meter.js') }}"></script>
 

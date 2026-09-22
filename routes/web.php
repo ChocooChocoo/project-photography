@@ -214,6 +214,8 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::delete('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteGallery'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.delete');
         Route::put('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'updateGallery'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.update');
         Route::post('/online-gallery/{galleryId}/publish', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'publish'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.publish');
+        Route::post('/online-gallery/{galleryId}/approve', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'approve'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.approve');
+        Route::post('/online-gallery/{galleryId}/reject', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'reject'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.reject');
 
         // Manage Studio Schedule
         Route::get('/view/schedules', [\App\Http\Controllers\StudioOwner\StudioScheduleController::class, 'index'])->middleware('permission:owner.schedules.manage')->name('owner.studio-schedule.index');
@@ -449,6 +451,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::delete('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'deleteGallery'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.delete');
         Route::put('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'updateGallery'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.update');
         Route::post('/online-gallery/{galleryId}/publish', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'publish'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.publish');
+        Route::post('/online-gallery/{galleryId}/submit', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'submitForApproval'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.submit');
     });
 
     // Studio Finance Routes ===============================================================================================================================================
@@ -625,6 +628,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::delete('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'deleteGallery'])->middleware('permission:studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.delete');
         Route::put('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'updateGallery'])->middleware('permission:studio-photographer.online_gallery.update')->name('studio-photographer.online-gallery.update');
         Route::post('/online-gallery/{galleryId}/publish', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'publish'])->middleware('permission:studio-photographer.online_gallery.update')->name('studio-photographer.online-gallery.publish');
+        Route::post('/online-gallery/{galleryId}/submit', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'submitForApproval'])->middleware('permission:studio-photographer.online_gallery.update')->name('studio-photographer.online-gallery.submit');
 
         // Procurement
         Route::get('/procurement/create', [\App\Http\Controllers\StudioPhotographer\ProcurementRequestController::class, 'create'])->middleware('permission:studio-photographer.procurement.manage')->name('studio-photographer.procurement.create');

@@ -170,7 +170,13 @@ class OnlineGalleryController extends Controller
                     'total_photos' => count($uploadedImages),
                     'status' => 'active',
                     'published_at' => now(),
-                    'gallery_status' => 'published',
+                    'gallery_status' => FreelanceOnlineGalleryModel::GALLERY_STATUS_PUBLISHED,
+                    // The freelancer works alone, so the upload is its own approval.
+                    'approval_status' => FreelanceOnlineGalleryModel::APPROVAL_APPROVED,
+                    'submitted_by' => $userId,
+                    'submitted_at' => now(),
+                    'approved_by' => $userId,
+                    'approved_at' => now(),
                 ]);
 
                 $message = 'Gallery created with ' . count($uploadedImages) . ' image(s) successfully.';

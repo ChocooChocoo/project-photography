@@ -78,11 +78,13 @@ class UserRolesAssignmentTest extends TestCase
 
         $hrPermission = PermissionModel::create([
             'name' => 'studio-hr.attendance.view',
+            'permission_string' => 'studio-hr.attendance.view',
             'portal' => 'studio-hr',
             'status' => 'active',
         ]);
         $financePermission = PermissionModel::create([
             'name' => 'studio-finance.payroll.view',
+            'permission_string' => 'studio-finance.payroll.view',
             'portal' => 'studio-finance',
             'status' => 'active',
         ]);
@@ -126,15 +128,17 @@ class UserRolesAssignmentTest extends TestCase
         $hrRole = $this->createRole('studio-hr-manager', 'studio-hr');
         $financeRole = $this->createRole('studio-finance-manager', 'studio-finance');
 
+        // One canonical identity per permission: portal.resource.action. The
+        // stored string and the checked string use the same form.
         $hrPermission = PermissionModel::create([
             'name' => 'studio-hr.attendance.view',
-            'permission_string' => 'attendance:view',
+            'permission_string' => 'studio-hr.attendance.view',
             'portal' => 'studio-hr',
             'status' => 'active',
         ]);
         $financePermission = PermissionModel::create([
             'name' => 'studio-finance.payroll.view',
-            'permission_string' => 'payroll:view',
+            'permission_string' => 'studio-finance.payroll.view',
             'portal' => 'studio-finance',
             'status' => 'active',
         ]);
@@ -155,8 +159,23 @@ class UserRolesAssignmentTest extends TestCase
             ->pluck('permission_string')
             ->all();
 
-        $this->assertContains('attendance:view', $permissionStrings);
-        $this->assertContains('payroll:view', $permissionStrings);
+        $this->assertContains('studio-hr.attendance.view', $permissionStrings);
+        $this->assertContains('studio-finance.payroll.view', $permissionStrings);
+
+        // The same canonical identity resolves on the permission check.
+        $this->assertTrue($employee->hasPermission('studio-hr.attendance.view', $studio->id));
+        $this->assertTrue($employee->hasPermission('studio-hr.attendance.view'));
+    }
+
+    public function test_view_roles_reports_a_permission_save_failure(): void
+    {
+        $html = view('owner.view-roles')->render();
+
+        $this->assertStringNotContainsString(
+            'Role details updated, but permissions may need review.',
+            $html
+        );
+        $this->assertStringContainsString("contentType: 'application/json'", $html);
     }
 
     public function test_update_user_roles_sync_removes_unchecked_roles(): void
@@ -290,6 +309,7 @@ class UserRolesAssignmentTest extends TestCase
 
         $permission = PermissionModel::create([
             'name' => 'owner.roles.manage',
+            'permission_string' => 'owner.roles.manage',
             'portal' => 'owner',
             'status' => 'active',
         ]);

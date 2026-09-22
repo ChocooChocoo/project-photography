@@ -245,6 +245,7 @@ class EmployeeProvisioningTest extends TestCase
         ]);
         $permissionRow = PermissionModel::create([
             'name' => $permission,
+            'permission_string' => $permission,
             'portal' => $portal,
             'status' => 'active',
         ]);
@@ -299,6 +300,7 @@ class EmployeeProvisioningTest extends TestCase
         Schema::create('tbl_permissions', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100)->unique();
+            $table->string('permission_string', 150)->nullable();
             $table->string('portal', 50)->default('studio');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');

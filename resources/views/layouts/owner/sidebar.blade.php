@@ -315,19 +315,17 @@
             {{-- Manage Roles and Permission --}}
             @php
                 $manageRolesRoutes = Route::is('owner.role.index');
-                $createRoleRoute = Route::is('owner.role.create');
                 $managePermissionsRoutes = Route::is('owner.permission.index');
-                $createPermissionRoute = Route::is('owner.permission.create');
             @endphp
 
             @if ($canManageRoles || $canManagePermissions)
-            <li class="side-nav-item {{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'active' : '' }}">
-                <a data-bs-toggle="collapse" href="#sidebarManageRoles" aria-expanded="{{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'true' : 'false' }}" aria-controls="sidebarManageRoles" class="side-nav-link {{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'active' : '' }}">
+            <li class="side-nav-item {{ $manageRolesRoutes || $managePermissionsRoutes ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarManageRoles" aria-expanded="{{ $manageRolesRoutes || $managePermissionsRoutes ? 'true' : 'false' }}" aria-controls="sidebarManageRoles" class="side-nav-link {{ $manageRolesRoutes || $managePermissionsRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-shield-check"></i></span>
                     <span class="menu-text" data-lang="manage-roles">Roles & Permissions</span>
                     <span class="menu-arrow"></span>
                 </a>
-                <div class="collapse {{ $manageRolesRoutes || $createRoleRoute || $managePermissionsRoutes || $createPermissionRoute ? 'show' : '' }}" id="sidebarManageRoles">
+                <div class="collapse {{ $manageRolesRoutes || $managePermissionsRoutes ? 'show' : '' }}" id="sidebarManageRoles">
                     <ul class="sub-menu">
                         @if ($canManageRoles)
                         <li class="side-nav-item">

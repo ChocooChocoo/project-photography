@@ -36,6 +36,12 @@
     {{-- CUSTOM TABLE --}}
     <script src="{{ asset('assets/js/pages/custom-table.js') }}"></script>
 
+    {{-- SESSION TOKEN --}}
+    <script src="{{ asset('assets/js/pages/session-token.js') }}"></script>
+
+    {{-- EMAIL FORMAT --}}
+    <script src="{{ asset('assets/js/pages/email-format.js') }}"></script>
+
     {{-- SWEETALERT2 JS --}}
     <script src="{{ asset('assets/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
     <script src="{{ asset('assets/js/pages/misc-sweetalerts.js') }}"></script>

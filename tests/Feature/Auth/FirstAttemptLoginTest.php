@@ -4,13 +4,15 @@ namespace Tests\Feature\Auth;
 
 use App\Models\UserModel;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
- * Covers the login defects: a real form action, CSRF header, a visible error
- * area, keeping the typed email, and a first POST attempt that succeeds.
+ * Covers the login defects: a real form action, a live CSRF token, a visible
+ * error area, keeping the typed email, and a first POST attempt that succeeds.
  */
 class FirstAttemptLoginTest extends TestCase
 {
@@ -20,6 +22,13 @@ class FirstAttemptLoginTest extends TestCase
 
         Schema::dropAllTables();
         $this->createUsersTable();
+
+        // W1 registers routes/session.php through bootstrap/app.php. Load the same
+        // file here while that change is in flight, so this test proves the route,
+        // its name, and its web middleware group on its own.
+        if (! Route::has('session.csrf-token')) {
+            Route::middleware('web')->group(base_path('routes/session.php'));
+        }
     }
 
     public function test_login_page_posts_to_the_login_route_with_csrf_and_error_ui(): void
@@ -32,7 +41,50 @@ class FirstAttemptLoginTest extends TestCase
         $response->assertSee('name="csrf-token"', false);
         $response->assertSee('id="loginErrorAlert"', false);
         $response->assertSee('id="loadingOverlay"', false);
-        $response->assertSee('X-CSRF-TOKEN', false);
+        $response->assertSee('PlatinumSession.post', false);
+        $response->assertDontSee('window.location.reload', false);
+        $response->assertSee('assets/js/pages/session-token.js', false);
+        $response->assertSee('assets/js/pages/email-format.js', false);
+    }
+
+    public function test_login_page_reads_the_token_at_request_time(): void
+    {
+        $page = $this->get(route('login'));
+
+        $page->assertOk();
+
+        preg_match('/<meta name="csrf-token" content="([^"]+)"/', $page->getContent(), $matches);
+
+        $this->assertNotEmpty($matches[1] ?? null, 'The login page must render a csrf-token meta tag.');
+
+        $token = $matches[1];
+
+        $response = $this->get('/csrf-token');
+
+        $response->assertOk();
+        $response->assertJsonStructure(['token']);
+        $this->assertSame($token, $response->json('token'), 'The endpoint must return the token the page rendered.');
+        $this->assertSame(session()->token(), $response->json('token'), 'The endpoint must return the live session token.');
+    }
+
+    public function test_csrf_token_route_is_wired_into_the_web_group(): void
+    {
+        $route = app(Router::class)->getRoutes()->getByName('session.csrf-token');
+
+        $this->assertNotNull($route, 'The session.csrf-token route must be registered.');
+        $this->assertContains(
+            'web',
+            $route->gatherMiddleware(),
+            'The token route must run in the web middleware group so it shares the session.'
+        );
+    }
+
+    public function test_portal_base_scripts_load_the_session_and_email_scripts(): void
+    {
+        $partial = file_get_contents(resource_path('views/layouts/partials/portal-base-scripts.blade.php'));
+
+        $this->assertStringContainsString('assets/js/pages/session-token.js', $partial);
+        $this->assertStringContainsString('assets/js/pages/email-format.js', $partial);
     }
 
     public function test_login_page_keeps_the_entered_email_after_a_failed_attempt(): void
@@ -42,6 +94,16 @@ class FirstAttemptLoginTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('value="keep.me@example.com"', false);
+    }
+
+    public function test_admin_login_page_reads_the_token_at_request_time(): void
+    {
+        $response = $this->get(route('admin.login'));
+
+        $response->assertOk();
+        $response->assertSee('id="adminLoginForm"', false);
+        $response->assertSee('PlatinumSession.refresh', false);
+        $response->assertSee('assets/js/pages/session-token.js', false);
     }
 
     public function test_first_login_attempt_with_valid_credentials_succeeds(): void

@@ -53,17 +53,17 @@
                                             $statusText = $isRefunded ? 'Refunded' : 'Refund Pending';
                                         @endphp
                                         <tr>
-                                            <td>
+                                            <td data-sort-value="{{ $booking->booking_reference }}">
                                                 <span class="fw-medium">{{ $booking->booking_reference }}</span>
                                                 <small class="text-muted d-block">{{ ucfirst($booking->booking_type) }}</small>
                                             </td>
                                             <td>{{ $providerName }}</td>
                                             <td>{{ $booking->category->category_name ?? 'N/A' }}</td>
-                                            <td>
+                                            <td data-sort-value="{{ \Carbon\Carbon::parse($booking->event_date)->format('Y-m-d') }}">
                                                 {{ \Carbon\Carbon::parse($booking->event_date)->format('M d, Y') }}
                                                 <small class="text-muted d-block">{{ $booking->start_time }}</small>
                                             </td>
-                                            <td>
+                                            <td data-sort-value="{{ $targetAmount }}">
                                                 <span class="fw-semibold">Target: ₱{{ number_format($targetAmount, 2) }}</span>
                                                  <small class="text-muted d-block">Paid: ₱{{ number_format($paidAmount, 2) }}</small>
                                                 @if($isRefunded)

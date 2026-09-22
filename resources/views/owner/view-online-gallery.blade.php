@@ -57,6 +57,7 @@
                                             </td>
                                             <td class="text-center">
                                                 @if ($booking->has_gallery)
+                                                    @php($approvalStatus = $booking->gallery->approval_status ?? null)
                                                     @if ($booking->gallery->gallery_status === 'published')
                                                         <span class="badge badge-soft-success w-100">
                                                             <i class="ti ti-photo-check me-1"></i> Published
@@ -65,9 +66,21 @@
                                                         <span class="badge badge-soft-warning w-100">
                                                             <i class="ti ti-refresh me-1"></i> Revision Pending
                                                         </span>
-                                                    @else
+                                                    @elseif ($approvalStatus === 'pending')
                                                         <span class="badge badge-soft-info w-100">
-                                                            <i class="ti ti-clock-hour-4 me-1"></i> Pending Review
+                                                            <i class="ti ti-clock-hour-4 me-1"></i> Pending Approval
+                                                        </span>
+                                                    @elseif ($approvalStatus === 'rejected')
+                                                        <span class="badge badge-soft-danger w-100">
+                                                            <i class="ti ti-x me-1"></i> Rejected
+                                                        </span>
+                                                    @elseif ($approvalStatus === 'approved')
+                                                        <span class="badge badge-soft-success w-100">
+                                                            <i class="ti ti-check me-1"></i> Approved
+                                                        </span>
+                                                    @else
+                                                        <span class="badge badge-soft-secondary w-100">
+                                                            <i class="ti ti-photo me-1"></i> Draft
                                                         </span>
                                                     @endif
                                                 @else
@@ -78,11 +91,26 @@
                                             </td>
                                             <td class="text-center">
                                                 @if ($booking->has_gallery)
+                                                    @php($approvalStatus = $booking->gallery->approval_status ?? null)
                                                     <button class="btn btn-sm manage-gallery"
                                                         data-booking-id="{{ $booking->id }}" title="Manage Gallery">
                                                         <i class="ti ti-library-photo fs-5" aria-hidden="true"></i>
                                                     </button>
-                                                    @if ($booking->gallery->gallery_status !== 'published')
+                                                    @if ($approvalStatus === 'pending')
+                                                        <button class="btn btn-sm approve-gallery"
+                                                            data-gallery-id="{{ $booking->gallery->id }}"
+                                                            data-gallery-reference="{{ $booking->gallery->gallery_reference }}"
+                                                            title="Approve">
+                                                            <i class="ti ti-check fs-5" aria-hidden="true"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm reject-gallery"
+                                                            data-gallery-id="{{ $booking->gallery->id }}"
+                                                            data-gallery-reference="{{ $booking->gallery->gallery_reference }}"
+                                                            title="Reject">
+                                                            <i class="ti ti-x fs-5" aria-hidden="true"></i>
+                                                        </button>
+                                                    @endif
+                                                    @if ($booking->gallery->gallery_status !== 'published' && $approvalStatus === 'approved')
                                                         <button class="btn btn-sm publish-gallery"
                                                             data-gallery-id="{{ $booking->gallery->id }}"
                                                             title="Publish to Client">
@@ -504,6 +532,37 @@
             </div>
         </div>
     </div>
+
+    {{-- REJECT GALLERY MODAL --}}
+    <div class="modal fade" id="rejectGalleryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-semibold">Reject Gallery</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="rejectGalleryForm">
+                        @csrf
+                        <input type="hidden" id="rejectGalleryId">
+                        <div class="mb-3">
+                            <label class="form-label">Gallery Reference</label>
+                            <input type="text" class="form-control" id="rejectGalleryReference" readonly>
+                        </div>
+                        <div>
+                            <label for="galleryRejectionReasonInput" class="form-label">Reason for Rejection <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="galleryRejectionReasonInput" name="rejection_reason" rows="5" placeholder="Provide the reason for rejecting this gallery..."></textarea>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="submitRejectGalleryBtn">Submit Rejection</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 {{-- SCRIPTS --}}
@@ -512,6 +571,90 @@
         $(document).ready(function() {
             let selectedBookingId = null;
             let currentGalleryId = null;
+
+            const rejectGalleryModal = new bootstrap.Modal(document.getElementById('rejectGalleryModal'));
+
+            // Process an approval decision on a pending gallery
+            function processGalleryApproval(galleryId, action, rejectionReason) {
+                const approveUrl = `{{ route('owner.online-gallery.approve', ['__ID__']) }}`.replace('__ID__', galleryId);
+                const rejectUrl = `{{ route('owner.online-gallery.reject', ['__ID__']) }}`.replace('__ID__', galleryId);
+
+                $.ajax({
+                    url: action === 'approve' ? approveUrl : rejectUrl,
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        action: action,
+                        rejection_reason: rejectionReason || ''
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: action === 'approve' ? 'Gallery Approved' : 'Gallery Rejected',
+                                text: response.message,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', response.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422 && action === 'reject') {
+                            $('#galleryRejectionReasonInput').addClass('is-invalid');
+                            $('#galleryRejectionReasonInput').siblings('.invalid-feedback').html(
+                                xhr.responseJSON?.errors?.rejection_reason?.[0] ||
+                                'Please provide a valid rejection reason.');
+                        }
+
+                        Swal.fire('Error', xhr.responseJSON?.message ||
+                            'Failed to process the gallery approval.', 'error');
+                    }
+                });
+            }
+
+            $(document).on('click', '.approve-gallery', function() {
+                const galleryId = $(this).data('gallery-id');
+
+                Swal.fire({
+                    title: 'Approve Gallery?',
+                    text: 'The photographer can publish this gallery to the client after you approve it.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, approve it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        processGalleryApproval(galleryId, 'approve');
+                    }
+                });
+            });
+
+            $(document).on('click', '.reject-gallery', function() {
+                $('#galleryRejectionReasonInput').removeClass('is-invalid');
+                $('#galleryRejectionReasonInput').siblings('.invalid-feedback').empty();
+                $('#rejectGalleryId').val($(this).data('gallery-id'));
+                $('#rejectGalleryReference').val($(this).data('gallery-reference') || '');
+                $('#galleryRejectionReasonInput').val('');
+                rejectGalleryModal.show();
+            });
+
+            $('#submitRejectGalleryBtn').on('click', function() {
+                const galleryId = $('#rejectGalleryId').val();
+                const rejectionReason = $('#galleryRejectionReasonInput').val();
+
+                if (!rejectionReason || rejectionReason.trim() === '') {
+                    $('#galleryRejectionReasonInput').addClass('is-invalid');
+                    $('#galleryRejectionReasonInput').siblings('.invalid-feedback').text(
+                        'Please provide a reason for rejecting this gallery.');
+                    return;
+                }
+
+                processGalleryApproval(galleryId, 'reject', rejectionReason);
+            });
 
             // Create/Manage Gallery button click
             $(document).on('click', '.create-gallery, .manage-gallery', function() {
@@ -562,16 +705,33 @@
                                     '<span class="badge badge-soft-danger p-1"><i class="ti ti-x me-1"></i>Inactive</span>';
                                 $('#galleryStatusBadge').html(statusBadge);
 
+                                const approvalStatus = response.gallery.approval_status || null;
+
                                 if (response.gallery.gallery_status === 'published') {
                                     $('#galleryReviewBadge').html(
                                         '<span class="badge badge-soft-success p-1"><i class="ti ti-photo-check me-1"></i>Published</span>'
                                     );
                                     $('#publishGalleryBtn').addClass('d-none');
-                                } else {
+                                } else if (approvalStatus === 'approved') {
                                     $('#galleryReviewBadge').html(
-                                        '<span class="badge badge-soft-info p-1"><i class="ti ti-clock-hour-4 me-1"></i>Pending Review</span>'
+                                        '<span class="badge badge-soft-success p-1"><i class="ti ti-check me-1"></i>Approved</span>'
                                     );
                                     $('#publishGalleryBtn').removeClass('d-none');
+                                } else if (approvalStatus === 'rejected') {
+                                    $('#galleryReviewBadge').html(
+                                        '<span class="badge badge-soft-danger p-1"><i class="ti ti-x me-1"></i>Rejected</span>'
+                                    );
+                                    $('#publishGalleryBtn').addClass('d-none');
+                                } else if (approvalStatus === 'pending') {
+                                    $('#galleryReviewBadge').html(
+                                        '<span class="badge badge-soft-info p-1"><i class="ti ti-clock-hour-4 me-1"></i>Pending Approval</span>'
+                                    );
+                                    $('#publishGalleryBtn').addClass('d-none');
+                                } else {
+                                    $('#galleryReviewBadge').html(
+                                        '<span class="badge badge-soft-secondary p-1"><i class="ti ti-photo me-1"></i>Draft</span>'
+                                    );
+                                    $('#publishGalleryBtn').addClass('d-none');
                                 }
 
                                 // Gallery info table

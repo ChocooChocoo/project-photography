@@ -214,4 +214,18 @@ return [
 
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Session Blocking
+    |--------------------------------------------------------------------------
+    |
+    | When this option is true, one request holds a lock on a session until it
+    | finishes. A second request for the same session waits for the lock. The
+    | wait stops two requests from writing the session at the same time, which
+    | can rotate the CSRF token and make a form submit fail.
+    |
+    */
+
+    'block' => env('SESSION_BLOCK', true),
+
 ];

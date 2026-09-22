@@ -115,6 +115,37 @@ class BookingFormsPresentationTest extends TestCase
         $this->assertStringContainsString('package.cover_thumbnail', $html);
     }
 
+    public function test_booking_forms_page_uses_the_shared_email_format_check(): void
+    {
+        $response = $this->actingAs($this->client)->get(route('client.booking-forms', [
+            'type' => 'studio',
+            'id' => $this->studio->id,
+        ]));
+
+        $response->assertOk();
+
+        $html = $response->getOriginalContent()->render();
+
+        // The page loads the shared email format script.
+        $this->assertStringContainsString('assets/js/pages/email-format.js', $html);
+        $this->assertStringContainsString('window.PlatinumEmail.isValid', $html);
+
+        // The old local regex is gone.
+        $this->assertStringNotContainsString('const emailRegex', $html);
+        $this->assertStringNotContainsString('/^[^\s@]+@[^\s@]+\.[^\s@]+$/', $html);
+    }
+
+    public function test_shared_email_format_script_publishes_the_pinned_global(): void
+    {
+        $scriptPath = public_path('assets/js/pages/email-format.js');
+
+        $this->assertFileExists($scriptPath);
+
+        $script = file_get_contents($scriptPath);
+        $this->assertStringContainsString('window.PlatinumEmail', $script);
+        $this->assertStringContainsString('isValid', $script);
+    }
+
     private function createUser(string $role): UserModel
     {
         return UserModel::create([

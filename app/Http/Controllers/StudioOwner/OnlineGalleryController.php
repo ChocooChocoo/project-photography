@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\StudioOwner;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StudioOwner\ProcessGalleryApprovalRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\BookingModel;
 use App\Models\StudioOwner\StudiosModel;
@@ -11,6 +13,7 @@ use App\Models\StudioOwner\PackagesModel;
 use App\Traits\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class OnlineGalleryController extends Controller
@@ -438,10 +441,24 @@ class OnlineGalleryController extends Controller
                 ->whereIn('studio_id', $studioIds)
                 ->firstOrFail();
 
-            $gallery->update([
-                'gallery_status' => 'published',
+            $updates = [
+                'gallery_status' => StudioOnlineGalleryModel::GALLERY_STATUS_PUBLISHED,
                 'published_at' => now(),
-            ]);
+                // The owner is the approver, so publishing always carries an approval.
+                // A published gallery must never stay pending or rejected.
+                'approval_status' => StudioOnlineGalleryModel::APPROVAL_APPROVED,
+                'approved_by' => $userId,
+                'approved_at' => now(),
+            ];
+
+            // Drop a stale rejection so the published row shows no rejected state.
+            if ($gallery->approval_status === StudioOnlineGalleryModel::APPROVAL_REJECTED) {
+                $updates['rejected_by'] = null;
+                $updates['rejected_at'] = null;
+                $updates['rejection_reason'] = null;
+            }
+
+            $gallery->update($updates);
 
             if ($gallery->client) {
                 $this->notifyGalleryPublished($gallery, $gallery->client);
@@ -457,6 +474,132 @@ class OnlineGalleryController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error publishing gallery: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Approve a pending gallery so the photographer can publish it.
+     */
+    public function approve(ProcessGalleryApprovalRequest $request, string $galleryId): JsonResponse
+    {
+        return $this->processApproval($request, $galleryId, 'approve');
+    }
+
+    /**
+     * Reject a pending gallery and store the reason.
+     */
+    public function reject(ProcessGalleryApprovalRequest $request, string $galleryId): JsonResponse
+    {
+        return $this->processApproval($request, $galleryId, 'reject');
+    }
+
+    /**
+     * Process a gallery approval or rejection action.
+     */
+    public function process(ProcessGalleryApprovalRequest $request, string $galleryId, string $action): JsonResponse
+    {
+        return $this->processApproval($request, $galleryId, $action);
+    }
+
+    /**
+     * Approve or reject a pending gallery inside the owned studios.
+     */
+    private function processApproval(ProcessGalleryApprovalRequest $request, string $galleryId, string $action): JsonResponse
+    {
+        try {
+            $ownerUserId = Auth::id();
+            $studioIds = StudiosModel::where('user_id', $ownerUserId)->pluck('id')->toArray();
+
+            if (empty($studioIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No studios found'
+                ], 404);
+            }
+
+            $gallery = StudioOnlineGalleryModel::where('id', $galleryId)
+                ->whereIn('studio_id', $studioIds)
+                ->first();
+
+            if (!$gallery) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gallery not found.'
+                ], 404);
+            }
+
+            $normalizedAction = strtolower($action);
+
+            if (!in_array($normalizedAction, ['approve', 'reject'], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected gallery approval action is invalid.'
+                ], 422);
+            }
+
+            if ($gallery->approval_status !== StudioOnlineGalleryModel::APPROVAL_PENDING) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only galleries that wait for approval can be processed.'
+                ], 422);
+            }
+
+            $validated = $request->validated();
+
+            if ($normalizedAction === 'approve') {
+                $gallery->update([
+                    'approval_status' => StudioOnlineGalleryModel::APPROVAL_APPROVED,
+                    'approved_by' => $ownerUserId,
+                    'approved_at' => now(),
+                    'rejected_by' => null,
+                    'rejected_at' => null,
+                    'rejection_reason' => null,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Gallery approved successfully.',
+                    'data' => [
+                        'id' => $gallery->id,
+                        'approval_status' => $gallery->approval_status,
+                        'processed_by' => Auth::user()->full_name ?? null,
+                        'processed_at' => $gallery->approved_at?->format('F d, Y h:i A'),
+                    ],
+                ]);
+            }
+
+            $gallery->update([
+                'approval_status' => StudioOnlineGalleryModel::APPROVAL_REJECTED,
+                'approved_by' => null,
+                'approved_at' => null,
+                'rejected_by' => $ownerUserId,
+                'rejected_at' => now(),
+                'rejection_reason' => $validated['rejection_reason'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Gallery rejected successfully.',
+                'data' => [
+                    'id' => $gallery->id,
+                    'approval_status' => $gallery->approval_status,
+                    'processed_by' => Auth::user()->full_name ?? null,
+                    'processed_at' => $gallery->rejected_at?->format('F d, Y h:i A'),
+                    'rejection_reason' => $gallery->rejection_reason,
+                ],
+            ]);
+        } catch (\Exception $exception) {
+            Log::error('Failed to process gallery approval for Studio Owner.', [
+                'exception' => $exception,
+                'gallery_id' => $galleryId,
+                'action' => $action,
+                'owner_user_id' => Auth::id(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process the gallery approval.'
             ], 500);
         }
     }

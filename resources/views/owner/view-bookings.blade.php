@@ -92,7 +92,7 @@
                                                     N/A
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td data-sort-value="{{ \Carbon\Carbon::parse($booking->event_date)->format('Y-m-d') }}">
                                                 <div class="d-flex">
                                                     <div>
                                                         <p class="mb-1">{{ \Carbon\Carbon::parse($booking->event_date)->format('F d, Y') }}</p>
@@ -127,7 +127,7 @@
                                                 <span class="badge {{ $paymentBadge }} fs-8 px-1 w-100 text-uppercase">{{ str_replace('_', ' ', $booking->payment_status) }}</span>
                                             </td>
                                             <td>PHP {{ number_format($booking->remaining_balance, 2) }}</td>
-                                            <td>PHP {{ number_format($booking->total_amount, 2) }}</td>
+                                            <td data-sort-value="{{ $booking->total_amount }}">PHP {{ number_format($booking->total_amount, 2) }}</td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
                                                     <button class="btn btn-sm view-booking-btn" 

@@ -2051,9 +2051,8 @@
                     return false;
                 }
 
-                // Basic email format validation
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
+                // Shared email format validation
+                if (!window.PlatinumEmail.isValid(email)) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Invalid Email',

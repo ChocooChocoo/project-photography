@@ -75,7 +75,7 @@
                                         <div class="row g-3">
                                             <div class="col-md-6">
                                                 <label class="form-label">Email Address <span class="text-danger">*</span></label>
-                                                <input type="email" class="form-control" name="email" placeholder="Enter email address" required {{ $fieldState }}>
+                                                <input type="text" inputmode="email" class="form-control" name="email" placeholder="Enter email address" required {{ $fieldState }}>
                                                 <div class="invalid-feedback">
                                                     Please enter a valid email address.
                                                 </div>
@@ -488,6 +488,15 @@
                     $('#operating_days_error').hide();
                 }
                 
+                // Use the shared email format rule.
+                const $emailInput = $form.find('input[name="email"]');
+                if (!window.PlatinumEmail.isValid(($emailInput.val() || '').trim())) {
+                    $emailInput.addClass('is-invalid');
+                    $form.addClass('was-validated');
+                    return;
+                }
+                $emailInput.removeClass('is-invalid');
+
                 // Validate form
                 if (!$form[0].checkValidity()) {
                     e.stopPropagation();

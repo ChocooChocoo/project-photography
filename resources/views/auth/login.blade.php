@@ -201,17 +201,10 @@
                 $('#loadingOverlay').show();
                 $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Signing in...');
                 
-                // Submit form via AJAX
-                $.ajax({
-                    url: $(this).attr('action'),
-                    method: 'POST',
-                    data: $(this).serialize(),
-                    dataType: 'json',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                        'Accept': 'application/json'
-                    },
-                    success: function(response) {
+                // Submit through the shared session helper. It reads the token at
+                // request time and retries the request one time after a 419.
+                window.PlatinumSession.post($(this).attr('action'), $(this).serialize())
+                    .done(function(response) {
                         if (response.success) {
                             // Show success SweetAlert
                             Swal.fire({
@@ -252,26 +245,10 @@
                                 confirmButtonColor: '#DC3545',
                             });
                         }
-                    },
-                    error: function(xhr) {
+                    })
+                    .fail(function(xhr) {
                         var response = xhr.responseJSON || {};
                         var errorMessage = response.message || 'Login failed. Please try again.';
-
-                        if (xhr.status === 419) {
-                            errorMessage = 'Your session expired. Please refresh the page and try again.';
-                            showLoginError(errorMessage);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Session Expired',
-                                text: errorMessage,
-                                confirmButtonText: 'Reload Page',
-                                confirmButtonColor: '#DC3545',
-                                allowOutsideClick: false,
-                            }).then(function() {
-                                window.location.reload();
-                            });
-                            return;
-                        }
 
                         if (xhr.status === 422) {
                             errorMessage = response.message || 'Please check the highlighted fields and try again.';
@@ -290,13 +267,12 @@
                             text: errorMessage,
                             confirmButtonColor: '#DC3545',
                         });
-                    },
-                    complete: function() {
+                    })
+                    .always(function() {
                         // Always reset the loading state.
                         $('#loadingOverlay').hide();
                         $('#submitBtn').prop('disabled', false).html('Sign In');
-                    }
-                });
+                    });
             });
             
             // Real-time form validation

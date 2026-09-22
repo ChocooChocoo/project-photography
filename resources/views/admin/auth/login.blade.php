@@ -50,7 +50,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('admin.login.authenticate') }}" novalidate>
+                    <form id="adminLoginForm" method="POST" action="{{ route('admin.login.authenticate') }}" novalidate>
                         @csrf
 
                         <div class="form-group mb-2">
@@ -102,6 +102,28 @@
                 if (window.lucide) {
                     lucide.createIcons();
                 }
+            });
+
+            // Read the token at submit time so a restored page cannot post a dead token.
+            $('#adminLoginForm').on('submit', function(event) {
+                var form = this;
+
+                if (form.dataset.platinumTokenReady === '1' || !window.PlatinumSession) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                window.PlatinumSession.refresh().always(function() {
+                    var input = form.querySelector('input[name="_token"]');
+
+                    if (input) {
+                        input.value = window.PlatinumSession.token();
+                    }
+
+                    form.dataset.platinumTokenReady = '1';
+                    form.submit();
+                });
             });
         });
     </script>

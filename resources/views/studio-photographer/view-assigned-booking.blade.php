@@ -55,7 +55,7 @@
                                 <tbody>
                                     @forelse($assignments as $assignment)
                                         <tr data-assignment-id="{{ $assignment->id }}">
-                                            <td>
+                                            <td data-sort-value="{{ $assignment->booking->booking_reference ?? 'N/A' }}">
                                                 <div class="d-flex align-items-center">
                                                     <span class="fw-medium">{{ $assignment->booking->booking_reference ?? 'N/A' }}</span>
                                                 </div>
@@ -73,7 +73,7 @@
                                             <td>
                                                 {{ $assignment->booking->event_name ?? 'N/A' }}
                                             </td>
-                                            <td>
+                                            <td data-sort-value="{{ $assignment->booking ? \Carbon\Carbon::parse($assignment->booking->event_date)->format('Y-m-d') : 'N/A' }}">
                                                 <div class="d-flex">
                                                     <div>
                                                         <p class="mb-1">{{ $assignment->booking ? \Carbon\Carbon::parse($assignment->booking->event_date)->format('M d, Y') : 'N/A' }}</p>
@@ -83,7 +83,7 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-sort-value="{{ $assignment->booking ? $assignment->booking->total_amount : 0 }}">
                                                 <span class="fw-semibold">
                                                     PHP {{ $assignment->booking ? number_format($assignment->booking->total_amount, 2) : '0.00' }}
                                                 </span>

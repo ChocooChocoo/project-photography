@@ -40,7 +40,7 @@
                                 <tbody>
                                     @forelse($bookings as $booking)
                                         <tr data-booking-id="{{ $booking->id }}">
-                                            <td>
+                                            <td data-sort-value="{{ $booking->booking_reference }}">
                                                 <span class="fw-medium">{{ $booking->booking_reference }}</span>
                                                 <small class="text-muted d-block">{{ ucfirst($booking->booking_type) }}</small>
                                             </td>
@@ -60,7 +60,7 @@
                                                     N/A
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td data-sort-value="{{ \Carbon\Carbon::parse($booking->event_date)->format('Y-m-d') }}">
                                                 <div class="d-flex">
                                                     <div>
                                                         <p class="mb-1">{{ \Carbon\Carbon::parse($booking->event_date)->format('M d, Y') }}</p>
@@ -116,7 +116,7 @@
                                                 </div>
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td data-sort-value="{{ $booking->total_amount }}">
                                                 <span class="fw-semibold">₱{{ number_format($booking->total_amount, 2) }}</span>
                                                 <small class="text-muted d-block">
                                                     @if($booking->booking_type === 'studio')
