@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "planId": "plan-0092fbf9930f4722",
+  "markdownBlockIds": [
+    "markdown-aa2625ca",
+    "markdown-8bdc875b",
+    "markdown-fa25d2b8",
+    "markdown-66082f10",
+    "markdown-e21857e9"
+  ],
+  "markdownBlocks": [
+    {
+      "id": "markdown-aa2625ca",
+      "hash": "095656815d733b26"
+    },
+    {
+      "id": "markdown-8bdc875b",
+      "hash": "78e336cc98f33bac"
+    },
+    {
+      "id": "markdown-fa25d2b8",
+      "hash": "c6a9096d43fc66b3"
+    },
+    {
+      "id": "markdown-66082f10",
+      "hash": "d0a6d22a2847b68b"
+    },
+    {
+      "id": "markdown-e21857e9",
+      "hash": "6019b6cc8f801075"
+    }
+  ],
+  "canvas": {
+    "zoom": 0.68,
+    "pan": {
+      "x": 80,
+      "y": 54
+    }
+  }
+}

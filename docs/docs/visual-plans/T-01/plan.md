@@ -1,0 +1,1281 @@
+---
+# Visual plan: open https://plan.agent-native.com/plans/plan-0092fbf9930f4722 in a browser for the canvas and review UI.
+visualUrl: "https://plan.agent-native.com/plans/plan-0092fbf9930f4722"
+title: "T-01: Fix the post-T-00 defects"
+brief: "Seven reported defects, one shared token-lifecycle fix, and eight parallel workstreams with disjoint file ownership."
+version: 2
+---
+
+## Objective
+
+Fix the seven defects that remain after task T-00. The defects cover login, session state, booking requests, role-based access control, email format, gallery publishing, and table sorting.
+
+The work keeps the T-00 shape. Eight workstreams run at the same time on the same build. Each workstream owns its own files, so parallel editors never touch the same path. Every step names the existing file it extends.
+
+### Success criteria
+
+1. An owner can assign or update employee permissions, and the change holds.
+2. A valid email address passes on the first attempt on every screen that asks for one.
+3. A photographer cannot publish a studio gallery before the owner approves it.
+4. Completing or cancelling a booking never returns a token mismatch error.
+5. A table row orders by real date, real number, or real identifier after the first click on a sortable header.
+6. Login succeeds on the first attempt.
+7. A navigation request succeeds on the first click after the session state syncs.
+8. The full test suite passes on the frozen build.
+
+### Scope and non-goals
+
+In scope: the seven defects above, the regression tests for them, and the small data repairs the fixes need.
+
+Out of scope: new product features, redesigns, payment gateway work, the AI assistant, refund rules, and the employee rows that have no role record. The `getStudioUserIds()` list in the role controller stays as it is, because the missing rows come from legacy data and not from the save path.
+
+The application is server rendered. Every fix lands in an existing controller, model, middleware, request, route, view, or in a small new file next to one. No single-page application, no duplicate workflow.
+
+### Three defects share one root cause
+
+Defects 4, 6, and 7 are one defect family. The CSRF token rotates during login, and an open page keeps the old token. The next booking request fails with a 419 response, and the login page shows a load with no result. The plan fixes the token lifecycle one time, in workstreams W1 and W2, and closes all three defects together. Do not fix the three defects apart from each other.
+
+## The token lifecycle contract
+
+The plan sets one contract for the whole application.
+
+1. One CSRF token lives for the whole session. The token changes only at sign-out.
+2. Login runs one session id migration. The `Auth::attempt` call already migrates the session id and keeps the token. The second `regenerate()` call goes away.
+3. A new endpoint `GET /csrf-token` returns the live token as JSON.
+4. A new global script reads the token from the live `meta[name="csrf-token"]` element at request time. On a 419 response the script refreshes the token from the endpoint and retries the same request one time.
+5. The session driver moves to `database` and session blocking turns on. The file driver has no request lock, so two requests on one session can race.
+6. Authenticated HTML responses carry `Cache-Control: no-store`, so a page from the Back button never reuses a dead token.
+
+<Diagram id="b-token-lifecycle" caption="The CSRF token lifecycle before and after the fix." frame="show">
+
+```html
+<div class="diagram-panel" data-rough><span class="diagram-pill">Before</span><div class="diagram-box"><b>Login</b><div class="diagram-muted">Auth::attempt migrates the session id. The next line calls regenerate() and rotates the CSRF token. The page keeps the old token.</div></div><div class="diagram-box"><b>Booking request</b><div class="diagram-muted">The AJAX call sends the dead token. Laravel answers 419. The page reloads and the user tries again.</div></div></div><div class="diagram-panel" data-rough><span class="diagram-pill">After</span><div class="diagram-box"><b>Login</b><div class="diagram-muted">One token per session. The session id migrates once, and the page token stays valid.</div></div><div class="diagram-box"><b>Any request</b><div class="diagram-muted">The script reads the live meta token at request time. A 419 refreshes the token from GET /csrf-token and retries one time.</div></div></div>
+```
+
+```css
+.diagram-panel{display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin-bottom:12px}.diagram-panel .diagram-pill{align-self:center}.diagram-box{flex:1 1 200px;min-width:200px;padding:12px;display:flex;flex-direction:column;gap:6px;border:1px solid var(--wf-border);border-radius:8px}.diagram-box b{color:var(--wf-ink)}.diagram-box .diagram-muted{color:var(--wf-muted)}
+```
+
+</Diagram>
+
+## Gallery approval state machine
+
+The owner approves a studio gallery before a photographer or a studio HR user publishes it. One column `approval_status` drives the flow on both gallery tables. The column set copies the leave-request pattern at `database/migrations/2026_03_31_201959_create_tbl_leave_requests_table.php:33-39` and `app/Http/Controllers/StudioOwner/LeaveRequestController.php:97-166`, with `approved_by`, `approved_at`, `rejected_by`, `rejected_at`, `rejection_reason`, and a `pending` status.
+
+States:
+
+- null means no approval record yet. Legacy rows and freelancer rows start here.
+- pending means the photographer or the studio HR user submitted the gallery. `submitted_by` and `submitted_at` hold the sender and the time.
+- approved means the owner approved. `approved_by` and `approved_at` hold the decision.
+- rejected means the owner rejected. `rejected_by`, `rejected_at`, and `rejection_reason` hold the decision.
+- cancelled means the submitter withdrew the gallery or the gallery was replaced.
+
+Rules:
+
+- Submit moves null or rejected to pending.
+- Approve moves pending to approved.
+- Reject moves pending to rejected and requires a reason.
+- Publish requires approved on the photographer route and on the studio HR route.
+- Owner publish records an approval row when none exists, because the owner owns the decision.
+- The freelancer flow self-approves at upload, because that flow has no owner.
+- A client sees a gallery only when the gallery is published, and a published studio gallery always carries an approval.
+
+<DataModel
+  id="b-gallery-approval"
+  entities={[
+    {
+      id: "tbl_studio_online_gallery",
+      name: "tbl_studio_online_gallery",
+      fields: [
+        {
+          name: "id",
+          type: "bigint",
+          note: "Primary key. Unchanged.",
+        },
+        {
+          name: "gallery_status",
+          type: "enum(draft, published)",
+          note: "Unchanged. Publish writes published.",
+        },
+        {
+          name: "approval_status",
+          type: "enum(pending, approved, rejected, cancelled), null",
+          note: "New. Null means no approval record.",
+        },
+        {
+          name: "submitted_by",
+          type: "bigint, null",
+          note: "New. Photographer or studio HR user who submitted.",
+        },
+        {
+          name: "submitted_at",
+          type: "timestamp, null",
+          note: "New. Submit time.",
+        },
+        {
+          name: "approved_by",
+          type: "bigint, null",
+          note: "New. Owner who approved.",
+        },
+        {
+          name: "approved_at",
+          type: "timestamp, null",
+          note: "New. Approval time.",
+        },
+        {
+          name: "rejected_by",
+          type: "bigint, null",
+          note: "New. Owner who rejected.",
+        },
+        {
+          name: "rejected_at",
+          type: "timestamp, null",
+          note: "New. Rejection time.",
+        },
+        {
+          name: "rejection_reason",
+          type: "text, null",
+          note: "New. Required on a reject.",
+        },
+      ],
+    },
+    {
+      id: "tbl_freelancer_online_gallery",
+      name: "tbl_freelancer_online_gallery",
+      fields: [
+        {
+          name: "id",
+          type: "bigint",
+          note: "Primary key. Unchanged.",
+        },
+        {
+          name: "gallery_status",
+          type: "enum(draft, published)",
+          note: "Unchanged. The freelancer flow publishes at upload.",
+        },
+        {
+          name: "approval_status",
+          type: "enum(pending, approved, rejected, cancelled), null",
+          note: "New. The self-approval path writes approved.",
+        },
+        {
+          name: "submitted_by",
+          type: "bigint, null",
+          note: "New. The freelancer.",
+        },
+        {
+          name: "submitted_at",
+          type: "timestamp, null",
+          note: "New. Upload time.",
+        },
+        {
+          name: "approved_by",
+          type: "bigint, null",
+          note: "New. The freelancer on the self-approval path.",
+        },
+        {
+          name: "approved_at",
+          type: "timestamp, null",
+          note: "New. Upload time.",
+        },
+        {
+          name: "rejected_by",
+          type: "bigint, null",
+          note: "New. Reserved, no review flow in this release.",
+        },
+        {
+          name: "rejected_at",
+          type: "timestamp, null",
+          note: "New. Reserved, no review flow in this release.",
+        },
+        {
+          name: "rejection_reason",
+          type: "text, null",
+          note: "New. Reserved, no review flow in this release.",
+        },
+      ],
+    },
+    {
+      id: "tbl_users",
+      name: "tbl_users",
+      fields: [
+        {
+          name: "id",
+          type: "bigint",
+          note: "Unchanged. The submitter and the approver point here.",
+        },
+      ],
+    },
+  ]}
+  relations={[
+    {
+      from: "tbl_studio_online_gallery.submitted_by",
+      to: "tbl_users.id",
+      kind: "1-n",
+    },
+    {
+      from: "tbl_studio_online_gallery.approved_by",
+      to: "tbl_users.id",
+      kind: "1-n",
+    },
+    {
+      from: "tbl_studio_online_gallery.rejected_by",
+      to: "tbl_users.id",
+      kind: "1-n",
+    },
+    {
+      from: "tbl_freelancer_online_gallery.submitted_by",
+      to: "tbl_users.id",
+      kind: "1-n",
+    },
+  ]}
+/>
+
+## Permission identity contract
+
+The plan sets one canonical permission string format: `portal.resource.action`, in lowercase, with hyphens inside the resource segment and inside the action segment. Example: `studio-hr.online-gallery.manage`.
+
+- The permission editor sends the canonical string.
+- The store path saves the canonical string.
+- The match path normalizes both sides. The check accepts a missing portal prefix and treats `_` and `-` as the same character.
+- One helper pair in the permission model owns the format: `canonicalString()` and `normalizeIdentifier()`.
+- `buildPermissionIdentifiers()` and `hasPermission()` call the same helper pair, so the stored row and the runtime check cannot drift apart.
+- One repair migration rewrites the stored rows into the canonical form and merges rows that collide.
+
+The subscription gate gets one change in the same area. The gate exempts the role routes, the permission routes, and the user-role routes next to `owner.profile`, because the roles table has no studio column and role rows belong to the account. A GET request already skips the gate, and the exemption closes the write path.
+
+## Workstreams
+
+Eight workstreams run at the same time. Each workstream owns a disjoint file set. Each workstream lists its goal, the files it owns, its steps, and its acceptance check.
+
+### W1: Session token server
+
+Goal: one CSRF token per session, a locked session store, and no-cache headers on authenticated pages.
+
+Reuses: the existing login flow in `AuthController`, the admin login mirror in `AdminAuthController`, the session configuration, and the Laravel session table shape.
+
+1. In `app/Http/Controllers/Auth/AuthController.php`, delete the extra `$request->session()->regenerate()` call inside `login()`. The `Auth::attempt` call already migrates the session id and keeps the token.
+2. In `app/Http/Controllers/Admin/AdminAuthController.php`, delete the same extra call.
+3. Keep the `logout()` calls as they are. A signed-out token can never be valid again.
+4. Add the sessions table migration under `database/migrations/`, generated with `php artisan make:session-table`.
+5. In `config/session.php`, keep `database` as the driver and turn the `block` option on. Add `SESSION_DRIVER=database` and `SESSION_BLOCK=true` to `.env.example`.
+6. Add `app/Http/Middleware/NoStoreSessionResponses.php` and register it in the `web` group in `bootstrap/app.php`. The middleware adds `Cache-Control: no-store, no-cache, must-revalidate` and `Pragma: no-cache` to authenticated HTML responses.
+7. In `bootstrap/app.php`, register `routes/session.php` with the `web` middleware through the `then:` closure of `withRouting`. This step is the interface for W2, which owns the route file.
+
+Acceptance: a login response carries the same CSRF token as the login page. Two requests on one session return the same token. `php artisan test --compact tests/Feature/Auth/SessionTokenTest.php` passes.
+
+Owned files: `app/Http/Controllers/Auth/AuthController.php`, `app/Http/Controllers/Admin/AdminAuthController.php`, `app/Http/Middleware/NoStoreSessionResponses.php`, `bootstrap/app.php`, `config/session.php`, `.env.example`, `database/migrations/2026_09_22_090000_create_sessions_table.php`, `tests/Feature/Auth/SessionTokenTest.php`.
+
+### W2: Token client and auth pages
+
+Goal: every request reads the live token, and a 419 response recovers without a page reload.
+
+Reuses: the existing login AJAX flow, the existing auth layout, the shared portal script partial, and the existing meta tag at `resources/views/layouts/auth/app.blade.php:6`.
+
+1. Add `app/Http/Controllers/Auth/SessionTokenController.php` with one method that returns `response()->json(['token' => csrf_token()])`.
+2. Add `routes/session.php` with `GET /csrf-token` on that method, named `session.csrf-token`. W1 registers the file.
+3. Add `public/assets/js/pages/session-token.js`. The script publishes one global name, `window.PlatinumSession`, with three members: `token()` reads `meta[name="csrf-token"]` at call time, `refresh()` fetches a live token from the endpoint, and `post(url, data)` sends a request and retries it one time after a 419 response. The retry keeps the same method, URL, and body. The name and the three members are the interface. W7 and W8 depend on nothing here.
+4. Load the script from `resources/views/layouts/partials/portal-base-scripts.blade.php` and from `resources/views/layouts/auth/app.blade.php`. Load `public/assets/js/pages/email-format.js` in the same two files. This step is the interface for W7, which owns the email script.
+5. In `resources/views/auth/login.blade.php`, read the token at request time instead of page render time, and replace the `window.location.reload()` branch with one retry through the helper.
+6. Do the same in `resources/views/admin/auth/login.blade.php`.
+7. Update `tests/Feature/Auth/FirstAttemptLoginTest.php` to assert the sync endpoint, the script tags, and the web group wiring.
+
+Acceptance: the login page posts a token that the server accepts on the first attempt. A forced 419 response recovers with one retry in the browser. The test file passes.
+
+Owned files: `app/Http/Controllers/Auth/SessionTokenController.php`, `routes/session.php`, `public/assets/js/pages/session-token.js`, `resources/views/layouts/partials/portal-base-scripts.blade.php`, `resources/views/layouts/auth/app.blade.php`, `resources/views/auth/login.blade.php`, `resources/views/admin/auth/login.blade.php`, `tests/Feature/Auth/FirstAttemptLoginTest.php`.
+
+### W3: Gallery approval server
+
+Goal: submit, approve, and reject endpoints for both gallery tables, and a publish gate that requires approval.
+
+Reuses: the leave-request approval pattern, the existing publish methods in the three gallery controllers, the existing permission middleware on the gallery routes, and the existing gallery models.
+
+1. Add `database/migrations/2026_09_22_090100_add_gallery_approval_columns.php`. Add the approval columns to `tbl_studio_online_gallery` and to `tbl_freelancer_online_gallery`. Copy the column shapes from the leave-request migration.
+2. Extend `app/Models/StudioOwner/StudioOnlineGalleryModel.php`: add the new columns to `$fillable`, add the casts, add the status constants, and add the helpers `isPendingApproval()`, `isApproved()`, and `canPublish()`. Extend the allowed `gallery_status` guard at lines 154-165.
+3. Extend `app/Models/Freelancer/FreelanceOnlineGalleryModel.php` in the same way.
+4. In `app/Http/Controllers/StudioPhotographer/OnlineGalleryController.php`, split the current `publish()` method at lines 394-437. The new `submitForApproval()` keeps the assignment check and writes `approval_status = pending`, `submitted_by`, and `submitted_at`. The new `publish()` refuses a gallery that is not approved.
+5. Mirror the split in `app/Http/Controllers/StudioHR/OnlineGalleryController.php` at lines 306-332.
+6. In `app/Http/Controllers/StudioOwner/OnlineGalleryController.php`, add `process()`, `approve()`, and `reject()` on the model of `app/Http/Controllers/StudioOwner/LeaveRequestController.php:97-166`. The shared `process()` rejects a record that is not pending and then writes the column pair. Change the owner publish path at lines 424-462 so it records an approval row when none exists.
+7. In `app/Http/Controllers/Freelancer/OnlineGalleryController.php`, keep the publish at upload and write `approval_status = approved`, with `submitted_by` and `approved_by` set to the freelancer.
+8. Add `app/Http/Requests/StudioOwner/ProcessGalleryApprovalRequest.php`. Validate `action` in `approve` and `reject`, and require `rejection_reason` when the action is `reject`.
+9. In `routes/web.php`, add the submit routes for the photographer and studio HR under the existing permission middleware, and add the owner approve and reject routes under `permission:owner.online-gallery.manage`. Keep the existing route names and the existing publish routes.
+10. Update the gallery tests. `tests/Feature/Gallery/PhotographerGalleryPublishTest.php` asserts the buggy behavior today, at lines 48-74, because a draft gallery publishes after the photographer press. Change that case to a refusal while the approval is pending, and add an approve-then-publish case. Add the approval columns to `createSchema()` in this file and in `GalleryLifecycleTest.php`, `GalleryVisibilityTest.php`, and `OwnerCompletionGateTest.php`.
+
+Acceptance: `php artisan route:list --path=online-gallery` shows the submit, approve, and reject routes. `php artisan test --compact tests/Feature/Gallery` passes.
+
+Owned files: `database/migrations/2026_09_22_090100_add_gallery_approval_columns.php`, `app/Models/StudioOwner/StudioOnlineGalleryModel.php`, `app/Models/Freelancer/FreelanceOnlineGalleryModel.php`, `app/Http/Controllers/StudioPhotographer/OnlineGalleryController.php`, `app/Http/Controllers/StudioHR/OnlineGalleryController.php`, `app/Http/Controllers/StudioOwner/OnlineGalleryController.php`, `app/Http/Controllers/Freelancer/OnlineGalleryController.php`, `app/Http/Requests/StudioOwner/ProcessGalleryApprovalRequest.php`, `routes/web.php`, `tests/Feature/Gallery/PhotographerGalleryPublishTest.php`, `tests/Feature/Gallery/GalleryLifecycleTest.php`, `tests/Feature/Gallery/GalleryVisibilityTest.php`, `tests/Feature/Gallery/OwnerCompletionGateTest.php`.
+
+### W4: Gallery approval surfaces
+
+Goal: the staff screens offer Submit for approval, and the owner screen offers Approve and Reject.
+
+Reuses: the existing gallery tables and modals in the four views, the existing AJAX handlers, the existing badge classes, and the existing review modal pattern from the HR overtime screen.
+
+1. In `resources/views/studio-photographer/view-online-gallery.blade.php`, keep the badge at lines 65-67 for the pending state. Add a `Submit for approval` button beside `Manage Gallery` when the gallery is not published and the approval is null or rejected. Keep `Publish to Client` only when the approval is approved. Change the handler at lines 1025-1065 to call the submit route and to show the message `Gallery submitted for owner approval.`
+2. In `resources/views/studio-hr/view-online-gallery.blade.php`, make the same change around the publish button at lines 133-134 and the handler at lines 159 and 311.
+3. In `resources/views/owner/view-online-gallery.blade.php`, change the `Pending Review` badge at lines 68-71 to `Pending Approval`. Add `Approve` and `Reject` buttons to the row actions for a pending gallery. Add a rejection modal with a `rejection_reason` textarea and a `Submit Rejection` button, on the model of `resources/views/owner/hr-overtime-requests.blade.php`.
+4. In `app/Http/Controllers/Client/OnlineGalleryController.php`, keep the current filter and add the approval filter, so the client list shows only approved rows and legacy rows that have no approval record.
+5. In `resources/views/client/view-online-gallery.blade.php`, keep the labels `My Online Galleries`, `View Gallery`, and `No Galleries Available` and keep the card grid. Confirm that the empty-state sentence still describes the flow after the approval gate.
+
+Acceptance: manual walk. Photographer submits, the badge shows pending, the owner approves or rejects, and the photographer publishes only after an approval. The client card grid shows a published gallery.
+
+Owned files: `resources/views/studio-photographer/view-online-gallery.blade.php`, `resources/views/studio-hr/view-online-gallery.blade.php`, `resources/views/owner/view-online-gallery.blade.php`, `resources/views/client/view-online-gallery.blade.php`, `app/Http/Controllers/Client/OnlineGalleryController.php`.
+
+### W5: Permission identity
+
+Goal: one canonical permission string on the store path and on the match path, plus a repair for stored rows.
+
+Reuses: the existing permission model, the existing permission cache, the existing permission controller, and the existing permission middleware.
+
+1. In `app/Models/StudioOwner/PermissionModel.php`, add `canonicalString(string $portal, string $resource, string $action)` and `normalizeIdentifier(string $value)`. The normalizer lowercases the value, converts `:` to `.`, treats `_` and `-` as equal, and adds the `portal.` prefix when the first segment is not a known portal name. Rewrite `buildPermissionIdentifiers()` at lines 110-141 to expand a value through the normalizer.
+2. In `app/Models/UserModel.php`, rewrite `hasPermission()` at lines 527-536 to compare normalized values from the same helper. Keep the in-memory cache and its keys.
+3. In `app/Http/Controllers/StudioOwner/PermissionController.php`, replace `normalizePermissionString()` at lines 373-382 with the shared normalizer. Stop `inferPortal()` at lines 401-418 from guessing when the request supplies the portal. Keep the JSON responses and return the saved row with the canonical string.
+4. In `resources/views/owner/view-permissions.blade.php`, change `buildPermissionString()` at lines 252-259 to send the canonical `portal.resource.action` value.
+5. In `app/Http/Middleware/CheckPermissionMiddleware.php`, normalize the required permission and the granted permission before the compare at lines 15-40.
+6. Add `database/migrations/2026_09_22_090200_normalize_permission_strings.php`. Rewrite every `tbl_permissions.permission_string` into the canonical form and merge rows that collide after the rewrite. Log the merge count.
+
+Acceptance: an owner grant of `studio-hr.online-gallery.manage` resolves for an HR user. `hasPermission('online_gallery.view')` and `hasPermission('studio-photographer.online-gallery.view')` both return true for the seeded row. No duplicate permission string remains.
+
+Owned files: `app/Models/StudioOwner/PermissionModel.php`, `app/Models/UserModel.php`, `app/Http/Controllers/StudioOwner/PermissionController.php`, `app/Http/Middleware/CheckPermissionMiddleware.php`, `resources/views/owner/view-permissions.blade.php`, `database/migrations/2026_09_22_090200_normalize_permission_strings.php`, `tests/Feature/Rbac/CrossPortalGalleryPermissionTest.php`.
+
+### W6: RBAC write path
+
+Goal: Save Changes saves, and the page reports a real failure when a save fails.
+
+Reuses: the existing subscription gate, the existing role controller, the existing role modal, and the existing permission cache.
+
+1. In `app/Http/Middleware/EnforceStudioSubscriptionAccess.php`, extend the exemption list at lines 66-68 next to `owner.profile` with the route names `owner.role.*`, `owner.permission.*`, and `owner.user-roles.*`. The roles table has no studio column, so a role row cannot resolve a studio id and the gate must not block the write.
+2. In `app/Http/Controllers/StudioOwner/RoleController.php`, clear `UserModel::$permissionCache` after `updatePermissions()` at lines 304-337 syncs, and after the role assignment paths. Return the fresh permission list in the response so the role table reflects the saved state.
+3. In `resources/views/owner/view-roles.blade.php`, fix the error branch at lines 655-668. Show the response message on a failure and keep the success dialog for a real success only.
+4. In `resources/views/layouts/owner/sidebar.blade.php`, repoint or remove the dead links to `owner.role.create` at line 320 and `owner.permission.create` at line 339, because those routes do not exist.
+5. Add `tests/Feature/Permissions/RolePermissionSaveTest.php`. The test saves a role with two permissions, checks the pivot rows, checks the cache clear, and checks the response.
+
+Acceptance: an owner ticks Online Gallery View and Online Gallery Manage, presses Save Changes, and sees the saved state after a reload. A multi-studio owner saves a role without a 403 response.
+
+Owned files: `app/Http/Middleware/EnforceStudioSubscriptionAccess.php`, `app/Http/Controllers/StudioOwner/RoleController.php`, `resources/views/owner/view-roles.blade.php`, `resources/views/layouts/owner/sidebar.blade.php`, `tests/Feature/Permissions/UserRolesAssignmentTest.php`, `tests/Feature/Permissions/RolePermissionSaveTest.php`.
+
+### W7: Email format
+
+Goal: a valid email address passes on the first attempt on every screen that asks for one.
+
+Reuses: the existing browser check pattern with `novalidate` and `checkValidity()`, the existing invalid-feedback messages, and the existing server email rules.
+
+1. Add `public/assets/js/pages/email-format.js`. The script publishes one global name, `window.PlatinumEmail`, with one member: `isValid(value)` returns true when the value has exactly one `@`, a non-empty local part, and a domain that carries at least one dot with a non-empty label on each side. W2 loads the script from the two layout files. This name and member are the interface with W2.
+2. In `resources/views/client/booking-forms.blade.php`, replace the local `const emailRegex` at line 2055 and its test at line 2056 with the shared check. Keep the existing message text.
+3. In `resources/views/auth/register.blade.php`, use the shared check in the submit guard at lines 189-191.
+4. In `resources/views/studio-hr/create-employee.blade.php`, `resources/views/owner/create-employee.blade.php`, and `resources/views/owner/create-studio-photographers.blade.php`, use the shared check in the submit guard next to the existing invalid-feedback message.
+5. Keep every server `email` rule as it is in `LoginRequest`, `RegisterRequest`, the employee requests, and the studio photographer request. Add no server regex.
+6. Update `tests/Feature/Client/BookingFormsPresentationTest.php`. Assert that the pages load the shared script and that the local regex is gone.
+
+Acceptance: `maria.santos+studio@gmail.com` and `maria.santos@gmail.com` pass on the five screens. `maria.santos@localhost` and `maria@@gmail.com` show the message. The test file passes.
+
+Owned files: `public/assets/js/pages/email-format.js`, `resources/views/client/booking-forms.blade.php`, `resources/views/auth/register.blade.php`, `resources/views/studio-hr/create-employee.blade.php`, `resources/views/owner/create-employee.blade.php`, `resources/views/owner/create-studio-photographers.blade.php`, `tests/Feature/Client/BookingFormsPresentationTest.php`.
+
+### W8: Table sorting
+
+Goal: booking ID, date, amount, and the four broken-header tables order on the first click.
+
+Reuses: the existing app-wide sorter in `public/assets/js/pages/custom-table.js`, the existing `data-table-sort` header marker, the existing `data-column` marker, and the existing sort icon markup.
+
+1. In `public/assets/js/pages/custom-table.js`, rewrite the value extractor. Read `data-sort-value` first, then `[data-sort="<header value>"]`, then the first non-empty direct text node, then the full cell text. Never return an empty value when the header key has no child match.
+2. Fix the currency branch so it strips the peso sign, the `PHP` prefix, spaces, and commas before the number parse.
+3. Fix the comparator. When the two values have different types, compare them as normalized strings instead of returning equal. When a value parses as a date, compare by timestamp.
+4. In the seven booking and refund views, add `data-sort-value` to the cells that need a sort key: the booking reference on the ID cell, the ISO date on the date cell, and the raw number on the amount cell. The views are `resources/views/client/view-my-bookings.blade.php`, `resources/views/client/view-booking-history.blade.php`, `resources/views/client/view-refunds.blade.php`, `resources/views/freelancer/view-bookings.blade.php`, `resources/views/freelancer/booking-history.blade.php`, `resources/views/studio-photographer/view-assigned-booking.blade.php`, and `resources/views/owner/view-bookings.blade.php`.
+5. Add `tests/Feature/Ui/TableSortMarkupTest.php`. Assert that the sorter reads `data-sort-value` and that the booking and refund views carry the marker on the ID, date, and amount cells.
+6. Leave `resources/views/studio-hr/view-employee.blade.php`, `resources/views/owner/view-employee.blade.php`, `resources/views/owner/view-roles.blade.php`, and `resources/views/owner/view-permissions.blade.php` unchanged. The extractor fallback to cell text repairs their headers on its own.
+
+Acceptance: a click on Event Date orders the rows by real date. A click on Total Amount orders the rows by number. A click on Booking ID orders the rows by the reference string. The four broken-header tables order on the first click.
+
+Owned files: `public/assets/js/pages/custom-table.js`, `resources/views/client/view-my-bookings.blade.php`, `resources/views/client/view-booking-history.blade.php`, `resources/views/client/view-refunds.blade.php`, `resources/views/freelancer/view-bookings.blade.php`, `resources/views/freelancer/booking-history.blade.php`, `resources/views/studio-photographer/view-assigned-booking.blade.php`, `resources/views/owner/view-bookings.blade.php`, `tests/Feature/Ui/TableSortMarkupTest.php`.
+
+## File ownership
+
+<FileTree
+  id="b-file-tree"
+  title="Every file this plan touches, grouped by workstream"
+  title="Every file this plan touches, grouped by workstream"
+  entries={[
+    {
+      path: "app/Http/Controllers/Auth/AuthController.php",
+      change: "modified",
+      note: "W1. Remove the second session regenerate call.",
+    },
+    {
+      path: "app/Http/Controllers/Admin/AdminAuthController.php",
+      change: "modified",
+      note: "W1. Same single-regeneration fix.",
+    },
+    {
+      path: "app/Http/Middleware/NoStoreSessionResponses.php",
+      change: "added",
+      note: "W1. No-store headers on authenticated pages.",
+    },
+    {
+      path: "bootstrap/app.php",
+      change: "modified",
+      note: "W1. Register the middleware and the session routes file.",
+    },
+    {
+      path: "config/session.php",
+      change: "modified",
+      note: "W1. Database driver and session blocking.",
+    },
+    {
+      path: ".env.example",
+      change: "modified",
+      note: "W1. Session driver and block values.",
+    },
+    {
+      path: "database/migrations/2026_09_22_090000_create_sessions_table.php",
+      change: "added",
+      note: "W1. Sessions table.",
+    },
+    {
+      path: "tests/Feature/Auth/SessionTokenTest.php",
+      change: "added",
+      note: "W1. Token stability and no-store test.",
+    },
+    {
+      path: "app/Http/Controllers/Auth/SessionTokenController.php",
+      change: "added",
+      note: "W2. Return the live token.",
+    },
+    {
+      path: "routes/session.php",
+      change: "added",
+      note: "W2. GET /csrf-token.",
+    },
+    {
+      path: "public/assets/js/pages/session-token.js",
+      change: "added",
+      note: "W2. Live token read, refresh, one retry.",
+    },
+    {
+      path: "resources/views/layouts/partials/portal-base-scripts.blade.php",
+      change: "modified",
+      note: "W2. Load the token and email scripts.",
+    },
+    {
+      path: "resources/views/layouts/auth/app.blade.php",
+      change: "modified",
+      note: "W2. Load the same scripts on the auth pages.",
+    },
+    {
+      path: "resources/views/auth/login.blade.php",
+      change: "modified",
+      note: "W2. Request-time token and one retry.",
+    },
+    {
+      path: "resources/views/admin/auth/login.blade.php",
+      change: "modified",
+      note: "W2. Same.",
+    },
+    {
+      path: "tests/Feature/Auth/FirstAttemptLoginTest.php",
+      change: "modified",
+      note: "W2. Endpoint and script assertions.",
+    },
+    {
+      path: "database/migrations/2026_09_22_090100_add_gallery_approval_columns.php",
+      change: "added",
+      note: "W3. Approval columns on both gallery tables.",
+    },
+    {
+      path: "app/Models/StudioOwner/StudioOnlineGalleryModel.php",
+      change: "modified",
+      note: "W3. Approval fillable, casts, helpers.",
+    },
+    {
+      path: "app/Models/Freelancer/FreelanceOnlineGalleryModel.php",
+      change: "modified",
+      note: "W3. Same.",
+    },
+    {
+      path: "app/Http/Controllers/StudioPhotographer/OnlineGalleryController.php",
+      change: "modified",
+      note: "W3. Submit split and publish gate.",
+    },
+    {
+      path: "app/Http/Controllers/StudioHR/OnlineGalleryController.php",
+      change: "modified",
+      note: "W3. Same.",
+    },
+    {
+      path: "app/Http/Controllers/StudioOwner/OnlineGalleryController.php",
+      change: "modified",
+      note: "W3. Process, approve, reject.",
+    },
+    {
+      path: "app/Http/Controllers/Freelancer/OnlineGalleryController.php",
+      change: "modified",
+      note: "W3. Self-approve at upload.",
+    },
+    {
+      path: "app/Http/Requests/StudioOwner/ProcessGalleryApprovalRequest.php",
+      change: "added",
+      note: "W3. Action and reason rules.",
+    },
+    {
+      path: "routes/web.php",
+      change: "modified",
+      note: "W3. Submit, approve, reject routes.",
+    },
+    {
+      path: "tests/Feature/Gallery/PhotographerGalleryPublishTest.php",
+      change: "modified",
+      note: "W3. Stop asserting the buggy publish.",
+    },
+    {
+      path: "tests/Feature/Gallery/GalleryLifecycleTest.php",
+      change: "modified",
+      note: "W3. Approval columns in the schema.",
+    },
+    {
+      path: "tests/Feature/Gallery/GalleryVisibilityTest.php",
+      change: "modified",
+      note: "W3. Same.",
+    },
+    {
+      path: "tests/Feature/Gallery/OwnerCompletionGateTest.php",
+      change: "modified",
+      note: "W3. Same.",
+    },
+    {
+      path: "resources/views/studio-photographer/view-online-gallery.blade.php",
+      change: "modified",
+      note: "W4. Submit button and pending badge.",
+    },
+    {
+      path: "resources/views/studio-hr/view-online-gallery.blade.php",
+      change: "modified",
+      note: "W4. Same.",
+    },
+    {
+      path: "resources/views/owner/view-online-gallery.blade.php",
+      change: "modified",
+      note: "W4. Approve and Reject actions.",
+    },
+    {
+      path: "resources/views/client/view-online-gallery.blade.php",
+      change: "modified",
+      note: "W4. Confirm labels and copy.",
+    },
+    {
+      path: "app/Http/Controllers/Client/OnlineGalleryController.php",
+      change: "modified",
+      note: "W4. Approved or legacy rows only.",
+    },
+    {
+      path: "app/Models/StudioOwner/PermissionModel.php",
+      change: "modified",
+      note: "W5. Canonical string and normalizer.",
+    },
+    {
+      path: "app/Models/UserModel.php",
+      change: "modified",
+      note: "W5. Normalized permission match.",
+    },
+    {
+      path: "app/Http/Controllers/StudioOwner/PermissionController.php",
+      change: "modified",
+      note: "W5. Shared normalizer on save.",
+    },
+    {
+      path: "app/Http/Middleware/CheckPermissionMiddleware.php",
+      change: "modified",
+      note: "W5. Normalized compare.",
+    },
+    {
+      path: "resources/views/owner/view-permissions.blade.php",
+      change: "modified",
+      note: "W5. Send the canonical string.",
+    },
+    {
+      path: "database/migrations/2026_09_22_090200_normalize_permission_strings.php",
+      change: "added",
+      note: "W5. Repair and merge stored strings.",
+    },
+    {
+      path: "tests/Feature/Rbac/CrossPortalGalleryPermissionTest.php",
+      change: "modified",
+      note: "W5. Normalized identity cases.",
+    },
+    {
+      path: "app/Http/Middleware/EnforceStudioSubscriptionAccess.php",
+      change: "modified",
+      note: "W6. Exempt the role and permission routes.",
+    },
+    {
+      path: "app/Http/Controllers/StudioOwner/RoleController.php",
+      change: "modified",
+      note: "W6. Clear the permission cache after a sync.",
+    },
+    {
+      path: "resources/views/owner/view-roles.blade.php",
+      change: "modified",
+      note: "W6. Show the real save failure.",
+    },
+    {
+      path: "resources/views/layouts/owner/sidebar.blade.php",
+      change: "modified",
+      note: "W6. Repoint the dead role links.",
+    },
+    {
+      path: "tests/Feature/Permissions/UserRolesAssignmentTest.php",
+      change: "modified",
+      note: "W6. Cache clear cases.",
+    },
+    {
+      path: "tests/Feature/Permissions/RolePermissionSaveTest.php",
+      change: "added",
+      note: "W6. Role permission save test.",
+    },
+    {
+      path: "public/assets/js/pages/email-format.js",
+      change: "added",
+      note: "W7. One shared email check.",
+    },
+    {
+      path: "resources/views/client/booking-forms.blade.php",
+      change: "modified",
+      note: "W7. Shared check, keep the message.",
+    },
+    {
+      path: "resources/views/auth/register.blade.php",
+      change: "modified",
+      note: "W7. Shared check in the submit guard.",
+    },
+    {
+      path: "resources/views/studio-hr/create-employee.blade.php",
+      change: "modified",
+      note: "W7. Same.",
+    },
+    {
+      path: "resources/views/owner/create-employee.blade.php",
+      change: "modified",
+      note: "W7. Same.",
+    },
+    {
+      path: "resources/views/owner/create-studio-photographers.blade.php",
+      change: "modified",
+      note: "W7. Same.",
+    },
+    {
+      path: "tests/Feature/Client/BookingFormsPresentationTest.php",
+      change: "modified",
+      note: "W7. Script present, regex gone.",
+    },
+    {
+      path: "public/assets/js/pages/custom-table.js",
+      change: "modified",
+      note: "W8. Extractor, currency, comparator.",
+    },
+    {
+      path: "resources/views/client/view-my-bookings.blade.php",
+      change: "modified",
+      note: "W8. Sort markers on ID, date, amount.",
+    },
+    {
+      path: "resources/views/client/view-booking-history.blade.php",
+      change: "modified",
+      note: "W8. Same.",
+    },
+    {
+      path: "resources/views/client/view-refunds.blade.php",
+      change: "modified",
+      note: "W8. Same.",
+    },
+    {
+      path: "resources/views/freelancer/view-bookings.blade.php",
+      change: "modified",
+      note: "W8. Same.",
+    },
+    {
+      path: "resources/views/freelancer/booking-history.blade.php",
+      change: "modified",
+      note: "W8. Same.",
+    },
+    {
+      path: "resources/views/studio-photographer/view-assigned-booking.blade.php",
+      change: "modified",
+      note: "W8. Same.",
+    },
+    {
+      path: "resources/views/owner/view-bookings.blade.php",
+      change: "modified",
+      note: "W8. Same.",
+    },
+    {
+      path: "tests/Feature/Ui/TableSortMarkupTest.php",
+      change: "added",
+      note: "W8. Sorter and marker test.",
+    },
+  ]}
+/>
+
+<Table
+  id="b-ownership"
+  columns={["File", "Workstream", "Change", "Purpose"]}
+  rows={[
+    [
+      "app/Http/Controllers/Auth/AuthController.php",
+      "W1",
+      "modified",
+      "Remove the second session regenerate call.",
+    ],
+    [
+      "app/Http/Controllers/Admin/AdminAuthController.php",
+      "W1",
+      "modified",
+      "Same fix on the admin login.",
+    ],
+    [
+      "app/Http/Middleware/NoStoreSessionResponses.php",
+      "W1",
+      "added",
+      "No-store headers on authenticated HTML.",
+    ],
+    [
+      "bootstrap/app.php",
+      "W1",
+      "modified",
+      "Register the middleware and the session routes file.",
+    ],
+    [
+      "config/session.php",
+      "W1",
+      "modified",
+      "Database driver and session blocking.",
+    ],
+    [".env.example", "W1", "modified", "Session driver and block values."],
+    [
+      "database/migrations/2026_09_22_090000_create_sessions_table.php",
+      "W1",
+      "added",
+      "Sessions table for the database driver.",
+    ],
+    [
+      "tests/Feature/Auth/SessionTokenTest.php",
+      "W1",
+      "added",
+      "Token stability and no-store test.",
+    ],
+    [
+      "app/Http/Controllers/Auth/SessionTokenController.php",
+      "W2",
+      "added",
+      "Return the live token as JSON.",
+    ],
+    ["routes/session.php", "W2", "added", "GET /csrf-token."],
+    [
+      "public/assets/js/pages/session-token.js",
+      "W2",
+      "added",
+      "Live token read, refresh, one retry.",
+    ],
+    [
+      "resources/views/layouts/partials/portal-base-scripts.blade.php",
+      "W2",
+      "modified",
+      "Load the token and email scripts.",
+    ],
+    [
+      "resources/views/layouts/auth/app.blade.php",
+      "W2",
+      "modified",
+      "Load the same scripts on the auth pages.",
+    ],
+    [
+      "resources/views/auth/login.blade.php",
+      "W2",
+      "modified",
+      "Request-time token and one retry.",
+    ],
+    [
+      "resources/views/admin/auth/login.blade.php",
+      "W2",
+      "modified",
+      "Same fix on the admin login.",
+    ],
+    [
+      "tests/Feature/Auth/FirstAttemptLoginTest.php",
+      "W2",
+      "modified",
+      "Endpoint and script assertions.",
+    ],
+    [
+      "database/migrations/2026_09_22_090100_add_gallery_approval_columns.php",
+      "W3",
+      "added",
+      "Approval columns on both gallery tables.",
+    ],
+    [
+      "app/Models/StudioOwner/StudioOnlineGalleryModel.php",
+      "W3",
+      "modified",
+      "Approval fillable, casts, helpers.",
+    ],
+    [
+      "app/Models/Freelancer/FreelanceOnlineGalleryModel.php",
+      "W3",
+      "modified",
+      "Same model change for the freelancer table.",
+    ],
+    [
+      "app/Http/Controllers/StudioPhotographer/OnlineGalleryController.php",
+      "W3",
+      "modified",
+      "Submit split and publish gate.",
+    ],
+    [
+      "app/Http/Controllers/StudioHR/OnlineGalleryController.php",
+      "W3",
+      "modified",
+      "Same split for studio HR.",
+    ],
+    [
+      "app/Http/Controllers/StudioOwner/OnlineGalleryController.php",
+      "W3",
+      "modified",
+      "Process, approve, and reject actions.",
+    ],
+    [
+      "app/Http/Controllers/Freelancer/OnlineGalleryController.php",
+      "W3",
+      "modified",
+      "Self-approve at upload.",
+    ],
+    [
+      "app/Http/Requests/StudioOwner/ProcessGalleryApprovalRequest.php",
+      "W3",
+      "added",
+      "Action and rejection reason rules.",
+    ],
+    ["routes/web.php", "W3", "modified", "Submit, approve, and reject routes."],
+    [
+      "tests/Feature/Gallery/PhotographerGalleryPublishTest.php",
+      "W3",
+      "modified",
+      "Stop asserting the buggy publish.",
+    ],
+    [
+      "tests/Feature/Gallery/GalleryLifecycleTest.php",
+      "W3",
+      "modified",
+      "Approval columns in the test schema.",
+    ],
+    [
+      "tests/Feature/Gallery/GalleryVisibilityTest.php",
+      "W3",
+      "modified",
+      "Same schema change.",
+    ],
+    [
+      "tests/Feature/Gallery/OwnerCompletionGateTest.php",
+      "W3",
+      "modified",
+      "Same schema change.",
+    ],
+    [
+      "resources/views/studio-photographer/view-online-gallery.blade.php",
+      "W4",
+      "modified",
+      "Submit button and pending badge.",
+    ],
+    [
+      "resources/views/studio-hr/view-online-gallery.blade.php",
+      "W4",
+      "modified",
+      "Same change for studio HR.",
+    ],
+    [
+      "resources/views/owner/view-online-gallery.blade.php",
+      "W4",
+      "modified",
+      "Approve and Reject actions with a reason.",
+    ],
+    [
+      "resources/views/client/view-online-gallery.blade.php",
+      "W4",
+      "modified",
+      "Confirm the labels and the empty-state copy.",
+    ],
+    [
+      "app/Http/Controllers/Client/OnlineGalleryController.php",
+      "W4",
+      "modified",
+      "Approved rows and legacy rows only.",
+    ],
+    [
+      "app/Models/StudioOwner/PermissionModel.php",
+      "W5",
+      "modified",
+      "Canonical string and normalizer.",
+    ],
+    [
+      "app/Models/UserModel.php",
+      "W5",
+      "modified",
+      "Normalized permission match.",
+    ],
+    [
+      "app/Http/Controllers/StudioOwner/PermissionController.php",
+      "W5",
+      "modified",
+      "Shared normalizer on the save path.",
+    ],
+    [
+      "app/Http/Middleware/CheckPermissionMiddleware.php",
+      "W5",
+      "modified",
+      "Normalized compare.",
+    ],
+    [
+      "resources/views/owner/view-permissions.blade.php",
+      "W5",
+      "modified",
+      "Send the canonical string.",
+    ],
+    [
+      "database/migrations/2026_09_22_090200_normalize_permission_strings.php",
+      "W5",
+      "added",
+      "Repair and merge stored permission strings.",
+    ],
+    [
+      "tests/Feature/Rbac/CrossPortalGalleryPermissionTest.php",
+      "W5",
+      "modified",
+      "Normalized identity cases.",
+    ],
+    [
+      "app/Http/Middleware/EnforceStudioSubscriptionAccess.php",
+      "W6",
+      "modified",
+      "Exempt the role and permission routes.",
+    ],
+    [
+      "app/Http/Controllers/StudioOwner/RoleController.php",
+      "W6",
+      "modified",
+      "Clear the permission cache after a sync.",
+    ],
+    [
+      "resources/views/owner/view-roles.blade.php",
+      "W6",
+      "modified",
+      "Show the real save failure.",
+    ],
+    [
+      "resources/views/layouts/owner/sidebar.blade.php",
+      "W6",
+      "modified",
+      "Repoint the dead role links.",
+    ],
+    [
+      "tests/Feature/Permissions/UserRolesAssignmentTest.php",
+      "W6",
+      "modified",
+      "Cache clear cases.",
+    ],
+    [
+      "tests/Feature/Permissions/RolePermissionSaveTest.php",
+      "W6",
+      "added",
+      "Role permission save test.",
+    ],
+    [
+      "public/assets/js/pages/email-format.js",
+      "W7",
+      "added",
+      "One shared email check.",
+    ],
+    [
+      "resources/views/client/booking-forms.blade.php",
+      "W7",
+      "modified",
+      "Shared check and the same message.",
+    ],
+    [
+      "resources/views/auth/register.blade.php",
+      "W7",
+      "modified",
+      "Shared check in the submit guard.",
+    ],
+    [
+      "resources/views/studio-hr/create-employee.blade.php",
+      "W7",
+      "modified",
+      "Same guard change.",
+    ],
+    [
+      "resources/views/owner/create-employee.blade.php",
+      "W7",
+      "modified",
+      "Same guard change.",
+    ],
+    [
+      "resources/views/owner/create-studio-photographers.blade.php",
+      "W7",
+      "modified",
+      "Same guard change.",
+    ],
+    [
+      "tests/Feature/Client/BookingFormsPresentationTest.php",
+      "W7",
+      "modified",
+      "Script present and regex gone.",
+    ],
+    [
+      "public/assets/js/pages/custom-table.js",
+      "W8",
+      "modified",
+      "Extractor, currency parsing, comparator.",
+    ],
+    [
+      "resources/views/client/view-my-bookings.blade.php",
+      "W8",
+      "modified",
+      "Sort markers on the ID, date, and amount cells.",
+    ],
+    [
+      "resources/views/client/view-booking-history.blade.php",
+      "W8",
+      "modified",
+      "Same markers.",
+    ],
+    [
+      "resources/views/client/view-refunds.blade.php",
+      "W8",
+      "modified",
+      "Same markers.",
+    ],
+    [
+      "resources/views/freelancer/view-bookings.blade.php",
+      "W8",
+      "modified",
+      "Same markers.",
+    ],
+    [
+      "resources/views/freelancer/booking-history.blade.php",
+      "W8",
+      "modified",
+      "Same markers.",
+    ],
+    [
+      "resources/views/studio-photographer/view-assigned-booking.blade.php",
+      "W8",
+      "modified",
+      "Same markers.",
+    ],
+    [
+      "resources/views/owner/view-bookings.blade.php",
+      "W8",
+      "modified",
+      "Same markers.",
+    ],
+    [
+      "tests/Feature/Ui/TableSortMarkupTest.php",
+      "W8",
+      "added",
+      "Sorter and marker test.",
+    ],
+  ]}
+/>
+
+## Verification plan
+
+Commands:
+
+- `php artisan make:session-table` creates the sessions migration before the migrate step.
+- `php artisan migrate` creates the sessions table, adds the approval columns, and repairs the permission strings.
+- `php artisan config:clear` reloads the session configuration after the driver change.
+- `php artisan route:list --path=online-gallery` shows the submit, approve, and reject routes.
+- `php artisan route:list --path=csrf-token` shows the sync endpoint.
+- `php artisan test --compact` runs the full suite.
+- `npm run build` confirms that the asset build still passes. The portal loads page scripts from `public/assets/js/pages/`, so this command is a regression check on the existing build only.
+
+Tests to add:
+
+- `tests/Feature/Auth/SessionTokenTest.php` covers token stability after login and the no-store headers.
+- `tests/Feature/Permissions/RolePermissionSaveTest.php` covers the role permission save and the cache clear.
+- `tests/Feature/Ui/TableSortMarkupTest.php` covers the sorter source and the sort markers.
+
+Tests to change:
+
+- `tests/Feature/Gallery/PhotographerGalleryPublishTest.php` asserts the buggy behavior today. It must flip to a refusal before approval.
+- `tests/Feature/Gallery/GalleryLifecycleTest.php`, `tests/Feature/Gallery/GalleryVisibilityTest.php`, and `tests/Feature/Gallery/OwnerCompletionGateTest.php` need the approval columns in their schemas.
+- `tests/Feature/Auth/FirstAttemptLoginTest.php` needs the endpoint and script checks.
+- `tests/Feature/Client/BookingFormsPresentationTest.php` needs the shared script checks.
+- `tests/Feature/Rbac/CrossPortalGalleryPermissionTest.php` and `tests/Feature/Permissions/UserRolesAssignmentTest.php` need the normalized identity and cache cases.
+
+Test limit: Laravel disables CSRF while the test suite runs, so no test can produce a real 419 response. The suite covers token stability, the endpoint, and the script wiring. Manual smoke step 2 covers the retry path.
+
+Manual smoke:
+
+1. Sign in as a studio owner. The dashboard opens on the first attempt, with no second try.
+2. Sign in, open a second tab on the same account, then complete a booking from the client account. No 419 message appears, and the first click works.
+3. Cancel a booking as the client. No token mismatch error appears.
+4. As the owner, open List of Roles, edit a role, tick the two gallery permissions, and press Save Changes. The success message shows the saved state. Reload the page and the ticks stay.
+5. Type `maria.santos+studio@gmail.com` in the register form, in the client booking form, and in the employee forms. No false email error appears.
+6. As the photographer, open Online Gallery and press Submit for approval. The badge shows Pending Owner Review. As the owner, press Approve, then publish as the photographer.
+7. As the owner, press Reject with a reason. The photographer sees the reason and can submit again.
+8. Click Booking ID, Event Date, and Total Amount on the client bookings table, the refunds table, and the owner bookings table. The rows order by number, by date, and by amount.
+9. Click a header that had a broken key, such as Permissions on the role table. The rows order on the first click.
+
+## Acceptance checklist
+
+<Checklist
+  id="b-acceptance"
+  items={[
+    {
+      id: "c1",
+      label:
+        "An owner assigns or updates employee permissions and the change holds after a reload.",
+    },
+    {
+      id: "c2",
+      label:
+        "A valid email address passes on the first attempt on the five screens that ask for one.",
+    },
+    {
+      id: "c3",
+      label:
+        "A photographer cannot publish a studio gallery before the owner approves it.",
+    },
+    {
+      id: "c4",
+      label:
+        "Completing or cancelling a booking never returns a token mismatch error.",
+    },
+    {
+      id: "c5",
+      label:
+        "Booking ID, date, and amount columns order by real value on the first click.",
+    },
+    {
+      id: "c6",
+      label:
+        "The four broken-header tables order on the first click with no view edit.",
+    },
+    {
+      id: "c7",
+      label: "Login succeeds on the first attempt.",
+    },
+    {
+      id: "c8",
+      label:
+        "A navigation request succeeds on the first click after the session syncs.",
+    },
+    {
+      id: "c9",
+      label:
+        "One CSRF token lives for the session, and only sign-out drops it.",
+    },
+    {
+      id: "c10",
+      label:
+        "The approval state machine on both gallery tables matches the six rules above.",
+    },
+    {
+      id: "c11",
+      label:
+        "The permission string format is canonical on the save path and on the match path.",
+    },
+    {
+      id: "c12",
+      label: "The repair migration leaves no duplicate permission string.",
+    },
+    {
+      id: "c13",
+      label: "The eight workstreams stay inside their owned files.",
+    },
+    {
+      id: "c14",
+      label: "The full suite passes with the new and changed tests.",
+    },
+  ]}
+/>
+
+### Open Questions
+
+<QuestionForm
+  id="b-questions"
+  questions={[
+    {
+      id: "q-submit-right",
+      title: "Who may submit a studio gallery for owner approval?",
+      mode: "single",
+      options: [
+        {
+          id: "opt-update-right",
+          label:
+            "Any photographer or studio HR user who holds the gallery update permission may submit. Publish stays with the owner and with an approved gallery.",
+          recommended: true,
+        },
+        {
+          id: "opt-new-permission",
+          label:
+            "Only a new dedicated submit permission may submit, and the seeder grants it to the studio photographer role.",
+        },
+      ],
+    },
+    {
+      id: "q-session-store",
+      title:
+        "May the session store move to the database with session blocking in this release?",
+      mode: "single",
+      options: [
+        {
+          id: "opt-database",
+          label:
+            "Yes. Ship the database driver, the sessions table, and session blocking with the token fix.",
+          recommended: true,
+        },
+        {
+          id: "opt-file",
+          label: "No. Keep the file driver and ship only the token changes.",
+        },
+      ],
+    },
+    {
+      id: "q-permission-repair",
+      title:
+        "May the repair migration rewrite stored permission strings and merge duplicates?",
+      mode: "single",
+      options: [
+        {
+          id: "opt-repair",
+          label:
+            "Yes. Rewrite the stored strings, merge the duplicates, and log every merge.",
+          recommended: true,
+        },
+        {
+          id: "opt-read-time",
+          label:
+            "No. Normalize at read time only and leave the stored rows untouched.",
+        },
+      ],
+    },
+    {
+      id: "q-legacy-rows",
+      title: "Should legacy published studio galleries get an approval row?",
+      mode: "single",
+      options: [
+        {
+          id: "opt-backfill",
+          label:
+            "Yes. The repair migration writes an approved row for a published studio gallery that has none, with the owner as the approver, and logs the count.",
+          recommended: true,
+        },
+        {
+          id: "opt-leave",
+          label:
+            "No. Leave legacy published rows with a null approval and rely on the client list filter.",
+        },
+      ],
+    },
+  ]}
+/>
+---
+Live plan: /plans/plan-0092fbf9930f4722
