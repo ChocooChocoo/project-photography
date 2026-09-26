@@ -193,7 +193,7 @@
 
                                                 <div class="col-md-6 mb-3">
                                                     <label class="form-label">Status</label>
-                                                    <select id="status" name="status" class="form-select" required>
+                                                    <select id="budget_status" name="status" class="form-select" required>
                                                         <option value="active">Active</option>
                                                         <option value="inactive">Inactive</option>
                                                     </select>
@@ -558,7 +558,7 @@
                         preferred_budget: $('#preferred_budget').val(),
                         category_id: $('#category_id').val(),
                         budget_type: $('#budget_type').val(),
-                        status: $('#status').val()
+                        status: $('#budget_status').val()
                     },
                     beforeSend: function() {
                         $('#saveBudgetBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Saving...');

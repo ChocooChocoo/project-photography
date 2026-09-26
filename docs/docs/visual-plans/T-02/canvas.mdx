@@ -1,0 +1,81 @@
+{/* Canvas source. Open https://plan.agent-native.com/plans/plan-32b8cbf281364f7a */}
+
+<DesignBoard mode="wireframe" version={1}>
+  <Section id="sec-owner" title="Owner booking actions" subtitle="The table, its pager, and the status modal">
+    <Artboard id="ab-table" label="Bookings table - five rows, matching footer" surface="browser" x={0} y={0} height={1000} order={1}>
+      <Screen surface="browser" frame="hide" html={"<div style=\"display:flex;flex-direction:column;height:100%;box-sizing:border-box\">\n<div style=\"display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1.4px solid var(--wf-line);width:100%\">\n<strong>Platinum Studio</strong><span class=\"wf-pill\">Owner</span><div style=\"flex:1\"></div>\n<small class=\"wf-muted\">Live refresh every 25s</small><span data-icon=\"bell\" aria-label=\"Notifications\"></span></div>\n<div style=\"display:flex;flex:1;min-height:0\">\n<div style=\"width:165px;padding:14px;display:flex;flex-direction:column;gap:6px;border-right:1.4px solid var(--wf-line)\">\n<small class=\"wf-muted\">MENU</small>\n<div style=\"padding:6px 8px\">Dashboard</div>\n<div style=\"padding:6px 8px;background:var(--wf-accent-soft);border-radius:6px\"><strong>Bookings</strong></div>\n<div style=\"padding:6px 8px\">Studios</div><div style=\"padding:6px 8px\">Employees</div><div style=\"padding:6px 8px\">Roles</div><div style=\"padding:6px 8px\">Finance</div></div>\n<div style=\"flex:1;min-width:0;padding:16px;display:flex;flex-direction:column;gap:12px\">\n<div style=\"display:flex;align-items:center;gap:12px\"><h2>Bookings</h2><div style=\"flex:1\"></div><input value=\"Search bookings\" style=\"max-width:170px\" /></div>\n<div class=\"wf-card\" style=\"padding:0;display:flex;flex-direction:column\">\n<div class=\"wf-muted\" style=\"display:flex;gap:8px;padding:10px 12px;border-bottom:1.4px solid var(--wf-line);font-size:11px\"><span style=\"flex:2\">BOOKING</span><span style=\"flex:2\">CLIENT</span><span style=\"flex:2\">EVENT</span><span style=\"flex:2\">STATUS</span><span style=\"flex:3\">ACTION</span></div>\n<div style=\"display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1.4px solid var(--wf-line);font-size:12px\"><span style=\"flex:2\">BK-2026-0148</span><span style=\"flex:2\">A. Reyes</span><span style=\"flex:2\">Sep 28</span><span style=\"flex:2\"><span class=\"wf-pill\">Confirmed</span></span><span style=\"flex:3\"><button class=\"primary\" style=\"font-size:11px;padding:4px 8px\">Assign Photographer</button></span></div>\n<div style=\"display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1.4px solid var(--wf-line);font-size:12px\"><span style=\"flex:2\">BK-2026-0147</span><span style=\"flex:2\">J. Santos</span><span style=\"flex:2\">Sep 30</span><span style=\"flex:2\"><span class=\"wf-pill\">In progress</span></span><span style=\"flex:3\"><span class=\"wf-pill\">Declined</span> <button class=\"primary\" style=\"font-size:11px;padding:4px 8px\">Assign</button></span></div>\n<div style=\"display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1.4px solid var(--wf-line);font-size:12px\"><span style=\"flex:2\">BK-2026-0145</span><span style=\"flex:2\">M. Cruz</span><span style=\"flex:2\">Oct 02</span><span style=\"flex:2\"><span class=\"wf-pill\">In progress</span></span><span style=\"flex:3\"><small class=\"wf-muted\">Maximum photographers assigned</small></span></div>\n<div style=\"display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1.4px solid var(--wf-line);font-size:12px\"><span style=\"flex:2\">BK-2026-0143</span><span style=\"flex:2\">L. Bautista</span><span style=\"flex:2\">Oct 05</span><span style=\"flex:2\"><span class=\"wf-pill\">Pending</span></span><span style=\"flex:3\"><button class=\"primary\" style=\"font-size:11px;padding:4px 8px\">Assign</button></span></div>\n<div style=\"display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1.4px solid var(--wf-line);font-size:12px\"><span style=\"flex:2\">BK-2026-0141</span><span style=\"flex:2\">R. Domingo</span><span style=\"flex:2\">Oct 09</span><span style=\"flex:2\"><span class=\"wf-pill\">Confirmed</span></span><span style=\"flex:3\"><button class=\"primary\" style=\"font-size:11px;padding:4px 8px\">Assign</button></span></div>\n<div style=\"display:flex;align-items:center;gap:8px;padding:10px 12px\"><small class=\"wf-muted\">Showing 1 to 5 of 24 bookings</small><div style=\"flex:1\"></div><small class=\"wf-muted\">5 per page</small><span class=\"wf-pill\">Prev</span><span class=\"wf-pill accent\">1</span><span class=\"wf-pill\">2</span><span class=\"wf-pill\">Next</span></div>\n</div></div></div></div>"} />
+    </Artboard>
+
+    <Artboard id="ab-status" label="Update Booking Status - no transition available" surface="panel" x={1150} y={0} height={700} order={2}>
+      <Screen surface="panel" frame="hide" html={"<div style=\"display:flex;flex-direction:column;gap:12px;padding:16px;height:100%;box-sizing:border-box\">\n<div style=\"display:flex;align-items:center\"><h3>Update Booking Status</h3><div style=\"flex:1\"></div><span data-icon=\"x\" aria-label=\"Close\"></span></div>\n<div class=\"wf-card\" style=\"display:flex;flex-direction:column;gap:4px\"><small class=\"wf-muted\">BOOKING</small><strong>BK-2026-0146 &middot; K. Villanueva</strong><small class=\"wf-muted\">Event on Oct 18, 2026</small></div>\n<label>New status<select disabled><option>Select Status</option></select></label>\n<div class=\"wf-box\" style=\"border-left:4px solid var(--wf-warn)\"><strong>No status change is available.</strong><div><small class=\"wf-muted\">This booking is cancelled. A cancelled booking keeps its status.</small></div></div>\n<div style=\"flex:1\"></div>\n<div style=\"display:flex;gap:8px;justify-content:flex-end\"><button>Close</button><button class=\"primary\" disabled style=\"opacity:0.55\">Yes, update status</button></div></div>"} />
+    </Artboard>
+
+  </Section>
+
+  <Section id="sec-client" title="Client and notification states" subtitle="Refund recovery, notification routing, and the login field">
+    <Artboard id="ab-recovery" label="Cancellation recovery - deadline not set" surface="panel" x={0} y={1500} height={640} order={3}>
+      <Screen surface="panel" frame="hide" html={"<div style=\"display:flex;flex-direction:column;gap:12px;padding:16px;height:100%;box-sizing:border-box\">\n<h3>Cancellation Recovery</h3>\n<div class=\"wf-card\" style=\"display:flex;flex-direction:column;gap:4px\"><small class=\"wf-muted\">BOOKING</small><strong>BK-2026-0151 &middot; L. Bautista</strong><small class=\"wf-muted\">Recovery status: awaiting client</small></div>\n<div class=\"wf-box\" style=\"display:flex;align-items:center;gap:10px\"><span data-icon=\"calendar\" aria-label=\"Deadline\"></span><div style=\"flex:1\"><strong>Recovery deadline</strong><div><small class=\"wf-muted\">Not set</small></div></div><span class=\"wf-pill\">Not set</span></div>\n<div class=\"wf-box\"><strong>Refund queue</strong><div style=\"display:flex;align-items:center;gap:10px;margin-top:8px\"><span style=\"flex:1\">Refund of PHP 12,000 pending</span><span class=\"wf-pill\">Queued</span></div></div>\n<div style=\"flex:1\"></div><button class=\"primary\">Queue refund</button></div>"} />
+    </Artboard>
+
+    <Artboard id="ab-notify" label="Notification dropdown - each row opens its record" surface="popover" x={900} y={1500} height={640} order={4}>
+      <Screen surface="popover" frame="hide" html={"<div style=\"display:flex;flex-direction:column;height:100%;box-sizing:border-box\">\n<div style=\"display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1.4px solid var(--wf-line)\"><strong>Notifications</strong><div style=\"flex:1\"></div><small class=\"wf-muted\">Mark all read</small></div>\n<div style=\"display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-bottom:1.4px solid var(--wf-line)\">\n<div style=\"width:30px;height:30px;border-radius:999px;background:var(--wf-accent-soft)\"></div>\n<div style=\"flex:1\"><strong>Booking received!</strong><div><small class=\"wf-muted\">A. Reyes requested a studio booking.</small></div><small class=\"wf-muted\">Opens BK-2026-0148</small></div><span data-icon=\"chevronRight\" aria-label=\"Open\"></span></div>\n<div style=\"display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-bottom:1.4px solid var(--wf-line)\">\n<div style=\"width:30px;height:30px;border-radius:999px;background:var(--wf-accent-soft)\"></div>\n<div style=\"flex:1\"><strong>New booking assigned</strong><div><small class=\"wf-muted\">You were assigned to BK-2026-0145.</small></div><small class=\"wf-muted\">Opens assigned bookings</small></div><span data-icon=\"chevronRight\" aria-label=\"Open\"></span></div>\n<div style=\"display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-bottom:1.4px solid var(--wf-line)\">\n<div style=\"width:30px;height:30px;border-radius:999px;background:var(--wf-accent-soft)\"></div>\n<div style=\"flex:1\"><strong>Gallery approval requested</strong><div><small class=\"wf-muted\">K. Villanueva submitted a gallery.</small></div><small class=\"wf-muted\">Opens the online gallery</small></div><span data-icon=\"chevronRight\" aria-label=\"Open\"></span></div>\n<div style=\"display:flex;align-items:flex-start;gap:10px;padding:11px 14px\">\n<div style=\"width:30px;height:30px;border-radius:999px;background:var(--wf-accent-soft)\"></div>\n<div style=\"flex:1\"><strong>Payment received</strong><div><small class=\"wf-muted\">PHP 12,000 for BK-2026-0141.</small></div><small class=\"wf-muted\">Opens BK-2026-0141</small></div><span data-icon=\"chevronRight\" aria-label=\"Open\"></span></div>\n<div style=\"flex:1\"></div>\n<div style=\"padding:10px 14px;border-top:1.4px solid var(--wf-line)\"><small class=\"wf-muted\">View all notifications</small></div></div>"} />
+    </Artboard>
+
+    <Artboard id="ab-login" label="Sign in - no email message while typing" surface="browser" x={2000} y={1500} height={760} order={5}>
+      <Screen surface="browser" frame="hide" html={"<div style=\"display:flex;flex-direction:column;height:100%;box-sizing:border-box\">\n<div style=\"display:flex;align-items:center;padding:12px 16px;border-bottom:1.4px solid var(--wf-line);width:100%\"><strong>Platinum Studio</strong></div>\n<div style=\"flex:1;display:flex;align-items:center;justify-content:center;padding:24px\">\n<div style=\"width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px\">\n<h2>Sign in</h2><p class=\"wf-muted\">Use the email address on your account.</p>\n<label>Email address<input value=\"owner@platinum.studio\" /></label>\n<label>Password<input value=\"&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;\" /></label>\n<label style=\"display:flex;align-items:center;gap:8px\"><input type=\"checkbox\" checked /> Remember me</label>\n<button class=\"primary\">Sign in</button><small class=\"wf-muted\">Forgot your password?</small></div></div></div>"} />
+    </Artboard>
+
+  </Section>
+
+<Annotation
+  id="an-table"
+  title="Rows and footer must agree"
+  targetId="ab-table"
+  placement="bottom"
+  text={
+    "The 25-second live refresh appends new bookings to this table without re-paginating it, so more than five rows render while the footer still counts five. The table must re-read its rows and re-render the current page slice after every merge."
+  }
+/>
+
+<Annotation
+  id="an-table2"
+  title="Assignment stays available"
+  targetId="ab-table"
+  placement="top"
+  text={
+    "Accepting an assignment moves the booking to In progress. The Assign Photographer action must stay visible while a photographer slot is free and the booking is not completed or cancelled, so a declined assignment can be replaced."
+  }
+/>
+
+<Annotation
+  id="an-status"
+  title="Name the real reason"
+  targetId="ab-status"
+  placement="right"
+  text={
+    "The available statuses list is empty for a cancelled or completed booking, so the select holds only its placeholder and the confirm action can never succeed. Disable the action and state the reason instead of the booking-status prompt."
+  }
+/>
+
+<Annotation
+  id="an-recovery"
+  title="Recovery without a deadline"
+  targetId="ab-recovery"
+  placement="right"
+  text={
+    "Client cancellation writes no deadline, and both recovery views call format on it. Render a not-set state and write the deadline where it is known."
+  }
+/>
+
+<Annotation
+  id="an-notify"
+  title="Notification rows open their record"
+  targetId="ab-notify"
+  placement="bottom"
+  text={
+    "Each notification already stores a relative route in its data payload. Render that target on the row and navigate to it after the mark-as-read call returns."
+  }
+/>
+
+  <Annotation id="an-login" title="No email message while typing" targetId="ab-login" placement="top-right" text={"The login input handler calls show on the static invalid-feedback sibling on every keystroke, so the valid-email message appears before any validation runs."} />
+</DesignBoard>

@@ -375,6 +375,7 @@ class BookingCancellationRecoveryService
                 'booking_id' => $booking->id,
                 'studio_id' => $booking->booking_type === 'studio' ? $booking->provider_id : null,
                 'status' => self::STATUS_REFUND_PENDING,
+                'deadline' => $this->deadline($booking),
                 'resolved_at' => now(),
                 'outcome_reason' => $reason,
             ]);

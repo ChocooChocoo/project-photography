@@ -217,6 +217,10 @@
                         </select>
                     </div>
 
+                    <div class="alert alert-danger d-none" id="statusNotAvailableAlert">
+                        <p class="mb-0 small" id="statusNotAvailableMessage"></p>
+                    </div>
+
                     <div class="mb-3 d-none" id="cancellationReasonGroup">
                         <label for="cancellationReason" class="form-label fw-semibold">Cancellation Reason <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="cancellationReason" rows="3" placeholder="Please provide the reason for cancellation..."></textarea>
@@ -351,8 +355,10 @@
             }
 
             function openUpdateStatusModal(bookingId, data) {
+                currentBookingId = bookingId;
                 const booking = data.booking;
                 const availableStatuses = data.available_statuses || {};
+                const hasAvailableStatuses = Object.keys(availableStatuses).length > 0;
                 const canMarkCompleted = data.can_mark_completed || false;
                 const completionBlockers = data.completion_blockers || [];
                 const completionBlockReason = data.completion_block_reason || 'This booking does not yet meet the completion requirements.';
@@ -385,6 +391,14 @@
                 $('#cancellationReason').val('');
                 $('#paymentWarningMessage').text(completionBlockers.length > 0 ? completionBlockers.join(' ') : completionBlockReason);
                 
+                // A terminal booking has no available statuses, so the update can never succeed.
+                const noStatusReason = booking.status === 'cancelled'
+                    ? 'This booking is cancelled. A cancelled booking keeps its status.'
+                    : `This booking is ${String(booking.status || 'closed').replace('_', ' ')}. Its status cannot be changed.`;
+                $('#statusNotAvailableMessage').text(noStatusReason);
+                $('#statusNotAvailableAlert').toggleClass('d-none', hasAvailableStatuses);
+                $('#confirmStatusUpdate').prop('disabled', !hasAvailableStatuses);
+                
                 // Handle status change
                 $statusSelect.off('change').on('change', function() {
                     const selectedStatus = $(this).val();
@@ -407,6 +421,20 @@
                 setTimeout(() => {
                     updateStatusModal.show();
                 }, 300);
+            }
+
+            // Refetch the booking details so the status modal is not stale.
+            function refreshStatusModalData(bookingId) {
+                $.ajax({
+                    url: '{{ route("owner.booking.details", ":id") }}'.replace(':id', bookingId),
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            currentBookingData = response;
+                            openUpdateStatusModal(bookingId, response);
+                        }
+                    }
+                });
             }
 
             // Update Status button click handler
@@ -462,7 +490,7 @@
                             data: {
                                 status: status,
                                 cancellation_reason: cancellationReason,
-                                _token: '{{ csrf_token() }}'
+                                _token: $('meta[name="csrf-token"]').attr('content')
                             },
                             beforeSend: function() {
                                 $('#confirmStatusUpdate').prop('disabled', true).html('<span class="loading-spinner"></span> Updating...');
@@ -513,6 +541,8 @@
                                     title: 'Error',
                                     text: message,
                                     confirmButtonColor: '#3475db'
+                                }).then(() => {
+                                    refreshStatusModalData(currentBookingId);
                                 });
                             },
                             complete: function() {
@@ -959,7 +989,7 @@
                                                 Currently assigned: <span class="fw-medium">${data.current_assigned_count}</span>
                                             </small>
                                         </div>
-                                        ${!['in_progress', 'completed'].includes(booking.status) && data.current_assigned_count < data.max_photographers ? `
+                                        ${!['completed', 'cancelled'].includes(booking.status) && data.current_assigned_count < data.max_photographers ? `
                                             <button class="btn btn-primary btn-sm" id="assignPhotographerBtn">
                                                 <i data-lucide="user-plus" class="me-1"></i> Assign Photographer
                                             </button>
@@ -1012,7 +1042,7 @@
                             url: '{{ route("owner.booking.complete", ":id") }}'.replace(':id', bookingId),
                             type: 'PUT',
                             data: {
-                                _token: '{{ csrf_token() }}'
+                                _token: $('meta[name="csrf-token"]').attr('content')
                             },
                             beforeSend: function() {
                                 Swal.fire({
@@ -1399,7 +1429,7 @@
                     data: {
                         photographer_ids: photographerIds,
                         assignment_notes: notes,
-                        _token: '{{ csrf_token() }}'
+                        _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     beforeSend: function() {
                         $('#confirmAssignment').prop('disabled', true).html('<span class="loading-spinner"></span> Assigning...');
@@ -1628,6 +1658,11 @@
                             row.remove();
                         }
                     });
+
+                    // Re-sync the table so the pager and footer match the rows rendered.
+                    if (window.PlatinumTable && typeof window.PlatinumTable.refresh === 'function') {
+                        window.PlatinumTable.refresh(BOOKINGS_TABLE);
+                    }
                 }).always(function() {
                     pollInFlight = false;
                 });

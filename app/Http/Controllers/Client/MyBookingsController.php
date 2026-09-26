@@ -294,7 +294,7 @@ class MyBookingsController extends Controller
                 ->with('assignedPhotographers.photographer')
                 ->firstOrFail();
 
-            if (! in_array($booking->status, [BookingModel::STATUS_PENDING, BookingModel::STATUS_CONFIRMED], true)) {
+            if (! in_array($booking->status, [BookingModel::STATUS_PENDING, BookingModel::STATUS_CONFIRMED, BookingModel::STATUS_IN_PROGRESS], true)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This booking can no longer be cancelled.',

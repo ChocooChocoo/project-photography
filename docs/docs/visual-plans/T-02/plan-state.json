@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "planId": "plan-32b8cbf281364f7a",
+  "markdownBlockIds": [
+    "b-objective",
+    "b-audit",
+    "b-causes",
+    "b-workstreams",
+    "b-portal",
+    "b-notify",
+    "b-verify",
+    "b-q-head"
+  ],
+  "markdownBlocks": [
+    {
+      "id": "b-objective",
+      "hash": "92a5c8c78e4514c1"
+    },
+    {
+      "id": "b-audit",
+      "hash": "24965425887680c1"
+    },
+    {
+      "id": "b-causes",
+      "hash": "21ee3c1dc27f9ea3"
+    },
+    {
+      "id": "b-workstreams",
+      "hash": "07c8acc91d6fc02b"
+    },
+    {
+      "id": "b-portal",
+      "hash": "44ad9e0b8a2a2e9a"
+    },
+    {
+      "id": "b-notify",
+      "hash": "572881c81fc9f32b"
+    },
+    {
+      "id": "b-verify",
+      "hash": "bd49ad12e93d4307"
+    },
+    {
+      "id": "b-q-head",
+      "hash": "6019b6cc8f801075"
+    }
+  ],
+  "canvas": {
+    "zoom": 0.62,
+    "pan": {
+      "x": 70,
+      "y": 50
+    }
+  }
+}

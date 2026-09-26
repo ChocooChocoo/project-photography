@@ -42,6 +42,12 @@ class NotificationController extends Controller
                 ->paginate(10);
 
             if ($request->wantsJson()) {
+                $notifications->through(function ($notification) {
+                    return array_merge($notification->toArray(), [
+                        'route' => $this->storedRoute($notification),
+                    ]);
+                });
+
                 return response()->json([
                     'success' => true,
                     'notifications' => $notifications
@@ -86,6 +92,7 @@ class NotificationController extends Controller
                     'title' => $notification->title,
                     'message' => $notification->message,
                     'data' => $notification->data,
+                    'route' => $this->storedRoute($notification),
                     'icon' => $notification->icon,
                     'color' => $notification->color,
                     'read_at' => $notification->read_at,
@@ -226,5 +233,21 @@ class NotificationController extends Controller
                 'message' => 'Failed to delete notification: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get the relative route stored with the notification, or null when absent.
+     */
+    private function storedRoute(NotificationModel $notification): ?string
+    {
+        $data = $notification->data;
+
+        if (! is_array($data)) {
+            return null;
+        }
+
+        $route = $data['route'] ?? null;
+
+        return is_string($route) && $route !== '' ? $route : null;
     }
 }

@@ -5,8 +5,10 @@ namespace App\Traits;
 use App\Mail\SubscriptionLifecycleMail;
 use App\Models\NotificationModel;
 use App\Models\StudioPlanModel;
+use App\Models\UserModel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
 
 trait Notifiable
 {
@@ -25,6 +27,20 @@ trait Notifiable
     public function createNotification($userId, $type, $title, $message, $data = null, $icon = null, $color = null)
     {
         try {
+            $data = is_array($data) ? $data : [];
+
+            if (empty($data['route'])) {
+                $fallback = $this->fallbackRouteForType($type, $userId);
+
+                if ($fallback !== null) {
+                    $data['route'] = $fallback;
+                }
+            }
+
+            if ($data === []) {
+                $data = null;
+            }
+
             $notification = NotificationModel::create([
                 'user_id' => $userId,
                 'type' => $type,
@@ -46,6 +62,44 @@ trait Notifiable
             \Log::error('Failed to create notification: ' . $e->getMessage());
             return null;
         }
+    }
+
+    /**
+     * Fallback route when a notification type has no stored route.
+     *
+     * The value is a route name, or a role-to-route map when the recipient
+     * can belong to more than one portal. An unknown type returns null so
+     * the row renders with no target instead of a broken link.
+     */
+    private function fallbackRouteForType(string $type, ?int $userId): ?string
+    {
+        $routes = [
+            'revision_requested' => [
+                'owner' => 'owner.booking.index',
+                'studio-photographer' => 'assigned.bookings',
+                'freelancer' => 'freelancer.booking.index',
+            ],
+            'review_received' => [
+                'owner' => 'owner.profile',
+                'studio-photographer' => 'studio-photographer.profile',
+                'freelancer' => 'freelancer.profile',
+            ],
+            'budget_exceeded' => 'client.budget.index',
+        ];
+
+        if (! array_key_exists($type, $routes)) {
+            return null;
+        }
+
+        $candidate = $routes[$type];
+
+        if (is_array($candidate)) {
+            $role = $userId ? UserModel::find($userId)?->role : null;
+
+            $candidate = $candidate[$role] ?? reset($candidate);
+        }
+
+        return Route::has($candidate) ? route($candidate, [], false) : null;
     }
 
     /**

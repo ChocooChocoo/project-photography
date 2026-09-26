@@ -26,6 +26,14 @@ class BookingModel extends Model
     public const STATUS_CANCELLED = 'cancelled';
 
     /**
+     * Assignment statuses that still hold a photographer slot on a booking.
+     * A cancelled or completed assignment does not consume a slot.
+     *
+     * @var array<int, string>
+     */
+    public const ACTIVE_ASSIGNMENT_STATUSES = ['assigned', 'confirmed', 'on_site', 'in_progress'];
+
+    /**
      * Payment Status Constants
      */
     public const PAYMENT_PENDING = 'pending';
@@ -439,7 +447,20 @@ class BookingModel extends Model
     }
 
     /**
-     * Check if required gallery delivery is satisfied.
+     * Check if the booking has an online gallery the client can see.
+     */
+    public function onlineGalleryIsPublished(): bool
+    {
+        $gallery = $this->relationLoaded('studioOnlineGallery')
+            ? $this->studioOnlineGallery
+            : $this->studioOnlineGallery()->first();
+
+        return $gallery !== null && $gallery->isPublished();
+    }
+
+    /**
+     * Check if required gallery delivery is satisfied. The gallery must hold at
+     * least one image and be published, because a draft is invisible to the client.
      */
     public function isGalleryReadyForCompletion(): bool
     {
@@ -447,7 +468,7 @@ class BookingModel extends Model
             return true;
         }
 
-        return $this->hasUploadedGalleryContent();
+        return $this->hasUploadedGalleryContent() && $this->onlineGalleryIsPublished();
     }
 
     /**
@@ -455,11 +476,31 @@ class BookingModel extends Model
      */
     public function getGalleryCompletionBlockReason(): ?string
     {
-        if (! $this->requiresOnlineGalleryUpload() || $this->hasUploadedGalleryContent()) {
+        if (! $this->requiresOnlineGalleryUpload()) {
             return null;
         }
 
-        return 'Cannot mark as completed until at least one image is uploaded to the client\'s online gallery.';
+        if (! $this->hasUploadedGalleryContent()) {
+            return 'Cannot mark as completed until at least one image is uploaded to the client\'s online gallery.';
+        }
+
+        if (! $this->onlineGalleryIsPublished()) {
+            return 'Cannot mark as completed until the client\'s online gallery is published.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Deadline by which a cancellation recovery must be resolved: the earlier of
+     * one day from now and two hours before the event starts.
+     */
+    public function cancellationRecoveryDeadline(): \Carbon\Carbon
+    {
+        $now = \Carbon\Carbon::now('Asia/Manila');
+        $eventStart = \Carbon\Carbon::parse($this->event_date->format('Y-m-d').' '.$this->start_time, 'Asia/Manila');
+
+        return $now->copy()->addDay()->min($eventStart->subHours(2));
     }
 
     /**

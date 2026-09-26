@@ -43,6 +43,7 @@ FROM tbl_permissions p
 JOIN (
   SELECT d.id,
     CASE
+      WHEN full_norm = '' THEN ''
       WHEN segr <> '' AND sega <> '' THEN
         CONCAT(
           CASE
@@ -57,8 +58,8 @@ JOIN (
           COALESCE(NULLIF(segp, ''), 'owner'),
           '.',
           SUBSTRING(full_norm, CHAR_LENGTH(SUBSTRING_INDEX(full_norm, '.', 1)) + 2))
-      WHEN SUBSTRING_INDEX(full_norm, '.', 1) IN ('owner','studio-hr','studio-finance','studio-photographer') THEN full_norm
-      ELSE CONCAT('portal.', full_norm)
+      WHEN SUBSTRING_INDEX(full_norm, '.', 1) IN ('owner','studio-hr','studio-finance','studio-photographer','admin','client','freelancer') THEN full_norm
+      ELSE CONCAT(COALESCE(NULLIF(segp, ''), 'owner'), '.', full_norm)
     END AS canonical
   FROM (
     SELECT id, portal, resource, action, permission_string,
@@ -69,7 +70,7 @@ JOIN (
     FROM tbl_permissions
   ) d
 ) c ON c.id = p.id
-WHERE p.permission_string <> c.canonical;
+WHERE p.permission_string <> c.canonical AND c.canonical <> '';
 
 
 -- ---------------------------------------------------------------------
@@ -81,6 +82,7 @@ UPDATE tbl_permissions p
 JOIN (
   SELECT d.id,
     CASE
+      WHEN full_norm = '' THEN ''
       WHEN segr <> '' AND sega <> '' THEN
         CONCAT(
           CASE
@@ -95,8 +97,8 @@ JOIN (
           COALESCE(NULLIF(segp, ''), 'owner'),
           '.',
           SUBSTRING(full_norm, CHAR_LENGTH(SUBSTRING_INDEX(full_norm, '.', 1)) + 2))
-      WHEN SUBSTRING_INDEX(full_norm, '.', 1) IN ('owner','studio-hr','studio-finance','studio-photographer') THEN full_norm
-      ELSE CONCAT('portal.', full_norm)
+      WHEN SUBSTRING_INDEX(full_norm, '.', 1) IN ('owner','studio-hr','studio-finance','studio-photographer','admin','client','freelancer') THEN full_norm
+      ELSE CONCAT(COALESCE(NULLIF(segp, ''), 'owner'), '.', full_norm)
     END AS canonical
   FROM (
     SELECT id, portal, resource, action, permission_string,
@@ -108,7 +110,7 @@ JOIN (
   ) d
 ) c ON c.id = p.id
 SET p.permission_string = c.canonical
-WHERE p.permission_string <> c.canonical;
+WHERE p.permission_string <> c.canonical AND c.canonical <> '';
 
 
 -- ---------------------------------------------------------------------
@@ -121,6 +123,7 @@ SELECT c.canonical, COUNT(*) AS rows_with_same_string, GROUP_CONCAT(c.id ORDER B
 FROM (
   SELECT d.id,
     CASE
+      WHEN full_norm = '' THEN ''
       WHEN segr <> '' AND sega <> '' THEN
         CONCAT(
           CASE
@@ -135,8 +138,8 @@ FROM (
           COALESCE(NULLIF(segp, ''), 'owner'),
           '.',
           SUBSTRING(full_norm, CHAR_LENGTH(SUBSTRING_INDEX(full_norm, '.', 1)) + 2))
-      WHEN SUBSTRING_INDEX(full_norm, '.', 1) IN ('owner','studio-hr','studio-finance','studio-photographer') THEN full_norm
-      ELSE CONCAT('portal.', full_norm)
+      WHEN SUBSTRING_INDEX(full_norm, '.', 1) IN ('owner','studio-hr','studio-finance','studio-photographer','admin','client','freelancer') THEN full_norm
+      ELSE CONCAT(COALESCE(NULLIF(segp, ''), 'owner'), '.', full_norm)
     END AS canonical
   FROM (
     SELECT id, portal, resource, action, permission_string,
@@ -147,6 +150,7 @@ FROM (
     FROM tbl_permissions
   ) d
 ) c
+WHERE c.canonical <> ''
 GROUP BY c.canonical
 HAVING COUNT(*) > 1;
 
@@ -157,8 +161,9 @@ HAVING COUNT(*) > 1;
 -- ---------------------------------------------------------------------
 SET @next_batch = (SELECT COALESCE(MAX(batch), 0) + 1 FROM migrations);
 
-INSERT INTO `migrations` (`migration`, `batch`) VALUES
-  ('2026_09_22_090200_normalize_permission_strings', @next_batch);
+INSERT INTO `migrations` (`migration`, `batch`)
+SELECT '2026_09_22_090200_normalize_permission_strings', @next_batch FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM `migrations` WHERE `migration` = '2026_09_22_090200_normalize_permission_strings');
 
 
 -- ---------------------------------------------------------------------

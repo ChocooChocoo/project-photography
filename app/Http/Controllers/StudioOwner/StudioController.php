@@ -529,6 +529,7 @@ class StudioController extends Controller
             $rules['studio_logo'] = 'nullable|image|mimes:jpg,jpeg,png|max:3072';
             $rules['business_permit'] = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:3072';
             $rules['owner_id_document'] = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:3072';
+            $rules['owner_profile_photo'] = 'nullable|image|mimes:jpg,jpeg,png|max:3072';
             $rules['permit_expiry_date'] = 'nullable|date';
             
             $validatedData = $request->validate($rules);
@@ -649,10 +650,16 @@ class StudioController extends Controller
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
+
+            // Show the first real field error so the user sees why the save
+            // failed instead of a generic message.
+            $errors = $e->errors();
+            $firstError = collect($errors)->flatten()->first();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed.',
-                'errors' => $e->errors(),
+                'message' => $firstError ?: 'Validation failed.',
+                'errors' => $errors,
                 'alert_color' => '#DC3545'
             ], 422);
 

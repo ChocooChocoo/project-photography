@@ -489,11 +489,12 @@
                         
                         if (response.success) {
                             const role = response.data;
+                            $('#editModalContent').data('role', role);
                             $('#editRoleId').val(role.id);
-                            $('#editRoleName').val(role.name);
+                            $('#editRoleName').val(role.name || '');
                             $('#editRolePreview').val(role.display_name || getFriendlyRoleName(role.name));
                             $('#editRoleDescription').val(role.description || '');
-                            $('#editRoleStatus').val(role.status);
+                            $('#editRoleStatus').val(role.status || 'active');
                             $('#editRoleIsSystem').prop('checked', Boolean(role.is_system));
                             
                             loadPermissionsForRole(role.id, role.permissions || []);
@@ -596,9 +597,12 @@
             
             $('#saveRoleBtn').on('click', function() {
                 const roleId = $('#editRoleId').val();
-                const roleName = $('#editRoleName').val();
+                // Fall back to the role we loaded so an empty field can never
+                // send a blank name or status by accident.
+                const currentRole = $('#editModalContent').data('role') || {};
+                const roleName = $('#editRoleName').val() || currentRole.name || '';
                 const roleDescription = $('#editRoleDescription').val();
-                const roleStatus = $('#editRoleStatus').val();
+                const roleStatus = $('#editRoleStatus').val() || currentRole.status || 'active';
                 const roleIsSystem = $('#editRoleIsSystem').is(':checked') ? 1 : 0;
                 
                 if (!roleName) {

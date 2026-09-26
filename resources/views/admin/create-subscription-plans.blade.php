@@ -141,7 +141,7 @@
 
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Status</label>
-                                        <select class="form-select" name="status" id="status" required>
+                                        <select class="form-select" name="status" id="plan_status" required>
                                             <option value="" disabled selected>Select Status</option>
                                             <option value="active">Active</option>
                                             <option value="inactive">Inactive</option>
@@ -332,7 +332,7 @@
                     max_studio_photographers: $('#user_type').val() === 'studio' ? ($('#max_studio_photographers').val() || null) : null,
                     description: $('#description').val(),
                     support_level: $('#support_level').val(),
-                    status: $('#status').val(),
+                    status: $('#plan_status').val(),
                     max_studios: $('#user_type').val() === 'studio' ? ($('#max_studios').val() || null) : null,
                     staff_limit: $('#user_type').val() === 'studio' ? ($('#staff_limit').val() || null) : null,
                     priority_level: $('#priority_level').val() || 0,

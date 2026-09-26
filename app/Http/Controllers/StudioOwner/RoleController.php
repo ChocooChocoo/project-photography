@@ -261,10 +261,13 @@ class RoleController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // The edit modal may send the role details, the permissions, or both.
+        // Every field is optional here so a partial payload still saves. The
+        // unique rule stays so a real duplicate name is still rejected.
         $request->validate([
-            'name' => ['required', 'string', 'max:100', Rule::unique('tbl_roles', 'name')->whereNull('deleted_at')->ignore($id)],
+            'name' => ['sometimes', 'required', 'string', 'max:100', Rule::unique('tbl_roles', 'name')->whereNull('deleted_at')->ignore($id)],
             'description' => 'nullable|string',
-            'status' => 'required|in:active,inactive',
+            'status' => ['sometimes', 'required', 'in:active,inactive'],
             'is_system' => 'nullable|boolean',
         ]);
 
@@ -272,13 +275,29 @@ class RoleController extends Controller
 
         try {
             $role = RoleModel::findOrFail($id);
-            $role->update([
-                'name' => $request->name,
-                'description' => $request->description,
-                'status' => $request->status,
-                'is_system' => $request->boolean('is_system'),
-                'portal' => $this->inferPortalFromRoleName($request->name),
-            ]);
+
+            // Only touch the fields that were actually sent, so a permission-only
+            // payload cannot blank out the role name or status.
+            $changes = [];
+
+            if ($request->exists('name')) {
+                $changes['name'] = $request->name;
+                $changes['portal'] = $this->inferPortalFromRoleName($request->name);
+            }
+
+            if ($request->exists('description')) {
+                $changes['description'] = $request->description;
+            }
+
+            if ($request->exists('status')) {
+                $changes['status'] = $request->status;
+            }
+
+            if ($request->exists('is_system')) {
+                $changes['is_system'] = $request->boolean('is_system');
+            }
+
+            $role->update($changes);
 
             DB::commit();
 

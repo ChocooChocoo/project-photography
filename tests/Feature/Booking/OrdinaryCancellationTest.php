@@ -164,21 +164,34 @@ class OrdinaryCancellationTest extends TestCase
         $this->assertSame(BookingModel::STATUS_PENDING, $booking->fresh()->status);
     }
 
-    public function test_in_progress_completed_and_cancelled_bookings_cannot_be_cancelled(): void
+    public function test_completed_and_cancelled_bookings_cannot_be_cancelled(): void
     {
         $client = $this->createUser('client', 'ordinary-locked-client@example.com');
         $studio = $this->createStudio();
-        $inProgress = $this->createBooking($studio, $client, BookingModel::STATUS_IN_PROGRESS, BookingModel::PAYMENT_PAID);
         $completed = $this->createBooking($studio, $client, BookingModel::STATUS_COMPLETED, BookingModel::PAYMENT_PAID);
         $cancelled = $this->createBooking($studio, $client, BookingModel::STATUS_CANCELLED, BookingModel::PAYMENT_PENDING);
 
-        foreach ([$inProgress, $completed, $cancelled] as $booking) {
+        foreach ([$completed, $cancelled] as $booking) {
             $this->actingAs($client)
                 ->postJson("/_test/client/booking/{$booking->id}/cancel", ['cancellation_reason' => 'This booking should not be cancellable anymore at all.'])
                 ->assertJsonPath('success', false);
 
             $this->assertSame($booking->status, $booking->fresh()->status);
         }
+    }
+
+    public function test_in_progress_booking_more_than_24_hours_before_the_event_can_be_cancelled(): void
+    {
+        $client = $this->createUser('client', 'ordinary-in-progress-client@example.com');
+        $studio = $this->createStudio();
+        $booking = $this->createBooking($studio, $client, BookingModel::STATUS_IN_PROGRESS, BookingModel::PAYMENT_PAID);
+
+        $this->actingAs($client)
+            ->postJson("/_test/client/booking/{$booking->id}/cancel", ['cancellation_reason' => 'The assigned photographer withdrew, so this booking must be cancelled.'])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertSame(BookingModel::STATUS_CANCELLED, $booking->fresh()->status);
     }
 
     public function test_client_cancellation_cancels_open_assignments_but_keeps_completed_ones(): void

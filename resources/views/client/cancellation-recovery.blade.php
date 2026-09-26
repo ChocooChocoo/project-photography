@@ -4,7 +4,7 @@
 <div class="container py-4">
     <h1 class="h4">Photographer replacement</h1>
     <p>A replacement photographer is available for booking {{ $recovery->booking->booking_reference }}.</p>
-    <p class="text-muted">Please respond by {{ $recovery->deadline->format('M d, Y h:i A') }}.</p>
+    <p class="text-muted">Please respond by {{ $recovery->deadline ? $recovery->deadline->format('M d, Y h:i A') : 'Not set' }}.</p>
     @if ($recovery->status === 'awaiting_client')
         <form method="post" action="{{ route('client.booking.recovery.response', $recovery->id) }}" class="d-inline recovery-response-form">
             @csrf

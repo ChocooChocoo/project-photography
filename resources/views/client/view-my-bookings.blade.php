@@ -163,7 +163,7 @@
                                                         @endif
                                                     @endif
                                                     
-                                                    @if(in_array($booking->status, ['pending', 'confirmed']))
+                                                    @if(in_array($booking->status, ['pending', 'confirmed', 'in_progress']))
                                                     <button class="btn btn-sm cancel-booking-btn" 
                                                             data-booking-id="{{ $booking->id }}"
                                                             data-booking-reference="{{ $booking->booking_reference }}"
@@ -605,7 +605,7 @@
                     type: 'POST',
                     data: {
                         amount: amount,
-                        _token: '{{ csrf_token() }}'
+                        _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     beforeSend: function() {
                         Swal.fire({
@@ -652,7 +652,7 @@
                     type: 'POST',
                     data: {
                         booking_id: bookingId,
-                        _token: '{{ csrf_token() }}'
+                        _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     beforeSend: function() {
                         Swal.fire({
@@ -1338,7 +1338,7 @@
                 $.ajax({
                     url: '{{ route("client.booking.cancel", ":id") }}'.replace(':id', bookingId),
                     type: 'POST',
-                    data: { cancellation_reason: reason, _token: '{{ csrf_token() }}' },
+                    data: { cancellation_reason: reason, _token: $('meta[name="csrf-token"]').attr('content') },
                     beforeSend: function() {
                         Swal.fire({
                             title: 'Cancelling...',
@@ -1594,7 +1594,7 @@
                             type: 'POST',
                             data: {
                                 confirmation_notes: notes,
-                                _token: '{{ csrf_token() }}'
+                                _token: $('meta[name="csrf-token"]').attr('content')
                             },
                             beforeSend: function() {
                                 Swal.fire({

@@ -3,7 +3,7 @@
 @section('content')
 <div class="container py-4">
     <h1 class="h4">Photographer cancellation recovery</h1>
-    <p class="text-muted">Booking {{ $recovery->booking->booking_reference }} · deadline {{ $recovery->deadline->format('M d, Y h:i A') }}</p>
+    <p class="text-muted">Booking {{ $recovery->booking->booking_reference }} · deadline {{ $recovery->deadline ? $recovery->deadline->format('M d, Y h:i A') : 'Not set' }}</p>
     <p>Status: <strong>{{ str_replace('_', ' ', $recovery->status) }}</strong></p>
     @if ($recovery->photographer_reason)
         <p><strong>Photographer reason (owner only):</strong> {{ $recovery->photographer_reason }}</p>

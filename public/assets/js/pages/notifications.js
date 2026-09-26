@@ -17,6 +17,15 @@
         );
     }
 
+    function escapeAttribute(value) {
+        return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         if (typeof window.jQuery === "undefined") {
             return;
@@ -68,12 +77,14 @@
                 var bgClass = isUnread ? "bg-light" : "";
                 var iconColor = notification.color || "primary";
                 var icon = notification.icon || "bell";
+                var route = notification.route || "";
+                var routeAttr = route ? ' data-route="' + escapeAttribute(route) + '"' : "";
                 var unreadMarker = isUnread
                     ? '<span class="position-absolute rounded-pill bg-success notification-badge" style="top: 0; right: 0;"><i class="ti ti-bell align-middle"></i></span>'
                     : "";
 
                 return (
-                    '<div class="dropdown-item notification-item py-3 text-wrap ' + bgClass + '" id="notification-' + notification.id + '" data-id="' + notification.id + '" style="position: relative; padding-right: 45px !important;">' +
+                    '<div class="dropdown-item notification-item py-3 text-wrap ' + bgClass + '" id="notification-' + notification.id + '" data-id="' + notification.id + '"' + routeAttr + ' style="position: relative; padding-right: 45px !important;">' +
                         '<div class="d-flex align-items-start gap-3">' +
                             '<div class="flex-shrink-0 position-relative">' +
                                 '<div class="avatar-sm rounded-circle bg-soft-' + iconColor + ' d-flex align-items-center justify-content-center">' +
@@ -150,8 +161,11 @@
             });
         }
 
-        function markAsRead(notificationId) {
+        function markAsRead(notificationId, targetUrl) {
             if (!markReadUrl) {
+                if (targetUrl) {
+                    window.location.assign(targetUrl);
+                }
                 return;
             }
 
@@ -172,6 +186,11 @@
 
                 updateBadge($badge, response.unread_count || 0);
                 $notificationCount.text((response.unread_count || 0) + " Unread");
+
+                if (targetUrl) {
+                    window.location.assign(targetUrl);
+                    return;
+                }
 
                 if (window.Swal) {
                     window.Swal.fire({
@@ -249,7 +268,7 @@
                 return;
             }
 
-            markAsRead($(this).data("id"));
+            markAsRead($(this).data("id"), $(this).data("route") || "");
         });
 
         loadUnreadCount();

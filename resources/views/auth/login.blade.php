@@ -178,7 +178,7 @@
 
                     input.addClass('is-invalid');
                     if (messages && messages.length) {
-                        input.siblings('.invalid-feedback').text(messages[0]);
+                        input.siblings('.invalid-feedback').text(messages[0]).show();
                     }
                 });
             }
@@ -186,7 +186,17 @@
             // Form validation
             $('#loginForm').on('submit', function(e) {
                 e.preventDefault();
-                
+
+                // One email rule for the client and the server.
+                var emailInput = $('#email');
+                if (!window.PlatinumEmail.isValid($.trim(emailInput.val() || ''))) {
+                    emailInput.addClass('is-invalid').siblings('.invalid-feedback').show();
+                    e.stopPropagation();
+                    return false;
+                }
+
+                emailInput.removeClass('is-invalid').siblings('.invalid-feedback').hide();
+
                 // Basic form validation
                 const form = $(this)[0];
                 if (!form.checkValidity()) {
@@ -275,15 +285,16 @@
                     });
             });
             
-            // Real-time form validation
+            // Editing a field clears its error. Feedback returns only on a failed submit.
             $('#loginForm input').on('input', function() {
                 $(this).removeClass('is-invalid');
-                $(this).siblings('.invalid-feedback').show();
+                $(this).siblings('.invalid-feedback').hide();
             });
-            
+
             // Remove validation on focus
             $('#loginForm input').on('focus', function() {
                 $(this).removeClass('is-invalid');
+                $(this).siblings('.invalid-feedback').hide();
             });
         });
     </script>
