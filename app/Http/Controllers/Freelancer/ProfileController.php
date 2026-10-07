@@ -88,7 +88,6 @@ class ProfileController extends Controller
                 ], 422);
             }
             
-            $barangayData = json_decode($location->barangay, true);
             $selectedBarangay = $request->barangay;
 
             // Handle brand logo upload
@@ -187,12 +186,29 @@ class ProfileController extends Controller
             'municipality' => 'required|exists:tbl_locations,municipality'
         ]);
 
-        $location = LocationModel::where('municipality', $request->municipality)->first();
-        $barangays = json_decode($location->barangay, true);
+        $location = LocationModel::active()
+            ->where('municipality', $request->municipality)
+            ->orderBy('id')
+            ->first();
+
+        if (! $location) {
+            return response()->json(['barangays' => [], 'zip_code' => null]);
+        }
+
+        $barangays = is_array($location->barangay)
+            ? $location->barangay
+            : (json_decode((string) $location->barangay, true) ?: []);
+
+        $barangays = collect($barangays)
+            ->filter(fn ($barangay) => is_string($barangay) && $barangay !== '')
+            ->unique()
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+            ->values()
+            ->all();
 
         return response()->json([
-            'barangays' => $barangays ?? [],
-            'zip_code' => $location->zip_code
+            'barangays' => $barangays,
+            'zip_code' => $location->zip_code,
         ]);
     }
 }

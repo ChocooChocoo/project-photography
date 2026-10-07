@@ -229,6 +229,9 @@
                                     window.location.href = response.redirect;
                                 }
                             });
+                            // Do not depend on the Swal close callback alone: if it
+                            // never fires, the user stays on the login page.
+                            setTimeout(() => { window.location.href = response.redirect; }, 2000);
                         } else if (response.needs_verification) {
                             // Check if email needs verification
                             showLoginError(response.message);

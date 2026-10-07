@@ -4,10 +4,11 @@ namespace App\Models\Admin;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserModel extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes; // soft delete keeps admin deletes consistent with App\Models\UserModel
 
     /**
      * The table associated with the model.

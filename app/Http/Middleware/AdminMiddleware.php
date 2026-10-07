@@ -81,7 +81,10 @@ class AdminMiddleware
         $routes = [
             'owner' => 'owner.dashboard',
             'freelancer' => 'freelancer.dashboard',
-            'client' => 'client.dashboard'
+            'client' => 'client.dashboard',
+            'studio-photographer' => 'studio-photographer.dashboard',
+            'studio-hr' => 'studio-hr.dashboard',
+            'studio-finance' => 'studio-finance.dashboard',
         ];
         
         return route($routes[$role] ?? 'login');

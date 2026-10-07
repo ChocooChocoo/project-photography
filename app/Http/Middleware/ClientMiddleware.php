@@ -81,7 +81,10 @@ class ClientMiddleware
         $routes = [
             'admin' => 'admin.dashboard',
             'owner' => 'owner.dashboard',
-            'freelancer' => 'freelancer.dashboard'
+            'freelancer' => 'freelancer.dashboard',
+            'studio-photographer' => 'studio-photographer.dashboard',
+            'studio-hr' => 'studio-hr.dashboard',
+            'studio-finance' => 'studio-finance.dashboard',
         ];
         
         return route($routes[$role] ?? 'login');

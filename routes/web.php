@@ -113,8 +113,8 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
 
         // Manage Freelancer
         Route::get('/view/freelancers', [\App\Http\Controllers\Admin\FreelancerController::class, 'index'])->name('admin.freelancer.index');
-        Route::get('/freelancers/data', [\App\Http\Controllers\Admin\FreelancerController::class, 'getFreelancers'])->name('admin.freelancer.data');
-        Route::get('/freelancers/{id}/details', [\App\Http\Controllers\Admin\FreelancerController::class, 'getFreelancerDetails'])->name('admin.freelancer.details');
+        Route::put('/freelancers/{id}', [\App\Http\Controllers\Admin\FreelancerController::class, 'update'])->name('admin.freelancer.update');
+        Route::delete('/freelancers/{id}', [\App\Http\Controllers\Admin\FreelancerController::class, 'destroy'])->name('admin.freelancer.delete');
 
         // Manage Categories
         Route::get('/view/categories', [\App\Http\Controllers\Admin\CategoriesController::class, 'index'])->name('admin.categories.index');

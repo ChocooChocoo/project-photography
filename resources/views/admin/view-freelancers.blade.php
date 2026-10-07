@@ -87,8 +87,17 @@
                                                     <a href="#" class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#freelancerModal{{ $freelancer->id }}">
                                                         <i class="ti ti-eye fs-lg"></i>
                                                     </a>
-                                                    <a href="#" class="btn btn-sm"><i class="ti ti-edit fs-lg"></i></a>
-                                                    <a href="#" class="btn btn-sm"><i class="ti ti-trash fs-lg"></i></a>
+                                                    <button type="button" class="btn btn-sm btn-edit-freelancer" title="Edit"
+                                                        data-id="{{ $freelancer->id }}"
+                                                        data-first-name="{{ $freelancer->first_name }}"
+                                                        data-last-name="{{ $freelancer->last_name }}"
+                                                        data-mobile="{{ $freelancer->mobile_number }}"
+                                                        data-status="{{ $freelancer->status }}">
+                                                        <i class="ti ti-edit fs-lg"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-delete-freelancer" title="Delete" data-id="{{ $freelancer->id }}">
+                                                        <i class="ti ti-trash fs-lg"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -107,6 +116,45 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    {{-- EDIT MODAL --}}
+    <div class="modal fade" id="editFreelancerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" id="editFreelancerForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Freelancer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editFreelancerId">
+                    <div class="mb-3">
+                        <label class="form-label" for="editFirstName">First Name</label>
+                        <input type="text" class="form-control" id="editFirstName" name="first_name" maxlength="100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="editLastName">Last Name</label>
+                        <input type="text" class="form-control" id="editLastName" name="last_name" maxlength="100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="editMobile">Mobile Number</label>
+                        <input type="text" class="form-control" id="editMobile" name="mobile_number" maxlength="20">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="editStatus">Status</label>
+                        <select class="form-select" id="editStatus" name="status" required>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -735,6 +783,69 @@
                     } else {
                         $(this).show();
                     }
+                });
+            });
+
+            const csrf = '{{ csrf_token() }}';
+            const freelancerUrl = id => '{{ route("admin.freelancer.update", ":id") }}'.replace(':id', id);
+
+            function showError(xhr, fallback) {
+                const json = xhr.responseJSON || {};
+                const message = json.errors
+                    ? Object.values(json.errors).map(e => e[0]).join('\n')
+                    : (json.message || fallback);
+                Swal.fire({ icon: 'error', title: 'Error', text: message, confirmButtonColor: '#3475db' });
+            }
+
+            // Edit
+            $(document).on('click', '.btn-edit-freelancer', function() {
+                const d = $(this).data();
+                $('#editFreelancerId').val(d.id);
+                $('#editFirstName').val(d.firstName);
+                $('#editLastName').val(d.lastName);
+                $('#editMobile').val(d.mobile);
+                $('#editStatus').val(d.status);
+                bootstrap.Modal.getOrCreateInstance('#editFreelancerModal').show();
+            });
+
+            $('#editFreelancerForm').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: freelancerUrl($('#editFreelancerId').val()),
+                    type: 'PUT',
+                    data: $(this).serialize(),
+                    headers: { 'X-CSRF-TOKEN': csrf },
+                    success: function(response) {
+                        Swal.fire({ icon: 'success', title: 'Success!', text: response.message, showConfirmButton: false, timer: 1500 })
+                            .then(() => location.reload());
+                    },
+                    error: xhr => showError(xhr, 'Failed to update freelancer.')
+                });
+            });
+
+            // Delete
+            $(document).on('click', '.btn-delete-freelancer', function() {
+                const id = $(this).data('id');
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3475db',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+                    $.ajax({
+                        url: freelancerUrl(id),
+                        type: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': csrf },
+                        success: function(response) {
+                            Swal.fire({ icon: 'success', title: 'Deleted!', text: response.message, showConfirmButton: false, timer: 1500 })
+                                .then(() => location.reload());
+                        },
+                        error: xhr => showError(xhr, 'Failed to delete freelancer.')
+                    });
                 });
             });
 

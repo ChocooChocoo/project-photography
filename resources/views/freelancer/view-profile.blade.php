@@ -337,7 +337,9 @@
                                                 <div class="flex-grow-1 ms-3">
                                                     <label class="text-muted small mb-1">Operating Days</label>
                                                     @php
-                                                        $days = json_decode($profile->schedule->operating_days, true);
+                                                        $days = is_array($profile->schedule->operating_days)
+                                                            ? $profile->schedule->operating_days
+                                                            : json_decode($profile->schedule->operating_days, true);
                                                         $dayNames = [
                                                             'monday' => 'Monday',
                                                             'tuesday' => 'Tuesday',

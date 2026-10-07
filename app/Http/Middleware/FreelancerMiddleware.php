@@ -81,7 +81,10 @@ class FreelancerMiddleware
         $routes = [
             'admin' => 'admin.dashboard',
             'owner' => 'owner.dashboard',
-            'client' => 'client.dashboard'
+            'client' => 'client.dashboard',
+            'studio-photographer' => 'studio-photographer.dashboard',
+            'studio-hr' => 'studio-hr.dashboard',
+            'studio-finance' => 'studio-finance.dashboard',
         ];
         
         return route($routes[$role] ?? 'login');
