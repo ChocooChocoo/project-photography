@@ -11,6 +11,7 @@ use App\Models\PaymentModel;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
 use App\Models\StudioOwner\PermissionModel;
 use App\Models\StudioOwner\RoleModel;
+use App\Models\StudioOwner\StudioPhotographersModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
 use Illuminate\Database\Schema\Blueprint;
@@ -36,6 +37,54 @@ class AssignmentLifecycleTest extends TestCase
         Route::post('/_test/client/assignment/{id}/confirm', [MyBookingsController::class, 'confirmPhotographerOnSite']);
         Route::post('/_test/owner/booking/{id}/status', [OwnerBookingController::class, 'updateStatus']);
         Route::post('/_test/owner/assignment/{id}/status', [OwnerBookingController::class, 'updateAssignmentStatus']);
+        Route::get('/_test/owner/booking/{id}/photographers', [OwnerBookingController::class, 'getAvailablePhotographers']);
+        Route::post('/_test/owner/booking/{id}/assign', [OwnerBookingController::class, 'assignPhotographers']);
+    }
+
+    public function test_rejecting_photographer_is_flagged_and_cannot_be_reassigned(): void
+    {
+        $client = $this->createUser('client', 'reject-client@example.com');
+        $rejecter = $this->createUser('studio-photographer', 'reject-photographer@example.com');
+        $other = $this->createUser('studio-photographer', 'other-photographer@example.com');
+        $studio = $this->createStudio();
+        foreach ([$rejecter, $other] as $photographer) {
+            StudioPhotographersModel::create([
+                'studio_id' => $studio->id,
+                'owner_id' => $this->owner->id,
+                'photographer_id' => $photographer->id,
+                'status' => 'active',
+            ]);
+        }
+        $booking = $this->createBooking($studio, $client, 'confirmed');
+        $booking->update(['start_time' => '09:00:00', 'end_time' => '12:00:00']);
+        $this->createAssignment($booking, $studio, $rejecter, 'cancelled', null, [
+            'cancelled_at' => now(),
+            'cancellation_reason' => 'Not available.',
+        ]);
+
+        Auth::setUser($this->owner);
+
+        $list = $this->getJson("/_test/owner/booking/{$booking->id}/photographers")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->json('photographers');
+        $byId = collect($list)->keyBy('id');
+
+        $this->assertFalse($byId[$rejecter->id]['is_available']);
+        $this->assertSame('rejected', $byId[$rejecter->id]['availability_status']);
+        $this->assertSame('Rejected this assignment', $byId[$rejecter->id]['availability_reason']);
+        $this->assertTrue($byId[$other->id]['is_available']);
+
+        $this->postJson("/_test/owner/booking/{$booking->id}/assign", ['photographer_ids' => [$rejecter->id]])
+            ->assertStatus(422)
+            ->assertJsonPath('success', false);
+
+        $this->assertSame(0, BookingAssignedPhotographerModel::where('booking_id', $booking->id)
+            ->where('photographer_id', $rejecter->id)->where('status', 'assigned')->count());
+
+        $this->postJson("/_test/owner/booking/{$booking->id}/assign", ['photographer_ids' => [$other->id]])
+            ->assertOk()
+            ->assertJsonPath('success', true);
     }
 
     public function test_assignment_full_lifecycle(): void
@@ -300,6 +349,8 @@ class AssignmentLifecycleTest extends TestCase
             $table->string('event_name');
             $table->date('event_date');
             $table->string('location_type')->default('in-studio');
+            $table->time('start_time')->nullable();
+            $table->time('end_time')->nullable();
             $table->decimal('total_amount', 10, 2);
             $table->decimal('down_payment', 10, 2);
             $table->string('payment_type');
@@ -399,6 +450,27 @@ class AssignmentLifecycleTest extends TestCase
             $table->string('status');
             
             $table->softDeletes();$table->timestamps();
+        });
+        Schema::create('tbl_studio_photographers', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('studio_id');
+            $table->foreignId('owner_id');
+            $table->foreignId('photographer_id');
+            $table->string('position')->nullable();
+            $table->string('specialization')->nullable();
+            $table->integer('years_of_experience')->nullable();
+            $table->string('status');
+            $table->softDeletes();
+            $table->timestamps();
+        });
+        Schema::create('tbl_leave_requests', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id');
+            $table->string('status');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->softDeletes();
+            $table->timestamps();
         });
         Schema::create('tbl_role_permissions', function (Blueprint $table) {
             $table->id();

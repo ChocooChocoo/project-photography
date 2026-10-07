@@ -103,7 +103,7 @@ class BookingAssignmentDomainTest extends TestCase
         $this->assertSame(BookingModel::STATUS_IN_PROGRESS, $booking->fresh()->status);
     }
 
-    public function test_a_cancelled_assignment_does_not_consume_a_slot_or_block_reassignment(): void
+    public function test_a_cancelled_assignment_does_not_consume_a_slot_but_blocks_reassignment(): void
     {
         $photographer = $this->createUser('studio-photographer', 'cancel-then-return@example.com');
         $booking = $this->createBooking('confirmed', 1);
@@ -114,15 +114,15 @@ class BookingAssignmentDomainTest extends TestCase
             ->assertOk();
         $this->assertSame(0, $details->json('current_assigned_count'));
 
-        $response = $this->actingAs($this->owner)
+        $this->actingAs($this->owner)
             ->postJson("/_test/owner/booking/{$booking->id}/assign", [
                 'photographer_ids' => [$photographer->id],
-            ]);
-
-        $response->assertOk()->assertJsonPath('success', true);
+            ])
+            ->assertStatus(422)
+            ->assertJsonPath('success', false);
 
         $this->assertSame(
-            1,
+            0,
             BookingAssignedPhotographerModel::where('booking_id', $booking->id)
                 ->where('photographer_id', $photographer->id)
                 ->where('status', 'assigned')

@@ -294,6 +294,20 @@ class BookingController extends Controller
     }
 
     /**
+     * Photographers whose assignment on this booking was cancelled (rejected); they cannot be re-selected.
+     */
+    private function rejectedPhotographerIds($bookingId): array
+    {
+        return BookingAssignedPhotographerModel::where('booking_id', $bookingId)
+            ->where('status', 'cancelled')
+            ->pluck('photographer_id')
+            ->map(fn ($photographerId) => (int) $photographerId)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
      * Get available photographers for assignment
      */
     public function getAvailablePhotographers($bookingId)
@@ -367,6 +381,8 @@ class BookingController extends Controller
                 ->map(fn ($photographerId) => (int) $photographerId)
                 ->toArray();
 
+            $rejectedPhotographerIds = $this->rejectedPhotographerIds($bookingId);
+
             $availabilityMap = $this->photographerAvailabilityService->getAvailabilityMapForBooking(
                 $booking,
                 $studioPhotographers->pluck('photographer_id')->map(fn ($photographerId) => (int) $photographerId)->toArray()
@@ -392,6 +408,21 @@ class BookingController extends Controller
                                 'type' => 'already_assigned',
                                 'status' => 'already_assigned',
                                 'message' => 'Already assigned to this booking.',
+                                'booking_id' => $booking->id,
+                                'booking_reference' => $booking->booking_reference,
+                            ],
+                        ],
+                    ];
+                } elseif (in_array($photographerId, $rejectedPhotographerIds, true)) {
+                    $availability = [
+                        'is_available' => false,
+                        'availability_status' => 'rejected',
+                        'availability_reason' => 'Rejected this assignment',
+                        'availability_conflicts' => [
+                            [
+                                'type' => 'rejected',
+                                'status' => 'rejected',
+                                'message' => 'Rejected this assignment',
                                 'booking_id' => $booking->id,
                                 'booking_reference' => $booking->booking_reference,
                             ],
@@ -552,6 +583,20 @@ class BookingController extends Controller
                         ];
                     })->values()->all(),
                 ], 409);
+            }
+
+            $rejectedSelections = array_values(array_intersect($requestedPhotographerIds, $this->rejectedPhotographerIds($bookingId)));
+
+            if (! empty($rejectedSelections)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'One or more selected photographers rejected this assignment and cannot be selected again.',
+                    'photographer_conflicts' => collect($rejectedSelections)->map(fn ($photographerId) => [
+                        'photographer_id' => $photographerId,
+                        'availability_status' => 'rejected',
+                        'availability_reason' => 'Rejected this assignment',
+                    ])->all(),
+                ], 422);
             }
 
             $availabilityMap = $this->photographerAvailabilityService->getAvailabilityMapForBooking($booking, $requestedPhotographerIds);

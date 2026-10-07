@@ -1490,7 +1490,8 @@
                     'on_leave': 'badge badge-soft-danger text-danger',
                     'in_progress_conflict': 'badge badge-soft-warning text-warning',
                     'reserved_conflict': 'badge badge-soft-info text-info',
-                    'already_assigned': 'badge badge-soft-secondary text-secondary'
+                    'already_assigned': 'badge badge-soft-secondary text-secondary',
+                    'rejected': 'badge badge-soft-danger text-danger'
                 };
 
                 return badgeClasses[status] || 'badge badge-soft-secondary text-secondary';
@@ -1502,7 +1503,8 @@
                     'on_leave': 'On Approved Leave',
                     'in_progress_conflict': 'In Progress',
                     'reserved_conflict': 'Reserved',
-                    'already_assigned': 'Already Assigned'
+                    'already_assigned': 'Already Assigned',
+                    'rejected': 'Rejected'
                 };
 
                 return labels[status] || 'Unavailable';
