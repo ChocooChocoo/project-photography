@@ -2327,7 +2327,7 @@ class BookingController extends Controller
 
     /**
      * Increment the client's active budget for this booking's category by
-     * the confirmed payment amount, and notify if the maximum is exceeded.
+     * the confirmed payment amount, and notify once the preferred budget is reached.
      */
     private function updateClientBudgetSpending($booking, $payment): void
     {
@@ -2343,7 +2343,7 @@ class BookingController extends Controller
 
         $budget->increment('spent_amount', $payment->amount);
 
-        if ($budget->maximum_budget !== null && $budget->spent_amount >= $budget->maximum_budget && $booking->client) {
+        if ($budget->spent_amount >= $budget->preferred_budget && $booking->client) {
             $this->notifyBudgetExceeded($budget, $booking->client);
         }
     }
@@ -2423,82 +2423,28 @@ class BookingController extends Controller
         }
         
         $match['has_budget'] = true;
-        $match['minimum_budget'] = $clientBudget->minimum_budget ? (float) $clientBudget->minimum_budget : null;
-        $match['maximum_budget'] = $clientBudget->maximum_budget ? (float) $clientBudget->maximum_budget : null;
-        $match['preferred_budget'] = $clientBudget->preferred_budget ? (float) $clientBudget->preferred_budget : null;
-        
-        // Format budget range for display
-        $match['budget_range'] = $this->formatBudgetRange($clientBudget);
-        
-        // Determine if within range
-        $min = $match['minimum_budget'] ?? 0;
-        $max = $match['maximum_budget'] ?? PHP_FLOAT_MAX;
-        $preferred = $match['preferred_budget'];
-        
-        if ($packagePrice >= $min && $packagePrice <= $max) {
-            $match['match_level'] = 'within_range';
-            
-            // Calculate match percentage based on preferred budget if available
-            if ($preferred && $preferred > 0) {
-                $diff = abs($packagePrice - $preferred);
-                $match['match_percentage'] = max(0, 100 - round(($diff / $preferred) * 100, 2));
-                
-                // Perfect match if within 10% of preferred budget
-                if ($match['match_percentage'] >= 90) {
-                    $match['match_level'] = 'perfect_match';
-                    $match['is_recommended'] = true;
-                }
-            } else {
-                // If no preferred budget, calculate based on position in range
-                $rangeSize = $max - $min;
-                if ($rangeSize > 0) {
-                    $position = ($packagePrice - $min) / $rangeSize;
-                    $match['match_percentage'] = round(100 - (abs(0.5 - $position) * 100), 2);
-                    
-                    if ($match['match_percentage'] >= 75) {
-                        $match['is_recommended'] = true;
-                    }
-                }
-            }
+        $preferred = (float) $clientBudget->preferred_budget;
+        $match['preferred_budget'] = $preferred;
+        $match['budget_range'] = $clientBudget->budget_range;
+
+        if ($preferred <= 0) {
+            return $match;
+        }
+
+        $match['match_percentage'] = max(0, 100 - round((abs($packagePrice - $preferred) / $preferred) * 100, 2));
+
+        // Tolerance is 10% of the preferred budget.
+        if ($match['match_percentage'] >= 90) {
+            $match['match_level'] = 'perfect_match';
+            $match['is_recommended'] = true;
+        } elseif ($packagePrice <= $preferred * 1.1) {
+            $match['match_level'] = 'within_budget';
         } else {
             $match['match_level'] = 'above_budget';
             $match['match_percentage'] = 0;
         }
-        
-        return $match;
-    }
 
-    /**
-     * Format budget range for display
-     *
-     * @param \App\Models\ClientBudgetModel $budget
-     * @return string|null
-     */
-    private function formatBudgetRange($budget)
-    {
-        if (!$budget) {
-            return null;
-        }
-        
-        $parts = [];
-        
-        if ($budget->minimum_budget) {
-            $parts[] = '₱' . number_format($budget->minimum_budget, 2);
-        }
-        
-        if ($budget->maximum_budget) {
-            $parts[] = '₱' . number_format($budget->maximum_budget, 2);
-        }
-        
-        if (empty($parts)) {
-            return null;
-        }
-        
-        if (count($parts) === 1) {
-            return $parts[0];
-        }
-        
-        return implode(' - ', $parts);
+        return $match;
     }
 
     /**
@@ -2674,10 +2620,8 @@ class BookingController extends Controller
                 // ========== START: DSS - Include budget info in response metadata ==========
                 'has_budget' => !is_null($clientBudget),
                 'budget_info' => $clientBudget ? [
-                    'minimum_budget' => $clientBudget->minimum_budget,
-                    'maximum_budget' => $clientBudget->maximum_budget,
                     'preferred_budget' => $clientBudget->preferred_budget,
-                    'budget_range' => $this->formatBudgetRange($clientBudget),
+                    'budget_range' => $clientBudget->budget_range,
                     'budget_name' => $clientBudget->budget_name
                 ] : null
                 // ========== END: DSS - Include budget info ==========

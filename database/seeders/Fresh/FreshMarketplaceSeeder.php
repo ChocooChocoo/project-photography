@@ -115,8 +115,6 @@ class FreshMarketplaceSeeder
                     'client_id' => $clientId,
                     'budget_name' => sprintf('%s Budget %d', $categoryName, $b + 1),
                     'description' => sprintf('Planned spending window for an upcoming %s booking.', strtolower($categoryName)),
-                    'minimum_budget' => $minimum,
-                    'maximum_budget' => $minimum + 9000,
                     'preferred_budget' => $minimum + 4500,
                     'spent_amount' => $b === 0 ? $minimum / 2 : 0,
                     'category_id' => $categoryIds[$categoryName],

@@ -82,8 +82,6 @@ class BudgetController extends Controller
                 'client_id' => Auth::id(),
                 'budget_name' => $request->budget_name,
                 'description' => $request->description,
-                'minimum_budget' => $request->minimum_budget,
-                'maximum_budget' => $request->maximum_budget,
                 'preferred_budget' => $request->preferred_budget,
                 'category_id' => $request->category_id,
                 'budget_type' => $request->budget_type,
@@ -144,8 +142,6 @@ class BudgetController extends Controller
             $budget->update([
                 'budget_name' => $request->budget_name,
                 'description' => $request->description,
-                'minimum_budget' => $request->minimum_budget,
-                'maximum_budget' => $request->maximum_budget,
                 'preferred_budget' => $request->preferred_budget,
                 'category_id' => $request->category_id,
                 'budget_type' => $request->budget_type,
@@ -254,8 +250,6 @@ class BudgetController extends Controller
                 'total_budgets' => ClientBudgetModel::byClient($clientId)->count(),
                 'active_budgets' => ClientBudgetModel::byClient($clientId)->active()->count(),
                 'inactive_budgets' => ClientBudgetModel::byClient($clientId)->inactive()->count(),
-                'average_minimum' => ClientBudgetModel::byClient($clientId)->active()->avg('minimum_budget'),
-                'average_maximum' => ClientBudgetModel::byClient($clientId)->active()->avg('maximum_budget'),
                 'average_preferred' => ClientBudgetModel::byClient($clientId)->active()->avg('preferred_budget'),
             ];
             

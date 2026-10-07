@@ -287,8 +287,6 @@ class CoverageGapsAndAdminSeeder extends Seeder
             ['client_id' => $client->id, 'budget_name' => 'Wedding Shoot Budget'],
             [
                 'description' => 'Savings set aside for our wedding photo and video package.',
-                'minimum_budget' => 15000,
-                'maximum_budget' => 40000,
                 'preferred_budget' => 25000,
                 'spent_amount' => 5000,
                 'category_id' => $category->id,

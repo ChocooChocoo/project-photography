@@ -742,16 +742,8 @@
              * Format budget range for display in tab
              */
             function formatBudgetRange(budget) {
-                if (budget.minimum_budget && budget.maximum_budget) {
-                    const min = parseInt(budget.minimum_budget).toLocaleString();
-                    const max = parseInt(budget.maximum_budget).toLocaleString();
-                    return `${min} - ${max}`;
-                } else if (budget.minimum_budget) {
-                    return `From ${parseInt(budget.minimum_budget).toLocaleString()}`;
-                } else if (budget.maximum_budget) {
-                    return `Up to ${parseInt(budget.maximum_budget).toLocaleString()}`;
-                } else if (budget.preferred_budget) {
-                    return `₱${parseInt(budget.preferred_budget).toLocaleString()}`;
+                if (budget.preferred_budget) {
+                    return parseInt(budget.preferred_budget).toLocaleString();
                 }
                 return 'Budget Set';
             }
@@ -893,10 +885,8 @@
                                             <i class="ti ti-wallet fs-4 me-3"></i>
                                             <div>
                                                 <strong>Your Budget: ${response.budget_info.budget_name || 'Budget'}</strong><br>
-                                                <span>Budget Range: ${response.budget_info.budget_range || 'Not specified'}</span>
-                                                ${response.budget_info.preferred_budget ? 
-                                                    `<br><small>Preferred: ₱${parseFloat(response.budget_info.preferred_budget).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</small>` 
-                                                    : ''}
+                                                <span>Preferred Budget: ${response.budget_info.budget_range || 'Not specified'}</span>
+                                                
                                             </div>
                                         </div>
                                     </div>
@@ -1019,7 +1009,7 @@
                                                 <i class="ti ti-star me-1"></i> Best Match
                                             </span>
                                         `;
-                                    } else if (package.budget_info.match_level === 'within_range') {
+                                    } else if (package.budget_info.match_level === 'within_budget') {
                                         borderClass = ' border-info';
                                         badgeHtml = `
                                             <span class="position-absolute top-0 end-0 badge badge-soft-info m-2">
@@ -1096,16 +1086,16 @@
                                                 ${package.budget_info && package.budget_info.has_budget ? `
                                                     <div class="mt-3 pt-2 border-top">
                                                         <div class="d-flex justify-content-between align-items-center small mb-1">
-                                                            <span class="text-muted" title="Your budget range: ${package.budget_info.budget_range || 'Not specified'}">
+                                                            <span class="text-muted" title="Your preferred budget: ${package.budget_info.budget_range || 'Not specified'}">
                                                                 <i class="ti ti-info-circle me-1"></i> Budget Match
                                                             </span>
-                                                            <span class="fw-medium ${package.budget_info.match_level === 'perfect_match' ? 'text-success' : (package.budget_info.match_level === 'within_range' ? 'text-info' : 'text-secondary')}">
+                                                            <span class="fw-medium ${package.budget_info.match_level === 'perfect_match' ? 'text-success' : (package.budget_info.match_level === 'within_budget' ? 'text-info' : 'text-secondary')}">
                                                                 ${package.budget_info.match_percentage > 0 ? package.budget_info.match_percentage + '%' : ''}
                                                                 ${package.budget_info.match_level === 'perfect_match' ? '★' : ''}
                                                             </span>
                                                         </div>
                                                         <div class="progress" style="height: 4px;">
-                                                            <div class="progress-bar ${package.budget_info.match_level === 'perfect_match' ? 'bg-success' : (package.budget_info.match_level === 'within_range' ? 'bg-info' : 'bg-secondary')}" 
+                                                            <div class="progress-bar ${package.budget_info.match_level === 'perfect_match' ? 'bg-success' : (package.budget_info.match_level === 'within_budget' ? 'bg-info' : 'bg-secondary')}" 
                                                                  role="progressbar" 
                                                                  style="width: ${package.budget_info.match_percentage}%" 
                                                                  aria-valuenow="${package.budget_info.match_percentage}" 

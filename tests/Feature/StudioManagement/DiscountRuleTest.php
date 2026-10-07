@@ -402,7 +402,7 @@ class DiscountRuleTest extends TestCase
             $table->id();
             $table->foreignId('client_id');
             $table->string('budget_name')->nullable();
-            $table->decimal('maximum_budget', 10, 2)->nullable();
+            $table->decimal('preferred_budget', 10, 2)->nullable();
             $table->string('status')->nullable();
             $table->softDeletes();
             $table->timestamps();

@@ -35,8 +35,6 @@ class ClientBudgetModel extends Model
         'client_id',
         'budget_name',
         'description',
-        'minimum_budget',
-        'maximum_budget',
         'preferred_budget',
         'spent_amount',
         'category_id',
@@ -45,13 +43,18 @@ class ClientBudgetModel extends Model
     ];
 
     /**
+     * Accessors included when the model is serialised to JSON (used by the budget page JS).
+     *
+     * @var array<int, string>
+     */
+    protected $appends = ['formatted_preferred_budget', 'formatted_spent_amount', 'budget_range'];
+
+    /**
      * The attributes that should be cast.
      *
      * @var array<string, string>
      */
     protected $casts = [
-        'minimum_budget' => 'decimal:2',
-        'maximum_budget' => 'decimal:2',
         'preferred_budget' => 'decimal:2',
         'spent_amount' => 'decimal:2',
         'created_at' => 'datetime',
@@ -100,34 +103,6 @@ class ClientBudgetModel extends Model
     }
 
     /**
-     * Scope a query to filter by budget range.
-     */
-    public function scopeInBudgetRange($query, $minAmount, $maxAmount)
-    {
-        return $query->where(function($q) use ($minAmount, $maxAmount) {
-            $q->whereBetween('minimum_budget', [$minAmount, $maxAmount])
-              ->orWhereBetween('maximum_budget', [$minAmount, $maxAmount])
-              ->orWhereBetween('preferred_budget', [$minAmount, $maxAmount]);
-        });
-    }
-
-    /**
-     * Get the formatted minimum budget with currency symbol.
-     */
-    public function getFormattedMinimumBudgetAttribute(): string
-    {
-        return $this->minimum_budget ? '₱' . number_format($this->minimum_budget, 2) : '—';
-    }
-
-    /**
-     * Get the formatted maximum budget with currency symbol.
-     */
-    public function getFormattedMaximumBudgetAttribute(): string
-    {
-        return $this->maximum_budget ? '₱' . number_format($this->maximum_budget, 2) : '—';
-    }
-
-    /**
      * Get the formatted preferred budget with currency symbol.
      */
     public function getFormattedPreferredBudgetAttribute(): string
@@ -144,21 +119,11 @@ class ClientBudgetModel extends Model
     }
 
     /**
-     * Get the budget range as formatted string.
+     * Get the budget as a formatted string.
      */
     public function getBudgetRangeAttribute(): string
     {
-        if ($this->minimum_budget && $this->maximum_budget) {
-            return '₱' . number_format($this->minimum_budget, 2) . ' - ₱' . number_format($this->maximum_budget, 2);
-        } elseif ($this->minimum_budget) {
-            return 'From ₱' . number_format($this->minimum_budget, 2);
-        } elseif ($this->maximum_budget) {
-            return 'Up to ₱' . number_format($this->maximum_budget, 2);
-        } elseif ($this->preferred_budget) {
-            return '₱' . number_format($this->preferred_budget, 2) . ' (Preferred)';
-        }
-        
-        return 'Not specified';
+        return $this->preferred_budget ? '₱' . number_format($this->preferred_budget, 2) : 'Not specified';
     }
 
     /**

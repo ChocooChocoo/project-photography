@@ -73,7 +73,7 @@
                                                     <tr class="text-uppercase fs-xxs">
                                                         <th>Budget Name</th>
                                                         <th>Category</th>
-                                                        <th>Budget Range</th>
+                                                        <th>Preferred Budget</th>
                                                         <th>Type</th>
                                                         <th>Status</th>
                                                         <th>Created</th>
@@ -160,21 +160,11 @@
                                                     <small class="text-muted">Link budget to a service category</small>
                                                 </div>
 
-                                                <div class="col-md-4 mb-3">
-                                                    <label class="form-label">Minimum Budget (₱)</label>
-                                                    <input type="number" id="minimum_budget" name="minimum_budget" class="form-control" 
-                                                           placeholder="0.00" min="0" step="0.01">
-                                                </div>
 
-                                                <div class="col-md-4 mb-3">
-                                                    <label class="form-label">Maximum Budget (₱)</label>
-                                                    <input type="number" id="maximum_budget" name="maximum_budget" class="form-control" 
-                                                           placeholder="0.00" min="0" step="0.01">
-                                                </div>
 
                                                 <div class="col-md-4 mb-3">
                                                     <label class="form-label">Preferred Budget (₱)</label>
-                                                    <input type="number" id="preferred_budget" name="preferred_budget" class="form-control" 
+                                                    <input type="number" id="preferred_budget" name="preferred_budget" class="form-control" required 
                                                            placeholder="0.00" min="0" step="0.01">
                                                 </div>
 
@@ -290,33 +280,7 @@
                                     </div>
                                 </div>
                                 
-                                <div class="col-12 col-md-6">
-                                    <div class="d-flex align-items-start">
-                                        <div class="flex-shrink-0">
-                                            <div class="bg-light-primary rounded-circle p-2">
-                                                <i class="ti ti-currency-peso fs-20 text-primary"></i>
-                                            </div>
-                                        </div>
-                                        <div class="flex-grow-1 ms-3">
-                                            <label class="text-muted small mb-1">Minimum Budget</label>
-                                            <p class="mb-0 fw-medium" id="view_minimum_budget">₱0.00</p>
-                                        </div>
-                                    </div>
-                                </div>
                                 
-                                <div class="col-12 col-md-6">
-                                    <div class="d-flex align-items-start">
-                                        <div class="flex-shrink-0">
-                                            <div class="bg-light-primary rounded-circle p-2">
-                                                <i class="ti ti-currency-peso fs-20 text-primary"></i>
-                                            </div>
-                                        </div>
-                                        <div class="flex-grow-1 ms-3">
-                                            <label class="text-muted small mb-1">Maximum Budget</label>
-                                            <p class="mb-0 fw-medium" id="view_maximum_budget">₱0.00</p>
-                                        </div>
-                                    </div>
-                                </div>
                                 
                                 <div class="col-12 col-md-6">
                                     <div class="d-flex align-items-start">
@@ -476,19 +440,7 @@
                     });
                     
                     // Calculate budget range if not available
-                    let budgetRange = budget.budget_range || (() => {
-                        if (budget.minimum_budget && budget.maximum_budget) {
-                            return '₱' + parseFloat(budget.minimum_budget).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 
-                                ' - ₱' + parseFloat(budget.maximum_budget).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                        } else if (budget.minimum_budget) {
-                            return 'From ₱' + parseFloat(budget.minimum_budget).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                        } else if (budget.maximum_budget) {
-                            return 'Up to ₱' + parseFloat(budget.maximum_budget).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                        } else if (budget.preferred_budget) {
-                            return '₱' + parseFloat(budget.preferred_budget).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' (Preferred)';
-                        }
-                        return 'Not specified';
-                    })();
+                    let budgetRange = budget.budget_range || 'Not specified';
 
                     html += `
                         <tr>
@@ -530,20 +482,6 @@
                     : '{{ route("client.budget.store") }}';
                 let method = budgetId ? 'PUT' : 'POST';
 
-                // Basic validation
-                let minBudget = parseFloat($('#minimum_budget').val()) || 0;
-                let maxBudget = parseFloat($('#maximum_budget').val()) || 0;
-                
-                if (maxBudget > 0 && minBudget > maxBudget) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Validation Error',
-                        text: 'Maximum budget must be greater than or equal to minimum budget',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                    return;
-                }
 
                 $.ajax({
                     url: url,
@@ -553,8 +491,6 @@
                         _token: '{{ csrf_token() }}',
                         budget_name: $('#budget_name').val(),
                         description: $('#description').val(),
-                        minimum_budget: $('#minimum_budget').val(),
-                        maximum_budget: $('#maximum_budget').val(),
                         preferred_budget: $('#preferred_budget').val(),
                         category_id: $('#category_id').val(),
                         budget_type: $('#budget_type').val(),
@@ -680,21 +616,11 @@
                                             <small class="text-muted">Link budget to a service category</small>
                                         </div>
 
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Minimum Budget (₱)</label>
-                                            <input type="number" id="edit_minimum_budget" name="minimum_budget" class="form-control" 
-                                                placeholder="0.00" min="0" step="0.01" value="${budget.minimum_budget || ''}">
-                                        </div>
 
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Maximum Budget (₱)</label>
-                                            <input type="number" id="edit_maximum_budget" name="maximum_budget" class="form-control" 
-                                                placeholder="0.00" min="0" step="0.01" value="${budget.maximum_budget || ''}">
-                                        </div>
 
                                         <div class="col-md-4 mb-3">
                                             <label class="form-label">Preferred Budget (₱)</label>
-                                            <input type="number" id="edit_preferred_budget" name="preferred_budget" class="form-control" 
+                                            <input type="number" id="edit_preferred_budget" name="preferred_budget" class="form-control" required 
                                                 placeholder="0.00" min="0" step="0.01" value="${budget.preferred_budget || ''}">
                                         </div>
 
@@ -758,20 +684,6 @@
                 let budgetId = $('#edit_budget_id').val();
                 let url = '{{ route("client.budget.update", ["id" => "PLACEHOLDER"]) }}'.replace('PLACEHOLDER', budgetId);
 
-                // Basic validation
-                let minBudget = parseFloat($('#edit_minimum_budget').val()) || 0;
-                let maxBudget = parseFloat($('#edit_maximum_budget').val()) || 0;
-                
-                if (maxBudget > 0 && minBudget > maxBudget) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Validation Error',
-                        text: 'Maximum budget must be greater than or equal to minimum budget',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                    return;
-                }
 
                 $.ajax({
                     url: url,
@@ -781,8 +693,6 @@
                         _token: '{{ csrf_token() }}',
                         budget_name: $('#edit_budget_name').val(),
                         description: $('#edit_description').val(),
-                        minimum_budget: $('#edit_minimum_budget').val(),
-                        maximum_budget: $('#edit_maximum_budget').val(),
                         preferred_budget: $('#edit_preferred_budget').val(),
                         category_id: $('#edit_category_id').val(),
                         budget_type: $('#edit_budget_type').val(),
@@ -930,33 +840,7 @@
                                                 </div>
                                             </div>
                                             
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-primary rounded-circle p-2">
-                                                            <i class="ti ti-currency-peso fs-20 text-primary"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Minimum Budget</label>
-                                                        <p class="mb-0 fw-medium">${budget.formatted_minimum_budget}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
                                             
-                                            <div class="col-12 col-md-6">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="bg-light-primary rounded-circle p-2">
-                                                            <i class="ti ti-currency-peso fs-20 text-primary"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <label class="text-muted small mb-1">Maximum Budget</label>
-                                                        <p class="mb-0 fw-medium">${budget.formatted_maximum_budget}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
                                             
                                             <div class="col-12 col-md-6">
                                                 <div class="d-flex align-items-start">

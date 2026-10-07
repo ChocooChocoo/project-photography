@@ -586,7 +586,7 @@ trait Notifiable
             $client->id,
             'budget_exceeded',
             'Budget Limit Reached',
-            "Your spending on \"{$budget->budget_name}\" has reached your set maximum of ₱" . number_format($budget->maximum_budget, 2) . ".",
+            "Your spending on \"{$budget->budget_name}\" has reached your preferred budget of ₱" . number_format($budget->preferred_budget, 2) . ".",
             [
                 'budget_id' => $budget->id,
             ],

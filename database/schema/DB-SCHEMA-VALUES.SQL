@@ -764,9 +764,7 @@ CREATE TABLE IF NOT EXISTS `tbl_client_budget` (
   `client_id` bigint unsigned NOT NULL,
   `budget_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Name/Title for this budget (e.g., Wedding Budget, Event Budget)',
   `description` text COLLATE utf8mb4_unicode_ci COMMENT 'Description of the budget purpose',
-  `minimum_budget` decimal(10,2) DEFAULT NULL COMMENT 'Minimum budget amount',
-  `maximum_budget` decimal(10,2) DEFAULT NULL COMMENT 'Maximum budget amount',
-  `preferred_budget` decimal(10,2) DEFAULT NULL COMMENT 'Preferred/ideal budget amount',
+  `preferred_budget` decimal(10,2) NOT NULL COMMENT 'Preferred/ideal budget amount',
   `category_id` bigint unsigned DEFAULT NULL COMMENT 'Associated service category',
   `budget_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Type: service, package, equipment, etc.',
   `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active' COMMENT 'Budget status',
@@ -778,7 +776,6 @@ CREATE TABLE IF NOT EXISTS `tbl_client_budget` (
   KEY `tbl_client_budget_category_id_index` (`category_id`),
   KEY `tbl_client_budget_status_index` (`status`),
   KEY `tbl_client_budget_client_id_status_index` (`client_id`,`status`),
-  KEY `tbl_client_budget_minimum_budget_maximum_budget_index` (`minimum_budget`,`maximum_budget`),
   CONSTRAINT `tbl_client_budget_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `tbl_categories` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tbl_client_budget_client_id_foreign` FOREIGN KEY (`client_id`) REFERENCES `tbl_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

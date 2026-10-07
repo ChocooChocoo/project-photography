@@ -23,9 +23,7 @@ class StoreBudgetRequest extends FormRequest
         return [
             'budget_name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'minimum_budget' => 'nullable|numeric|min:0',
-            'maximum_budget' => 'nullable|numeric|min:0|gte:minimum_budget',
-            'preferred_budget' => 'nullable|numeric|min:0',
+            'preferred_budget' => 'required|numeric|min:0',
             'category_id' => 'nullable|exists:tbl_categories,id',
             'budget_type' => 'nullable|string|max:100',
             'status' => 'required|in:active,inactive',
@@ -38,7 +36,7 @@ class StoreBudgetRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'maximum_budget.gte' => 'Maximum budget must be greater than or equal to minimum budget.',
+            'preferred_budget.required' => 'Please enter your preferred budget.',
             'category_id.exists' => 'The selected category does not exist.',
             'status.required' => 'Please select a status.',
             'status.in' => 'Invalid status selected.',
@@ -54,8 +52,6 @@ class StoreBudgetRequest extends FormRequest
         $this->merge([
             'budget_name' => $this->budget_name ?: null,
             'description' => $this->description ?: null,
-            'minimum_budget' => $this->minimum_budget !== '' ? $this->minimum_budget : null,
-            'maximum_budget' => $this->maximum_budget !== '' ? $this->maximum_budget : null,
             'preferred_budget' => $this->preferred_budget !== '' ? $this->preferred_budget : null,
             'category_id' => $this->category_id ?: null,
             'budget_type' => $this->budget_type ?: null,

@@ -112,8 +112,6 @@ class BudgetStatusControlTest extends TestCase
             $table->foreignId('client_id');
             $table->string('budget_name')->nullable();
             $table->text('description')->nullable();
-            $table->decimal('minimum_budget', 10, 2)->nullable();
-            $table->decimal('maximum_budget', 10, 2)->nullable();
             $table->decimal('preferred_budget', 10, 2)->nullable();
             $table->decimal('spent_amount', 10, 2)->nullable();
             $table->foreignId('category_id')->nullable();
