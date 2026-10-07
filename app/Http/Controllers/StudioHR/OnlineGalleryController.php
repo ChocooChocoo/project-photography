@@ -63,9 +63,16 @@ class OnlineGalleryController extends Controller
             }
         }
 
+        $user = Auth::user();
+        $canManage = $user->hasPermission('studio-hr.online-gallery.manage') || $user->hasPermission('owner.online-gallery.manage');
+
         return view('studio-hr.view-online-gallery', [
             'bookings' => $bookings,
             'pageTitle' => self::PAGE_TITLE,
+            'canCreate' => $canManage || $user->hasPermission('studio-hr.online-gallery.create'),
+            'canUpdate' => $canManage || $user->hasPermission('studio-hr.online-gallery.update'),
+            // Delete never rides on manage; it needs its own key.
+            'canDelete' => $user->hasPermission('studio-hr.online-gallery.delete'),
         ]);
     }
 

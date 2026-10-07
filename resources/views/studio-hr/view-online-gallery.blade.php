@@ -116,10 +116,12 @@
                             <label class="form-label">Gallery Name</label>
                             <input type="text" class="form-control" id="galleryName">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Upload Images</label>
-                            <input type="file" class="form-control" id="galleryImages" accept="image/*" multiple>
-                        </div>
+                        @if($canCreate)
+                            <div class="col-md-6">
+                                <label class="form-label">Upload Images</label>
+                                <input type="file" class="form-control" id="galleryImages" accept="image/*" multiple>
+                            </div>
+                        @endif
                         <div class="col-12">
                             <label class="form-label">Description</label>
                             <textarea class="form-control" id="galleryDescription" rows="2"></textarea>
@@ -133,21 +135,27 @@
                 </div>
                 <div class="modal-footer justify-content-between">
                     <div>
-                        <button type="button" class="btn btn-outline-danger" id="galleryDeleteBtn" disabled>
-                            <i class="ti ti-trash me-1"></i> Delete Gallery
-                        </button>
+                        @if($canDelete)
+                            <button type="button" class="btn btn-outline-danger" id="galleryDeleteBtn" disabled>
+                                <i class="ti ti-trash me-1"></i> Delete Gallery
+                            </button>
+                        @endif
                     </div>
                     <div>
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-secondary" id="galleryPublishBtn" disabled>
-                            <i class="ti ti-send me-1"></i> Publish
-                        </button>
-                        <button type="button" class="btn btn-primary" id="gallerySubmitBtn" disabled>
-                            <i class="ti ti-check me-1"></i> Submit for approval
-                        </button>
-                        <button type="button" class="btn btn-primary" id="gallerySaveBtn">
-                            <i class="ti ti-device-floppy me-1"></i> Save
-                        </button>
+                        @if($canUpdate)
+                            <button type="button" class="btn btn-secondary" id="galleryPublishBtn" disabled>
+                                <i class="ti ti-send me-1"></i> Publish
+                            </button>
+                            <button type="button" class="btn btn-primary" id="gallerySubmitBtn" disabled>
+                                <i class="ti ti-check me-1"></i> Submit for approval
+                            </button>
+                        @endif
+                        @if($canCreate || $canUpdate)
+                            <button type="button" class="btn btn-primary" id="gallerySaveBtn">
+                                <i class="ti ti-device-floppy me-1"></i> Save
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -203,13 +211,13 @@
             const alertBox = document.getElementById('galleryModalAlert');
             const nameInput = document.getElementById('galleryName');
             const descriptionInput = document.getElementById('galleryDescription');
-            const imagesInput = document.getElementById('galleryImages');
+            const imagesInput = document.getElementById('galleryImages') || document.createElement('input');
             const photoGrid = document.getElementById('galleryPhotoGrid');
             const photoCount = document.getElementById('galleryPhotoCount');
-            const saveBtn = document.getElementById('gallerySaveBtn');
-            const publishBtn = document.getElementById('galleryPublishBtn');
-            const submitBtn = document.getElementById('gallerySubmitBtn');
-            const deleteBtn = document.getElementById('galleryDeleteBtn');
+            const saveBtn = document.getElementById('gallerySaveBtn') || document.createElement('input');
+            const publishBtn = document.getElementById('galleryPublishBtn') || document.createElement('input');
+            const submitBtn = document.getElementById('gallerySubmitBtn') || document.createElement('input');
+            const deleteBtn = document.getElementById('galleryDeleteBtn') || document.createElement('input');
 
             let currentBookingId = null;
             let currentGallery = null;

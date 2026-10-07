@@ -441,17 +441,20 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         // Accepts the studio-HR gallery permissions and the owner gallery
         // permission, so an owner grant of either portal's permission works for
         // the employee's HR account.
-        $galleryViewPermissions = 'permission:studio-hr.online-gallery.view,studio-hr.online-gallery.manage,owner.online-gallery.manage';
-        $galleryManagePermissions = 'permission:studio-hr.online-gallery.manage,owner.online-gallery.manage';
+        $galleryViewPermissions = 'permission:studio-hr.online-gallery.view,studio-hr.online-gallery.manage,studio-hr.online-gallery.create,studio-hr.online-gallery.update,studio-hr.online-gallery.delete,owner.online-gallery.manage';
+        $galleryCreatePermissions = 'permission:studio-hr.online-gallery.create,studio-hr.online-gallery.manage,owner.online-gallery.manage';
+        $galleryUpdatePermissions = 'permission:studio-hr.online-gallery.update,studio-hr.online-gallery.manage,owner.online-gallery.manage';
+        // Delete never rides on manage: an unchecked Delete must return 403.
+        $galleryDeletePermissions = 'permission:studio-hr.online-gallery.delete';
 
         Route::get('/view/online-gallery', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'index'])->middleware($galleryViewPermissions)->name('studio-hr.online-gallery.index');
         Route::get('/online-gallery/{bookingId}/details', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'getGalleryDetails'])->middleware($galleryViewPermissions)->name('studio-hr.online-gallery.details');
-        Route::post('/online-gallery/{bookingId}/upload', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'uploadImages'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.upload');
-        Route::delete('/online-gallery/{galleryId}/image', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'deleteImage'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.delete-image');
-        Route::delete('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'deleteGallery'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.delete');
-        Route::put('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'updateGallery'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.update');
-        Route::post('/online-gallery/{galleryId}/publish', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'publish'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.publish');
-        Route::post('/online-gallery/{galleryId}/submit', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'submitForApproval'])->middleware($galleryManagePermissions)->name('studio-hr.online-gallery.submit');
+        Route::post('/online-gallery/{bookingId}/upload', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'uploadImages'])->middleware($galleryCreatePermissions)->name('studio-hr.online-gallery.upload');
+        Route::delete('/online-gallery/{galleryId}/image', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'deleteImage'])->middleware($galleryDeletePermissions)->name('studio-hr.online-gallery.delete-image');
+        Route::delete('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'deleteGallery'])->middleware($galleryDeletePermissions)->name('studio-hr.online-gallery.delete');
+        Route::put('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'updateGallery'])->middleware($galleryUpdatePermissions)->name('studio-hr.online-gallery.update');
+        Route::post('/online-gallery/{galleryId}/publish', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'publish'])->middleware($galleryUpdatePermissions)->name('studio-hr.online-gallery.publish');
+        Route::post('/online-gallery/{galleryId}/submit', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'submitForApproval'])->middleware($galleryUpdatePermissions)->name('studio-hr.online-gallery.submit');
     });
 
     // Studio Finance Routes ===============================================================================================================================================

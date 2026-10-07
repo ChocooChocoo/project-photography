@@ -289,6 +289,102 @@ class CrossPortalGalleryPermissionTest extends TestCase
         $this->assertSame(1, DB::table('tbl_permissions')->whereNull('deleted_at')->count());
     }
 
+    public function test_hr_delete_requires_the_delete_key_even_with_manage(): void
+    {
+        $this->registerRealPermissionRoute('studio-hr.online-gallery.delete', 'delete', '/_test/rbac/hr-gallery/delete', fn () => response()->json(['success' => true]));
+
+        $manageOnly = $this->hrWithPermissions(['manage', 'create', 'view'], 'manage-only@example.com');
+        $this->actingAs($manageOnly)
+            ->deleteJson('/_test/rbac/hr-gallery/delete')
+            ->assertForbidden();
+
+        $this->clearPermissionCache();
+        $withDelete = $this->hrWithPermissions(['delete'], 'with-delete@example.com');
+        $this->actingAs($withDelete)
+            ->deleteJson('/_test/rbac/hr-gallery/delete')
+            ->assertOk();
+    }
+
+    public function test_manage_create_and_view_grant_the_non_delete_actions(): void
+    {
+        $this->registerRealPermissionRoute('studio-hr.online-gallery.upload', 'post', '/_test/rbac/hr-gallery/upload', fn () => response()->json(['success' => true]));
+        $this->registerRealPermissionRoute('studio-hr.online-gallery.publish', 'post', '/_test/rbac/hr-gallery/publish', fn () => response()->json(['success' => true]));
+        $this->registerRealPermissionRoute('studio-hr.online-gallery.update', 'put', '/_test/rbac/hr-gallery/update', fn () => response()->json(['success' => true]));
+        $this->registerRealPermissionRoute('studio-hr.online-gallery.delete-image', 'delete', '/_test/rbac/hr-gallery/delete-image', fn () => response()->json(['success' => true]));
+
+        $hr = $this->hrWithPermissions(['manage', 'create', 'view'], 'full-use@example.com');
+
+        $this->actingAs($hr)->get('/_test/rbac/studio-hr/online-gallery')->assertOk();
+        $this->actingAs($hr)->postJson('/_test/rbac/hr-gallery/upload')->assertOk();
+        $this->actingAs($hr)->postJson('/_test/rbac/hr-gallery/publish')->assertOk();
+        $this->actingAs($hr)->putJson('/_test/rbac/hr-gallery/update')->assertOk();
+        $this->actingAs($hr)->deleteJson('/_test/rbac/hr-gallery/delete-image')->assertForbidden();
+    }
+
+    public function test_view_only_cannot_upload_or_update(): void
+    {
+        $this->registerRealPermissionRoute('studio-hr.online-gallery.upload', 'post', '/_test/rbac/hr-gallery/upload', fn () => response()->json(['success' => true]));
+        $this->registerRealPermissionRoute('studio-hr.online-gallery.update', 'put', '/_test/rbac/hr-gallery/update', fn () => response()->json(['success' => true]));
+
+        $hr = $this->hrWithPermissions(['view'], 'view-only@example.com');
+
+        $this->actingAs($hr)->postJson('/_test/rbac/hr-gallery/upload')->assertForbidden();
+        $this->actingAs($hr)->putJson('/_test/rbac/hr-gallery/update')->assertForbidden();
+    }
+
+    public function test_gallery_page_hides_controls_the_user_may_not_use(): void
+    {
+        $studio = $this->createStudio('Cross Portal Studio');
+        $this->createGalleryBooking($studio, 'Gala Night', 'GAL-BOOK-2');
+
+        $limited = $this->hrWithPermissions(['view'], 'limited@example.com', $studio);
+        $html = $this->actingAs($limited)->get('/_test/rbac/studio-hr/online-gallery')->assertOk()->getContent();
+        $this->assertStringNotContainsString('id="galleryDeleteBtn"', $html);
+        $this->assertStringNotContainsString('id="galleryImages"', $html);
+        $this->assertStringNotContainsString('id="gallerySaveBtn"', $html);
+
+        $this->clearPermissionCache();
+        $full = $this->hrWithPermissions(['view', 'manage', 'delete'], 'full@example.com', $studio);
+        $html = $this->actingAs($full)->get('/_test/rbac/studio-hr/online-gallery')->assertOk()->getContent();
+        $this->assertStringContainsString('id="galleryDeleteBtn"', $html);
+        $this->assertStringContainsString('id="galleryImages"', $html);
+        $this->assertStringContainsString('id="gallerySaveBtn"', $html);
+    }
+
+    /**
+     * Register a test route that reuses the permission middleware the real
+     * HR gallery route declares, so the test follows routes/web.php.
+     */
+    private function registerRealPermissionRoute(string $realRouteName, string $method, string $uri, \Closure $action): void
+    {
+        $permission = collect(\Illuminate\Support\Facades\Route::getRoutes()->getByName($realRouteName)->gatherMiddleware())
+            ->first(fn ($m) => is_string($m) && str_starts_with($m, 'permission:'));
+        $this->assertNotNull($permission, "{$realRouteName} has no permission middleware");
+
+        Route::middleware(['studio.hr', $permission])->{$method === 'delete' ? 'delete' : $method}($uri, $action);
+    }
+
+    /**
+     * @param  array<int, string>  $actions
+     */
+    private function hrWithPermissions(array $actions, string $email, ?StudiosModel $studio = null): UserModel
+    {
+        $studio ??= $this->createStudio('Cross Portal Studio');
+        $role = $this->createRole('hr-role-'.md5($email), 'studio-hr');
+
+        foreach ($actions as $action) {
+            $string = 'studio-hr.online-gallery.'.$action;
+            $permission = PermissionModel::where('permission_string', $string)->first()
+                ?? $this->createPermission($string, 'studio-hr', 'online-gallery', $action);
+            $role->permissions()->attach($permission->id);
+        }
+
+        $hr = $this->createUser('studio-hr', 'Hana', $email);
+        $hr->roles()->attach($role->id, ['studio_id' => $studio->id]);
+
+        return $hr;
+    }
+
     private function createUser(string $role, string $firstName, string $email): UserModel
     {
         return UserModel::create([

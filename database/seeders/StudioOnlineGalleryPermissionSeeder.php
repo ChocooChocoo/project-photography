@@ -24,7 +24,10 @@ class StudioOnlineGalleryPermissionSeeder extends Seeder
 
         $permissions = [
             ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.online-gallery.view', 'resource' => 'online-gallery', 'action' => 'view', 'description' => 'View online galleries for the assigned studio.'],
-            ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.online-gallery.manage', 'resource' => 'online-gallery', 'action' => 'manage', 'description' => 'Manage, publish, and delete online galleries for the assigned studio.'],
+            ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.online-gallery.manage', 'resource' => 'online-gallery', 'action' => 'manage', 'description' => 'Create, upload, update, and publish online galleries for the assigned studio.'],
+            ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.online-gallery.create', 'resource' => 'online-gallery', 'action' => 'create', 'description' => 'Create galleries and upload images for the assigned studio.'],
+            ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.online-gallery.update', 'resource' => 'online-gallery', 'action' => 'update', 'description' => 'Update, publish, and submit online galleries for the assigned studio.'],
+            ['portal' => 'studio-hr', 'permission_string' => 'studio-hr.online-gallery.delete', 'resource' => 'online-gallery', 'action' => 'delete', 'description' => 'Delete online galleries and gallery images for the assigned studio.'],
         ];
 
         foreach ($permissions as $permission) {

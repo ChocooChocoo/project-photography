@@ -565,7 +565,8 @@
                 const groupedPermissions = {};
 
                 permissions.forEach(permission => {
-                    const groupName = permission.resource_display || 'Other';
+                    const resourceName = permission.resource_display || 'Other';
+                    const groupName = permission.portal_display ? permission.portal_display + ' - ' + resourceName : resourceName;
 
                     if (!groupedPermissions[groupName]) {
                         groupedPermissions[groupName] = [];
