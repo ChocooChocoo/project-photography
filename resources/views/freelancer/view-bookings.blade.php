@@ -252,6 +252,7 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
+    @include('partials.contract-block-js')
     <script>
         $(document).ready(function() {
             let currentBookingId = null;
@@ -647,6 +648,7 @@
 
                 $('#bookingReference').text(booking.booking_reference);
                 $('#bookingModalBody').html(modalContent);
+                $('#bookingModalBody').prepend(window.renderContractBlock(data.contract, 'freelancer'));
                 $('#bookingModalFooter').show();
                 loadIcons();
             }
@@ -899,7 +901,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Failed to update status. Please try again.',
+                            text: (xhr.responseJSON && xhr.responseJSON.message) || 'Failed to update status. Please try again.',
                             confirmButtonColor: '#3475db'
                         });
                     },

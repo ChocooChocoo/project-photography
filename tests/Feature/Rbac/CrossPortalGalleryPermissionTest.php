@@ -594,6 +594,9 @@ class CrossPortalGalleryPermissionTest extends TestCase
             $table->foreignId('category_id')->nullable();
             $table->string('event_name');
             $table->date('event_date');
+            $table->date('event_end_date')->nullable();
+            $table->string('booking_duration_type')->default('short_term');
+            $table->timestamp('terms_accepted_at')->nullable();
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();
             $table->string('location_type')->nullable();

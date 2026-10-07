@@ -188,6 +188,8 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/view/bookings', [\App\Http\Controllers\StudioOwner\BookingController::class, 'index'])->middleware('permission:owner.bookings.manage')->name('owner.booking.index');
         Route::get('/booking/history', [\App\Http\Controllers\StudioOwner\BookingController::class, 'history'])->middleware('permission:owner.bookings.manage')->name('owner.booking.history');
         Route::get('/bookings/{id}/details', [\App\Http\Controllers\StudioOwner\BookingController::class, 'getBookingDetails'])->middleware('permission:owner.bookings.manage')->name('owner.booking.details');
+        Route::get('/contracts/{booking}', [\App\Http\Controllers\BookingContractController::class, 'show'])->middleware('permission:owner.bookings.manage')->name('owner.contracts.show');
+        Route::post('/contracts/{booking}/sign', [\App\Http\Controllers\BookingContractController::class, 'sign'])->middleware('permission:owner.bookings.manage')->name('owner.contracts.sign');
         Route::get('/bookings/{id}/available-photographers', [\App\Http\Controllers\StudioOwner\BookingController::class, 'getAvailablePhotographers'])->middleware('permission:owner.bookings.manage')->name('owner.booking.available.photographers');
         Route::post('/bookings/{id}/assign-photographers', [\App\Http\Controllers\StudioOwner\BookingController::class, 'assignPhotographers'])->middleware('permission:owner.bookings.manage')->name('owner.booking.assign.photographers');
         Route::delete('/assignments/{id}', [\App\Http\Controllers\StudioOwner\BookingController::class, 'removePhotographerAssignment'])->middleware('permission:owner.bookings.manage')->name('owner.booking.remove.assignment');
@@ -517,6 +519,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
     // Freelancer Routes ===================================================================================================================================================
     Route::prefix('freelancer')->middleware([FreelancerMiddleware::class])->group(function () {
 
+        // Booking contracts
+        Route::get('/contracts/{booking}', [\App\Http\Controllers\BookingContractController::class, 'show'])->name('freelancer.contracts.show');
+        Route::post('/contracts/{booking}/sign', [\App\Http\Controllers\BookingContractController::class, 'sign'])->name('freelancer.contracts.sign');
+
         // Profile
         Route::get('/profile', [\App\Http\Controllers\GeneralProfileController::class, 'freelancer'])->name('freelancer.profile');
 
@@ -657,6 +663,11 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
 
         // Favorites
         Route::post('/favorites/toggle', [\App\Http\Controllers\Client\FavoritesController::class, 'toggle'])->name('client.favorites.toggle');
+
+        // Booking contracts and the provider's terms
+        Route::get('/contracts/{booking}', [\App\Http\Controllers\BookingContractController::class, 'show'])->name('client.contracts.show');
+        Route::post('/contracts/{booking}/sign', [\App\Http\Controllers\BookingContractController::class, 'sign'])->name('client.contracts.sign');
+        Route::get('/booking-terms/{type}/{id}', [\App\Http\Controllers\BookingContractController::class, 'terms'])->name('client.booking-terms');
 
         // Booking Details
         Route::get('/booking-details/{type}/{id}', [\App\Http\Controllers\Client\BookingDetailsController::class, 'index'])->name('client.booking-details');

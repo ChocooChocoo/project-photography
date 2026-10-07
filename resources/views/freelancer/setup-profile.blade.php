@@ -76,6 +76,12 @@
                                     </div>
 
                                     <div class="col-12 mb-3">
+                                        <label class="form-label">Contract Template <small class="text-muted">(optional)</small></label>
+                                        <textarea class="form-control" name="contract_template" rows="6" maxlength="5000" placeholder="Leave empty to use the platform default contract."></textarea>
+                                        <small class="form-text text-muted">Used for bookings of two or more days. Placeholders: @{{provider_name}}, @{{client_name}}, @{{booking_reference}}, @{{package}}, @{{event_dates}}, @{{event_time}}, @{{location}}, @{{total}}.</small>
+                                    </div>
+
+                                    <div class="col-12 mb-3">
                                         <label class="form-label">Years of Experience</label>
                                         <input type="number" class="form-control" placeholder="Enter years of experience" name="years_of_experience" required>
                                         <div class="invalid-feedback">

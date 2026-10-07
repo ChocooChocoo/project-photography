@@ -314,6 +314,9 @@ class DepositPolicyTest extends TestCase
             $table->foreignId('provider_id');
             $table->foreignId('category_id');
             $table->date('event_date');
+            $table->date('event_end_date')->nullable();
+            $table->string('booking_duration_type')->default('short_term');
+            $table->timestamp('terms_accepted_at')->nullable();
             $table->string('start_time');
             $table->string('end_time');
             $table->string('location_type');

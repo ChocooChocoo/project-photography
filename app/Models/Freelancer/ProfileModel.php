@@ -23,6 +23,7 @@ class ProfileModel extends Model
      */
     protected $fillable = [
         'user_id',
+        'contract_template',
         'location_id',
         'brand_name',
         'tagline',

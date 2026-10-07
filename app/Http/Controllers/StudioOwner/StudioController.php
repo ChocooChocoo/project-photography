@@ -614,6 +614,11 @@ class StudioController extends Controller
                 'advance_booking_days' => $validatedData['advance_booking_days'],
             ]);
 
+            // Only touch the contract template when the form submitted it
+            if (array_key_exists('contract_template', $validatedData)) {
+                $studio->contract_template = $validatedData['contract_template'];
+            }
+
             if (array_key_exists('permit_expiry_date', $validatedData) && $validatedData['permit_expiry_date'] !== null) {
                 $studio->permit_expiry_date = $validatedData['permit_expiry_date'];
             }

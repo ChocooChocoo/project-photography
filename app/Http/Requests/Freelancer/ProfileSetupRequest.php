@@ -31,6 +31,7 @@ class ProfileSetupRequest extends FormRequest
             'brand_name' => 'required|string|max:255',
             'professional_tagline' => 'nullable|string|max:255',
             'bio' => 'required|string|min:50|max:2000',
+            'contract_template' => 'nullable|string|max:5000',
             'years_of_experience' => 'required|integer|min:0|max:50',
             'brand_logo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             

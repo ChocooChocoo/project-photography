@@ -234,6 +234,9 @@ class NotificationAutomationTest extends TestCase
             $table->unsignedBigInteger('provider_id');
             $table->string('event_name');
             $table->date('event_date');
+            $table->date('event_end_date')->nullable();
+            $table->string('booking_duration_type')->default('short_term');
+            $table->timestamp('terms_accepted_at')->nullable();
             $table->decimal('total_amount', 10, 2);
             $table->decimal('down_payment', 10, 2);
             $table->string('payment_type');

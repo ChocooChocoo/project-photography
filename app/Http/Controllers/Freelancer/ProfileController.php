@@ -118,6 +118,7 @@ class ProfileController extends Controller
                 'brand_name' => $request->brand_name,
                 'tagline' => $request->professional_tagline,
                 'bio' => $request->bio,
+                'contract_template' => $request->contract_template,
                 'years_experience' => $request->years_of_experience,
                 'brand_logo' => $brandLogoPath,
                 'street' => $request->street,

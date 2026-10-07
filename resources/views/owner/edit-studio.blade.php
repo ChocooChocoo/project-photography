@@ -92,6 +92,12 @@
                                     </div>
 
                                     <div class="col-12 mb-3">
+                                        <label class="form-label">Contract Template <small class="text-muted">(optional)</small></label>
+                                        <textarea class="form-control" name="contract_template" rows="8" maxlength="5000" placeholder="Leave empty to use the platform default contract.">{{ $studio->contract_template }}</textarea>
+                                        <small class="form-text text-muted">Used for bookings of two or more days. You can use these placeholders: @{{provider_name}}, @{{client_name}}, @{{booking_reference}}, @{{package}}, @{{event_dates}}, @{{event_time}}, @{{location}}, @{{total}}. Write your terms, cancellation and payment rules here.</small>
+                                    </div>
+
+                                    <div class="col-12 mb-3">
                                         <label class="form-label fw-semibold">Studio Logo</label>
                                         <div class="input-group">
                                             <input type="file" class="form-control" id="studioLogo" name="studio_logo" accept=".jpg,.jpeg,.png">

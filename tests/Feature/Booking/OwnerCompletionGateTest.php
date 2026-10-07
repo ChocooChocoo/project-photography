@@ -365,6 +365,9 @@ class OwnerCompletionGateTest extends TestCase
             $table->unsignedBigInteger('category_id')->nullable();
             $table->string('event_name');
             $table->date('event_date');
+            $table->date('event_end_date')->nullable();
+            $table->string('booking_duration_type')->default('short_term');
+            $table->timestamp('terms_accepted_at')->nullable();
             $table->time('start_time');
             $table->time('end_time');
             $table->string('location_type');

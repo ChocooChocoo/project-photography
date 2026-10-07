@@ -67,7 +67,8 @@ class BookingController extends Controller
                 'client' => $booking->client,
                 'category' => $booking->category,
                 'packages' => $booking->packages,
-                'payments' => $booking->payments
+                'payments' => $booking->payments,
+                'contract' => $booking->contractSummary('freelancer'),
             ]);
             
         } catch (\Exception $e) {
@@ -115,6 +116,14 @@ class BookingController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid status transition from ' . $oldStatus . ' to ' . $newStatus
+                ], 400);
+            }
+
+            // Long-term bookings need both contract signatures before they can be confirmed
+            if ($newStatus === 'confirmed' && ! $booking->canBeConfirmed()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This long-term booking cannot be confirmed until both parties have signed the contract.'
                 ], 400);
             }
 

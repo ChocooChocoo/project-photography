@@ -225,6 +225,14 @@
                                                 <span id="dateStatusText">Select a date to check availability</span>
                                             </small>
                                         </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">End Date <small class="text-muted">(optional, for multi-day bookings)</small></label>
+                                            <input type="date" class="form-control" id="eventEndDate" name="event_end_date"
+                                                min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                                max="{{ date('Y-m-d', strtotime('+90 days')) }}">
+                                            <small class="mt-1 d-block" id="durationTypeNote"><span class="badge badge-soft-primary">Short-term (1 day)</span></small>
+                                            <small class="text-muted d-block" id="multiDayRecurringNote" style="display:none !important;">Multi-day and recurring bookings cannot be combined.</small>
+                                        </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Start Time</label>
                                             <input type="time" class="form-control" id="startTime" name="start_time"
@@ -438,7 +446,7 @@
                                         <input class="form-check-input" type="checkbox" id="termsCheck"
                                             name="terms_agree" required>
                                         <label class="form-check-label" for="termsCheck">
-                                            I agree to the <a href="#" class="text-primary">Booking Terms and
+                                            I agree to the <a href="{{ route('client.booking-terms', ['type' => $type, 'id' => $id]) }}" target="_blank" rel="noopener" class="text-primary">Booking Terms and
                                                 Conditions</a>
                                         </label>
                                         <div class="invalid-feedback">
@@ -614,6 +622,42 @@
             const operatingDayIndices = operatingDays
                 .map(d => dayNameToIndex[d.toLowerCase()])
                 .filter(d => d !== undefined);
+
+            /**
+             * First date in the span (Y-m-d) that is not an operating day, or null.
+             */
+            function firstClosedDay(startString, endString) {
+                const parts = startString.split('-');
+                const day = new Date(parts[0], parts[1] - 1, parts[2]);
+                const endParts = (endString || startString).split('-');
+                const last = new Date(endParts[0], endParts[1] - 1, endParts[2]);
+
+                for (; day <= last; day.setDate(day.getDate() + 1)) {
+                    if (!operatingDayIndices.includes(day.getDay())) {
+                        return day.toLocaleDateString('en-CA');
+                    }
+                }
+                return null;
+            }
+
+            /**
+             * Show short-term/long-term live and keep multi-day and recurring mutually exclusive.
+             */
+            function updateDurationType() {
+                const start = $('#eventDate').val();
+                const end = $('#eventEndDate').val();
+                const days = (start && end) ? Math.round((new Date(end) - new Date(start)) / 86400000) + 1 : 1;
+                const longTerm = days > 1;
+
+                $('#durationTypeNote').html(longTerm
+                    ? `<span class="badge badge-soft-warning">Long-term (${days} days)</span> <span class="text-muted">A contract that you and the provider both sign is required before this booking is confirmed.</span>`
+                    : '<span class="badge badge-soft-primary">Short-term (1 day)</span>');
+
+                if (start) { $('#eventEndDate').attr('min', start); }
+                $('#recurringToggle').prop('disabled', longTerm);
+                $('#eventEndDate').prop('disabled', $('#recurringToggle').is(':checked'));
+                $('#multiDayRecurringNote').attr('style', (longTerm || $('#recurringToggle').is(':checked')) ? '' : 'display:none !important;');
+            }
 
             /**
              * Check if a date string falls on an operating day
@@ -1505,6 +1549,7 @@
                         type:        type,
                         provider_id: providerId,
                         date:        selectedDate,
+                        end_date:    $('#eventEndDate').val() || undefined,
                         start_time:  startTime,
                         end_time:    endTime,
                         _token:      '{{ csrf_token() }}'
@@ -1648,7 +1693,10 @@
             });
 
             // ========== AUTO-CHECK DATE/TIME CHANGES ==========
-            $('#eventDate, #startTime, #endTime').on('change', function() {
+            $('#eventDate, #eventEndDate, #startTime, #endTime, #recurringToggle').on('change', updateDurationType);
+            updateDurationType();
+
+            $('#eventDate, #eventEndDate, #startTime, #endTime').on('change', function() {
                 const selectedDate = $('#eventDate').val();
                 const startTime    = $('#startTime').val();
                 const endTime      = $('#endTime').val();
@@ -1662,8 +1710,9 @@
                 }
 
                 // Block non-operating days immediately without server call
-                if (!isOperatingDay(selectedDate)) {
-                    const parts   = selectedDate.split('-');
+                const closedDay = firstClosedDay(selectedDate, $('#eventEndDate').val());
+                if (closedDay) {
+                    const parts   = closedDay.split('-');
                     const dayName = new Date(parts[0], parts[1] - 1, parts[2])
                         .toLocaleDateString('en-US', { weekday: 'long' });
 
@@ -1713,6 +1762,7 @@
                     category_id: $('#serviceCategory').val(),
                     package_id: selectedPackageId,
                     event_date: $('#eventDate').val(),
+                    event_end_date: $('#eventEndDate').val() || null,
                     start_time: $('#startTime').val(),
                     end_time: $('#endTime').val(),
                     location_type: $('#locationType').val(),
@@ -2465,11 +2515,13 @@
 
                 // Event date
                 const eventDate = new Date(bookingData.event_date);
-                $('#summaryDate').text(eventDate.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                }));
+                const dateFormat = { year: 'numeric', month: 'long', day: 'numeric' };
+                let summaryDateText = eventDate.toLocaleDateString('en-US', dateFormat);
+                if (bookingData.event_end_date) {
+                    summaryDateText += ' to ' + new Date(bookingData.event_end_date).toLocaleDateString('en-US', dateFormat)
+                        + ' (long-term, contract required)';
+                }
+                $('#summaryDate').text(summaryDateText);
 
                 // Event time
                 $('#summaryTime').text(

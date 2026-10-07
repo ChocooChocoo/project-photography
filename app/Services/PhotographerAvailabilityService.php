@@ -38,24 +38,25 @@ class PhotographerAvailabilityService
 
         $photographerIds = array_values(array_unique(array_map('intval', $photographerIds)));
         $bookingDate = $booking->event_date?->toDateString();
+        $bookingEndDate = ($booking->event_end_date ?? $booking->event_date)?->toDateString();
 
         $approvedLeaves = LeaveRequestModel::query()
             ->whereIn('user_id', $photographerIds)
             ->where('status', 'approved')
-            ->whereDate('start_date', '<=', $bookingDate)
+            ->whereDate('start_date', '<=', $bookingEndDate)
             ->whereDate('end_date', '>=', $bookingDate)
             ->get()
             ->groupBy('user_id');
 
         $conflictingAssignments = BookingAssignedPhotographerModel::query()
             ->with([
-                'booking:id,booking_reference,event_name,event_date,start_time,end_time,status',
+                'booking:id,booking_reference,event_name,event_date,event_end_date,start_time,end_time,status',
             ])
             ->whereIn('photographer_id', $photographerIds)
             ->where('booking_id', '!=', $booking->id)
             ->whereIn('status', array_merge(self::RESERVED_STATUSES, self::ONGOING_STATUSES))
-            ->whereHas('booking', function ($query) use ($booking, $bookingDate) {
-                $query->whereDate('event_date', $bookingDate)
+            ->whereHas('booking', function ($query) use ($booking, $bookingDate, $bookingEndDate) {
+                $query->overlappingDates($bookingDate, $bookingEndDate)
                     ->where(function ($timeQuery) use ($booking) {
                         $timeQuery->where(function ($overlapQuery) use ($booking) {
                             $overlapQuery->whereTime('start_time', '<', $booking->end_time)

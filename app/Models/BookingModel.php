@@ -101,6 +101,9 @@ class BookingModel extends Model
         'booking_frequency',
         'recurrence_pattern',
         'parent_booking_id',
+        'event_end_date',
+        'booking_duration_type',
+        'terms_accepted_at',
     ];
 
     /**
@@ -110,6 +113,8 @@ class BookingModel extends Model
      */
     protected $casts = [
         'event_date' => 'date',
+        'event_end_date' => 'date',
+        'terms_accepted_at' => 'datetime',
         'total_amount' => 'decimal:2',
         'down_payment' => 'decimal:2',
         'remaining_balance' => 'decimal:2',
@@ -123,6 +128,94 @@ class BookingModel extends Model
         'revision_deadline' => 'datetime',
         'recurrence_pattern' => 'array',
     ];
+
+    public const DURATION_SHORT_TERM = 'short_term';
+
+    public const DURATION_LONG_TERM = 'long_term';
+
+    /**
+     * Bookings whose date span (event_date..event_end_date, or the single day) overlaps the given range.
+     */
+    public function scopeOverlappingDates($query, $startDate, $endDate = null)
+    {
+        $startDate = \Carbon\Carbon::parse($startDate)->toDateString();
+        $endDate = \Carbon\Carbon::parse($endDate ?? $startDate)->toDateString();
+
+        return $query->whereDate('event_date', '<=', $endDate)
+            ->whereRaw('date(coalesce(event_end_date, event_date)) >= ?', [$startDate]);
+    }
+
+    /**
+     * Short-term covers one day; long-term covers two or more days.
+     */
+    public static function durationTypeFor($startDate, $endDate = null): string
+    {
+        if (! $endDate) {
+            return self::DURATION_SHORT_TERM;
+        }
+
+        return \Carbon\Carbon::parse($endDate)->gt(\Carbon\Carbon::parse($startDate))
+            ? self::DURATION_LONG_TERM
+            : self::DURATION_SHORT_TERM;
+    }
+
+    public function contract()
+    {
+        return $this->hasOne(BookingContractModel::class, 'booking_id');
+    }
+
+    /**
+     * Contract state for the booking detail screens, or null for short-term bookings.
+     *
+     * @param  string  $role  client|owner|freelancer, picks the contract page URL
+     */
+    public function contractSummary(string $role): ?array
+    {
+        if (! $this->requiresContract() || ! $this->contract) {
+            return null;
+        }
+
+        return [
+            'status' => $this->contract->status,
+            'client_signed' => $this->contract->client_signed_at !== null,
+            'provider_signed' => $this->contract->studio_signed_at !== null,
+            'fully_signed' => $this->contract->isFullySigned(),
+            'url' => route($role.'.contracts.show', ['booking' => $this->id], false),
+        ];
+    }
+
+    public function requiresContract(): bool
+    {
+        return $this->booking_duration_type === self::DURATION_LONG_TERM;
+    }
+
+    public function contractFullySigned(): bool
+    {
+        return $this->contract?->isFullySigned() === true;
+    }
+
+    /**
+     * Confirmation gate: long-term bookings need both signatures first.
+     */
+    public function canBeConfirmed(): bool
+    {
+        return ! $this->requiresContract() || $this->contractFullySigned();
+    }
+
+    /**
+     * Move a pending booking to confirmed unless the contract gate blocks it.
+     */
+    public function confirmIfEligible(): bool
+    {
+        if ($this->status !== self::STATUS_PENDING || ! $this->canBeConfirmed()) {
+            return false;
+        }
+
+        $this->status = self::STATUS_CONFIRMED;
+        $this->save();
+
+        return true;
+    }
 
     /**
      * Get the client who made the booking.
@@ -523,6 +616,10 @@ class BookingModel extends Model
             return false;
         }
 
+        if ($newStatus === self::STATUS_CONFIRMED && ! $this->canBeConfirmed()) {
+            return false;
+        }
+
         // Special rule: Completed status requires full payment
         if ($newStatus === self::STATUS_COMPLETED) {
             return $this->canMarkAsCompleted();
@@ -546,6 +643,10 @@ class BookingModel extends Model
         ][$this->status] ?? [];
 
         foreach ($allowedTransitions as $status) {
+            if ($status === self::STATUS_CONFIRMED && ! $this->canBeConfirmed()) {
+                continue; // Long-term bookings need both contract signatures first
+            }
+
             if ($status === self::STATUS_COMPLETED && ! $this->canMarkAsCompleted()) {
                 continue; // Skip completed if not fully paid
             }

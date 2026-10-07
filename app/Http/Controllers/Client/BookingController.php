@@ -169,12 +169,13 @@ class BookingController extends Controller
             'type'         => 'required|in:studio,freelancer',
             'provider_id'  => 'required|integer',
             'date'         => 'required|date',
+            'end_date'     => 'nullable|date|after:date',
             'start_time'   => 'required|date_format:H:i',
             'end_time'     => 'required|date_format:H:i|after:start_time',
         ]);
 
         $selectedDate = Carbon::parse($request->date);
-        $dayOfWeek    = strtolower($selectedDate->format('l'));
+        $spanDays     = $this->spanDays($request->date, $request->end_date);
 
         // Check if date is in the past
         if ($selectedDate->isPast()) {
@@ -206,11 +207,11 @@ class BookingController extends Controller
                 $operatingDays = json_decode($operatingDays, true) ?? [];
             }
 
-            if (!in_array($dayOfWeek, $operatingDays)) {
+            if ($closedDow = $this->firstClosedDayOfWeek($spanDays, $operatingDays)) {
                 return response()->json([
                     'success'           => false,
                     'available'         => false,
-                    'message'           => 'Studio is closed on ' . ucfirst($dayOfWeek) . '.',
+                    'message'           => 'Studio is closed on ' . ucfirst($closedDow) . '.',
                     'not_operating_day' => true,
                 ]);
             }
@@ -236,11 +237,11 @@ class BookingController extends Controller
                 $operatingDays = json_decode($operatingDays, true) ?? [];
             }
 
-            if (!in_array($dayOfWeek, $operatingDays)) {
+            if ($closedDow = $this->firstClosedDayOfWeek($spanDays, $operatingDays)) {
                 return response()->json([
                     'success'           => false,
                     'available'         => false,
-                    'message'           => 'Freelancer is not available on ' . ucfirst($dayOfWeek) . '.',
+                    'message'           => 'Freelancer is not available on ' . ucfirst($closedDow) . '.',
                     'not_operating_day' => true,
                 ]);
             }
@@ -249,11 +250,7 @@ class BookingController extends Controller
         }
 
         // Check max bookings limit for the day
-        $existingBookingsCount = BookingModel::where('booking_type', $request->type)
-            ->where('provider_id', $request->provider_id)
-            ->where('event_date', $request->date)
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->count();
+        $existingBookingsCount = $this->peakBookingCount($request->type, $request->provider_id, $request->date, $request->end_date);
 
         if ($existingBookingsCount >= $maxBookings) {
             return response()->json([
@@ -271,7 +268,8 @@ class BookingController extends Controller
             $request->provider_id,
             $request->date,
             $request->start_time,
-            $request->end_time
+            $request->end_time,
+            $request->end_date
         )) {
             return response()->json([
                 'success'           => false,
@@ -294,12 +292,83 @@ class BookingController extends Controller
     }
 
     /**
+     * Every calendar day (Y-m-d) from the start date through the optional end date.
+     */
+    private function spanDays($startDate, $endDate = null): array
+    {
+        $day = Carbon::parse($startDate)->startOfDay();
+        $last = Carbon::parse($endDate ?: $startDate)->startOfDay();
+        $days = [];
+
+        for (; $day->lte($last); $day->addDay()) {
+            $days[] = $day->toDateString();
+        }
+
+        return $days;
+    }
+
+    /**
+     * Lowercase weekday name of the first day in the span the provider does not work, or null.
+     */
+    private function firstClosedDayOfWeek(array $days, array $operatingDays): ?string
+    {
+        foreach ($days as $day) {
+            $dow = strtolower(Carbon::parse($day)->format('l'));
+            if (! in_array($dow, $operatingDays)) {
+                return $dow;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Active bookings per calendar day within the range; multi-day bookings count on every day they span.
+     *
+     * @return array<string, int>
+     */
+    private function bookingCountsByDay($type, $providerId, $start, $end): array
+    {
+        $counts = [];
+        $rangeStart = Carbon::parse($start)->startOfDay();
+        $rangeEnd = Carbon::parse($end)->startOfDay();
+
+        BookingModel::where('booking_type', $type)
+            ->where('provider_id', $providerId)
+            ->overlappingDates($rangeStart, $rangeEnd)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->get(['event_date', 'event_end_date'])
+            ->each(function ($booking) use (&$counts, $rangeStart, $rangeEnd) {
+                $day = $booking->event_date->copy()->startOfDay()->max($rangeStart);
+                $last = ($booking->event_end_date ?? $booking->event_date)->copy()->startOfDay()->min($rangeEnd);
+
+                for (; $day->lte($last); $day->addDay()) {
+                    $key = $day->toDateString();
+                    $counts[$key] = ($counts[$key] ?? 0) + 1;
+                }
+            });
+
+        return $counts;
+    }
+
+    /**
+     * Highest number of active bookings on any single day of the requested span.
+     */
+    private function peakBookingCount($type, $providerId, $startDate, $endDate = null): int
+    {
+        $days = $this->spanDays($startDate, $endDate);
+        $counts = $this->bookingCountsByDay($type, $providerId, $days[0], end($days));
+
+        return max(array_map(fn ($day) => $counts[$day] ?? 0, $days));
+    }
+
+    /**
      * Determine whether a requested timeslot overlaps an active booking.
      *
      * Shared by the availability endpoint and store() so a conflict is caught at
      * booking time instead of waiting for the payment gateway.
      */
-    private function hasTimeslotConflict($type, $providerId, $date, $startTime, $endTime): bool
+    private function hasTimeslotConflict($type, $providerId, $date, $startTime, $endTime, $endDate = null): bool
     {
         if (!$type || !$providerId || !$date || !$startTime || !$endTime) {
             return false;
@@ -307,7 +376,7 @@ class BookingController extends Controller
 
         return BookingModel::where('booking_type', $type)
             ->where('provider_id', $providerId)
-            ->where('event_date', $date)
+            ->overlappingDates($date, $endDate)
             ->whereIn('status', ['pending', 'confirmed'])
             ->where(function ($query) use ($startTime, $endTime) {
                 $query->where(function ($q) use ($startTime) {
@@ -339,6 +408,17 @@ class BookingController extends Controller
             'category_id' => 'required|exists:tbl_categories,id',
             'package_id' => 'required|integer',
             'event_date' => 'required|date|after:today',
+            'event_end_date' => [
+                'nullable', 'date', 'after:event_date',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($value && abs(Carbon::parse($value)->diffInDays(Carbon::parse($request->event_date))) > 29) {
+                        $fail('A booking can cover at most 30 days.');
+                    }
+                    if ($value && $request->input('booking_frequency') === 'recurring') {
+                        $fail('A multi-day booking cannot also be recurring. Choose one.');
+                    }
+                },
+            ],
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'location_type' => 'required|in:in-studio,on-location',
@@ -421,7 +501,8 @@ class BookingController extends Controller
                 $request->provider_id,
                 $request->event_date,
                 $request->start_time,
-                $request->end_time
+                $request->end_time,
+                $request->event_end_date
             )) {
                 return response()->json([
                     'success' => false,
@@ -494,6 +575,9 @@ class BookingController extends Controller
                 'provider_id' => $request->provider_id,
                 'category_id' => $request->category_id,
                 'event_date' => $request->event_date,
+                'event_end_date' => $request->event_end_date ?: null,
+                'booking_duration_type' => BookingModel::durationTypeFor($request->event_date, $request->event_end_date),
+                'terms_accepted_at' => now(),
                 'start_time' => $request->start_time,
                 'end_time' => $request->end_time,
                 'location_type' => $request->location_type,
@@ -505,7 +589,9 @@ class BookingController extends Controller
                 'payment_type' => $paymentType,
                 'status' => $bookingStatus,
                 'payment_status' => $paymentStatus,
-                'expires_at' => $bookingStatus === 'pending' ? now()->addHours(48) : null,
+                'expires_at' => $bookingStatus === 'pending'
+                    ? now()->addHours(BookingModel::durationTypeFor($request->event_date, $request->event_end_date) === BookingModel::DURATION_LONG_TERM ? 168 : 48)
+                    : null,
             ];
 
             // Handle locations based on location type
@@ -574,6 +660,11 @@ class BookingController extends Controller
                     'enhancement_amount' => $enhancementAmount,
                 ]);
 
+                // 6a. Long-term bookings get a contract both parties must sign
+                if ($booking->requiresContract()) {
+                    app(\App\Services\ContractService::class)->createFor($booking);
+                }
+
                 // 6b. Generate child sessions for the remaining recurring sessions
                 if (($bookingData['booking_frequency'] ?? 'one_time') === 'recurring') {
                     $this->createRecurringChildren($booking, $bookingData);
@@ -590,6 +681,14 @@ class BookingController extends Controller
                 'payment_method' => 'pending',
                 'status' => 'pending',
             ]);
+
+            if ($booking->requiresContract()) {
+                $contractProviderUserId = app(\App\Services\ContractService::class)->providerUserId($booking);
+                $this->notifyContractReady($booking, Auth::id(), 'client');
+                if ($contractProviderUserId) {
+                    $this->notifyContractReady($booking, $contractProviderUserId, $request->type === 'studio' ? 'owner' : 'freelancer');
+                }
+            }
 
             // Get the provider's user ID based on booking type
             $providerUserId = null;
@@ -736,7 +835,7 @@ class BookingController extends Controller
     {
         try {
             $selectedDate = Carbon::parse($request->event_date);
-            $dayOfWeek = strtolower($selectedDate->format('l'));
+            $spanDays = $this->spanDays($request->event_date, $request->event_end_date);
             
             // Check if date is in the past
             if ($selectedDate->isPast()) {
@@ -766,11 +865,11 @@ class BookingController extends Controller
                     $operatingDays = json_decode($operatingDays, true) ?? [];
                 }
                 
-                if (!in_array($dayOfWeek, $operatingDays)) {
+                if ($closedDow = $this->firstClosedDayOfWeek($spanDays, $operatingDays)) {
                     return [
                         'success' => false,
                         'available' => false,
-                        'message' => 'Studio is closed on ' . ucfirst($dayOfWeek) . '.'
+                        'message' => 'Studio is closed on ' . ucfirst($closedDow) . '.'
                     ];
                 }
                 
@@ -793,11 +892,11 @@ class BookingController extends Controller
                     $operatingDays = json_decode($operatingDays, true) ?? [];
                 }
                 
-                if (!in_array($dayOfWeek, $operatingDays)) {
+                if ($closedDow = $this->firstClosedDayOfWeek($spanDays, $operatingDays)) {
                     return [
                         'success' => false,
                         'available' => false,
-                        'message' => 'Freelancer is not available on ' . ucfirst($dayOfWeek) . '.'
+                        'message' => 'Freelancer is not available on ' . ucfirst($closedDow) . '.'
                     ];
                 }
                 
@@ -805,11 +904,7 @@ class BookingController extends Controller
             }
 
             // Get existing bookings
-            $existingBookings = BookingModel::where('booking_type', $request->type)
-                ->where('provider_id', $request->provider_id)
-                ->where('event_date', $request->event_date)
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->count();
+            $existingBookings = $this->peakBookingCount($request->type, $request->provider_id, $request->event_date, $request->event_end_date);
 
             $available = $existingBookings < $maxBookings;
 
@@ -819,7 +914,8 @@ class BookingController extends Controller
                 $request->provider_id,
                 $request->event_date,
                 $request->start_time ?? null,
-                $request->end_time ?? null
+                $request->end_time ?? null,
+                $request->event_end_date
             )) {
                 return [
                     'success' => true,
@@ -1172,10 +1268,8 @@ class BookingController extends Controller
                 
                 // Only update booking status to confirmed if it's the first payment
                 $isBalancePayment = $paymentDetails['is_balance_payment'] ?? false;
-                if (!$isBalancePayment && $booking->status === 'pending') {
-                    $booking->update([
-                        'status' => 'confirmed',
-                    ]);
+                if (!$isBalancePayment) {
+                    $booking->confirmIfEligible();
                 }
                 
                 // Log payment info
@@ -1287,9 +1381,7 @@ class BookingController extends Controller
                         if ($booking) {
                             $booking->updatePaymentStatus();
 
-                            if ($booking->status === BookingModel::STATUS_PENDING) {
-                                $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
-                            }
+                            $booking->confirmIfEligible();
                             
                             // ADD THIS LINE FOR REVENUE SPLIT IN WEBHOOK
                             $this->createRevenueRecord($booking, $payment);
@@ -1549,9 +1641,7 @@ class BookingController extends Controller
         if ($booking) {
             $booking->updatePaymentStatus();
 
-            if ($booking->status === BookingModel::STATUS_PENDING) {
-                $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
-            }
+            $booking->confirmIfEligible();
 
             $this->updateClientBudgetSpending($booking, $payment);
         }
@@ -1684,9 +1774,7 @@ class BookingController extends Controller
 
                 // markAsPaid() applies BookingModel::updatePaymentStatus().
                 $booking = $payment->booking;
-                if ($booking && $booking->status === BookingModel::STATUS_PENDING) {
-                    $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
-                }
+                $booking?->confirmIfEligible();
 
                 Log::info('Payment marked as paid via webhook', [
                     'payment_id' => $payment->id,
@@ -1709,9 +1797,7 @@ class BookingController extends Controller
 
                 // markAsPaid() applies BookingModel::updatePaymentStatus().
                 $booking = $payment->booking;
-                if ($booking && $booking->status === BookingModel::STATUS_PENDING) {
-                    $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
-                }
+                $booking?->confirmIfEligible();
             }
         }
     }
@@ -1824,16 +1910,7 @@ class BookingController extends Controller
             }
 
             // Get booking counts per date for the month
-            $existingBookings = BookingModel::where('booking_type', $request->type)
-                ->where('provider_id', $request->provider_id)
-                ->whereBetween('event_date', [$startDate, $endDate])
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->selectRaw('event_date, COUNT(*) as booking_count')
-                ->groupBy('event_date')
-                ->get()
-                ->keyBy(function ($item) {
-                    return Carbon::parse($item->event_date)->format('Y-m-d');
-                });
+            $existingBookings = $this->bookingCountsByDay($request->type, $request->provider_id, $startDate, $endDate);
 
             // Build availability data
             $availability = [];
@@ -1845,7 +1922,7 @@ class BookingController extends Controller
                 $dayOfWeek     = strtolower($currentDate->format('l'));
                 $isPast        = $currentDate->lt($today);
                 $isOperatingDay = in_array($dayOfWeek, $operatingDays);
-                $bookingCount  = $existingBookings[$dateString]->booking_count ?? 0;
+                $bookingCount  = $existingBookings[$dateString] ?? 0;
 
                 // Fully booked if booking count has reached max limit
                 $fullyBooked = $isOperatingDay && ($bookingCount >= $maxBookings);
@@ -1953,9 +2030,7 @@ class BookingController extends Controller
                     if ($booking) {
                         $booking->updatePaymentStatus();
 
-                        if ($booking->status === BookingModel::STATUS_PENDING) {
-                            $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
-                        }
+                        $booking->confirmIfEligible();
 
                         $this->createRevenueRecord($booking, $payment);
                         $this->updateClientBudgetSpending($booking, $payment);
@@ -2062,9 +2137,7 @@ class BookingController extends Controller
 
                 // Settle via the single entry point, then confirm if still pending.
                 $booking->updatePaymentStatus();
-                if ($booking->status === BookingModel::STATUS_PENDING) {
-                    $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
-                }
+                $booking->confirmIfEligible();
 
                 return response()->json([
                     'success' => true,
@@ -2088,9 +2161,7 @@ class BookingController extends Controller
 
                 // Settle via the single entry point, then confirm if still pending.
                 $booking->updatePaymentStatus();
-                if ($booking->status === BookingModel::STATUS_PENDING) {
-                    $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
-                }
+                $booking->confirmIfEligible();
 
                 return response()->json([
                     'success' => true,
@@ -2166,9 +2237,7 @@ class BookingController extends Controller
                     
                     // Update booking status via the single settlement entry point
                     $booking->updatePaymentStatus();
-                    if ($booking->status === BookingModel::STATUS_PENDING) {
-                        $booking->update(['status' => BookingModel::STATUS_CONFIRMED]);
-                    }
+                    $booking->confirmIfEligible();
                     
                     return response()->json([
                         'success' => true,

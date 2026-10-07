@@ -175,6 +175,48 @@ trait Notifiable
     }
 
     /**
+     * Tell a party that a booking contract is waiting for their signature.
+     *
+     * @param  string  $role  client|owner|freelancer, picks the contract page they can open
+     */
+    public function notifyContractReady($booking, int $userId, string $role)
+    {
+        return $this->createNotification(
+            $userId,
+            'contract_ready',
+            'Contract Ready to Sign',
+            "The contract for booking #{$booking->booking_reference} is ready for your signature.",
+            [
+                'booking_id' => $booking->id,
+                'booking_reference' => $booking->booking_reference,
+                'route' => route($role.'.contracts.show', ['booking' => $booking->id], false),
+            ],
+            'file-text',
+            'warning'
+        );
+    }
+
+    /**
+     * Tell a party that the booking contract now carries both signatures.
+     */
+    public function notifyContractSigned($booking, int $userId, string $role)
+    {
+        return $this->createNotification(
+            $userId,
+            'contract_signed',
+            'Contract Fully Signed',
+            "The contract for booking #{$booking->booking_reference} has been signed by both parties.",
+            [
+                'booking_id' => $booking->id,
+                'booking_reference' => $booking->booking_reference,
+                'route' => route($role.'.contracts.show', ['booking' => $booking->id], false),
+            ],
+            'file-check',
+            'success'
+        );
+    }
+
+    /**
      * Create a payment received notification.
      *
      * @param object $payment

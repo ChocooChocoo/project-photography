@@ -285,6 +285,7 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
+    @include('partials.contract-block-js')
     <script>
         $(document).ready(function() {
             let currentBookingId = null;
@@ -1307,6 +1308,7 @@
 
                 $('#bookingReference').text(booking.booking_reference);
                 $('#bookingModalBody').html(modalContent);
+                $('#bookingModalBody').prepend(window.renderContractBlock(data.contract, 'client'));
                 loadIcons();
             }
 

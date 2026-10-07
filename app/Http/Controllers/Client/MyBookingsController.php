@@ -256,6 +256,7 @@ class MyBookingsController extends Controller
                 'packages' => $booking->packages,
                 'payments' => $booking->payments,
                 'assignedPhotographers' => $booking->assignedPhotographers,
+                'contract' => $booking->contractSummary('client'),
                 'downpayment_percentage' => $downpaymentPercentage,
                 'deposit_info' => [
                     'policy' => $depositPolicy,

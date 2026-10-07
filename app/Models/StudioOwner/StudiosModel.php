@@ -50,6 +50,7 @@ class StudiosModel extends Model
         'rejection_note',
         'permit_expiry_date',
         'resubmission_count',
+        'contract_template',
         // Removed: 'service_coverage_area',
     ];
 
@@ -185,6 +186,7 @@ class StudiosModel extends Model
             'maximum_price' => 'nullable|numeric|gte:starting_price',
             'downpayment_percentage' => 'nullable|numeric|min:0|max:100',
             'requires_downpayment' => 'sometimes|boolean',
+            'contract_template' => 'nullable|string|max:5000',
             'permit_expiry_date' => 'required|date',
             'operating_days' => 'required|array|min:1',
             'operating_days.*' => 'string|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',

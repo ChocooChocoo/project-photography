@@ -196,6 +196,7 @@ class BookingController extends Controller
                 'has_uploaded_gallery_content' => $hasUploadedGalleryContent,
                 'completion_block_reason' => $galleryBlockReason,
                 'completion_blockers' => $completionBlockers,
+                'contract' => $booking->contractSummary('owner'),
             ]);
 
         } catch (\Exception $e) {
@@ -949,6 +950,15 @@ class BookingController extends Controller
 
             // Completion uses the owner-specific gate below instead of the model
             // transition guard, so a not-yet-overdue balance does not block it.
+            if ($newStatus === BookingModel::STATUS_CONFIRMED
+                && $booking->status === BookingModel::STATUS_PENDING
+                && ! $booking->canBeConfirmed()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This long-term booking cannot be confirmed until both parties have signed the contract.',
+                ], 422);
+            }
+
             if (! $isCompletion
                 && $newStatus !== BookingModel::STATUS_CANCELLED
                 && ! $booking->canTransitionTo($newStatus)) {
