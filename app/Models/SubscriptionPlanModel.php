@@ -60,6 +60,8 @@ class SubscriptionPlanModel extends Model
         'commission_rate' => 'decimal:2',
         'trial_days' => 'integer',
         'max_studios' => 'integer',
+        'staff_limit' => 'integer',
+        'max_studio_photographers' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

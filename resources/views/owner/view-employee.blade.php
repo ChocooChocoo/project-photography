@@ -11,6 +11,13 @@
                     <div data-table data-table-rows-per-page="10" class="card" id="employeesTable">
                         <div class="card-header">
                             <h5 class="card-title">List of Studios Employee</h5>
+                            @foreach ($studios as $studio)
+                                @php($slots = $staffSlots[$studio->id])
+                                <span class="badge {{ $slots['allowed'] ? 'bg-light text-dark' : 'bg-danger' }} me-1">
+                                    {{ $studio->studio_name }}: {{ $slots['used'] }}{{ $slots['limit'] === null ? '' : ' of ' . $slots['limit'] }} staff
+                                    {{ $slots['limit'] === null ? '(unlimited)' : '(' . $slots['remaining'] . ' left)' }}
+                                </span>
+                            @endforeach
                         </div>
 
                         <div class="card-header border-light justify-content-between">

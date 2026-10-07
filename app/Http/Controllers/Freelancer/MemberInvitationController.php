@@ -77,6 +77,10 @@ class MemberInvitationController extends Controller
                 ->where('status', 'pending')
                 ->firstOrFail();
 
+            if ($message = \App\Services\StudioStaffLimit::violation((int) $invitation->studio_id)) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+
             $invitation->update([
                 'status' => 'approved',
                 'responded_at' => now()

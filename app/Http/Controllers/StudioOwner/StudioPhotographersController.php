@@ -93,6 +93,11 @@ class StudioPhotographersController extends Controller
      */
     public function store(StudioPhotographerRequest $request)
     {
+        if ($request->status === 'active'
+            && $message = \App\Services\StudioStaffLimit::violation((int) $request->studio_id)) {
+            return response()->json(['success' => false, 'message' => $message], 422);
+        }
+
         DB::beginTransaction();
         
         try {

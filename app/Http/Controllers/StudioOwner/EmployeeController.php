@@ -108,7 +108,9 @@ class EmployeeController extends Controller
             ];
         })->values());
 
-        return view('owner.view-employee', compact('employees', 'studios', 'employeesJson'));
+        $staffSlots = $studios->mapWithKeys(fn ($s) => [$s->id => \App\Services\StudioStaffLimit::summary($s->id)]);
+
+        return view('owner.view-employee', compact('employees', 'studios', 'employeesJson', 'staffSlots'));
     }
 
     /**
@@ -131,6 +133,11 @@ class EmployeeController extends Controller
      */
     public function store(EmployeeRequest $request)
     {
+        if ($request->status === 'active'
+            && $message = \App\Services\StudioStaffLimit::violation((int) $request->studio_id)) {
+            return response()->json(['success' => false, 'message' => $message], 422);
+        }
+
         DB::beginTransaction();
         
         try {
@@ -563,7 +570,15 @@ class EmployeeController extends Controller
                   ->whereIn('tbl_roles.name', ['studio-hr-manager', 'studio-hr-staff', 'studio-finance-manager', 'studio-finance-staff', 'studio-photographer']);
             })
             ->firstOrFail();
-        
+
+        if ($request->status === 'active' && $employee->status !== 'active') {
+            $sid = DB::table('tbl_user_roles')->where('user_id', $employee->id)
+                ->whereIn('studio_id', $studioIds)->value('studio_id');
+            if ($sid && $message = \App\Services\StudioStaffLimit::violation((int) $sid)) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+        }
+
         $employee->update([
             'status' => $request->status
         ]);

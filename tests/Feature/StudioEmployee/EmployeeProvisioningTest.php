@@ -170,6 +170,74 @@ class EmployeeProvisioningTest extends TestCase
         $this->assertNotNull(UserModel::withTrashed()->find($employee->id)->deleted_at);
     }
 
+    private function storePayload(StudiosModel $studio, RoleModel $role, string $email): array
+    {
+        return [
+            'studio_id' => $studio->id,
+            'first_name' => 'Staff',
+            'last_name' => 'Member',
+            'email' => $email,
+            'mobile_number' => '09170000001',
+            'role_id' => $role->id,
+            'status' => 'active',
+            'operating_days' => ['monday'],
+            'start_time' => '09:00',
+            'end_time' => '18:00',
+        ];
+    }
+
+    public function test_owner_and_hr_store_reject_staff_over_plan_limit(): void
+    {
+        Mail::fake();
+
+        $owner = $this->createUser('owner', 'owner@example.com');
+        $studio = StudiosModel::create(['user_id' => $owner->id, 'studio_name' => 'Test Studio', 'status' => 'verified']);
+        $plan = $this->createSubscription($studio, 5);
+        $this->grantPermission($owner, 'owner', 'manage_employees', $studio->id);
+        $hr = $this->createUser('studio-hr', 'hr@example.com');
+        $this->grantPermission($hr, 'studio-hr', 'create_employee', $studio->id);
+        $role = RoleModel::create(['name' => 'studio-finance-manager', 'portal' => 'studio-finance', 'status' => 'active']);
+
+        // HR user already holds a studio role row and counts as 1 staff; add 4 more via owner.
+        $this->actingAs($owner);
+        for ($i = 1; $i <= 4; $i++) {
+            $this->postJson(route('owner.employee.store'), $this->storePayload($studio, $role, "s{$i}@example.com"))
+                ->assertOk();
+        }
+
+        $this->postJson(route('owner.employee.store'), $this->storePayload($studio, $role, 's6@example.com'))
+            ->assertStatus(422)->assertJsonPath('success', false);
+
+        $this->actingAs($hr);
+        $this->postJson(route('studio-hr.employee.store'), $this->storePayload($studio, $role, 's7@example.com'))
+            ->assertStatus(422);
+
+        // Higher limit allows more.
+        $plan->plan->update(['staff_limit' => 6]);
+        $this->postJson(route('studio-hr.employee.store'), $this->storePayload($studio, $role, 's8@example.com'))
+            ->assertOk();
+    }
+
+    public function test_reactivation_over_limit_is_rejected(): void
+    {
+        $owner = $this->createUser('owner', 'owner@example.com');
+        $studio = StudiosModel::create(['user_id' => $owner->id, 'studio_name' => 'Test Studio', 'status' => 'verified']);
+        $this->createSubscription($studio, 1);
+        $this->grantPermission($owner, 'owner', 'owner.employees.manage', $studio->id);
+        $this->actingAs($owner);
+
+        $active = $this->createAssignedEmployee($studio, 'studio-hr-manager', 'a@example.com');
+        $inactive = $this->createAssignedEmployee($studio, 'studio-hr-staff', 'b@example.com');
+        $inactive->update(['status' => 'inactive']);
+
+        $this->putJson(route('owner.employee.update-status', $inactive->id), ['status' => 'active'])
+            ->assertStatus(422);
+
+        $active->update(['status' => 'inactive']);
+        $this->putJson(route('owner.employee.update-status', $inactive->id), ['status' => 'active'])
+            ->assertOk();
+    }
+
     private function createAssignedEmployee(StudiosModel $studio, string $roleName, string $email): UserModel
     {
         $employee = $this->createUser('studio-hr', $email);
@@ -193,7 +261,7 @@ class EmployeeProvisioningTest extends TestCase
         return $employee;
     }
 
-    private function createSubscription(StudiosModel $studio): StudioPlanModel
+    private function createSubscription(StudiosModel $studio, ?int $staffLimit = null): StudioPlanModel
     {
         $plan = SubscriptionPlanModel::create([
             'user_type' => 'studio',
@@ -205,6 +273,7 @@ class EmployeeProvisioningTest extends TestCase
             'commission_rate' => 5,
             'trial_days' => 0,
             'priority_level' => 1,
+            'staff_limit' => $staffLimit,
             'status' => 'active',
         ]);
 
@@ -345,9 +414,31 @@ class EmployeeProvisioningTest extends TestCase
             $table->decimal('commission_rate', 5, 2);
             $table->unsignedInteger('trial_days')->default(0);
             $table->unsignedInteger('priority_level')->default(0);
+            $table->unsignedInteger('staff_limit')->nullable();
             $table->string('status');
             
             $table->softDeletes();$table->timestamps();
+        });
+        Schema::create('tbl_studio_photographers', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('studio_id');
+            $table->unsignedBigInteger('owner_id')->nullable();
+            $table->unsignedBigInteger('photographer_id');
+            $table->string('position')->nullable();
+            $table->string('specialization')->nullable();
+            $table->unsignedInteger('years_of_experience')->nullable();
+            $table->string('status')->default('active');
+            $table->softDeletes();
+            $table->timestamps();
+        });
+        Schema::create('tbl_studio_members', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('studio_id');
+            $table->unsignedBigInteger('freelancer_id');
+            $table->string('status')->default('pending');
+            $table->timestamp('responded_at')->nullable();
+            $table->softDeletes();
+            $table->timestamps();
         });
         Schema::create('tbl_studio_plans', function (Blueprint $table) {
             $table->id();
