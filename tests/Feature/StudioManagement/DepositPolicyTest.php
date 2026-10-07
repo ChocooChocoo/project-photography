@@ -36,48 +36,13 @@ class DepositPolicyTest extends TestCase
         Route::get('/_test/owner/bookings', fn () => 'ok')->name('owner.booking.index');
     }
 
-    public function test_studio_without_downpayment_creates_a_full_payment_booking(): void
+    public function test_studio_booking_is_always_full_payment_even_when_studio_requires_downpayment(): void
     {
-        $studio = $this->createStudio(['requires_downpayment' => false]);
+        $studio = $this->createStudio(['requires_downpayment' => true, 'downpayment_percentage' => 30]);
 
+        // The payload still asks for a downpayment; the server must ignore it.
         $this->actingAs($this->client)
             ->postJson('/_test/client/booking', $this->bookingPayload($studio))
-            ->assertOk()
-            ->assertJsonPath('success', true);
-
-        $booking = BookingModel::latest('id')->first();
-
-        $this->assertSame('full_payment', $booking->payment_type);
-        $this->assertSame(10000, $booking->getRawOriginal('down_payment'));
-        $this->assertSame(0, $booking->getRawOriginal('remaining_balance'));
-        $this->assertSame('100% (Full payment)', $booking->deposit_policy);
-    }
-
-    public function test_studio_summary_honors_full_payment_selection(): void
-    {
-        $studio = $this->createStudio(['requires_downpayment' => true, 'downpayment_percentage' => 30]);
-        $payload = $this->bookingPayload($studio);
-
-        $this->actingAs($this->client)
-            ->postJson('/_test/client/booking-summary', [
-                'package_id' => $payload['package_id'],
-                'type' => 'studio',
-                'payment_type' => 'full_payment',
-            ])
-            ->assertOk()
-            ->assertJsonPath('summary.payment_type', 'full_payment')
-            ->assertJsonPath('summary.down_payment', '10,000.00')
-            ->assertJsonPath('summary.remaining_balance', '0.00');
-    }
-
-    public function test_studio_full_payment_selection_persists_and_creates_full_initial_payment(): void
-    {
-        $studio = $this->createStudio(['requires_downpayment' => true, 'downpayment_percentage' => 30]);
-        $payload = $this->bookingPayload($studio);
-        $payload['payment_type'] = 'full_payment';
-
-        $this->actingAs($this->client)
-            ->postJson('/_test/client/booking', $payload)
             ->assertOk()
             ->assertJsonPath('success', true);
 
@@ -87,40 +52,95 @@ class DepositPolicyTest extends TestCase
         $this->assertSame('full_payment', $booking->payment_type);
         $this->assertSame(10000, $booking->getRawOriginal('down_payment'));
         $this->assertSame(0, $booking->getRawOriginal('remaining_balance'));
+        $this->assertSame('100% (Full payment)', $booking->deposit_policy);
         $this->assertSame(10000, $payment->getRawOriginal('amount'));
     }
 
-    public function test_studio_with_downpayment_keeps_the_percentage_deposit(): void
-    {
-        $studio = $this->createStudio(['requires_downpayment' => true, 'downpayment_percentage' => 30]);
-
-        $this->actingAs($this->client)
-            ->postJson('/_test/client/booking', $this->bookingPayload($studio))
-            ->assertOk()
-            ->assertJsonPath('success', true);
-
-        $booking = BookingModel::latest('id')->first();
-
-        $this->assertSame('downpayment', $booking->payment_type);
-        $this->assertSame(3000, $booking->getRawOriginal('down_payment'));
-        $this->assertSame(7000, $booking->getRawOriginal('remaining_balance'));
-        $this->assertSame('30.00%', $booking->deposit_policy);
-    }
-
-    public function test_studio_without_a_downpayment_flag_defaults_to_required_deposit(): void
+    public function test_studio_without_a_downpayment_flag_is_full_payment_too(): void
     {
         $studio = $this->createStudio(['downpayment_percentage' => 50]);
 
         $this->actingAs($this->client)
             ->postJson('/_test/client/booking', $this->bookingPayload($studio))
-            ->assertOk()
-            ->assertJsonPath('success', true);
+            ->assertOk();
 
         $booking = BookingModel::latest('id')->first();
 
-        $this->assertSame('downpayment', $booking->payment_type);
-        $this->assertSame(5000, $booking->getRawOriginal('down_payment'));
-        $this->assertSame('50.00%', $booking->deposit_policy);
+        $this->assertSame('full_payment', $booking->payment_type);
+        $this->assertSame(10000, $booking->getRawOriginal('down_payment'));
+    }
+
+    public function test_summary_is_full_payment_regardless_of_requested_type(): void
+    {
+        $studio = $this->createStudio(['requires_downpayment' => true, 'downpayment_percentage' => 30]);
+        $payload = $this->bookingPayload($studio);
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking-summary', [
+                'package_id' => $payload['package_id'],
+                'type' => 'studio',
+                'payment_type' => 'downpayment',
+            ])
+            ->assertOk()
+            ->assertJsonPath('summary.payment_type', 'full_payment')
+            ->assertJsonPath('summary.down_payment', '10,000.00')
+            ->assertJsonPath('summary.remaining_balance', '0.00')
+            ->assertJsonPath('summary.enhancement_amount', '0.00')
+            ->assertJsonPath('summary.photo_edit_option', 'raw');
+    }
+
+    public function test_enhanced_photos_add_the_price_to_summary_total_and_booking_snapshot(): void
+    {
+        $studio = $this->createStudio();
+        $payload = $this->bookingPayload($studio);
+        StudioPackagesModel::whereKey($payload['package_id'])->update([
+            'enhanced_photos_price' => 750,
+            'materials' => json_encode([['name' => 'Photo frame', 'quantity' => 2]]),
+        ]);
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking-summary', ['package_id' => $payload['package_id'], 'type' => 'studio', 'photo_edit_option' => 'enhanced'])
+            ->assertOk()
+            ->assertJsonPath('summary.package_price', '10,000.00')
+            ->assertJsonPath('summary.enhancement_amount', '750.00')
+            ->assertJsonPath('summary.total_amount', '10,750.00')
+            ->assertJsonPath('summary.photo_edit_option', 'enhanced');
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', $payload + ['photo_edit_option' => 'enhanced'])
+            ->assertOk();
+
+        $booking = BookingModel::latest('id')->first();
+        $snapshot = \App\Models\BookingPackageModel::where('booking_id', $booking->id)->first();
+
+        $this->assertEquals(10750, $booking->total_amount);
+        $this->assertEquals(10750, $booking->down_payment);
+        $this->assertSame('enhanced', $snapshot->photo_edit_option);
+        $this->assertSame('750.00', $snapshot->enhancement_amount);
+        $this->assertSame([['name' => 'Photo frame', 'quantity' => 2]], $snapshot->materials);
+
+        // later package edits must not change the stored snapshot
+        StudioPackagesModel::whereKey($payload['package_id'])->update(['materials' => json_encode([])]);
+        $this->assertSame([['name' => 'Photo frame', 'quantity' => 2]], $snapshot->fresh()->materials);
+    }
+
+    public function test_raw_choice_keeps_base_price_and_enhanced_is_rejected_without_a_price(): void
+    {
+        $studio = $this->createStudio();
+        $payload = $this->bookingPayload($studio);
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', $payload + ['photo_edit_option' => 'enhanced'])
+            ->assertStatus(422);
+        $this->assertSame(0, BookingModel::count());
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', $payload + ['photo_edit_option' => 'raw'])
+            ->assertOk();
+
+        $booking = BookingModel::latest('id')->first();
+        $this->assertEquals(10000, $booking->total_amount);
+        $this->assertSame('raw', \App\Models\BookingPackageModel::where('booking_id', $booking->id)->value('photo_edit_option'));
     }
 
     private function createUser(string $role): UserModel
@@ -276,6 +296,8 @@ class DepositPolicyTest extends TestCase
             $table->integer('duration')->nullable();
             $table->integer('maximum_edited_photos')->nullable();
             $table->string('coverage_scope')->nullable();
+            $table->json('materials')->nullable();
+            $table->decimal('enhanced_photos_price', 10, 2)->nullable();
             $table->decimal('package_price', 10, 2);
             $table->json('package_location')->nullable();
             $table->boolean('allow_multiple_locations')->default(false);
@@ -327,6 +349,9 @@ class DepositPolicyTest extends TestCase
             $table->integer('duration')->nullable();
             $table->integer('maximum_edited_photos')->nullable();
             $table->string('coverage_scope')->nullable();
+            $table->json('materials')->nullable();
+            $table->string('photo_edit_option', 20)->nullable();
+            $table->decimal('enhancement_amount', 10, 2)->default(0);
             $table->timestamps();
         });
         Schema::create('tbl_payments', function (Blueprint $table) {

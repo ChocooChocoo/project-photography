@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\StudioOwner;
 
+use App\Http\Controllers\Concerns\HandlesMediaUploads;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\StudioOwner\PackageStoreRequest;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Storage;
 
 class PackagesController extends Controller
 {
+    use HandlesMediaUploads;
+
     /**
      * Display a listing of packages.
      */
@@ -88,6 +91,9 @@ class PackagesController extends Controller
                 }
                 $validatedData['cover_images'] = $coverImages;
             }
+
+            unset($validatedData['cover_videos']);
+            $validatedData['cover_videos'] = $this->syncMedia($request, 'cover_videos', 'keep_cover_videos', [], 'package-videos/' . $studio->id, 5);
 
             // Create package with all validated data
             $package = PackagesModel::create($validatedData);
@@ -179,6 +185,9 @@ class PackagesController extends Controller
             }
 
             $validatedData['cover_images'] = $coverImages;
+
+            unset($validatedData['cover_videos']);
+            $validatedData['cover_videos'] = $this->syncMedia($request, 'cover_videos', 'keep_cover_videos', $packageModel->cover_videos ?? [], 'package-videos/' . $studio->id, 5);
 
             $packageModel->update($validatedData);
 

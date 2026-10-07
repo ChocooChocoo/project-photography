@@ -162,6 +162,8 @@
                                         <div id="coverImagesPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
                                     </div>
 
+                                    @include('partials.package-extras')
+
                                     <div class="col-12 mb-3">
                                         <label class="form-label">Status</label>
                                         <select class="form-select" name="status" required>
@@ -341,6 +343,7 @@
 
                 keepCoverImages.forEach(path => uploadData.append('keep_cover_images[]', path));
                 Array.from($('#coverImages')[0].files).forEach(file => uploadData.append('cover_images[]', file));
+                window.appendPackageExtras(uploadData, $('#editPackageForm')[0]);
 
                 submitBtn.prop('disabled', true).html('<i class="ti ti-loader me-2"></i>Saving...');
 

@@ -70,23 +70,6 @@ class BookingController extends Controller
                 $operatingDays = json_decode($operatingDays, true) ?? [];
             }
             
-            // Get downpayment percentage
-            $downpaymentPercentage = $provider->downpayment_percentage ?? 30;
-            
-            // ========== STUDIO DEPOSIT INFO ==========
-            if ($provider->requires_downpayment !== false) {
-                $depositPolicy = 'required';
-                $depositType = 'percentage';
-                $depositAmount = $downpaymentPercentage;
-                $depositDisplay = $downpaymentPercentage . '% downpayment required';
-            } else {
-                $depositPolicy = 'not_required';
-                $depositType = null;
-                $depositAmount = 0;
-                $downpaymentPercentage = 0;
-                $depositDisplay = 'No deposit required (full payment)';
-            }
-
             // Active discount rules offered by this studio
             $discounts = $provider->discountRules()->active()->get();
         } else {
@@ -112,25 +95,6 @@ class BookingController extends Controller
                 $operatingDays = json_decode($operatingDays, true) ?? [];
             }
             
-            // ========== FREELANCER DEPOSIT LOGIC ==========
-            // Get deposit policy from freelancer profile
-            $depositPolicy = $provider->deposit_policy ?? 'not_required';
-            $depositType = $provider->deposit_type ?? null;
-            $depositAmount = $provider->deposit_amount ?? 0;
-            
-            // Calculate downpayment percentage for display (only relevant for percentage type)
-            if ($depositPolicy === 'required' && $depositType === 'percentage') {
-                $downpaymentPercentage = $depositAmount;
-                $depositDisplay = $downpaymentPercentage . '% downpayment required';
-            } elseif ($depositPolicy === 'required' && $depositType === 'fixed') {
-                $downpaymentPercentage = 0; // Not applicable for fixed amount
-                $depositDisplay = '₱' . number_format($depositAmount, 2) . ' fixed deposit required';
-            } else {
-                $downpaymentPercentage = 0;
-                $depositDisplay = 'No deposit required (full payment)';
-            }
-            // ========== End of Freelancer Deposit Logic ==========
-
             // No discount rules apply to freelancer bookings
             $discounts = collect();
         }
@@ -165,11 +129,6 @@ class BookingController extends Controller
             'availableDates',
             'municipalities',
             'operatingDays',
-            'downpaymentPercentage',
-            'depositPolicy',
-            'depositType',
-            'depositAmount',
-            'depositDisplay',
             'clientBudgets', // ADD THIS
             'discounts' // ADD THIS
         ));
@@ -447,22 +406,8 @@ class BookingController extends Controller
         }
         // ==== END: Conditional validation based on location type ====
 
-        // ==== Conditional payment_type validation for freelancers ====
-        // Studios accept the client's selected payment option; freelancer policy
-        // continues to determine the payment type server-side.
-        if ($request->type === 'studio') {
-            $rules['payment_type'] = 'required|in:downpayment,full_payment';
-        } else {
-            // For freelancers, check if they have a deposit policy
-            $freelancer = \App\Models\Freelancer\ProfileModel::where('user_id', $request->provider_id)->first();
-            
-            // If freelancer has no deposit policy or policy is 'not_required', payment_type should be 'full_payment'
-            // But we don't need to validate it from the request - we'll set it in the backend
-            if (!$freelancer || $freelancer->deposit_policy !== 'required') {
-                // No validation rule for payment_type - we'll set it manually
-            }
-        }
-        // ==== END: Conditional payment_type validation ====
+        // Downpayments are disabled: any submitted payment_type is ignored and bookings are always full payment.
+        $rules['photo_edit_option'] = 'nullable|in:raw,enhanced';
 
         $request->validate($rules, [
             'terms_agree.required' => 'You must agree to the booking terms and conditions.',
@@ -516,77 +461,29 @@ class BookingController extends Controller
                 ], 400);
             }
 
-            // 4. Calculate amounts based on deposit policy
-            $totalAmount = $package->package_price;
-            
-            // ========== FIX: Implement deposit logic based on provider type ==========
-            if ($request->type === 'studio') {
-                // Studio logic: percentage deposit unless downpayments are disabled
-                $studio = StudiosModel::subscriptionAccessible()->findOrFail($request->provider_id);
-                $downpaymentPercentage = $studio->downpayment_percentage ?? 30;
-
-                if ($studio->requires_downpayment !== false && $request->payment_type === 'downpayment') {
-                    $paymentType = 'downpayment';
-                    $downPayment = ($totalAmount * $downpaymentPercentage) / 100;
-                    $remainingBalance = $totalAmount - $downPayment;
-                    $depositPolicy = $downpaymentPercentage . '%';
-                } else {
-                    $paymentType = 'full_payment';
-                    $downPayment = $totalAmount;
-                    $remainingBalance = 0;
-                    $downpaymentPercentage = 100;
-                    $depositPolicy = '100% (Full payment)';
-                }
-
-                $paymentStatus = 'pending';
-                $bookingStatus = 'pending';
-                
-            } else {
-                // Freelancer logic based on deposit policy
-                $freelancer = ProfileModel::where('user_id', $request->provider_id)->first();
-                
-                if ($freelancer && $freelancer->deposit_policy === 'required') {
-                    // Deposit is required
-                    $paymentType = 'downpayment';
-                    
-                    if ($freelancer->deposit_type === 'percentage') {
-                        // Percentage-based deposit
-                        $downpaymentPercentage = $freelancer->deposit_amount ?? 30;
-                        $downPayment = ($totalAmount * $downpaymentPercentage) / 100;
-                        $depositPolicy = $downpaymentPercentage . '%';
-                        
-                    } elseif ($freelancer->deposit_type === 'fixed') {
-                        // Fixed amount deposit
-                        $downPayment = $freelancer->deposit_amount ?? 0;
-                        $downpaymentPercentage = 0; // Not applicable
-                        $depositPolicy = 'Fixed: ₱' . number_format($downPayment, 2);
-                        
-                        // Ensure fixed deposit doesn't exceed total amount
-                        if ($downPayment > $totalAmount) {
-                            $downPayment = $totalAmount;
-                        }
-                    } else {
-                        // Fallback to 30% if type not set
-                        $downpaymentPercentage = 30;
-                        $downPayment = ($totalAmount * 30) / 100;
-                        $depositPolicy = '30%';
-                    }
-                    
-                    $remainingBalance = $totalAmount - $downPayment;
-                    $paymentStatus = 'pending';
-                    $bookingStatus = 'pending';
-                    
-                } else {
-                    // No deposit required - full payment
-                    $paymentType = 'full_payment';
-                    $downPayment = $totalAmount;
-                    $remainingBalance = 0;
-                    $downpaymentPercentage = 100;
-                    $depositPolicy = '100% (Full payment)';
-                    $paymentStatus = 'pending';
-                    $bookingStatus = 'pending';
-                }
+            // 4. Calculate amounts: full payment only, plus the optional photo enhancement
+            $photoEdit = $this->resolvePhotoEdit($package, $request->input('photo_edit_option'));
+            if ($photoEdit === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Enhanced photos are not offered for this package.',
+                ], 422);
             }
+            [$photoEditOption, $enhancementAmount] = $photoEdit;
+
+            $totalAmount = $package->package_price + $enhancementAmount;
+
+            if ($request->type === 'studio') {
+                // Throws when the studio's subscription no longer allows bookings
+                StudiosModel::subscriptionAccessible()->findOrFail($request->provider_id);
+            }
+
+            $paymentType = 'full_payment';
+            $downPayment = $totalAmount;
+            $remainingBalance = 0;
+            $depositPolicy = '100% (Full payment)';
+            $paymentStatus = 'pending';
+            $bookingStatus = 'pending';
             // ========== End of deposit logic ==========
 
             // 5. Prepare booking data
@@ -656,7 +553,7 @@ class BookingController extends Controller
             }
 
             // Create booking (with child sessions for recurring bookings)
-            $booking = DB::transaction(function () use ($bookingData, $package, $request) {
+            $booking = DB::transaction(function () use ($bookingData, $package, $request, $photoEditOption, $enhancementAmount) {
                 $booking = BookingModel::create($bookingData);
 
                 $normalizedCoverageScope = $this->normalizeCoverageScope($package->coverage_scope);
@@ -672,6 +569,9 @@ class BookingController extends Controller
                     'duration' => $package->duration,
                     'maximum_edited_photos' => $package->maximum_edited_photos,
                     'coverage_scope' => $normalizedCoverageScope,
+                    'materials' => $package->materials,
+                    'photo_edit_option' => $photoEditOption,
+                    'enhancement_amount' => $enhancementAmount,
                 ]);
 
                 // 6b. Generate child sessions for the remaining recurring sessions
@@ -1693,77 +1593,60 @@ class BookingController extends Controller
     }
 
     /**
+     * Resolve the raw/enhanced photo choice into [option, extra amount].
+     * Returns null when enhanced is requested but the package does not offer it.
+     *
+     * @return array{0: string, 1: float}|null
+     */
+    private function resolvePhotoEdit($package, ?string $option): ?array
+    {
+        if ($option !== 'enhanced') {
+            return ['raw', 0.0];
+        }
+
+        return $package->enhanced_photos_price === null ? null : ['enhanced', (float) $package->enhanced_photos_price];
+    }
+
+    /**
      * Get booking summary
      */
     public function getSummary(Request $request)
     {
-        $rules = [
+        $request->validate([
             'package_id' => 'required|integer',
             'type' => 'required|in:studio,freelancer',
-        ];
-
-        if ($request->type === 'studio') {
-            $rules['payment_type'] = 'required|in:downpayment,full_payment';
-        }
-
-        $request->validate($rules);
+            'photo_edit_option' => 'nullable|in:raw,enhanced',
+        ]);
 
         if ($request->type === 'studio') {
             $package = StudioPackagesModel::findOrFail($request->package_id);
-            // Get downpayment percentage and honor the selected payment option.
-            $studio = StudiosModel::subscriptionAccessible()->findOrFail($package->studio_id);
-            $downpaymentPercentage = $studio->downpayment_percentage ?? 30;
-            $paymentType = $studio->requires_downpayment !== false
-                ? $request->payment_type
-                : 'full_payment';
+            StudiosModel::subscriptionAccessible()->findOrFail($package->studio_id);
         } else {
             $package = FreelancerPackagesModel::findOrFail($request->package_id);
-            
-            // ========== FIX: Get freelancer deposit settings ==========
-            $freelancer = ProfileModel::where('user_id', $package->user_id)->first();
-            
-            if ($freelancer && $freelancer->deposit_policy === 'required') {
-                // Deposit is required
-                $paymentType = 'downpayment';
-                
-                if ($freelancer->deposit_type === 'percentage') {
-                    $downpaymentPercentage = $freelancer->deposit_amount ?? 30;
-                } elseif ($freelancer->deposit_type === 'fixed') {
-                    $downpaymentPercentage = 0; // Not applicable for fixed amount
-                } else {
-                    $downpaymentPercentage = 30; // Fallback
-                }
-            } else {
-                // No deposit required - full payment
-                $paymentType = 'full_payment';
-                $downpaymentPercentage = 100;
-            }
-            // ========== End of freelancer deposit logic ==========
         }
 
-        $totalAmount = $package->package_price;
-        
-        if ($paymentType === 'downpayment') {
-            if ($request->type === 'freelancer' && isset($freelancer) && 
-                $freelancer->deposit_policy === 'required' && $freelancer->deposit_type === 'fixed') {
-                // Fixed amount deposit
-                $downPayment = $freelancer->deposit_amount ?? 0;
-                if ($downPayment > $totalAmount) {
-                    $downPayment = $totalAmount;
-                }
-            } else {
-                // Percentage-based deposit
-                $downPayment = ($totalAmount * $downpaymentPercentage) / 100;
-            }
-            $remainingBalance = $totalAmount - $downPayment;
-        } else {
-            $downPayment = $totalAmount;
-            $remainingBalance = 0;
+        $photoEdit = $this->resolvePhotoEdit($package, $request->input('photo_edit_option'));
+        if ($photoEdit === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Enhanced photos are not offered for this package.',
+            ], 422);
         }
+        [$photoEditOption, $enhancementAmount] = $photoEdit;
+
+        // Downpayments are disabled: the full amount is due up front.
+        $paymentType = 'full_payment';
+        $downpaymentPercentage = 100;
+        $totalAmount = $package->package_price + $enhancementAmount;
+        $downPayment = $totalAmount;
+        $remainingBalance = 0;
 
         $packageData = [
             'package_name' => $package->package_name,
             'package_price' => number_format($package->package_price, 2),
+            'photo_edit_option' => $photoEditOption,
+            'enhancement_amount' => number_format($enhancementAmount, 2),
+            'materials' => $package->materials ?? [],
             'total_amount' => number_format($totalAmount, 2),
             'down_payment' => number_format($downPayment, 2),
             'downpayment_percentage' => $downpaymentPercentage,
@@ -1776,14 +1659,6 @@ class BookingController extends Controller
             'gallery_status' => ($package->online_gallery ?? false) ? 'Included' : 'Not Included',
             'package_location' => $package->package_location ?? 'In-Studio',
         ];
-        
-        // Add fixed deposit info for freelancer if applicable
-        if ($request->type === 'freelancer' && isset($freelancer) && 
-            $freelancer->deposit_policy === 'required' && $freelancer->deposit_type === 'fixed') {
-            $packageData['deposit_type'] = 'fixed';
-            $packageData['deposit_amount'] = $freelancer->deposit_amount;
-            $packageData['deposit_display'] = 'Fixed Deposit: ₱' . number_format($freelancer->deposit_amount, 2);
-        }
         
         if ($request->type === 'studio') {
             $packageData['photographer_count'] = $package->photographer_count ?? 1;
@@ -2545,6 +2420,9 @@ class BookingController extends Controller
                             'photographer_text' => $package->photographer_count . ' photographer' . ($package->photographer_count > 1 ? 's' : ''),
                             'cover_images' => $package->cover_images ?? [],
                             'cover_thumbnail' => $package->cover_thumbnail ? asset('storage/' . $package->cover_thumbnail) : null,
+                            'cover_videos' => array_map(fn ($path) => asset('storage/' . $path), $package->cover_videos ?? []),
+                            'materials' => $package->materials ?? [],
+                            'enhanced_photos_price' => $package->enhanced_photos_price,
                             // ========== START: DSS - Add budget info to response ==========
                             'budget_info' => $budgetMatch
                             // ========== END: DSS - Add budget info ==========
@@ -2596,16 +2474,15 @@ class BookingController extends Controller
                             'location_flexibility' => $locationFlexibility,
                             'allow_multiple_locations' => $package->allow_multiple_locations ?? false,
                             'max_locations' => $package->max_locations ?? 1,
-                            'freelancer_has_policy' => $profile->deposit_policy === 'required',
-                            'freelancer_deposit_policy' => $profile->deposit_policy,
-                            'freelancer_deposit_type' => $profile->deposit_type,
-                            'freelancer_deposit_amount' => $profile->deposit_amount,
                             'allow_time_customization' => $package->allow_time_customization,
                             'gallery_badge' => ($package->online_gallery ?? false) ? 'Yes' : 'No',
                             'gallery_icon' => ($package->online_gallery ?? false) ? 'ti ti-photo' : 'ti ti-photo-off',
                             'gallery_class' => ($package->online_gallery ?? false) ? 'success' : 'secondary',
                             'cover_images' => $package->cover_images ?? [],
                             'cover_thumbnail' => $package->cover_thumbnail ? asset('storage/' . $package->cover_thumbnail) : null,
+                            'cover_videos' => array_map(fn ($path) => asset('storage/' . $path), $package->cover_videos ?? []),
+                            'materials' => $package->materials ?? [],
+                            'enhanced_photos_price' => $package->enhanced_photos_price,
                             // ========== START: DSS - Add budget info to response ==========
                             'budget_info' => $budgetMatch
                             // ========== END: DSS - Add budget info ==========

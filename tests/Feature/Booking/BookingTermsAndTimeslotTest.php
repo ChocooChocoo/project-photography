@@ -379,6 +379,9 @@ class BookingTermsAndTimeslotTest extends TestCase
             $table->integer('duration')->nullable();
             $table->integer('maximum_edited_photos')->nullable();
             $table->string('coverage_scope')->nullable();
+            $table->json('materials')->nullable();
+            $table->string('photo_edit_option', 20)->nullable();
+            $table->decimal('enhancement_amount', 10, 2)->default(0);
             $table->timestamps();
         });
         Schema::create('tbl_payments', function (Blueprint $table) {

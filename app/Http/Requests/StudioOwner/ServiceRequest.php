@@ -55,6 +55,10 @@ class ServiceRequest extends FormRequest
             'service_name' => 'required|array|min:1',
             'service_name.*' => 'required|string|max:255',
             'starting_from' => 'nullable|numeric|min:0',
+            'images' => 'nullable|array|max:5',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'videos' => 'nullable|array|max:5',
+            'videos.*' => 'nullable|file|mimes:mp4,webm,mov|max:51200',
         ];
 
         return $rules;
@@ -107,7 +111,7 @@ class ServiceRequest extends FormRequest
                 }
                 
                 // Check if service names already exist in the database
-                $serviceId = $this->route('service'); // This works for update
+                $serviceId = $this->route('id'); // owner.services.update uses {id}
                 
                 foreach ($filteredServiceNames as $serviceName) {
                     $query = \App\Models\StudioOwner\ServicesModel::where('studio_id', $studioId)

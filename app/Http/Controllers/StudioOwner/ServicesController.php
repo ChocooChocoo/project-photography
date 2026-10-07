@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\StudioOwner;
 
+use App\Http\Controllers\Concerns\HandlesMediaUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StudioOwner\ServiceRequest;
 use App\Models\StudioOwner\ServicesModel;
@@ -11,6 +12,8 @@ use Illuminate\Http\Request;
 
 class ServicesController extends Controller
 {
+    use HandlesMediaUploads;
+
     /**
      * Display a listing of services.
      */
@@ -50,6 +53,8 @@ class ServicesController extends Controller
                 'category_id' => $validated['category_id'],
                 'service_name' => $validated['service_name'],
                 'starting_from' => $validated['starting_from'] ?? null,
+                'images' => $this->syncMedia($request, 'images', 'keep_images', [], 'service-media/'.$validated['studio_id'].'/images', 5),
+                'videos' => $this->syncMedia($request, 'videos', 'keep_videos', [], 'service-media/'.$validated['studio_id'].'/videos', 5),
             ]);
             
             return response()->json([
@@ -151,6 +156,8 @@ class ServicesController extends Controller
                 'category_id' => $validated['category_id'],
                 'service_name' => $validated['service_name'],
                 'starting_from' => $validated['starting_from'] ?? null,
+                'images' => $this->syncMedia($request, 'images', 'keep_images', $service->images ?? [], 'service-media/'.$validated['studio_id'].'/images', 5),
+                'videos' => $this->syncMedia($request, 'videos', 'keep_videos', $service->videos ?? [], 'service-media/'.$validated['studio_id'].'/videos', 5),
             ]);
             
             return response()->json([

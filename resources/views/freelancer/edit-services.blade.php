@@ -65,6 +65,8 @@
                                         <label class="form-label">Starting Price (₱)</label>
                                         <input type="number" class="form-control" name="starting_from" id="starting_from" min="0" step="0.01" value="{{ $service->starting_from }}" placeholder="Optional — shown to clients as 'from ₱X'">
                                     </div>
+
+                                    @include('partials.service-media')
                                 </div>
                                 <button type="submit" class="btn btn-primary" id="submitBtn">
                                     <span id="submitText">Update Services</span>
@@ -121,7 +123,9 @@
                 }
 
                 const serviceId = $('input[name="id"]').val();
-                const formData = $(this).serialize();
+                const formData = new FormData(this);
+                formData.set('_method', 'PUT');
+                window.appendServiceMedia(formData, this);
                 const submitBtn = $('#submitBtn');
                 const submitText = $('#submitText');
                 const spinner = $('#spinner');
@@ -132,8 +136,10 @@
 
                 $.ajax({
                     url: `{{ url('freelancer/services') }}/${serviceId}`,
-                    type: 'PUT',
+                    type: 'POST',
                     data: formData,
+                    processData: false,
+                    contentType: false,
                     success: function(response) {
                         if (response.success) {
                             Swal.fire({

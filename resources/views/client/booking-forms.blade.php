@@ -134,7 +134,6 @@
                                 <input type="hidden" id="providerId" value="{{ $id }}">
                                 <input type="hidden" id="operatingDays" value="{{ json_encode($operatingDays) }}">
                                 @if($type === 'studio')
-                                <input type="hidden" id="downpaymentPercentage" value="{{ $downpaymentPercentage }}">
                                 @endif
 
                                 {{-- CLIENT INFORMATION --}}
@@ -312,71 +311,39 @@
                                     })();
                                 </script>
 
-                                {{-- PAYMENT TYPE --}}
+                                {{-- PAYMENT: downpayment is disabled, full payment only --}}
                                 <h4 class="card-title text-primary mb-3">Payment Details</h4>
                                 <div class="mb-4">
-                                    @if($type === 'studio')
-                                        {{-- Studio always shows payment options --}}
-                                        <div class="btn-group w-100" role="group" aria-label="Payment type selection">
-                                            <input class="btn-check" type="radio" name="payment_type" id="payment_type_downpayment" value="downpayment" checked>
-                                            <label class="btn btn-outline-primary" for="payment_type_downpayment">
-                                                <i class="ti ti-percentage me-1"></i> {{ $downpaymentPercentage }}% Downpayment
+                                    <input class="d-none" type="radio" name="payment_type" value="full_payment" checked>
+                                    <div class="alert alert-success mb-2">
+                                        <i class="ti ti-check-circle me-2"></i>
+                                        <strong>Full Payment:</strong> The full amount is collected upon booking.
+                                    </div>
+
+                                    @if($type === 'studio' && !empty($discounts) && $discounts->count() > 0)
+                                        <div class="mt-2">
+                                            <i class="ti ti-tag me-1 text-success"></i>
+                                            <span class="fw-medium">Discounts available:</span>
+                                            @foreach($discounts as $discount)
+                                                <span class="badge badge-soft-success ms-1">{{ $discount->name }} ({{ rtrim(rtrim(number_format($discount->percentage, 2), '0'), '.') }}% OFF)</span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    {{-- Shown by JS only when the selected package offers enhanced photos --}}
+                                    <div id="photoEditOptions" class="mt-3" style="display: none;">
+                                        <label class="form-label fw-medium">Photo Delivery</label>
+                                        <div class="btn-group w-100" role="group" aria-label="Photo delivery option">
+                                            <input class="btn-check" type="radio" name="photo_edit_option" id="photo_edit_raw" value="raw" checked>
+                                            <label class="btn btn-outline-primary" for="photo_edit_raw">
+                                                <i class="ti ti-photo me-1"></i> Raw photos
                                             </label>
-                                            
-                                            <input class="btn-check" type="radio" name="payment_type" id="payment_type_full" value="full_payment">
-                                            <label class="btn btn-outline-primary" for="payment_type_full">
-                                                <i class="ti ti-discount-2 me-1"></i> Full Payment
+                                            <input class="btn-check" type="radio" name="photo_edit_option" id="photo_edit_enhanced" value="enhanced">
+                                            <label class="btn btn-outline-primary" for="photo_edit_enhanced">
+                                                <i class="ti ti-sparkles me-1"></i> Enhanced photos <span id="enhancedPriceLabel"></span>
                                             </label>
                                         </div>
-
-                                        @if(!empty($discounts) && $discounts->count() > 0)
-                                            <div class="mt-2">
-                                                <i class="ti ti-tag me-1 text-success"></i>
-                                                <span class="fw-medium">Discounts available:</span>
-                                                @foreach($discounts as $discount)
-                                                    <span class="badge badge-soft-success ms-1">{{ $discount->name }} ({{ rtrim(rtrim(number_format($discount->percentage, 2), '0'), '.') }}% OFF)</span>
-                                                @endforeach
-                                            </div>
-                                        @endif
                                     </div>
-                                    @else
-                                        {{-- Freelancer dynamic display based on deposit policy --}}
-                                        @if($depositPolicy === 'required')
-                                            <div class="alert alert-info">
-                                                <i class="ti ti-info-circle me-2"></i>
-                                                <strong>Payment Required:</strong> {{ $depositDisplay }}
-                                            </div>
-                                            
-                                            @if($depositType === 'percentage')
-                                                {{-- For percentage deposits, show the percentage clearly --}}
-                                                <div class="bg-light p-3 rounded text-center">
-                                                    <span class="text-muted d-block mb-1">Required Deposit</span>
-                                                    <span class="display-6 fw-bold text-primary">{{ $depositAmount }}%</span>
-                                                    <span class="text-muted d-block mt-1">of total package price</span>
-                                                </div>
-                                                <input type="hidden" name="payment_type" value="downpayment">
-                                            @elseif($depositType === 'fixed')
-                                                {{-- For fixed deposits, show the fixed amount --}}
-                                                <div class="bg-light p-3 rounded text-center">
-                                                    <span class="text-muted d-block mb-1">Required Fixed Deposit</span>
-                                                    <span class="display-6 fw-bold text-primary">₱{{ number_format($depositAmount, 2) }}</span>
-                                                    <span class="text-muted d-block mt-1">fixed amount regardless of package price</span>
-                                                </div>
-                                                <input type="hidden" name="payment_type" value="downpayment">
-                                            @endif
-                                        @else
-                                            {{-- No deposit required --}}
-                                            <div class="alert alert-success">
-                                                <i class="ti ti-check-circle me-2"></i>
-                                                <strong>No Deposit Required:</strong> Full payment will be collected upon booking.
-                                            </div>
-                                            <div class="bg-light p-3 rounded text-center">
-                                                <span class="text-muted d-block mb-1">Payment Type</span>
-                                                <span class="display-6 fw-bold text-success">Full Payment</span>
-                                            </div>
-                                            <input type="hidden" name="payment_type" value="full_payment">
-                                        @endif
-                                    @endif
                                 </div>
 
                                 {{-- EVENT LOCATION --}}
@@ -554,16 +521,20 @@
                             <span>Package Price:</span>
                             <span class="fw-medium" id="packagePrice">₱0</span>
                         </div>
+                        <div class="d-flex d-none justify-content-between mb-2" id="enhancementRow">
+                            <span>Enhanced Photos:</span>
+                            <span class="fw-medium" id="enhancementAmount">₱0</span>
+                        </div>
 
-                        <div class="d-flex justify-content-between mb-2" id="paymentTypeRow" style="display: none;">
+                        <div class="d-flex justify-content-between mb-2" id="paymentTypeRow">
                             <span>Payment Type:</span>
                             <span class="fw-medium text-success" id="paymentTypeDisplay">Full Payment</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2" id="downPaymentRow">
+                        <div class="d-flex d-none justify-content-between mb-2" id="downPaymentRow">
                             <span id="downPaymentLabel">Down Payment (30%):</span>
                             <span class="fw-medium" id="downPayment">₱0</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2" id="remainingBalanceRow">
+                        <div class="d-flex d-none justify-content-between mb-2" id="remainingBalanceRow">
                             <span>Remaining Balance:</span>
                             <span class="fw-medium" id="remainingBalance">₱0</span>
                         </div>
@@ -828,6 +799,15 @@
             // Initialize the checked state on page load
             $('input[name="payment_type"]:checked').trigger('change');
 
+            // Re-price the summary when the client switches between raw and enhanced photos
+            $('input[name="photo_edit_option"]').on('change', function() {
+                if (!selectedPackageId) return;
+                const packageData = $(`.package-radio[value="${selectedPackageId}"]`).data('package');
+                if (packageData) {
+                    getBookingSummaryWithPaymentType(packageData, $('input[name="payment_type"]:checked').val());
+                }
+            });
+
             // Load packages when category is selected
             $('#serviceCategory').on('change', function() {
                 // Reset location type when category changes
@@ -1042,6 +1022,11 @@
                                             ${package.cover_thumbnail ? `
                                                 <img src="${package.cover_thumbnail}" alt="${package.package_name}" class="w-100" style="height: 140px; object-fit: cover;">
                                             ` : ''}
+                                            ${(package.cover_videos || []).length ? `
+                                                <div class="d-flex flex-wrap gap-2 p-2 pb-0">
+                                                    ${package.cover_videos.map(v => `<video src="${v}" controls preload="metadata" style="width:140px;height:70px;object-fit:cover;border-radius:6px;background:#000;"></video>`).join('')}
+                                                </div>
+                                            ` : ''}
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-start mb-2 mt-3">
                                                     <h6 class="card-title fw-bold mb-0">${package.package_name}</h6>
@@ -1143,6 +1128,20 @@
                                                             </li>
                                                         `).join('')}
                                                         
+                                                        ${(package.materials || []).map(m => `
+                                                            <li class="mb-1">
+                                                                <i class="ti ti-frame text-primary me-2"></i>
+                                                                ${parseInt(m.quantity) || 1} &times; ${$('<div>').text(m.name || '').html()}
+                                                            </li>
+                                                        `).join('')}
+
+                                                        ${package.enhanced_photos_price !== null && package.enhanced_photos_price !== undefined ? `
+                                                            <li class="mb-1">
+                                                                <i class="ti ti-sparkles text-success me-2"></i>
+                                                                Enhanced photos available: +₱${parseFloat(package.enhanced_photos_price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                                            </li>
+                                                        ` : ''}
+
                                                         ${package.coverage_scope ? `
                                                             <li class="mb-1">
                                                                 <i class="ti ti-map-pin text-primary me-2"></i> 
@@ -1247,6 +1246,12 @@
                     return;
                 }
                 
+                // Offer raw/enhanced only when the package has an enhanced-photos price
+                const hasEnhanced = packageData.enhanced_photos_price !== null && packageData.enhanced_photos_price !== undefined;
+                $('#photo_edit_raw').prop('checked', true);
+                $('#enhancedPriceLabel').text(hasEnhanced ? '(+₱' + parseFloat(packageData.enhanced_photos_price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')' : '');
+                $('#photoEditOptions').toggle(hasEnhanced);
+
                 // ==== START: Reset and prepare location UI based on booking type ====
                 resetLocationUI();
                 
@@ -1730,6 +1735,8 @@
                 }
                 // ==== END: Handle recurring booking fields ====
                 
+                bookingData.photo_edit_option = $('input[name="photo_edit_option"]:checked').val() || 'raw';
+
                 // ==== FIXED: Handle payment type based on booking type and policy ====
                 if (bookingType === 'freelancer') {
                     // Check if freelancer has a deposit policy
@@ -1942,6 +1949,7 @@
                         package_id: packageData.id,
                         type: $('#bookingType').val(),
                         payment_type: paymentType,
+                        photo_edit_option: $('input[name="photo_edit_option"]:checked').val(),
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
@@ -2400,7 +2408,8 @@
                     data: {
                         package_id: packageData.id,
                         type: $('#bookingType').val(),
-                        payment_type: $('input[name="payment_type"]:checked').val() || $('input[name="payment_type"][type="hidden"]').val(),
+                        payment_type: $('input[name="payment_type"]:checked').val(),
+                        photo_edit_option: $('input[name="photo_edit_option"]:checked').val(),
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
@@ -2541,6 +2550,7 @@
 
                 // Display price breakdown with proper formatting
                 if (window.bookingSummary) {
+                    renderEnhancementRow(window.bookingSummary);
                     $('#packagePrice').text('₱' + window.bookingSummary.package_price);
                     $('#downPayment').text('₱' + window.bookingSummary.down_payment);
                     $('#remainingBalance').text('₱' + window.bookingSummary.remaining_balance);
@@ -2870,7 +2880,13 @@
             /**
              * Update summary price display
              */
+            function renderEnhancementRow(summary) {
+                $('#enhancementAmount').text('₱' + summary.enhancement_amount);
+                $('#enhancementRow').toggleClass('d-none', summary.photo_edit_option !== 'enhanced');
+            }
+
             function updateSummaryPriceDisplay(summary) {
+                renderEnhancementRow(summary);
                 $('#packagePrice').text('₱' + summary.package_price);
                 $('#downPayment').text('₱' + summary.down_payment);
                 $('#remainingBalance').text('₱' + summary.remaining_balance);

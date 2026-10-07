@@ -284,17 +284,6 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-12 col-md-6 mb-3">
-                                        <label class="form-label">Downpayment Percentage (%)</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" placeholder="Enter downpayment percentage" name="downpayment_percentage" step="0.01" min="0" max="100" value="{{ $studio->downpayment_percentage }}">
-                                            <span class="input-group-text">%</span>
-                                            <div class="invalid-feedback">
-                                                Please enter a valid percentage between 0 and 100.
-                                            </div>
-                                        </div>
-                                        <small class="form-text text-muted">This will be required as downpayment for bookings.</small>
-                                    </div>
                                 </div>
 
                                     <div class="col-12 col-md-6 mb-3">
@@ -308,14 +297,6 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-12 col-md-6 mb-3">
-                                        <div class="form-check form-switch mt-4">
-                                            <input type="hidden" name="requires_downpayment" value="0">
-                                            <input class="form-check-input" type="checkbox" role="switch" id="requiresDownpayment" name="requires_downpayment" value="1" {{ $studio->requires_downpayment !== false ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="requiresDownpayment">Require Downpayment for Bookings</label>
-                                        </div>
-                                        <small class="form-text text-muted">Turn off to let clients pay in full without a downpayment.</small>
-                                    </div>
                                 </div>
 
                                 <div class="row">

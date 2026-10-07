@@ -164,6 +164,8 @@
                                 <label class="form-label">Starting Price (₱)</label>
                                 <input type="number" class="form-control" name="starting_from" id="edit_starting_from" min="0" step="0.01" placeholder="Optional — shown to clients as 'from ₱X'">
                             </div>
+
+                            @include('partials.service-media', ['service' => null])
                         </div>
                     </form>
                 </div>
@@ -203,104 +205,6 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            // Edit service - Load data via AJAX
-            $(document).on('click', '.btn-edit-service', function() {
-                const serviceId = $(this).data('id');
-                
-                // Show loading state
-                $('#editServiceModal').modal('show');
-                $('#updateServiceBtn').prop('disabled', true).text('Loading...');
-                
-                $.ajax({
-                    url: `{{ url('owner/services') }}/${serviceId}/edit`,
-                    type: 'GET',
-                    success: function(response) {
-                        if (response.success) {
-                            const service = response.data.service;
-                            
-                            $('#edit_service_id').val(service.id);
-                            $('#edit_studio_id').val(service.studio_id);
-                            $('#edit_category_id').val(service.category_id);
-                            $('#edit_service_name').val(service.service_name);
-                            $('#edit_starting_from').val(service.starting_from);
-                            // Removed: service_description and status fields
-                            
-                            $('#updateServiceBtn').prop('disabled', false).text('Update Service');
-                        } else {
-                            $('#editServiceModal').modal('hide');
-                            showErrorAlert(response.message || 'Failed to load service data.');
-                        }
-                    },
-                    error: function() {
-                        $('#editServiceModal').modal('hide');
-                        showErrorAlert('An error occurred while loading service data.');
-                    }
-                });
-            });
-            
-            // Update service
-            $('#updateServiceBtn').click(function() {
-                const form = $('#editServiceForm');
-                
-                if (!form[0].checkValidity()) {
-                    form[0].classList.add('was-validated');
-                    return;
-                }
-                
-                const formData = form.serialize();
-                const serviceId = $('#edit_service_id').val();
-                
-                $(this).prop('disabled', true).text('Updating...');
-                
-                $.ajax({
-                    url: `{{ url('owner/services') }}/${serviceId}`,
-                    type: 'PUT',
-                    data: formData,
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: response.message,
-                                showConfirmButton: false,
-                                timerProgressBar: true,
-                                timer: 1500
-                            }).then(() => {
-                                $('#editServiceModal').modal('hide');
-                                location.reload(); // Reload page to show updated data
-                            });
-                        } else {
-                            showErrorAlert(response.message || 'Failed to update service.');
-                            $('#updateServiceBtn').prop('disabled', false).text('Update Service');
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMessage = 'An error occurred. Please try again.';
-                        
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                            
-                            if (xhr.responseJSON.errors) {
-                                const errors = xhr.responseJSON.errors;
-                                errorMessage = '';
-                                for (const key in errors) {
-                                    if (key === 'service_name') {
-                                        errorMessage += errors[key][0] + '\n';
-                                    } else if (Array.isArray(errors[key])) {
-                                        errorMessage += errors[key][0] + '\n';
-                                    } else {
-                                        errorMessage += errors[key] + '\n';
-                                    }
-                                }
-                            }
-                        }
-                        
-                        showErrorAlert(errorMessage);
-                        $('#updateServiceBtn').prop('disabled', false).text('Update Service');
-                    }
-                });
-            });
-            
             // Delete service
             $(document).on('click', '.btn-delete-service', function() {
                 const serviceId = $(this).data('id');
@@ -347,16 +251,17 @@
                 });
             });
             
-            function showErrorAlert(message) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: message,
-                    confirmButtonColor: '#DC3545',
-                    confirmButtonText: 'OK'
-                });
-            }
         });
+
+        function showErrorAlert(message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: message,
+                confirmButtonColor: '#DC3545',
+                confirmButtonText: 'OK'
+            });
+        }
 
         // Function to update remove button states for edit modal
         function updateEditRemoveButtons() {
@@ -413,6 +318,8 @@
                         $('#edit_studio_id').val(service.studio_id);
                         $('#edit_category_id').val(service.category_id);
                         $('#edit_starting_from').val(service.starting_from);
+                        window.renderExistingServiceMedia(service);
+                        $('#editServiceForm input[type=file]').val('');
 
                         // Clear and populate service names container
                         $('#editServiceNamesContainer').empty();
@@ -485,15 +392,19 @@
                 return;
             }
             
-            const formData = form.serialize();
+            const formData = new FormData(form[0]);
+            window.appendServiceMedia(formData, form[0]);
             const serviceId = $('#edit_service_id').val();
             
             $(this).prop('disabled', true).text('Updating...');
             
+            // multipart bodies cannot be sent with PUT; _method (hidden field) spoofs it
             $.ajax({
                 url: `{{ url('owner/services') }}/${serviceId}`,
-                type: 'PUT',
+                type: 'POST',
                 data: formData,
+                processData: false,
+                contentType: false,
                 success: function(response) {
                     if (response.success) {
                         Swal.fire({

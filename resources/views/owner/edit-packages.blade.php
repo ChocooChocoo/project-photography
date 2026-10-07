@@ -249,6 +249,8 @@
                                         <div id="coverImagesPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
                                     </div>
 
+                                    @include('partials.package-extras')
+
                                     <div class="col-12 mb-3">
                                         <label class="form-label">Status</label>
                                         <select class="form-select" name="status" required>
@@ -437,6 +439,7 @@
                 });
                 formData.delete('package_inclusions[]');
                 formData.append('package_inclusions', JSON.stringify(inclusions));
+                window.appendPackageExtras(formData, this);
 
                 const allowCustomization = formData.get('allow_time_customization');
                 if (allowCustomization === '1') {

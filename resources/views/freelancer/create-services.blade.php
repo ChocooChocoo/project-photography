@@ -50,6 +50,8 @@
                                         <label class="form-label">Starting Price (₱)</label>
                                         <input type="number" class="form-control" name="starting_from" id="starting_from" min="0" step="0.01" placeholder="Optional — shown to clients as 'from ₱X'">
                                     </div>
+
+                                    @include('partials.service-media', ['service' => null])
                                 </div>
                                 <button type="submit" class="btn btn-primary" id="submitBtn">
                                     <span id="submitText">Create Services</span>
@@ -118,26 +120,17 @@
                 $('#submitText').addClass('d-none');
                 $('#spinner').removeClass('d-none');
 
-                // Get form data
-                const formData = $(this).serializeArray();
-                
-                // Filter out empty service names
-                const serviceNames = $('input[name="service_name[]"]').map(function() {
-                    return $(this).val().trim();
-                }).get().filter(name => name !== '');
-
-                // Prepare final data
-                const data = {
-                    category_id: $('#category_id').val(),
-                    service_name: serviceNames
-                };
+                // Multipart body so image/video files travel with the request; blank names are dropped server-side
+                const data = new FormData(this);
+                window.appendServiceMedia(data, this);
 
                 // AJAX request
                 $.ajax({
                     url: "{{ route('freelancer.services.store') }}",
                     type: 'POST',
-                    data: JSON.stringify(data),
-                    contentType: 'application/json',
+                    data: data,
+                    processData: false,
+                    contentType: false,
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },

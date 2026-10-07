@@ -41,6 +41,9 @@ class PackagesModel extends Model
         'allow_multiple_locations',
         'max_locations',
         'cover_images',
+        'cover_videos',
+        'materials',
+        'enhanced_photos_price',
     ];
 
     /**
@@ -61,6 +64,9 @@ class PackagesModel extends Model
         'allow_multiple_locations' => 'boolean',
         'max_locations' => 'integer',
         'cover_images' => 'array',
+        'cover_videos' => 'array',
+        'materials' => 'array',
+        'enhanced_photos_price' => 'decimal:2',
     ];
 
     /**

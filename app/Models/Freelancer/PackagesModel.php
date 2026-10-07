@@ -38,6 +38,9 @@ class PackagesModel extends Model
         'max_locations',
         // ==== NEW FIELDS END ====
         'cover_images',
+        'cover_videos',
+        'materials',
+        'enhanced_photos_price',
     ];
 
     /**
@@ -55,6 +58,9 @@ class PackagesModel extends Model
         'max_locations' => 'integer',
         // ==== NEW CASTS END ====
         'cover_images' => 'array',
+        'cover_videos' => 'array',
+        'materials' => 'array',
+        'enhanced_photos_price' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

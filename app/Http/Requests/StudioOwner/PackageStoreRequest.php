@@ -101,6 +101,12 @@ class PackageStoreRequest extends FormRequest
             'status' => 'required|in:active,inactive',
             'cover_images' => 'nullable|array|max:5',
             'cover_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'cover_videos' => 'nullable|array|max:5',
+            'cover_videos.*' => 'nullable|file|mimes:mp4,webm,mov|max:51200',
+            'materials' => 'nullable|array|max:30',
+            'materials.*.name' => 'required|string|max:100',
+            'materials.*.quantity' => 'required|integer|min:1|max:999',
+            'enhanced_photos_price' => 'nullable|numeric|min:0|max:1000000',
         ];
     }
 
@@ -155,7 +161,13 @@ class PackageStoreRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $input = $this->all();
-        
+
+        // Materials arrive as a JSON string from the repeater.
+        if (isset($input['materials']) && is_string($input['materials'])) {
+            $decoded = json_decode($input['materials'], true);
+            $input['materials'] = is_array($decoded) ? $decoded : null;
+        }
+
         // Convert string boolean values to actual booleans
         if ($this->has('allow_time_customization')) {
             $input['allow_time_customization'] = filter_var($this->allow_time_customization, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
@@ -201,7 +213,8 @@ class PackageStoreRequest extends FormRequest
             $validated['allow_multiple_locations'] = false;
         }
         // ==== NEW PASSED VALIDATION END ====
-        
-        $this->replace($validated);
+
+        // merge, not replace: keep_cover_* fields are read by the controller but are not validated rules
+        $this->merge($validated);
     }
 }

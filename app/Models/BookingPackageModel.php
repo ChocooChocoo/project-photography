@@ -31,6 +31,9 @@ class BookingPackageModel extends Model
         'duration',
         'maximum_edited_photos',
         'coverage_scope',
+        'materials',
+        'photo_edit_option',
+        'enhancement_amount',
     ];
 
     /**
@@ -41,6 +44,8 @@ class BookingPackageModel extends Model
     protected $casts = [
         'package_price' => 'decimal:2',
         'package_inclusions' => 'array',
+        'materials' => 'array',
+        'enhancement_amount' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

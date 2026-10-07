@@ -881,6 +881,8 @@
                                         <div class="flex-grow-1 ms-3">
                                             <label class="text-muted small mb-1">Price</label>
                                             <p class="mb-0 fw-medium">₱${parseFloat(pkg.package_price).toFixed(2)}</p>
+                                            ${parseFloat(pkg.enhancement_amount) > 0 ? `<small class="text-muted d-block">+ ₱${parseFloat(pkg.enhancement_amount).toFixed(2)} enhanced photos</small>` : ''}
+                                            ${(pkg.materials || []).map(m => `<small class="text-muted d-block">${parseInt(m.quantity) || 1} &times; ${$('<div>').text(m.name || '').html()}</small>`).join('')}
                                         </div>
                                     </div>
                                 </div>

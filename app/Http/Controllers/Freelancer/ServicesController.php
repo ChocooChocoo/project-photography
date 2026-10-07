@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Freelancer;
 
+use App\Http\Controllers\Concerns\HandlesMediaUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Freelancer\ServiceRequest;
 use App\Models\Admin\CategoriesModel;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 
 class ServicesController extends Controller
 {
+    use HandlesMediaUploads;
+
     /**
      * Display a listing of the resource.
      */
@@ -79,6 +82,8 @@ class ServicesController extends Controller
                 'category_id' => $request->category_id,
                 'services_name' => $request->service_name,
                 'starting_from' => $request->starting_from,
+                'images' => $this->syncMedia($request, 'images', 'keep_images', [], 'service-media/freelancer/'.auth()->id().'/images', 5),
+                'videos' => $this->syncMedia($request, 'videos', 'keep_videos', [], 'service-media/freelancer/'.auth()->id().'/videos', 5),
             ]);
 
             // No longer need to store in pivot table since category_id is in main table
@@ -191,6 +196,8 @@ class ServicesController extends Controller
                 'category_id' => $request->category_id,
                 'services_name' => $request->service_name,
                 'starting_from' => $request->starting_from,
+                'images' => $this->syncMedia($request, 'images', 'keep_images', $service->images ?? [], 'service-media/freelancer/'.auth()->id().'/images', 5),
+                'videos' => $this->syncMedia($request, 'videos', 'keep_videos', $service->videos ?? [], 'service-media/freelancer/'.auth()->id().'/videos', 5),
             ]);
 
             DB::commit();
@@ -227,6 +234,7 @@ class ServicesController extends Controller
             $categoryId = $service->category_id;
             
             // Delete service
+            $this->deleteMedia(array_merge($service->images ?? [], $service->videos ?? []));
             $service->delete();
 
             // Check if any services left with this category for this user

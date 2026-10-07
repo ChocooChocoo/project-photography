@@ -35,6 +35,12 @@ class PackageStoreRequest extends FormRequest
             }
         }
 
+        // Materials arrive as a JSON string from the repeater.
+        if (is_string($this->materials)) {
+            $decoded = json_decode($this->materials, true);
+            $this->merge(['materials' => is_array($decoded) ? $decoded : null]);
+        }
+
         // Handle allow_time_customization boolean conversion
         if ($this->has('allow_time_customization')) {
             $this->merge([
@@ -91,6 +97,12 @@ class PackageStoreRequest extends FormRequest
             'status' => 'required|in:active,inactive',
             'cover_images' => 'nullable|array|max:5',
             'cover_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'cover_videos' => 'nullable|array|max:5',
+            'cover_videos.*' => 'nullable|file|mimes:mp4,webm,mov|max:51200',
+            'materials' => 'nullable|array|max:30',
+            'materials.*.name' => 'required|string|max:100',
+            'materials.*.quantity' => 'required|integer|min:1|max:999',
+            'enhanced_photos_price' => 'nullable|numeric|min:0|max:1000000',
 
             // ==== NEW VALIDATION RULES START ====
             'allow_multiple_locations' => 'sometimes|boolean',

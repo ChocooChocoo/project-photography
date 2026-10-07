@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Freelancer;
 
+use App\Http\Controllers\Concerns\HandlesMediaUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Freelancer\PackageStoreRequest;
 use App\Models\Freelancer\PackagesModel;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Storage;
 
 class PackagesController extends Controller
 {
+    use HandlesMediaUploads;
+
     /**
      * Display a listing of packages.
      *
@@ -127,6 +130,9 @@ class PackagesController extends Controller
                 $validated['cover_images'] = $coverImages;
             }
 
+            unset($validated['cover_videos']);
+            $validated['cover_videos'] = $this->syncMedia($request, 'cover_videos', 'keep_cover_videos', [], 'package-videos/freelancer/' . Auth::id(), 5);
+
             // Log final data before insert (remove in production)
             \Log::info('Package creation - Final data:', $validated);
 
@@ -236,6 +242,9 @@ class PackagesController extends Controller
             }
 
             $validated['cover_images'] = $coverImages;
+
+            unset($validated['cover_videos']);
+            $validated['cover_videos'] = $this->syncMedia($request, 'cover_videos', 'keep_cover_videos', $package->cover_videos ?? [], 'package-videos/freelancer/' . Auth::id(), 5);
 
             $package->update($validated);
 
@@ -392,8 +401,9 @@ class PackagesController extends Controller
                 ->where('id', $id)
                 ->firstOrFail();
             
+            $this->deleteMedia(array_merge($package->cover_images ?? [], $package->cover_videos ?? []));
             $package->delete();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Package deleted successfully!'

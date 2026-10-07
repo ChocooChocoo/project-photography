@@ -184,6 +184,8 @@
                                         <div id="coverImagesPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
                                     </div>
 
+                                    @include('partials.package-extras', ['package' => null])
+
                                     <div class="col-12 mb-3">
                                         <label class="form-label">Status</label>
                                         <select class="form-select" name="status" required>
@@ -607,6 +609,7 @@
                 Array.from($('#coverImages')[0].files).forEach(function(file) {
                     uploadData.append('cover_images[]', file);
                 });
+                window.appendPackageExtras(uploadData, $('#createPackageForm')[0]);
 
                 // Send AJAX request
                 $.ajax({

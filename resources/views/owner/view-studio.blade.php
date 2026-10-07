@@ -603,7 +603,6 @@
                                         </div>
                                         @endif
 
-                                        @if($studio->requires_downpayment === false)
                                         <div class="col-12 col-md-6 mb-3">
                                             <div class="d-flex align-items-start">
                                                 <div class="flex-shrink-0">
@@ -612,28 +611,12 @@
                                                     </div>
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
-                                                    <label class="text-muted small mb-1">Downpayment Requirement</label>
-                                                    <p class="mb-0 fw-medium">No downpayment required</p>
-                                                    <small class="text-muted">Clients can pay in full without a downpayment</small>
+                                                    <label class="text-muted small mb-1">Payment Requirement</label>
+                                                    <p class="mb-0 fw-medium">Full payment</p>
+                                                    <small class="text-muted">Clients pay the full amount when booking</small>
                                                 </div>
                                             </div>
                                         </div>
-                                        @elseif($studio->downpayment_percentage)
-                                        <div class="col-12 col-md-6 mb-3">
-                                            <div class="d-flex align-items-start">
-                                                <div class="flex-shrink-0">
-                                                    <div class="bg-light-primary rounded-circle p-2">
-                                                        <i data-lucide="percent" class="fs-20 text-primary"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-grow-1 ms-3">
-                                                    <label class="text-muted small mb-1">Downpayment Requirement</label>
-                                                    <p class="mb-0 fw-medium">{{ number_format($studio->downpayment_percentage, 2) }}% of total booking amount</p>
-                                                    <small class="text-muted">Clients must pay this percentage as downpayment when booking</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        @endif
                                     </div>
 
                                     {{-- Service Coverage Area --}}

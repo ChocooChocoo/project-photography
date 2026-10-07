@@ -154,6 +154,11 @@
                                                         </div>
                                                     </div>
                                                 @endforeach
+                                                @if(!empty($serviceRow->images) || !empty($serviceRow->videos))
+                                                    <div class="col-12">
+                                                        @include('partials.media-strip', ['images' => $serviceRow->images, 'videos' => $serviceRow->videos, 'class' => 'mb-2'])
+                                                    </div>
+                                                @endif
                                             @endforeach
                                         </div>
                                     </div>
@@ -191,6 +196,9 @@
                                                             <div class="card border h-100 package-card">
                                                                 @if ($package->cover_thumbnail)
                                                                     <img src="{{ asset('storage/' . $package->cover_thumbnail) }}" alt="{{ $package->package_name }}" class="w-100" style="height: 140px; object-fit: cover;">
+                                                                @endif
+                                                                @if(!empty($package->cover_videos))
+                                                                    @include('partials.media-strip', ['images' => [], 'videos' => $package->cover_videos, 'class' => 'p-2 pb-0'])
                                                                 @endif
                                                                 <div class="card-body">
                                                                     <!-- Package Name & Price -->
@@ -318,6 +326,20 @@
                                                                                 @endforeach
                                                                             @endif
                                                                             
+                                                                            @foreach($package->materials ?? [] as $material)
+                                                                                <li class="mb-1">
+                                                                                    <i class="ti ti-frame text-primary me-2"></i>
+                                                                                    {{ $material['quantity'] ?? 1 }} &times; {{ $material['name'] ?? '' }}
+                                                                                </li>
+                                                                            @endforeach
+
+                                                                            @if($package->enhanced_photos_price !== null)
+                                                                                <li class="mb-1">
+                                                                                    <i class="ti ti-sparkles text-success me-2"></i>
+                                                                                    Enhanced photos available: +₱{{ number_format($package->enhanced_photos_price, 2) }}
+                                                                                </li>
+                                                                            @endif
+
                                                                             @php
                                                                                 $coverageScope = $package->coverage_scope;
 
@@ -749,9 +771,9 @@
                                                 <h5 class="mb-1">Payment Terms</h5>
                                                 <p class="text-muted mb-0">
                                                     @if($type === 'studio')
-                                                        {{ $studio->deposit_policy ?? '30%' }} downpayment to confirm booking
+                                                        Full payment to confirm booking
                                                     @else
-                                                        {{ $freelancer->deposit_policy ?? '30%' }} downpayment to confirm booking
+                                                        Full payment to confirm booking
                                                     @endif
                                                 </p>
                                             </div>

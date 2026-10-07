@@ -27,6 +27,8 @@ class ServicesModel extends Model
         'category_id',
         'service_name', // This will now store JSON
         'starting_from',
+        'images',
+        'videos',
     ];
 
     /**
@@ -37,6 +39,8 @@ class ServicesModel extends Model
     protected $casts = [
         'service_name' => 'array', // Cast JSON to array
         'starting_from' => 'decimal:2',
+        'images' => 'array',
+        'videos' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
