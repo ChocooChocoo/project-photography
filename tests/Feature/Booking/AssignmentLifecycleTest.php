@@ -30,6 +30,9 @@ class AssignmentLifecycleTest extends TestCase
 
         Schema::dropAllTables();
         $this->createSchema();
+        (require database_path('migrations/2026_08_12_000002_create_tbl_booking_equipment_table.php'))->up();
+        (require database_path('migrations/2026_10_09_100000_add_booking_preparation.php'))->up();
+        \Illuminate\Support\Facades\Storage::fake('public');
         $this->owner = $this->createUser('owner', 'assignment-owner@example.com');
         Auth::setUser($this->owner);
 
@@ -117,11 +120,19 @@ class AssignmentLifecycleTest extends TestCase
 
         $this->actingAs($photographer)
             ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site'])
+            ->assertUnprocessable()->assertJsonValidationErrors('on_site_proof_image');
+        $this->assertSame('confirmed', $assignment->fresh()->status);
+
+        $proof = \Illuminate\Http\UploadedFile::fake()->createWithContent('arrival.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWf8AAAAASUVORK5CYII='));
+        $this->actingAs($photographer)
+            ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site', 'on_site_proof_image' => $proof])
             ->assertOk();
 
         $assignment->refresh();
         $this->assertSame('on_site', $assignment->status);
         $this->assertNotNull($assignment->on_site_at);
+        $this->assertNotNull($assignment->on_site_proof_image);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($assignment->on_site_proof_image);
 
         $this->actingAs($client)
             ->postJson("/_test/client/assignment/{$assignment->id}/confirm", ['confirmation_notes' => 'Photographer arrived on time.'])
@@ -170,6 +181,29 @@ class AssignmentLifecycleTest extends TestCase
                 ->where('type', 'assignment_deadline_warning')
                 ->count()
         );
+    }
+
+    public function test_failed_on_site_persistence_rolls_back_status_and_removes_uploaded_proof(): void
+    {
+        $client = $this->createUser('client', 'proof-rollback-client@example.com');
+        $photographer = $this->createUser('studio-photographer', 'proof-rollback-photo@example.com');
+        $studio = $this->createStudio();
+        $this->grantAssignmentPermission($photographer, $studio);
+        $booking = $this->createBooking($studio, $client, 'confirmed', 'on-location');
+        $assignment = $this->createAssignment($booking, $studio, $photographer, 'confirmed');
+        $events = \Illuminate\Support\Facades\DB::table('tbl_booking_events')->count();
+        $recorder = \Mockery::mock(\App\Services\BookingEventRecorder::class);
+        $recorder->shouldReceive('saved')->andThrow(new \RuntimeException('Timeline storage failed'));
+        $this->app->instance(\App\Services\BookingEventRecorder::class, $recorder);
+        $proof = \Illuminate\Http\UploadedFile::fake()->createWithContent('arrival.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWf8AAAAASUVORK5CYII='));
+        $this->actingAs($photographer)->postJson("/_test/photographer/assignment/{$assignment->id}/status", [
+            'status' => 'on_site', 'on_site_proof_image' => $proof,
+        ])->assertStatus(500);
+        $this->assertSame('confirmed', $assignment->fresh()->status);
+        $this->assertNull($assignment->fresh()->on_site_proof_image);
+        $this->assertSame('confirmed', $booking->fresh()->status);
+        $this->assertSame([], \Illuminate\Support\Facades\Storage::disk('public')->allFiles());
+        $this->assertDatabaseCount('tbl_booking_events', $events);
     }
 
     public function test_owner_cancelling_booking_cancels_open_assignments(): void

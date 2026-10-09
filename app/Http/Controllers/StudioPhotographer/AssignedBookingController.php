@@ -118,7 +118,9 @@ class AssignedBookingController extends Controller
      */
     public function updateAssignmentStatus(UpdateAssignmentStatusRequest $request, $assignmentId)
     {
+        $proofPath = null;
         try {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $assignmentId, &$proofPath) {
             $userId = Auth::id();
             $photographerName = Auth::user() ? Auth::user()->first_name.' '.Auth::user()->last_name : 'Photographer';
 
@@ -127,7 +129,9 @@ class AssignedBookingController extends Controller
                 ->firstOrFail();
 
             $booking = BookingModel::with(['packages.studioPackage', 'studioOnlineGallery'])
-                ->findOrFail($assignment->booking_id);
+                ->lockForUpdate()->findOrFail($assignment->booking_id);
+            $assignment = BookingAssignedPhotographerModel::where('photographer_id', $userId)
+                ->lockForUpdate()->findOrFail($assignmentId);
 
             $requiresLocationConfirmation = $booking->requiresLocationConfirmation();
 
@@ -239,9 +243,16 @@ class AssignedBookingController extends Controller
                         return response()->json([
                             'success' => false,
                             'message' => 'You must confirm the assignment first before marking as on-site.',
-                        ]);
+                        ], 422);
                     }
 
+                    $proofPath = $request->file('on_site_proof_image')->store('on-site-proofs/'.$booking->id, 'public');
+                    if (! $proofPath) {
+                        throw new \RuntimeException('Could not save arrival proof. Please try again.');
+                    }
+                    $updateData['on_site_proof_image'] = $proofPath;
+                    $updateData['latitude'] = $request->input('latitude');
+                    $updateData['longitude'] = $request->input('longitude');
                     $updateData['on_site_at'] = now();
 
                     // A studio booking that is still Confirmed advances to In Progress
@@ -377,8 +388,11 @@ class AssignedBookingController extends Controller
                 'assignment' => $assignment->fresh(),
                 'recovery' => $recovery,
             ]);
-
-        } catch (\Exception $e) {
+            });
+        } catch (\Throwable $e) {
+            if ($proofPath) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($proofPath);
+            }
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating assignment status: '.$e->getMessage(),

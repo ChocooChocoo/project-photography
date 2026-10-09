@@ -308,6 +308,7 @@ class RecurringBookingTest extends TestCase
             $table->string('province')->nullable();
             $table->json('multiple_locations')->nullable();
             $table->text('special_requests')->nullable();
+            $table->string('preferred_camera_brand', 100)->nullable();
             $table->decimal('total_amount', 10, 2);
             $table->decimal('down_payment', 10, 2);
             $table->decimal('remaining_balance', 10, 2);

@@ -4,7 +4,8 @@
 {{-- CONTENTS --}}
 @section('content')
     <div class="content-page">
-        <div class="container-fluid">                  
+        <div class="container-fluid">
+            <p class="mt-3">Already paid for a booking? <a href="{{ route('client.my-bookings.index') }}">Open My Bookings to see preparation, equipment, and arrival proof.</a></p>
             <div class="row mt-3">
                 <div class="col-12">
                     <div class="card">

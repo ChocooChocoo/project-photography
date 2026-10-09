@@ -20,6 +20,10 @@ use Tests\TestCase;
 
 class VenueConfirmationChainTest extends TestCase
 {
+    private function proof(): \Illuminate\Http\UploadedFile
+    {
+        return \Illuminate\Http\UploadedFile::fake()->createWithContent('arrival.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWf8AAAAASUVORK5CYII='));
+    }
     private UserModel $owner;
 
     protected function setUp(): void
@@ -28,6 +32,12 @@ class VenueConfirmationChainTest extends TestCase
 
         Schema::dropAllTables();
         $this->createSchema();
+        Schema::table('tbl_booking_assigned_photographers', function (Blueprint $table) {
+            $table->string('on_site_proof_image')->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
+        });
+        \Illuminate\Support\Facades\Storage::fake('public');
         $this->owner = $this->createUser('owner', 'venue-owner@example.com');
         Auth::setUser($this->owner);
 
@@ -56,7 +66,7 @@ class VenueConfirmationChainTest extends TestCase
         $this->assertSame('in_progress', $booking->status);
 
         $this->actingAs($photographer)
-            ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site'])
+            ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site', 'on_site_proof_image' => $this->proof()])
             ->assertOk()
             ->assertJsonPath('success', true);
 
@@ -114,7 +124,7 @@ class VenueConfirmationChainTest extends TestCase
         $this->payInFull($booking);
 
         $this->actingAs($photographer)
-            ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site'])
+            ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site', 'on_site_proof_image' => $this->proof()])
             ->assertOk()
             ->assertJsonPath('success', true);
 

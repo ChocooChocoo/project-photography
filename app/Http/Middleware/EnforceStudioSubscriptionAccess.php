@@ -129,6 +129,9 @@ class EnforceStudioSubscriptionAccess
         }
 
         $routeName = (string) $request->route()?->getName();
+        if (str_starts_with($routeName, 'owner.equipment.catalog.') && is_numeric($request->route('id'))) {
+            return \App\Models\StudioOwner\StudioEquipmentModel::find($request->route('id'))?->studio_id;
+        }
         if (str_starts_with($routeName, 'owner.studio.') && is_numeric($request->route('id'))) {
             return (int) $request->route('id');
         }

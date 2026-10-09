@@ -46,6 +46,9 @@ class BookingAssignedPhotographerModel extends Model
         'completed_at',
         'cancelled_at',
         'recovery_id',
+        'on_site_proof_image',
+        'latitude',
+        'longitude',
     ];
 
     /**
@@ -54,6 +57,8 @@ class BookingAssignedPhotographerModel extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
         'assigned_at' => 'datetime',
         'response_deadline' => 'datetime',
         'confirmed_at' => 'datetime',

@@ -435,6 +435,11 @@
 
                                 {{-- SPECIAL REQUESTS --}}
                                 <div class="mb-3">
+                                    <label for="preferredCameraBrand" class="form-label">Preferred camera brand (optional)</label>
+                                    <input id="preferredCameraBrand" name="preferred_camera_brand" class="form-control" maxlength="100">
+                                    <small>Preference only. Your provider will show the equipment assigned to your booking.</small>
+                                </div>
+                                <div class="mb-3">
                                     <label class="form-label fw-medium">Special Requests / Notes</label>
                                     <textarea class="form-control" rows="3" id="specialRequests" name="special_requests"
                                         placeholder="Enter special requests or notes..."></textarea>
@@ -1767,6 +1772,7 @@
                     end_time: $('#endTime').val(),
                     location_type: $('#locationType').val(),
                     special_requests: $('#specialRequests').val(),
+                    preferred_camera_brand: $('#preferredCameraBrand').val(),
                     full_name: $('#fullName').val(),
                     contact_number: $('#contactNumber').val(),
                     email: $('#email').val(),

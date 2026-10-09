@@ -302,6 +302,24 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
+    <style>
+        #ownerEquipmentPanel :is(button, input, select, summary) { min-height: 44px; }
+        #ownerEquipmentPanel .equipment-feedback { overflow-wrap: anywhere; }
+        #ownerEquipmentPanel .row { margin-inline: 0; }
+    </style>
+    <script src="{{ asset('assets/js/booking-preparation.js') }}"></script>
+    @php
+        $equipmentRoutes = [
+            'catalog' => route('owner.equipment.catalog', '__ID__', false),
+            'assigned' => route('owner.booking.equipment.index', '__ID__', false),
+            'remove' => route('owner.booking.equipment.destroy', '__ID__', false),
+            'update' => route('owner.equipment.catalog.update', '__ID__', false),
+            'delete' => route('owner.equipment.catalog.destroy', '__ID__', false),
+        ];
+    @endphp
+    <script>
+        window.bookingEquipmentRoutes = @json($equipmentRoutes);
+    </script>
     @include('partials.contract-block-js')
     <script>
         $(document).ready(function() {
@@ -1015,6 +1033,20 @@
                 $('#bookingReference').text(booking.booking_reference);
                 $('#bookingModalBody').html(modalContent);
                 $('#bookingModalBody').prepend(window.renderContractBlock(data.contract, 'owner'));
+                $('#bookingModalBody').append('<section id="ownerEquipmentPanel" class="mt-4 border-top pt-3"></section>');
+                window.mountBookingEquipment(document.getElementById('ownerEquipmentPanel'), booking, assignedPhotographers || []);
+                const proofs = (assignedPhotographers || []).filter(a => a.on_site_proof_image);
+                if (proofs.length) {
+                    const section = $('<section class="mt-4"><h5>Photographer arrival proof</h5></section>');
+                    proofs.forEach(a => {
+                        const figure = $('<figure>');
+                        $('<figcaption>').text((a.photographer?.first_name || '') + ' ' + (a.photographer?.last_name || '')).appendTo(figure);
+                        $('<img class="img-fluid rounded" style="max-height:240px">').attr('src', '{{ asset("storage") }}/' + a.on_site_proof_image).attr('alt', 'Photographer arrival proof').appendTo(figure);
+                        if (a.latitude !== null && a.latitude !== undefined) $('<p>').text('Submitted coordinates: ' + a.latitude + ', ' + a.longitude + ' (not independently verified).').appendTo(figure);
+                        section.append(figure);
+                    });
+                    $('#bookingModalBody').append(section);
+                }
                 loadIcons();
                 
                 // Rebind the assign button click event

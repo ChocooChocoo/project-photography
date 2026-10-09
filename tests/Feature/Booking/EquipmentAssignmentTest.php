@@ -43,6 +43,9 @@ class EquipmentAssignmentTest extends TestCase
         $studio = $this->createStudio();
         $booking = $this->createBooking($studio, $client);
 
+        $photographer = $this->createUser('studio-photographer', 'equipment-owner-assigned@example.com');
+        $this->createAssignment($booking, $studio, $photographer);
+
         $this->actingAs($this->owner)
             ->postJson("/_test/owner/bookings/{$booking->id}/equipment", [
                 'equipment_name' => 'Camera body',
@@ -72,6 +75,84 @@ class EquipmentAssignmentTest extends TestCase
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonCount(2, 'data');
+    }
+
+    public function test_equipment_requires_a_non_cancelled_photographer(): void
+    {
+        $client = $this->createUser('client', 'equipment-gate-client@example.com');
+        $studio = $this->createStudio();
+        $booking = $this->createBooking($studio, $client);
+        $payload = ['equipment_name' => 'Camera body', 'equipment_type' => 'camera'];
+
+        $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", $payload)
+            ->assertUnprocessable()->assertJsonPath('success', false);
+
+        $photographer = $this->createUser('studio-photographer', 'equipment-gate-photo@example.com');
+        $assignment = $this->createAssignment($booking, $studio, $photographer);
+        $assignment->update(['status' => 'cancelled']);
+        $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", $payload)
+            ->assertUnprocessable();
+        $this->assertDatabaseCount('tbl_booking_equipment', 0);
+    }
+
+    public function test_equipment_assignment_must_belong_to_the_same_booking(): void
+    {
+        $client = $this->createUser('client', 'equipment-scope-client@example.com');
+        $photographer = $this->createUser('studio-photographer', 'equipment-scope-photo@example.com');
+        $studio = $this->createStudio();
+        $booking = $this->createBooking($studio, $client);
+        $this->createAssignment($booking, $studio, $photographer);
+        $otherBooking = $this->createBooking($studio, $client);
+        $otherAssignment = $this->createAssignment($otherBooking, $studio, $photographer);
+
+        $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", [
+            'assignment_id' => $otherAssignment->id,
+            'equipment_name' => 'Camera body', 'equipment_type' => 'camera',
+        ])->assertUnprocessable();
+        $this->assertDatabaseCount('tbl_booking_equipment', 0);
+    }
+
+    public function test_invalid_equipment_returns_validation_errors(): void
+    {
+        $client = $this->createUser('client', 'equipment-invalid-client@example.com');
+        $studio = $this->createStudio();
+        $booking = $this->createBooking($studio, $client);
+        $photographer = $this->createUser('studio-photographer', 'equipment-invalid-photo@example.com');
+        $this->createAssignment($booking, $studio, $photographer);
+        $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", [])
+            ->assertUnprocessable()->assertJsonValidationErrors(['equipment_name', 'equipment_type']);
+    }
+
+    public function test_terminal_bookings_cannot_receive_equipment(): void
+    {
+        $client = $this->createUser('client', 'equipment-terminal-client@example.com');
+        $studio = $this->createStudio();
+        $booking = $this->createBooking($studio, $client);
+        $photographer = $this->createUser('studio-photographer', 'equipment-terminal-photo@example.com');
+        $this->createAssignment($booking, $studio, $photographer);
+        foreach (['completed', 'cancelled'] as $status) {
+            $booking->update(['status' => $status]);
+            $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", [
+                'equipment_name' => 'Camera body', 'equipment_type' => 'camera',
+            ])->assertUnprocessable();
+        }
+        $this->assertDatabaseCount('tbl_booking_equipment', 0);
+    }
+
+    public function test_owner_cannot_assign_equipment_to_another_owners_booking(): void
+    {
+        $client = $this->createUser('client', 'equipment-other-client@example.com');
+        $otherOwner = $this->createUser('owner', 'equipment-other-owner@example.com');
+        $studio = $this->createStudio();
+        $studio->update(['user_id' => $otherOwner->id]);
+        $booking = $this->createBooking($studio, $client);
+        $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", [
+            'equipment_name' => 'Camera body', 'equipment_type' => 'camera',
+        ])->assertNotFound();
+        $this->getJson("/_test/owner/bookings/{$booking->id}/equipment")->assertNotFound();
+        $equipment = $this->createEquipment($booking);
+        $this->deleteJson("/_test/owner/equipment/{$equipment->id}")->assertNotFound();
+        $this->assertDatabaseHas('tbl_booking_equipment', ['id' => $equipment->id]);
     }
 
     public function test_photographer_can_confirm_assigned_equipment(): void
@@ -326,5 +407,6 @@ class EquipmentAssignmentTest extends TestCase
             $table->integer('total_photos')->default(0);
             $table->timestamps();
         });
+        (require database_path('migrations/2026_10_09_100000_add_booking_preparation.php'))->up();
     }
 }

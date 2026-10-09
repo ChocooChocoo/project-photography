@@ -113,11 +113,12 @@ class BookingTermsAndTimeslotTest extends TestCase
     public function test_store_accepts_booking_when_terms_agreed(): void
     {
         $this->actingAs($this->client)
-            ->postJson('/test/bookings/store', $this->bookingPayload(['terms_agree' => 1]))
+            ->postJson('/test/bookings/store', $this->bookingPayload(['terms_agree' => 1, 'preferred_camera_brand' => 'Canon']))
             ->assertOk()
             ->assertJsonPath('success', true);
 
         $this->assertSame(1, BookingModel::count());
+        $this->assertSame('Canon', BookingModel::first()->preferred_camera_brand);
     }
 
     public function test_store_rejects_overlapping_timeslot(): void
@@ -357,6 +358,7 @@ class BookingTermsAndTimeslotTest extends TestCase
             $table->string('province')->nullable();
             $table->json('multiple_locations')->nullable();
             $table->text('special_requests')->nullable();
+            $table->string('preferred_camera_brand', 100)->nullable();
             $table->decimal('total_amount', 10, 2);
             $table->decimal('down_payment', 10, 2);
             $table->decimal('remaining_balance', 10, 2);

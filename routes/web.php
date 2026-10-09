@@ -201,6 +201,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::put('/bookings/{id}/complete', [\App\Http\Controllers\StudioOwner\BookingController::class, 'completeBooking'])->middleware('permission:owner.bookings.manage')->name('owner.booking.complete');
 
         // Manage Booking Equipment
+        Route::get('/studios/{studioId}/equipment', [\App\Http\Controllers\StudioOwner\StudioEquipmentController::class, 'index'])->middleware('permission:owner.bookings.manage')->name('owner.equipment.catalog');
+        Route::post('/studios/{studioId}/equipment', [\App\Http\Controllers\StudioOwner\StudioEquipmentController::class, 'store'])->middleware('permission:owner.bookings.manage')->name('owner.equipment.catalog.store');
+        Route::put('/equipment-catalog/{id}', [\App\Http\Controllers\StudioOwner\StudioEquipmentController::class, 'update'])->middleware('permission:owner.bookings.manage')->name('owner.equipment.catalog.update');
+        Route::delete('/equipment-catalog/{id}', [\App\Http\Controllers\StudioOwner\StudioEquipmentController::class, 'destroy'])->middleware('permission:owner.bookings.manage')->name('owner.equipment.catalog.destroy');
         Route::get('/bookings/{bookingId}/equipment', [\App\Http\Controllers\StudioOwner\BookingEquipmentController::class, 'index'])->middleware('permission:owner.bookings.manage')->name('owner.booking.equipment.index');
         Route::post('/bookings/{bookingId}/equipment', [\App\Http\Controllers\StudioOwner\BookingEquipmentController::class, 'store'])->middleware('permission:owner.bookings.manage')->name('owner.booking.equipment.store');
         Route::delete('/equipment/{id}', [\App\Http\Controllers\StudioOwner\BookingEquipmentController::class, 'destroy'])->middleware('permission:owner.bookings.manage')->name('owner.booking.equipment.destroy');
@@ -677,6 +681,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/view/bookings-history', [\App\Http\Controllers\Client\MyBookingsController::class, 'history'])->name('client.my-bookings.history');
         Route::get('/view/refunds', [\App\Http\Controllers\Client\MyBookingsController::class, 'refunds'])->name('client.refunds.index');
         Route::get('/bookings/{id}/details', [\App\Http\Controllers\Client\MyBookingsController::class, 'getBookingDetails'])->name('client.booking.details');
+        Route::get('/bookings/{booking}/preparation', [\App\Http\Controllers\Client\BookingPreparationController::class, 'show'])->name('client.booking.preparation');
         Route::post('/bookings/{id}/cancel', [\App\Http\Controllers\Client\MyBookingsController::class, 'cancelBooking'])->name('client.booking.cancel');
         Route::post('/cancellation-recoveries/{recoveryId}/response', [\App\Http\Controllers\Client\MyBookingsController::class, 'respondToPhotographerReplacement'])->name('client.booking.recovery.response');
         Route::get('/cancellation-recoveries/{recoveryId}', [\App\Http\Controllers\Client\MyBookingsController::class, 'cancellationRecoveryView'])->name('client.booking.recovery.view');

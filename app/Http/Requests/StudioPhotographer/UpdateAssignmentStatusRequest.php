@@ -18,6 +18,9 @@ class UpdateAssignmentStatusRequest extends FormRequest
     {
         return [
             'status' => 'required|in:confirmed,on_site,in_progress,completed,cancelled',
+            'on_site_proof_image' => 'required_if:status,on_site|nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'latitude' => 'nullable|numeric|between:-90,90|required_with:longitude',
+            'longitude' => 'nullable|numeric|between:-180,180|required_with:latitude',
             'cancellation_reason' => 'required_if:status,cancelled|nullable|string|max:500',
             'client_confirmation_notes' => 'nullable|string|max:500'
         ];

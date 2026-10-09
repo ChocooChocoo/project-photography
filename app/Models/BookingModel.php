@@ -104,6 +104,7 @@ class BookingModel extends Model
         'event_end_date',
         'booking_duration_type',
         'terms_accepted_at',
+        'preferred_camera_brand',
     ];
 
     /**
@@ -162,6 +163,21 @@ class BookingModel extends Model
     public function contract()
     {
         return $this->hasOne(BookingContractModel::class, 'booking_id');
+    }
+
+    public function events()
+    {
+        return $this->hasMany(BookingEventModel::class, 'booking_id')->orderBy('occurred_at')->orderBy('id');
+    }
+
+    public function equipment()
+    {
+        return $this->hasMany(\App\Models\StudioOwner\BookingEquipmentModel::class, 'booking_id');
+    }
+
+    public function preparationVisible(): bool
+    {
+        return in_array($this->payment_status, [self::PAYMENT_PAID, self::PAYMENT_PARTIALLY_PAID, self::PAYMENT_REFUND_PENDING, self::PAYMENT_REFUNDED], true);
     }
 
     /**
@@ -430,6 +446,7 @@ class BookingModel extends Model
      */
     public function updatePaymentStatus(): void
     {
+        $previous = $this->payment_status;
         $totalPaid = $this->total_paid;
 
         if ($totalPaid <= 0) {
@@ -441,6 +458,9 @@ class BookingModel extends Model
         }
 
         $this->saveQuietly(); // Save without firing events
+        if ($previous !== self::PAYMENT_PAID && $this->payment_status === self::PAYMENT_PAID) {
+            app(\App\Services\BookingEventRecorder::class)->record($this->id, 'payment_settled', 'Payment settled', 'payment_settled');
+        }
     }
 
     /**

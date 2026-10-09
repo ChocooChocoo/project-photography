@@ -257,6 +257,7 @@ class MyBookingsController extends Controller
                 'payments' => $booking->payments,
                 'assignedPhotographers' => $booking->assignedPhotographers,
                 'contract' => $booking->contractSummary('client'),
+                'preparation_url' => $booking->preparationVisible() ? route('client.booking.preparation', $booking->id, false) : null,
                 'downpayment_percentage' => $downpaymentPercentage,
                 'deposit_info' => [
                     'policy' => $depositPolicy,

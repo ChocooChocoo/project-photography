@@ -30,6 +30,8 @@ class BookingEquipmentModel extends Model
      */
     protected $fillable = [
         'booking_id',
+        'equipment_id',
+        'brand',
         'assignment_id',
         'equipment_name',
         'equipment_type',

@@ -883,16 +883,22 @@
                 $(document).off('click', '#onSiteAssignmentBtn').on('click', '#onSiteAssignmentBtn', function() {
                     Swal.fire({
                         title: 'Mark as On-Site',
-                        text: 'Have you arrived at the event location?',
+                        html: '<label for="arrivalProof" class="form-label">Arrival proof photo (required, JPG, PNG or WebP, max 5 MB)</label><input id="arrivalProof" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" class="form-control"><p class="mt-2">Photo will be visible to the owner and client. Avoid including bystanders or private documents.</p>',
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#f39c12',
                         cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Yes, I am on-site',
-                        cancelButtonText: 'Not yet'
+                        confirmButtonText: 'Submit arrival proof',
+                        cancelButtonText: 'Not yet',
+                        preConfirm: () => {
+                            const file = document.getElementById('arrivalProof').files[0];
+                            if (!file) { Swal.showValidationMessage('Select an arrival photo.'); return false; }
+                            if (file.size > 5 * 1024 * 1024) { Swal.showValidationMessage('Photo must be 5 MB or smaller.'); return false; }
+                            return file;
+                        }
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            updateAssignmentStatus('on_site');
+                            updateAssignmentStatus('on_site', null, result.value);
                         }
                     });
                 });
@@ -1074,19 +1080,26 @@
             });
             
             // Update assignment status
-            function updateAssignmentStatus(status, reason = null) {
+            function updateAssignmentStatus(status, reason = null, proof = null) {
+                const payload = new FormData();
+                payload.append('status', status);
+                payload.append('_token', '{{ csrf_token() }}');
+                if (reason) payload.append('cancellation_reason', reason);
+                if (proof) payload.append('on_site_proof_image', proof);
                 $.ajax({
                     url: '{{ route("assignment.update-status", ":id") }}'.replace(':id', currentAssignmentId),
                     type: 'POST',
-                    data: {
-                        status: status,
-                        cancellation_reason: reason,
-                        _token: '{{ csrf_token() }}'
-                    },
+                    data: payload,
+                    processData: false,
+                    contentType: false,
                     beforeSend: function() {
                         $('#confirmStatusUpdate').prop('disabled', true).html('<span class="loading-spinner"></span> Updating...');
                     },
                     success: function(response) {
+                        if (!response.success) {
+                            Swal.fire({icon: 'error', title: 'Status not updated', text: response.message});
+                            return;
+                        }
                         Swal.fire({
                             icon: 'success',
                             title: 'Success!',

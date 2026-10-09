@@ -285,6 +285,7 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
+    <script src="{{ asset('assets/js/booking-preparation.js') }}"></script>
     @include('partials.contract-block-js')
     <script>
         $(document).ready(function() {
@@ -1309,6 +1310,11 @@
                 $('#bookingReference').text(booking.booking_reference);
                 $('#bookingModalBody').html(modalContent);
                 $('#bookingModalBody').prepend(window.renderContractBlock(data.contract, 'client'));
+                if (data.preparation_url) {
+                    const preparation = $('<div>');
+                    $('#bookingModalBody').append(preparation);
+                    window.mountBookingPreparation(preparation[0], data.preparation_url);
+                }
                 loadIcons();
             }
 
