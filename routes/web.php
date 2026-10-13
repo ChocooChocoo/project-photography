@@ -216,6 +216,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::post('/online-gallery/portfolio', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'storePortfolio'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.portfolio.store');
         Route::get('/online-gallery/{bookingId}/details', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'getGalleryDetails'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.details');
         Route::post('/online-gallery/{bookingId}/upload', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'uploadImages'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.upload');
+        Route::post('/online-gallery/{bookingId}/drive-link', [\App\Http\Controllers\GalleryDeliveryController::class, 'saveDrive'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.drive');
+        Route::get('/bookings/{bookingId}/hardcopy', [\App\Http\Controllers\HardcopyOrderController::class, 'ownerShow'])->middleware('permission:owner.bookings.manage')->name('owner.hardcopy.index');
+        Route::post('/bookings/{bookingId}/hardcopy', [\App\Http\Controllers\HardcopyOrderController::class, 'store'])->middleware('permission:owner.bookings.manage')->name('owner.hardcopy.store');
+        Route::post('/bookings/{bookingId}/hardcopy/{order}/status', [\App\Http\Controllers\HardcopyOrderController::class, 'status'])->middleware('permission:owner.bookings.manage')->name('owner.hardcopy.status');
         Route::delete('/online-gallery/{galleryId}/image', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteImage'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.delete-image');
         Route::delete('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteGallery'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.delete');
         Route::put('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'updateGallery'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.update');
@@ -580,6 +584,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::post('/online-gallery/portfolio', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'storePortfolio'])->name('freelancer.online-gallery.portfolio.store');
         Route::get('/online-gallery/{bookingId}/details', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'getGalleryDetails'])->name('freelancer.online-gallery.details');
         Route::post('/online-gallery/{bookingId}/upload', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'uploadImages'])->name('freelancer.online-gallery.upload');
+        Route::post('/online-gallery/{bookingId}/drive-link', [\App\Http\Controllers\GalleryDeliveryController::class, 'saveDrive'])->name('freelancer.online-gallery.drive');
         Route::delete('/online-gallery/{galleryId}/image', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'deleteImage'])->name('freelancer.online-gallery.delete-image');
         Route::delete('/online-gallery/{galleryId}', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'deleteGallery'])->name('freelancer.online-gallery.delete');
         Route::put('/online-gallery/{galleryId}', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'updateGallery'])->name('freelancer.online-gallery.update');
@@ -637,6 +642,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/view/online-gallery', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'index'])->middleware('permission:studio-photographer.online_gallery.view,studio-photographer.online_gallery.create,studio-photographer.online_gallery.update,studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.index');
         Route::get('/online-gallery/{bookingId}/details', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'getGalleryDetails'])->middleware('permission:studio-photographer.online_gallery.view,studio-photographer.online_gallery.update,studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.details');
         Route::post('/online-gallery/{bookingId}/upload', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'uploadImages'])->middleware('permission:studio-photographer.online_gallery.create')->name('studio-photographer.online-gallery.upload');
+        Route::post('/online-gallery/{bookingId}/drive-link', [\App\Http\Controllers\GalleryDeliveryController::class, 'saveDrive'])->middleware('permission:studio-photographer.online_gallery.create')->name('studio-photographer.online-gallery.drive');
         Route::delete('/online-gallery/{galleryId}/image', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'deleteImage'])->middleware('permission:studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.delete-image');
         Route::delete('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'deleteGallery'])->middleware('permission:studio-photographer.online_gallery.delete')->name('studio-photographer.online-gallery.delete');
         Route::put('/online-gallery/{galleryId}', [\App\Http\Controllers\StudioPhotographer\OnlineGalleryController::class, 'updateGallery'])->middleware('permission:studio-photographer.online_gallery.update')->name('studio-photographer.online-gallery.update');
@@ -678,6 +684,8 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
 
         // Client Bookings
         Route::get('/view/my-bookings', [\App\Http\Controllers\Client\MyBookingsController::class, 'index'])->name('client.my-bookings.index');
+        Route::get('/bookings/{bookingId}/hardcopy', [\App\Http\Controllers\HardcopyOrderController::class, 'clientShow'])->name('client.hardcopy.index');
+        Route::post('/bookings/{bookingId}/hardcopy/{order}/accept', [\App\Http\Controllers\HardcopyOrderController::class, 'accept'])->name('client.hardcopy.accept');
         Route::get('/view/bookings-history', [\App\Http\Controllers\Client\MyBookingsController::class, 'history'])->name('client.my-bookings.history');
         Route::get('/view/refunds', [\App\Http\Controllers\Client\MyBookingsController::class, 'refunds'])->name('client.refunds.index');
         Route::get('/bookings/{id}/details', [\App\Http\Controllers\Client\MyBookingsController::class, 'getBookingDetails'])->name('client.booking.details');
@@ -693,6 +701,8 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
 
         // Online Gallery
         Route::get('/view/online-gallery', [\App\Http\Controllers\Client\OnlineGalleryController::class, 'index'])->name('client.online-gallery.index');
+        Route::get('/online-gallery/{id}/{type}/download/{file}', [\App\Http\Controllers\Client\OnlineGalleryController::class, 'downloadFile'])->name('client.online-gallery.download');
+        Route::get('/online-gallery/{id}/{type}/download-zip', [\App\Http\Controllers\Client\OnlineGalleryController::class, 'downloadZip'])->name('client.online-gallery.zip');
         Route::get('/online-gallery/{id}/{type}', [\App\Http\Controllers\Client\OnlineGalleryController::class, 'getGalleryDetails'])->name('client.online-gallery.details');
 
         // Studio Reviews

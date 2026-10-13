@@ -201,6 +201,14 @@
                             </div>
                         </div>
 
+                        <form id="driveLinkForm" class="mb-4">
+                            <label class="form-label" for="driveLinkInput">Google Drive sharing link</label>
+                            <p id="driveLinkHelp">Deliver softcopies without uploading images here. Allow the client access in Google Drive, then publish this gallery.</p>
+                            <input id="driveLinkInput" name="drive_link" type="url" class="form-control mb-2" maxlength="2048" aria-describedby="driveLinkHelp driveLinkFeedback" required>
+                            <button type="submit" class="btn btn-primary" style="min-height:44px;--ins-btn-bg:#2e69c5;--ins-btn-border-color:#2e69c5">Save Drive link</button>
+                            <p id="driveLinkFeedback" class="mt-2 mb-0" role="status"></p>
+                        </form>
+
                         <div class="row mb-3">
                             <div class="col">
                                 {{-- Booking Information Section --}}
@@ -660,6 +668,8 @@
             $(document).on('click', '.create-gallery, .manage-gallery', function() {
                 const bookingId = $(this).data('booking-id');
                 selectedBookingId = bookingId;
+                $('#driveLinkForm')[0].reset();
+                $('#driveLinkFeedback').text('');
 
                 // Reset modal
                 $('#modalLoadingSpinner').show();
@@ -681,6 +691,10 @@
                     type: 'GET',
                     success: function(response) {
                         if (response.success) {
+                            const published = response.gallery?.gallery_status === 'published';
+                            $('#driveLinkInput').val(response.gallery?.drive_link || '').prop('disabled', published);
+                            $('#driveLinkForm button').prop('disabled', published);
+                            if (published) $('#driveLinkFeedback').text('Published delivery cannot be changed. Request a revision first.');
                             // Fill booking info
                             $('#bookingReference').text(response.booking.booking_reference);
                             $('#clientName').text(response.booking.client_name);
@@ -791,6 +805,27 @@
                             text: 'Failed to load gallery details'
                         });
                     }
+                });
+            });
+
+            $('#driveLinkForm').on('submit', function(event) {
+                event.preventDefault();
+                const button = $(this).find('button');
+                button.prop('disabled', true);
+                $('#driveLinkFeedback').text('Saving Drive link...');
+                $.ajax({
+                    url: @json(route('owner.online-gallery.drive', ['bookingId' => '__ID__'], false)).replace('__ID__', selectedBookingId),
+                    type: 'POST',
+                    data: {_token: @json(csrf_token()), drive_link: $('#driveLinkInput').val()},
+                    success: function(response) {
+                        currentGalleryId = response.gallery.id;
+                        $('#publishGalleryBtn').removeClass('d-none');
+                        $('#driveLinkFeedback').text('Drive link saved. Publish to Client when ready to deliver.');
+                    },
+                    error: function(xhr) {
+                        $('#driveLinkFeedback').text(xhr.responseJSON?.errors?.drive_link?.[0] || xhr.responseJSON?.message || 'Could not save Drive link. Try again.');
+                    },
+                    complete: function() { button.prop('disabled', false); }
                 });
             });
 

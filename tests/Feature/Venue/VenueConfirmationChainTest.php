@@ -103,10 +103,10 @@ class VenueConfirmationChainTest extends TestCase
         $this->assertSame('completed', $assignment->status);
         $this->assertNotNull($assignment->completed_at);
 
-        $this->actingAs($this->owner)
-            ->putJson("/_test/owner/booking/{$booking->id}/complete")
-            ->assertOk()
-            ->assertJsonPath('success', true);
+        $response = $this->actingAs($this->owner)
+            ->putJson("/_test/owner/booking/{$booking->id}/complete");
+        $this->assertSame(200, $response->status(), $response->getContent());
+        $response->assertJsonPath('success', true);
 
         $booking->refresh();
         $this->assertSame('completed', $booking->status);

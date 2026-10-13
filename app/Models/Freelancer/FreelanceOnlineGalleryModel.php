@@ -50,6 +50,7 @@ class FreelanceOnlineGalleryModel extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'drive_link',
         'booking_id',
         'freelancer_id',
         'client_id',

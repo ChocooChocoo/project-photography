@@ -160,7 +160,7 @@
                     {{-- Gallery Content --}}
                     <div id="galleryContent" style="display: none;">
                         {{-- Gallery Info --}}
-                        <div class="row mb-4">
+                        <div class="row mb-4 mx-0">
                             <div class="col-12">
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="bg-light-primary rounded-circle p-3 me-3">
@@ -177,6 +177,7 @@
                                 </div>
                                 
                                 <p id="galleryDescription" class="text-muted mb-3"></p>
+                                <div id="galleryDownloads" class="mb-3"></div>
                                 
                                 <div class="alert alert-info d-flex align-items-center py-2" role="alert">
                                     <i class="ti ti-info-circle me-2 fs-5"></i>
@@ -186,7 +187,7 @@
                         </div>
 
                         {{-- Images Grid --}}
-                        <div class="row g-3" id="imagesGrid"></div>
+                        <div class="row g-3 mx-0" id="imagesGrid"></div>
                     </div>
                 </div>
             </div>
@@ -255,6 +256,15 @@
                             $('#galleryDate').html('<i class="ti ti-calendar me-1"></i>' + gallery.event_date);
                             $('#photoCount').html('<i class="ti ti-photo me-1"></i>' + gallery.total_photos);
                             $('#galleryDescription').text(gallery.description || 'No description provided');
+                            $('#galleryDownloads').empty();
+                            if (gallery.drive_link) {
+                                $('<a class="btn btn-outline-primary me-2" style="min-height:44px;--ins-btn-color:var(--ins-body-color);--ins-btn-border-color:var(--ins-body-color);--ins-btn-hover-bg:#2e69c5;--ins-btn-hover-border-color:#2e69c5" target="_blank" rel="noopener noreferrer">Open Google Drive</a>')
+                                    .attr('href', gallery.drive_link).appendTo('#galleryDownloads');
+                            }
+                            if (gallery.zip_url) {
+                                $('<a class="btn btn-primary" style="min-height:44px;--ins-btn-bg:#2e69c5;--ins-btn-border-color:#2e69c5">Download all photos (ZIP)</a>')
+                                    .attr('href', gallery.zip_url).appendTo('#galleryDownloads');
+                            }
 
                             // Store images for fullscreen navigation
                             currentImages = gallery.images;
@@ -278,6 +288,11 @@
                             });
 
                             $('#imagesGrid').html(imagesHtml);
+                            (gallery.download_urls || []).forEach((url, index) => {
+                                $('<a class="btn btn-outline-primary mt-2" style="min-height:44px;--ins-btn-color:var(--ins-body-color);--ins-btn-border-color:var(--ins-body-color);--ins-btn-hover-bg:#2e69c5;--ins-btn-hover-border-color:#2e69c5">')
+                                    .text('Download photo ' + (index + 1)).attr('href', url)
+                                    .appendTo($('#imagesGrid .card-body').eq(index));
+                            });
                             
                             $('#modalLoadingSpinner').hide();
                             $('#galleryContent').show();

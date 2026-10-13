@@ -50,6 +50,7 @@ class StudioOnlineGalleryModel extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'drive_link',
         'booking_id',
         'studio_id',
         'client_id',

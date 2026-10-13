@@ -303,6 +303,10 @@
 {{-- SCRIPTS --}}
 @section('scripts')
     <style>
+        .complete-booking-btn:focus-visible {
+            outline: 3px solid var(--ins-body-color) !important;
+            outline-offset: 3px;
+        }
         #ownerEquipmentPanel :is(button, input, select, summary) { min-height: 44px; }
         #ownerEquipmentPanel .equipment-feedback { overflow-wrap: anywhere; }
         #ownerEquipmentPanel .row { margin-inline: 0; }
@@ -321,9 +325,11 @@
         window.bookingEquipmentRoutes = @json($equipmentRoutes);
     </script>
     @include('partials.contract-block-js')
+    @include('partials.hardcopy-script')
     <script>
         $(document).ready(function() {
             let currentBookingId = null;
+            let currentCompletionDeliveryTypes = [];
             let selectedPhotographers = [];
             let currentBookingData = null;
             let currentAssignmentInfo = null;
@@ -616,6 +622,7 @@
             // Render booking details
             function renderBookingDetails(data) {
                 const booking = data.booking;
+                currentCompletionDeliveryTypes = data.completion_delivery_types || [];
                 const client = data.client;
                 const category = data.category;
                 const packages = data.packages;
@@ -729,7 +736,7 @@
                                                             ${booking.status.replace('_', ' ').toUpperCase()}
                                                         </span>
                                                         ${data.can_owner_complete ? `
-                                                            <button class="btn btn-sm btn-success complete-booking-btn" data-booking-id="${booking.id}">
+                                                            <button class="btn btn-sm btn-success complete-booking-btn" data-booking-id="${booking.id}" style="min-height:44px;--ins-btn-bg:#0f7864;--ins-btn-border-color:#0f7864;--ins-btn-hover-bg:#0c6151;--ins-btn-hover-border-color:#0c6151">
                                                                 <i data-lucide="check-circle" class="me-1"></i>Complete Booking
                                                             </button>
                                                         ` : ''}
@@ -1035,6 +1042,8 @@
                 $('#bookingModalBody').prepend(window.renderContractBlock(data.contract, 'owner'));
                 $('#bookingModalBody').append('<section id="ownerEquipmentPanel" class="mt-4 border-top pt-3"></section>');
                 window.mountBookingEquipment(document.getElementById('ownerEquipmentPanel'), booking, assignedPhotographers || []);
+                $('#bookingModalBody').append('<section id="ownerHardcopyPanel" class="mt-4 border-top pt-3"></section>');
+                window.mountHardcopy(document.getElementById('ownerHardcopyPanel'), booking.id, true);
                 const proofs = (assignedPhotographers || []).filter(a => a.on_site_proof_image);
                 if (proofs.length) {
                     const section = $('<section class="mt-4"><h5>Photographer arrival proof</h5></section>');
@@ -1065,6 +1074,12 @@
                 
                 Swal.fire({
                     title: 'Complete Booking',
+                    input: 'select',
+                    inputLabel: 'Final delivery type',
+                    inputOptions: Object.fromEntries(Object.entries({softcopy: 'Softcopy (gallery or Drive)', hardcopy: 'Hardcopy only', both: 'Softcopy and hardcopy'})
+                        .filter(([type]) => currentCompletionDeliveryTypes.includes(type))),
+                    inputPlaceholder: 'Choose delivery type',
+                    inputValidator: value => !value ? 'Choose a delivery type.' : undefined,
                     text: 'Are you sure you want to mark this booking as completed? This action cannot be undone.',
                     icon: 'question',
                     showCancelButton: true,
@@ -1078,6 +1093,7 @@
                             url: '{{ route("owner.booking.complete", ":id") }}'.replace(':id', bookingId),
                             type: 'PUT',
                             data: {
+                                delivery_type: result.value,
                                 _token: $('meta[name="csrf-token"]').attr('content')
                             },
                             beforeSend: function() {
@@ -1656,10 +1672,18 @@
                     }
 
                     var incomingRows = incomingTable.querySelectorAll('tr[data-booking-id]');
+                    var tbody = document.querySelector(BOOKINGS_TABLE);
+                    var tableInstance = window.PlatinumTable?.tables.find(function(table) {
+                        return table.tbody === tbody;
+                    });
 
                     // Empty server list: swap in the server-rendered empty state.
                     if (incomingRows.length === 0) {
                         document.querySelector(BOOKINGS_TABLE).innerHTML = incomingTable.innerHTML;
+                        if (tableInstance) {
+                            tableInstance.rows = [];
+                            window.PlatinumTable.refresh(BOOKINGS_TABLE);
+                        }
                         return;
                     }
 
@@ -1670,6 +1694,12 @@
                         seen[id] = true;
 
                         var current = document.querySelector(BOOKINGS_TABLE + ' tr[data-booking-id="' + id + '"]');
+                        // Pagination detaches off-page rows, but the table still owns them.
+                        if (!current && tableInstance) {
+                            current = tableInstance.rows.find(function(row) {
+                                return row.getAttribute('data-booking-id') === id;
+                            });
+                        }
                         if (current) {
                             // Status (4), payment status (5), remaining balance (6), total (7).
                             [4, 5, 6, 7].forEach(function(index) {
@@ -1698,8 +1728,21 @@
                     });
 
                     // Re-sync the table so the pager and footer match the rows rendered.
+                    if (tableInstance) {
+                        tableInstance.rows = tableInstance.rows.filter(function(row) {
+                            return seen[row.getAttribute('data-booking-id')];
+                        });
+                    }
                     if (window.PlatinumTable && typeof window.PlatinumTable.refresh === 'function') {
                         window.PlatinumTable.refresh(BOOKINGS_TABLE);
+                        if (tableInstance?.searchInput?.value) {
+                            var search = tableInstance.searchInput.value.toLowerCase();
+                            tableInstance.filteredRows = tableInstance.filteredRows.filter(function(row) {
+                                return row.textContent.toLowerCase().includes(search);
+                            });
+                            tableInstance.currentPage = Math.min(tableInstance.currentPage, tableInstance.totalPages);
+                            tableInstance.update();
+                        }
                     }
                 }).always(function() {
                     pollInFlight = false;

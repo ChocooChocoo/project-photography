@@ -480,7 +480,8 @@ class BookingModel extends Model
     public function canMarkAsCompleted(): bool
     {
         return $this->isFullyPaid() &&
-               $this->status === self::STATUS_IN_PROGRESS;
+               $this->status === self::STATUS_IN_PROGRESS &&
+               $this->getDeliveryCompletionBlockReason() === null;
     }
 
     /**
@@ -499,6 +500,8 @@ class BookingModel extends Model
      */
     public function requiresOnlineGalleryUpload(): bool
     {
+        if ($this->delivery_type === 'hardcopy') return false;
+        if (in_array($this->delivery_type, ['softcopy', 'both'], true)) return true;
         if ($this->booking_type !== 'studio') {
             return false;
         }
@@ -556,7 +559,10 @@ class BookingModel extends Model
         $images = is_array($gallery->images) ? array_filter($gallery->images) : [];
         $totalPhotos = (int) ($gallery->total_photos ?? 0);
 
-        return $totalPhotos > 0 || count($images) > 0;
+        $validDrive = $gallery->drive_link && \Illuminate\Support\Facades\Validator::make(
+            ['link' => $gallery->drive_link], ['link' => ['url', new \App\Rules\DriveLink]]
+        )->passes();
+        return $totalPhotos > 0 || count($images) > 0 || $validDrive;
     }
 
     /**
@@ -568,7 +574,8 @@ class BookingModel extends Model
             ? $this->studioOnlineGallery
             : $this->studioOnlineGallery()->first();
 
-        return $gallery !== null && $gallery->isPublished();
+        return $gallery !== null && $gallery->status === 'active' && $gallery->isPublished()
+            && ($gallery->approval_status === null || $gallery->isApproved());
     }
 
     /**
@@ -594,7 +601,7 @@ class BookingModel extends Model
         }
 
         if (! $this->hasUploadedGalleryContent()) {
-            return 'Cannot mark as completed until at least one image is uploaded to the client\'s online gallery.';
+            return 'Cannot mark as completed until at least one image is uploaded or a Google Drive link is shared in the client\'s online gallery.';
         }
 
         if (! $this->onlineGalleryIsPublished()) {
@@ -602,6 +609,21 @@ class BookingModel extends Model
         }
 
         return null;
+    }
+
+    public function getDeliveryCompletionBlockReason(): ?string
+    {
+        // Null delivery_type preserves pre-migration bookings while still enforcing their orders.
+        $orders = \Illuminate\Support\Facades\Schema::hasTable('tbl_booking_hardcopy_orders')
+            ? HardcopyOrderModel::where('booking_id', $this->id)->where('status', '!=', 'cancelled')->get()
+            : collect();
+        if ($orders->contains(fn ($order) => !$order->accepted_at || $order->status !== 'delivered')) {
+            return 'All hardcopy orders must be accepted and delivered before completion.';
+        }
+        if (in_array($this->delivery_type, ['hardcopy', 'both'], true) && $orders->isEmpty()) {
+            return 'Add and deliver a hardcopy order before selecting this delivery type.';
+        }
+        return $this->getGalleryCompletionBlockReason();
     }
 
     /**

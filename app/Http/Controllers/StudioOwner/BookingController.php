@@ -155,18 +155,15 @@ class BookingController extends Controller
                 $packageDetails = \App\Models\StudioOwner\PackagesModel::find($bookingPackage->package_id);
             }
 
-            // Owner can only complete booking if:
-            // 1. Booking is in 'in_progress' status
-            // 2. At least one photographer is assigned
-            // 3. All assigned photographers have marked as completed
-            // 4. The balance is settled (no outstanding payment)
-            // 5. Required gallery images have been published
-            $canOwnerComplete = $booking->status === 'in_progress' &&
-                                $hasAssignedPhotographers &&
-                                $allPhotographersCompleted &&
-                                ! $this->isPaymentOverdue($booking, (float) $totalPaid) &&
-                                ! $this->hasOutstandingBalance($booking, (float) $totalPaid) &&
-                                $booking->isGalleryReadyForCompletion();
+            $completionDeliveryTypes = [];
+            foreach (['softcopy', 'hardcopy', 'both'] as $deliveryType) {
+                $candidate = clone $booking;
+                $candidate->delivery_type = $deliveryType;
+                if ($this->getOwnerCompletionBlockers($candidate, $hasAssignedPhotographers, $allPhotographersCompleted, $totalPaid) === []) {
+                    $completionDeliveryTypes[] = $deliveryType;
+                }
+            }
+            $canOwnerComplete = $completionDeliveryTypes !== [];
 
             $completionBlockers = $this->getOwnerCompletionBlockers(
                 $booking,
@@ -185,6 +182,7 @@ class BookingController extends Controller
                 'assignedPhotographers' => $booking->assignedPhotographers,
                 'available_statuses' => $availableStatuses,
                 'can_owner_complete' => $canOwnerComplete,
+                'completion_delivery_types' => $completionDeliveryTypes,
                 'can_mark_completed' => $canOwnerComplete,
                 'total_paid' => $totalPaid,
                 'status_badge_class' => $booking->getStatusBadgeClass(),
@@ -234,8 +232,8 @@ class BookingController extends Controller
             $blockers[] = 'All assigned photographers must mark their assignments as completed before the owner can complete the booking.';
         }
 
-        if (! $booking->isGalleryReadyForCompletion()) {
-            $blockers[] = $booking->getGalleryCompletionBlockReason();
+        if ($reason = $booking->getDeliveryCompletionBlockReason()) {
+            $blockers[] = $reason;
         }
 
         return $blockers;
@@ -969,6 +967,10 @@ class BookingController extends Controller
             }
 
             if ($isCompletion) {
+                $delivery = $request->validate(['delivery_type' => 'nullable|in:softcopy,hardcopy,both']);
+                if (isset($delivery['delivery_type'])) {
+                    $booking->delivery_type = $delivery['delivery_type'];
+                }
                 $totalPaid = (float) $booking->payments->where('status', 'succeeded')->sum('amount');
                 $activeAssignments = $booking->assignedPhotographers->where('status', '!=', 'cancelled');
                 $hasAssignedPhotographers = $activeAssignments->count() > 0;
@@ -1269,6 +1271,7 @@ class BookingController extends Controller
      */
     public function completeBooking($id)
     {
+        $delivery = request()->validate(['delivery_type' => 'nullable|in:softcopy,hardcopy,both']);
         try {
             $userId = Auth::id();
 
@@ -1288,6 +1291,10 @@ class BookingController extends Controller
                 ->where('booking_type', 'studio')
                 ->with(['packages.studioPackage', 'studioOnlineGallery'])
                 ->firstOrFail();
+
+            if (isset($delivery['delivery_type'])) {
+                $booking->delivery_type = $delivery['delivery_type'];
+            }
 
             // Check if booking is in progress
             if ($booking->status !== 'in_progress') {
@@ -1335,10 +1342,10 @@ class BookingController extends Controller
                 }
             }
 
-            if (! $booking->isGalleryReadyForCompletion()) {
+            if ($reason = $booking->getDeliveryCompletionBlockReason()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $booking->getGalleryCompletionBlockReason(),
+                    'message' => $reason,
                 ], 403);
             }
 

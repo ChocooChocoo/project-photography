@@ -31,6 +31,22 @@ class BookingStatusTest extends TestCase
 
         Schema::dropAllTables();
         $this->createSchema();
+        Schema::create('tbl_booking_packages', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('booking_id');
+            $table->unsignedBigInteger('package_id')->nullable();
+            $table->string('package_type')->nullable();
+        });
+        Schema::create('tbl_packages', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('studio_id');
+            $table->unsignedBigInteger('category_id')->nullable();
+            $table->string('status');
+            $table->decimal('package_price', 10, 2);
+            $table->string('package_name');
+            $table->boolean('online_gallery')->default(false);
+            $table->softDeletes();
+        });
     }
 
     protected function tearDown(): void

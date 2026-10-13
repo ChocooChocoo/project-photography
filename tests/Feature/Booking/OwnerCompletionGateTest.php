@@ -31,6 +31,8 @@ class OwnerCompletionGateTest extends TestCase
 
         Schema::dropAllTables();
         $this->createSchema();
+        (require database_path('migrations/2026_10_09_150000_add_hardcopy_orders.php'))->up();
+        Schema::table('tbl_studio_online_gallery', fn (Blueprint $table) => $table->string('drive_link')->nullable());
 
         $this->owner = $this->createUser('owner', 'completion-owner@example.com');
         $this->client = $this->createUser('client', 'completion-client@example.com');
@@ -59,6 +61,53 @@ class OwnerCompletionGateTest extends TestCase
         $booking->refresh();
         $this->assertSame(BookingModel::STATUS_COMPLETED, $booking->status);
         $this->assertNotNull($booking->completed_at);
+    }
+
+    public function test_drive_only_delivery_can_complete_without_uploaded_images(): void
+    {
+        $booking = $this->createBooking(['online_gallery' => true]);
+        $this->createAssignment($booking, 'completed');
+        $this->createPayment($booking, 1000);
+        StudioOnlineGalleryModel::create(['booking_id' => $booking->id, 'studio_id' => $this->studio->id, 'client_id' => $this->client->id, 'total_photos' => 0, 'images' => [], 'drive_link' => 'https://drive.google.com/file/d/example/view', 'status' => 'active', 'gallery_status' => 'published']);
+        $this->actingAs($this->owner)->putJson("/_test/owner/bookings/{$booking->id}/complete", ['delivery_type' => 'softcopy'])->assertOk();
+        $this->assertSame('softcopy', $booking->fresh()->delivery_type);
+    }
+
+    public function test_hardcopy_only_completion_requires_delivered_orders_but_not_gallery(): void
+    {
+        $booking = $this->createBooking(['online_gallery' => true]);
+        $this->createAssignment($booking, 'completed');
+        $this->createPayment($booking, 1000);
+        $order = \App\Models\HardcopyOrderModel::create(['booking_id' => $booking->id, 'fulfillment_method' => 'pickup', 'amount' => 0, 'accepted_at' => now(), 'status' => 'ready']);
+        $this->actingAs($this->owner)->putJson("/_test/owner/bookings/{$booking->id}/complete", ['delivery_type' => 'hardcopy'])->assertForbidden();
+        $order->update(['status' => 'delivered']);
+        $this->putJson("/_test/owner/bookings/{$booking->id}/complete", ['delivery_type' => 'hardcopy'])->assertOk();
+        $this->assertSame('hardcopy', $booking->fresh()->delivery_type);
+    }
+
+    public function test_status_endpoint_cannot_bypass_undelivered_hardcopy(): void
+    {
+        $booking = $this->createBooking();
+        $this->createAssignment($booking, 'completed');
+        $this->createPayment($booking, 1000);
+        \App\Models\HardcopyOrderModel::create(['booking_id' => $booking->id, 'fulfillment_method' => 'pickup', 'amount' => 0, 'accepted_at' => now(), 'status' => 'ready']);
+        $this->actingAs($this->owner)->putJson("/_test/owner/bookings/{$booking->id}/status", ['status' => 'completed', 'delivery_type' => 'softcopy'])->assertForbidden();
+    }
+
+    public function test_booking_details_offer_hardcopy_completion_without_a_gallery(): void
+    {
+        $booking = $this->createBooking(['online_gallery' => true]);
+        $this->createAssignment($booking, 'completed');
+        $this->createPayment($booking, 1000);
+        $order = \App\Models\HardcopyOrderModel::create(['booking_id' => $booking->id, 'fulfillment_method' => 'pickup', 'amount' => 0, 'accepted_at' => now(), 'status' => 'delivered']);
+        $this->actingAs($this->owner)->getJson("/_test/owner/bookings/{$booking->id}/details")
+            ->assertOk()->assertJsonPath('can_owner_complete', true)
+            ->assertJsonPath('completion_delivery_types', ['hardcopy']);
+        $this->assertNull($booking->fresh()->delivery_type);
+        $order->update(['status' => 'ready']);
+        $this->getJson("/_test/owner/bookings/{$booking->id}/details")
+            ->assertOk()->assertJsonPath('can_owner_complete', false)
+            ->assertJsonPath('completion_delivery_types', []);
     }
 
     public function test_completion_is_blocked_when_an_outstanding_balance_remains(): void

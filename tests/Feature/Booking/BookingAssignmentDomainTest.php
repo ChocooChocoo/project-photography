@@ -181,7 +181,7 @@ class BookingAssignmentDomainTest extends TestCase
         $response->assertStatus(403)->assertJsonPath('success', false);
         $this->assertNotNull($expected);
         $this->assertSame(
-            "Cannot mark as completed until at least one image is uploaded to the client's online gallery.",
+            "Cannot mark as completed until at least one image is uploaded or a Google Drive link is shared in the client's online gallery.",
             $expected
         );
         $this->assertSame($expected, $response->json('message'));

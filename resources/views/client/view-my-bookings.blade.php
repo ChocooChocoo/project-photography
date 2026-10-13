@@ -287,6 +287,7 @@
 @section('scripts')
     <script src="{{ asset('assets/js/booking-preparation.js') }}"></script>
     @include('partials.contract-block-js')
+    @include('partials.hardcopy-script')
     <script>
         $(document).ready(function() {
             let currentBookingId = null;
@@ -423,7 +424,7 @@
                     modalContent += `
                         <div class="alert alert-warning mt-3">
                             <i class="ti ti-clock me-2"></i>
-                            You have a pending payment for this booking. Please complete it or wait for it to expire.
+                            A payment is already pending. Proceed to Payment continues that payment without adding another charge.
                         </div>
                     `;
                 }
@@ -438,7 +439,7 @@
                 $('#proceedBalancePayment').data('remaining-balance', remainingBalance);
                 
                 // Enable proceed button
-                $('#proceedBalancePayment').prop('disabled', data.has_pending_payment);
+                $('#proceedBalancePayment').prop('disabled', remainingBalance <= 0);
                 
                 // Reinitialize icons
                 if (typeof lucide !== 'undefined') {
@@ -1310,6 +1311,10 @@
                 $('#bookingReference').text(booking.booking_reference);
                 $('#bookingModalBody').html(modalContent);
                 $('#bookingModalBody').prepend(window.renderContractBlock(data.contract, 'client'));
+                if (booking.booking_type === 'studio') {
+                    $('#bookingModalBody').append('<section id="clientHardcopyPanel" class="mt-4 border-top pt-3"></section>');
+                    window.mountHardcopy(document.getElementById('clientHardcopyPanel'), booking.id, false);
+                }
                 if (data.preparation_url) {
                     const preparation = $('<div>');
                     $('#bookingModalBody').append(preparation);

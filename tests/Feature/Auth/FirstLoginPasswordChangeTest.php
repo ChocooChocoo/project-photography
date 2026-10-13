@@ -22,6 +22,19 @@ class FirstLoginPasswordChangeTest extends TestCase
 
         Schema::dropAllTables();
         $this->createSchema();
+        Schema::create('tbl_studio_photographers', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('studio_id');
+            $table->unsignedBigInteger('photographer_id');
+            $table->softDeletes();
+        });
+        Schema::create('tbl_studio_members', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('studio_id');
+            $table->unsignedBigInteger('freelancer_id');
+            $table->string('status');
+            $table->softDeletes();
+        });
     }
 
     public function test_employee_created_by_owner_must_change_password_on_first_login(): void
@@ -214,7 +227,7 @@ class FirstLoginPasswordChangeTest extends TestCase
             'user_type' => 'studio',
             'plan_type' => 'basic',
             'billing_cycle' => 'monthly',
-            'plan_code' => 'PLAN-' . str()->upper(str()->random(8)),
+            'plan_code' => 'PLAN-'.str()->upper(str()->random(8)),
             'name' => 'Basic Plan',
             'price' => 590,
             'commission_rate' => 5,
@@ -226,7 +239,7 @@ class FirstLoginPasswordChangeTest extends TestCase
         return StudioPlanModel::create([
             'studio_id' => $studio->id,
             'plan_id' => $plan->id,
-            'subscription_reference' => 'SUB-' . str()->upper(str()->random(10)),
+            'subscription_reference' => 'SUB-'.str()->upper(str()->random(10)),
             'start_date' => now()->subDays(10)->toDateString(),
             'end_date' => now()->addDays(20)->toDateString(),
             'next_billing_date' => now()->addDays(20)->toDateString(),
@@ -299,8 +312,9 @@ class FirstLoginPasswordChangeTest extends TestCase
             $table->string('studio_name');
             $table->date('permit_expiry_date')->nullable();
             $table->string('status');
-            
-            $table->softDeletes();$table->timestamps();
+
+            $table->softDeletes();
+            $table->timestamps();
         });
         Schema::create('tbl_roles', function (Blueprint $table) {
             $table->id();
@@ -361,8 +375,9 @@ class FirstLoginPasswordChangeTest extends TestCase
             $table->unsignedInteger('trial_days')->default(0);
             $table->unsignedInteger('priority_level')->default(0);
             $table->string('status');
-            
-            $table->softDeletes();$table->timestamps();
+
+            $table->softDeletes();
+            $table->timestamps();
         });
         Schema::create('tbl_studio_plans', function (Blueprint $table) {
             $table->id();
