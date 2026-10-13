@@ -405,9 +405,20 @@ class UserModel extends Authenticatable
     /**
      * Get active RBAC roles, optionally scoped by portal and studio.
      */
-    public function activeRoles(?string $portal = null, ?int $studioId = null)
+    public function activeRoles(?string $portal = null, ?int $studioId = null, ?int $bookingId = null)
     {
         $query = $this->roles()->where('tbl_roles.status', 'active');
+        if (\Illuminate\Support\Facades\Schema::hasColumn('tbl_user_roles', 'expires_at')) {
+            $query->where(function ($query) {
+                $query->whereNull('tbl_user_roles.expires_at')->orWhere('tbl_user_roles.expires_at', '>', now());
+            });
+            $query->where(function ($query) use ($bookingId) {
+                $query->whereNull('tbl_user_roles.booking_id');
+                if ($bookingId !== null) {
+                    $query->orWhere('tbl_user_roles.booking_id', $bookingId);
+                }
+            });
+        }
 
         if ($portal !== null) {
             $query->where('tbl_roles.portal', $portal);
@@ -487,7 +498,7 @@ class UserModel extends Authenticatable
     /**
      * Get all permissions for this user through their roles.
      */
-    public function getAllPermissions(?int $studioId = null, ?string $portal = null): Collection
+    public function getAllPermissions(?int $studioId = null, ?string $portal = null, ?int $bookingId = null): Collection
     {
         $cacheKey = implode(':', [
             $this->getKey(),
@@ -495,7 +506,8 @@ class UserModel extends Authenticatable
             $studioId ?? 'all',
         ]);
 
-        if (isset(self::$permissionCache[$cacheKey])) {
+        $hasExpiringGrants = \Illuminate\Support\Facades\Schema::hasColumn('tbl_user_roles', 'expires_at');
+        if (! $hasExpiringGrants && isset(self::$permissionCache[$cacheKey])) {
             return self::$permissionCache[$cacheKey];
         }
 
@@ -506,7 +518,7 @@ class UserModel extends Authenticatable
         // an employee role, regardless of the portal the permission was filed
         // under. Role resolution stays portal-aware; permission resolution does
         // not.
-        $roles = $this->activeRoles($portal, $studioId)->with(['permissions' => function ($query) {
+        $roles = $this->activeRoles($portal, $studioId, $bookingId)->with(['permissions' => function ($query) {
             $query->where('tbl_permissions.status', 'active');
         }])->get();
 
@@ -528,11 +540,11 @@ class UserModel extends Authenticatable
      * permission normalizer in PermissionModel. The compare accepts a missing
      * portal prefix and treats an underscore and a hyphen as the same character.
      */
-    public function hasPermission(string $permissionName, ?int $studioId = null): bool
+    public function hasPermission(string $permissionName, ?int $studioId = null, ?int $bookingId = null): bool
     {
         $portal = $this->getPortalName();
 
-        return $this->getAllPermissions($studioId, $portal)->contains(function ($permission) use ($permissionName) {
+        return $this->getAllPermissions($studioId, $portal, $bookingId)->contains(function ($permission) use ($permissionName) {
             return \App\Models\StudioOwner\PermissionModel::identifierMatches($permissionName, $permission->permission_string);
         });
     }

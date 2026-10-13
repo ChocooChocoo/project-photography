@@ -29,6 +29,7 @@ class BookingAssignedPhotographerModel extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'is_freelancer',
         'booking_id',
         'studio_id',
         'photographer_id',
@@ -57,6 +58,7 @@ class BookingAssignedPhotographerModel extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'is_freelancer' => 'boolean',
         'latitude' => 'float',
         'longitude' => 'float',
         'assigned_at' => 'datetime',
@@ -70,6 +72,20 @@ class BookingAssignedPhotographerModel extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::updated(function ($assignment) {
+            if ($assignment->is_freelancer && $assignment->wasChanged('status') && in_array($assignment->status, ['cancelled', 'completed'])) {
+                app(\App\Services\FreelancerBookingAccess::class)->revoke($assignment->booking_id, $assignment->photographer_id);
+            }
+        });
+        static::deleted(function ($assignment) {
+            if ($assignment->is_freelancer) {
+                app(\App\Services\FreelancerBookingAccess::class)->revoke($assignment->booking_id, $assignment->photographer_id);
+            }
+        });
+    }
 
     // ────────────────────────────────────────────────
     //  Relationships

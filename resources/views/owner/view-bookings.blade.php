@@ -1211,9 +1211,15 @@
             }
 
             // Render available photographers
+            function escapeAssignmentText(value) {
+                return String(value ?? '').replace(/[&<>"']/g, character => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character]));
+            }
+
             function renderAvailablePhotographers(data) {
                 const booking = data.booking;
-                const photographers = data.photographers;
+                const staff = data.photographers;
+                const freelancers = data.freelancers || [];
+                const photographers = [...staff, ...freelancers];
                 const assignmentInfo = data.assignment_info;
                 const availablePhotographers = photographers.filter(photographer => photographer.is_available === true);
                 const maxSelectable = assignmentInfo.is_initial_assignment
@@ -1280,7 +1286,12 @@
                 }
 
                 let photographersHtml = '<div class="photographer-list">';
+                let fallbackHeadingShown = false;
                 photographers.forEach(photographer => {
+                    if (photographer.is_freelancer && !fallbackHeadingShown) {
+                        photographersHtml += '<h3 class="h5 mt-4">Freelancer fallback</h3><p>No studio photographer is available. Approved members get access only to this booking until event end.</p>';
+                        fallbackHeadingShown = true;
+                    }
                     const initials = photographer.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase();
                     const photographerId = photographer.id.toString();
                     const isSelected = selectedPhotographers.includes(photographerId);
@@ -1291,8 +1302,8 @@
                         ? photographer.availability_conflicts
                         : [];
                     const availabilityDetails = conflictDetails.length > 0
-                        ? conflictDetails.map(conflict => `<div class="small text-muted">${conflict.message || photographer.availability_reason}</div>`).join('')
-                        : `<div class="small text-muted">${photographer.availability_reason || 'Available for assignment.'}</div>`;
+                        ? conflictDetails.map(conflict => `<div class="small text-muted">${escapeAssignmentText(conflict.message || photographer.availability_reason)}</div>`).join('')
+                        : `<div class="small text-muted">${escapeAssignmentText(photographer.availability_reason || 'Available for assignment.')}</div>`;
                     
                     photographersHtml += `
                         <div class="card border mb-2 photographer-card ${isSelected ? 'selected border-primary' : ''} ${isUnavailable ? 'bg-light-subtle border-danger-subtle' : ''}" data-photographer-id="${photographer.id}" data-is-available="${photographer.is_available ? '1' : '0'}">
@@ -1306,24 +1317,24 @@
                                                 value="${photographer.id}"
                                                 ${isSelected ? 'checked' : ''}
                                                 ${isDisabled ? 'disabled' : ''}>
-                                            <label class="form-check-label visually-hidden" for="photographer_${photographer.id}">Assign ${photographer.name}</label>
+                                            <label class="form-check-label visually-hidden" for="photographer_${photographer.id}">Assign ${escapeAssignmentText(photographer.name)}</label>
                                         </div>
                                     </div>
                                     <div class="col py-3">
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-xl flex-shrink-0">
                                                 <span class="avatar-title bg-info-subtle text-info rounded-circle">
-                                                    ${initials}
+                                                    ${escapeAssignmentText(initials)}
                                                 </span>
                                             </div>
                                             <div class="ms-3">
-                                                <h4 class="mb-0 fw-semibold">${photographer.name}</h4>
+                                                <h4 class="mb-0 fw-semibold">${escapeAssignmentText(photographer.name)}</h4>
                                                 <div class="d-flex align-items-center flex-wrap">
-                                                    <small class="mb-1">${photographer.position || 'Photographer'}</small>
+                                                    <small class="mb-1">${escapeAssignmentText(photographer.position || 'Photographer')}</small>
                                                 </div>
                                                 <div class="d-flex align-items-center flex-wrap">
-                                                    <span class="badge badge-soft-success text-success small mb-1">${photographer.status}</span>
-                                                    <small class="text-muted ms-2">${photographer.years_experience} years experience</small>
+                                                    <span class="badge badge-soft-success text-success small mb-1">${escapeAssignmentText(photographer.status)}</span>
+                                                    ${photographer.years_experience !== null ? `<small class="text-muted ms-2">${escapeAssignmentText(photographer.years_experience)} years experience</small>` : ''}
                                                 </div>
                                                 <div class="mt-2">
                                                     <span class="${getAvailabilityBadgeClass(photographer.availability_status)} small mb-1">${getAvailabilityLabel(photographer.availability_status)}</span>

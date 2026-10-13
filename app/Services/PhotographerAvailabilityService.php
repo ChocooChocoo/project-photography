@@ -68,6 +68,11 @@ class PhotographerAvailabilityService
             ->groupBy('photographer_id');
 
         $availabilityMap = [];
+        $directBookings = BookingModel::where('booking_type', 'freelancer')->whereIn('provider_id', $photographerIds)
+            ->where('id', '!=', $booking->id)->whereNotIn('status', ['cancelled', 'completed'])
+            ->overlappingDates($bookingDate, $bookingEndDate)
+            ->whereTime('start_time', '<', $booking->end_time)->whereTime('end_time', '>', $booking->start_time)
+            ->get()->groupBy('provider_id');
 
         foreach ($photographerIds as $photographerId) {
             $availabilityMap[$photographerId] = $this->buildAvailabilityPayload(
@@ -76,6 +81,12 @@ class PhotographerAvailabilityService
                 $approvedLeaves->get($photographerId, collect()),
                 $conflictingAssignments->get($photographerId, collect())
             );
+            if ($directBookings->has($photographerId)) {
+                $availabilityMap[$photographerId]['is_available'] = false;
+                $availabilityMap[$photographerId]['availability_status'] = 'reserved_conflict';
+                $availabilityMap[$photographerId]['availability_reason'] = 'Unavailable due to a direct freelancer booking.';
+                $availabilityMap[$photographerId]['availability_conflicts'][] = ['type' => 'direct_booking', 'status' => 'reserved_conflict', 'message' => 'Unavailable due to a direct freelancer booking.'];
+            }
         }
 
         return $availabilityMap;

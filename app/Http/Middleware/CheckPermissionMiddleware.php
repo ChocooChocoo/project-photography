@@ -20,6 +20,15 @@ class CheckPermissionMiddleware
         }
 
         $user = Auth::user();
+        if ($request->routeIs('freelancer.studio-assignments.*') && $request->route('id')) {
+            $assignment = \App\Models\StudioOwner\BookingAssignedPhotographerModel::find($request->route('id'));
+            $allowed = $assignment && collect($permissions)->contains(function ($permission) use ($user, $assignment) {
+                $action = str($permission)->afterLast('.')->toString();
+                return app(\App\Services\FreelancerBookingAccess::class)->allows($user, $assignment, $action);
+            });
+            abort_unless($allowed, 403, 'Temporary booking access is unavailable or has ended.');
+            return $next($request);
+        }
         $studioId = $this->resolveStudioId($request);
         // Normalize the required permission. UserModel::hasPermission normalizes
         // the granted permission with the same helper before the compare.

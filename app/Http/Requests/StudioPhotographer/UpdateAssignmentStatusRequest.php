@@ -9,6 +9,10 @@ class UpdateAssignmentStatusRequest extends FormRequest
 {
     public function authorize()
     {
+        if ($this->routeIs('freelancer.studio-assignments.status')) {
+            $assignment = BookingAssignedPhotographerModel::find($this->route('id'));
+            return $assignment && auth()->check() && app(\App\Services\FreelancerBookingAccess::class)->allows(auth()->user(), $assignment, 'update-status');
+        }
         return auth()->check()
             && auth()->user()->isStudioPhotographer()
             && auth()->user()->hasPermission('studio-photographer.assignment.update_status');

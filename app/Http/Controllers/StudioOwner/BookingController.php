@@ -446,10 +446,13 @@ class BookingController extends Controller
             $assignablePhotographerCount = collect($availablePhotographers)
                 ->where('is_available', true)
                 ->count();
+            $freelancers = app(\App\Services\FreelancerFallbackCandidates::class)->candidates($booking);
+            $assignablePhotographerCount += collect($freelancers)->where('is_available', true)->count();
 
             return response()->json([
                 'success' => true,
                 'photographers' => $availablePhotographers,
+                'freelancers' => $freelancers,
                 'booking' => [
                     'reference' => $booking->booking_reference,
                     'event_name' => $booking->event_name,
@@ -619,6 +622,20 @@ class BookingController extends Controller
                 $userId,
                 $request
             ) {
+                $booking = BookingModel::lockForUpdate()->findOrFail($bookingId);
+                $fallback = app(\App\Services\FreelancerFallbackCandidates::class);
+                // Lock people consistently across bookings before the availability recheck.
+                $lockIds = $requestedPhotographerIds;
+                if (\Illuminate\Support\Facades\Schema::hasTable('tbl_studio_photographers')) {
+                    $lockIds = array_unique([...$lockIds, ...$fallback->staffIds($booking)]);
+                }
+                UserModel::whereIn('id', $lockIds)->orderBy('id')->lockForUpdate()->get();
+                $freelancerIds = $fallback->validate($booking, $requestedPhotographerIds);
+                if (in_array($booking->status, ['completed', 'cancelled'])
+                    || BookingAssignedPhotographerModel::where('booking_id', $bookingId)->whereIn('status', BookingModel::ACTIVE_ASSIGNMENT_STATUSES)->count()
+                        + count($requestedPhotographerIds) !== $this->getMaxPhotographersFromPackage($booking)) {
+                    throw new \RuntimeException(json_encode(['message' => 'Booking assignment requirement changed. Reload and try again.'], JSON_THROW_ON_ERROR));
+                }
                 $freshAvailabilityMap = $this->photographerAvailabilityService->getAvailabilityMapForBooking($booking, $requestedPhotographerIds);
                 $freshUnavailableSelections = collect($freshAvailabilityMap)
                     ->filter(fn ($availability) => ! $availability['is_available'])
@@ -662,7 +679,7 @@ class BookingController extends Controller
                         ], JSON_THROW_ON_ERROR));
                     }
 
-                    $assignment = BookingAssignedPhotographerModel::create([
+                    $attributes = [
                         'booking_id' => $bookingId,
                         'studio_id' => $studio->id,
                         'photographer_id' => $photographerId,
@@ -671,7 +688,14 @@ class BookingController extends Controller
                         'assignment_notes' => $request->assignment_notes,
                         'assigned_at' => now(),
                         'response_deadline' => now()->addHours(24),
-                    ]);
+                    ];
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('tbl_booking_assigned_photographers', 'is_freelancer')) {
+                        $attributes['is_freelancer'] = in_array($photographerId, $freelancerIds, true);
+                    }
+                    $assignment = BookingAssignedPhotographerModel::create($attributes);
+                    if ($assignment->is_freelancer) {
+                        app(\App\Services\FreelancerBookingAccess::class)->grant($assignment);
+                    }
 
                     $assignedCount++;
                     $createdAssignments[] = $assignment;
@@ -737,7 +761,7 @@ class BookingController extends Controller
                         'assigned_by' => $owner->id,
                         'assigned_by_name' => $ownerName,
                         'assignment_notes' => $request->assignment_notes,
-                        'route' => route('assigned.bookings', [], false),
+                        'route' => $assignment->is_freelancer ? route('freelancer.studio-assignments.index', [], false) : route('assigned.bookings', [], false),
                         'is_batch_assignment' => $isBatchAssignment,
                         'batch_size' => $assignedCount,
                         'notification_type' => 'photographer_notification',

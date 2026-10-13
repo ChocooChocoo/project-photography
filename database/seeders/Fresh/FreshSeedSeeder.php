@@ -5,6 +5,7 @@ namespace Database\Seeders\Fresh;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\Fresh\Concerns\FreshSeedSupport;
 use Database\Seeders\RbacSeeder;
+use Database\Seeders\StudioFreelancerRoleSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -40,6 +41,7 @@ class FreshSeedSeeder extends Seeder
         $this->call([
             CategorySeeder::class,
             RbacSeeder::class,
+            StudioFreelancerRoleSeeder::class,
         ]);
 
         $graph = (new FreshStudioNetworkSeeder($this->command))->run();

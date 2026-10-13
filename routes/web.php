@@ -531,6 +531,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
 
     // Freelancer Routes ===================================================================================================================================================
     Route::prefix('freelancer')->middleware([FreelancerMiddleware::class])->group(function () {
+        Route::get('/studio-assignments', [\App\Http\Controllers\Freelancer\StudioAssignmentController::class, 'index'])->name('freelancer.studio-assignments.index');
+        Route::get('/studio-assignments/{id}', [\App\Http\Controllers\Freelancer\StudioAssignmentController::class, 'show'])->middleware('permission:freelancer.studio-assignments.view')->name('freelancer.studio-assignments.show');
+        Route::post('/studio-assignments/{id}/status', [\App\Http\Controllers\Freelancer\StudioAssignmentController::class, 'status'])->middleware('permission:freelancer.studio-assignments.update-status')->name('freelancer.studio-assignments.status');
+        Route::post('/studio-assignments/{id}/images', [\App\Http\Controllers\Freelancer\StudioAssignmentController::class, 'images'])->middleware('permission:freelancer.studio-assignments.upload')->name('freelancer.studio-assignments.images');
 
         // Booking contracts
         Route::get('/contracts/{booking}', [\App\Http\Controllers\BookingContractController::class, 'show'])->name('freelancer.contracts.show');

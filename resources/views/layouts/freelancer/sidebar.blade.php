@@ -68,6 +68,13 @@
             </li>
 
             {{-- Manage Bookings --}}
+            <li class="side-nav-item {{ Route::is('freelancer.studio-assignments.*') ? 'active' : '' }}">
+                <a href="{{ route('freelancer.studio-assignments.index') }}" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-camera" aria-hidden="true"></i></span>
+                    <span class="menu-text">Studio Assignments</span>
+                </a>
+            </li>
+
             @php
                 $manageBookingsRoutes = Route::is('freelancer.booking.index');
                 $bookingHistoryRoutes = Route::is('freelancer.booking.history');

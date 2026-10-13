@@ -9,6 +9,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('assignments:check-deadlines')->hourly()->withoutOverlapping()->environments(['production']);
+Schedule::command('bookings:revoke-freelancer-access')->hourly()->withoutOverlapping()->environments(['production']);
 Schedule::command('procurement:escalate-overdue')->hourly()->withoutOverlapping()->environments(['production']);
 Schedule::command('bookings:expire-pending')->hourly()->withoutOverlapping()->environments(['production']);
 Schedule::command('bookings:send-reminders')->dailyAt('08:00')->withoutOverlapping()->environments(['production']);

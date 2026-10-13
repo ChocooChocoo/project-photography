@@ -146,6 +146,16 @@ class BookingModel extends Model
             ->whereRaw('date(coalesce(event_end_date, event_date)) >= ?', [$startDate]);
     }
 
+    protected static function booted(): void
+    {
+        static::updated(function ($booking) {
+            if ($booking->wasChanged('status') && in_array($booking->status, ['cancelled', 'completed'])) {
+                app(\App\Services\FreelancerBookingAccess::class)->revoke($booking->id);
+            }
+        });
+        static::deleted(fn ($booking) => app(\App\Services\FreelancerBookingAccess::class)->revoke($booking->id));
+    }
+
     /**
      * Short-term covers one day; long-term covers two or more days.
      */

@@ -24,7 +24,7 @@ class AssignBookingPhotographersRequest extends FormRequest
     {
         return [
             'photographer_ids' => ['required', 'array', 'min:1'],
-            'photographer_ids.*' => ['required', 'integer', 'distinct', Rule::exists('tbl_users', 'id')],
+            'photographer_ids.*' => ['required', 'integer', 'distinct', Rule::exists('tbl_users', 'id')->where(fn ($query) => $query->whereIn('role', ['studio-photographer', 'freelancer'])->where('status', 'active')->whereNull('deleted_at'))],
             'assignment_notes' => ['nullable', 'string', 'max:500'],
         ];
     }
