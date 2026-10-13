@@ -29,6 +29,18 @@ class ReviewModerationController extends Controller
             ->map(fn ($review) => $this->normalize($review, 'freelancer'));
 
         $reviews = $studioReviews->concat($freelancerReviews)->sortByDesc('created_at')->values();
+        foreach (['service' => \App\Models\ServiceRatingModel::class, 'photographer' => \App\Models\PhotographerRatingModel::class, 'photo' => \App\Models\PhotoRatingModel::class] as $type => $model) {
+            // Existing deployments may not yet have the additive feedback migration.
+            if (! \Illuminate\Support\Facades\Schema::hasTable((new $model)->getTable())) continue;
+            $feedback = $model::with('booking.client')->when($status, fn ($query) => $query->where('status', $status))->latest()->get()
+                ->map(fn ($review) => [
+                    'id' => $review->id, 'type' => $type, 'provider_name' => $review->booking?->booking_reference,
+                    'client_name' => $review->booking?->client?->full_name, 'rating' => $review->rating,
+                    'title' => null, 'review_text' => $review->review_text, 'status' => $review->status, 'created_at' => $review->created_at,
+                ]);
+            $reviews = $reviews->concat($feedback);
+        }
+        $reviews = $reviews->sortByDesc('created_at')->values();
 
         return view('admin.view-review-moderation', compact('reviews', 'status'));
     }
@@ -71,16 +83,22 @@ class ReviewModerationController extends Controller
 
     private function findReview(string $type, int $id)
     {
-        return $type === 'studio'
-            ? StudioRatingModel::findOrFail($id)
-            : FreelancerRatingModel::findOrFail($id);
+        $model = match ($type) {
+            'studio' => StudioRatingModel::class,
+            'freelancer' => FreelancerRatingModel::class,
+            'service' => \App\Models\ServiceRatingModel::class,
+            'photographer' => \App\Models\PhotographerRatingModel::class,
+            'photo' => \App\Models\PhotoRatingModel::class,
+            default => abort(404),
+        };
+        return $model::findOrFail($id);
     }
 
     private function refreshAggregate(string $type, $review): void
     {
         if ($type === 'studio') {
             StudioRatingModel::updateAggregate($review->studio_id);
-        } else {
+        } elseif ($type === 'freelancer') {
             FreelancerRatingModel::updateAggregate($review->freelancer_id);
         }
     }

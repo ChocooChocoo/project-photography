@@ -1311,6 +1311,10 @@
                 $('#bookingReference').text(booking.booking_reference);
                 $('#bookingModalBody').html(modalContent);
                 $('#bookingModalBody').prepend(window.renderContractBlock(data.contract, 'client'));
+                if (booking.status === 'completed') {
+                    $('<a class="btn btn-outline-secondary mt-3" style="min-height:44px">Feedback / report</a>')
+                        .attr('href', @json(route('client.feedback.show', ['booking' => '__ID__'], false)).replace('__ID__', booking.id)).appendTo('#bookingModalBody');
+                }
                 if (booking.booking_type === 'studio') {
                     $('#bookingModalBody').append('<section id="clientHardcopyPanel" class="mt-4 border-top pt-3"></section>');
                     window.mountHardcopy(document.getElementById('clientHardcopyPanel'), booking.id, false);

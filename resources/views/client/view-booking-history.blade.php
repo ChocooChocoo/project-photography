@@ -113,6 +113,7 @@
                                                         <i class="ti ti-eye fs-lg"></i>
                                                     </button>
                                                     @if($booking->status === 'completed')
+                                                        <a class="btn btn-sm" style="min-height:44px" href="{{ route('client.feedback.show', $booking->id) }}">Feedback / report</a>
                                                         @if($booking->booking_type === 'studio')
                                                             <button class="btn btn-sm review-studio-btn" 
                                                                     data-booking-id="{{ $booking->id }}"
@@ -1112,6 +1113,10 @@
 
                 $('#bookingReference').text(booking.booking_reference);
                 $('#bookingModalBody').html(modalContent);
+                if (booking.status === 'completed') {
+                    $('<a class="btn btn-outline-secondary mt-3" style="min-height:44px">Feedback / report</a>')
+                        .attr('href', @json(route('client.feedback.show', ['booking' => '__ID__'], false)).replace('__ID__', booking.id)).appendTo('#bookingModalBody');
+                }
                 loadIcons();
             }
 

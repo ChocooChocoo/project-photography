@@ -118,6 +118,15 @@
             </li>
 
             {{-- Manage Online Gallery --}}
+            @if($canManageBookings)
+            <li class="side-nav-item {{ Route::is('owner.feedback.index') ? 'active' : '' }}">
+                <a href="{{ route('owner.feedback.index') }}" class="side-nav-link">
+                    <span class="menu-icon"><i class="ti ti-message" aria-hidden="true"></i></span>
+                    <span class="menu-text">Client Feedback</span>
+                </a>
+            </li>
+            @endif
+
             @php
                 $manageOnlineGalleryRoutes = Route::is('owner.online-gallery.index');
             @endphp

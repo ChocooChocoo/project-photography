@@ -93,6 +93,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/dashboard/export', [\App\Http\Controllers\Admin\DashboardController::class, 'export'])->name('admin.dashboard.export');
 
         // Review Moderation
+        Route::get('/reports', [\App\Http\Controllers\BookingReportController::class, 'index'])->name('admin.reports.index');
+        Route::get('/reports/{report}', [\App\Http\Controllers\BookingReportController::class, 'show'])->name('admin.reports.show');
+        Route::post('/reports/{report}/status', [\App\Http\Controllers\BookingReportController::class, 'update'])->name('admin.reports.update');
+        Route::get('/reports/{report}/evidence', [\App\Http\Controllers\BookingReportController::class, 'evidence'])->name('admin.reports.evidence');
         Route::get('/reviews', [\App\Http\Controllers\Admin\ReviewModerationController::class, 'index'])->name('admin.reviews.index');
         Route::post('/reviews/{type}/{id}/flag', [\App\Http\Controllers\Admin\ReviewModerationController::class, 'flag'])->name('admin.reviews.flag');
         Route::post('/reviews/{type}/{id}/remove', [\App\Http\Controllers\Admin\ReviewModerationController::class, 'remove'])->name('admin.reviews.remove');
@@ -186,6 +190,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
 
         // Manage Bookings
         Route::get('/view/bookings', [\App\Http\Controllers\StudioOwner\BookingController::class, 'index'])->middleware('permission:owner.bookings.manage')->name('owner.booking.index');
+        Route::get('/feedback', [\App\Http\Controllers\StudioOwner\FeedbackController::class, 'index'])->middleware('permission:owner.bookings.manage')->name('owner.feedback.index');
         Route::get('/booking/history', [\App\Http\Controllers\StudioOwner\BookingController::class, 'history'])->middleware('permission:owner.bookings.manage')->name('owner.booking.history');
         Route::get('/bookings/{id}/details', [\App\Http\Controllers\StudioOwner\BookingController::class, 'getBookingDetails'])->middleware('permission:owner.bookings.manage')->name('owner.booking.details');
         Route::get('/contracts/{booking}', [\App\Http\Controllers\BookingContractController::class, 'show'])->middleware('permission:owner.bookings.manage')->name('owner.contracts.show');
@@ -683,6 +688,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/booking-details/{type}/{id}', [\App\Http\Controllers\Client\BookingDetailsController::class, 'index'])->name('client.booking-details');
 
         // Client Bookings
+        Route::get('/bookings/{booking}/feedback', [\App\Http\Controllers\Client\BookingFeedbackController::class, 'show'])->name('client.feedback.show');
+        Route::post('/bookings/{booking}/reports', [\App\Http\Controllers\BookingReportController::class, 'store'])->middleware('throttle:5,1')->name('client.reports.store');
+        Route::get('/reports/{report}/evidence', [\App\Http\Controllers\BookingReportController::class, 'evidence'])->name('client.reports.evidence');
+        Route::post('/bookings/{booking}/feedback/{type}', [\App\Http\Controllers\Client\BookingFeedbackController::class, 'store'])->middleware('throttle:10,1')->name('client.feedback.store');
         Route::get('/view/my-bookings', [\App\Http\Controllers\Client\MyBookingsController::class, 'index'])->name('client.my-bookings.index');
         Route::get('/bookings/{bookingId}/hardcopy', [\App\Http\Controllers\HardcopyOrderController::class, 'clientShow'])->name('client.hardcopy.index');
         Route::post('/bookings/{bookingId}/hardcopy/{order}/accept', [\App\Http\Controllers\HardcopyOrderController::class, 'accept'])->name('client.hardcopy.accept');

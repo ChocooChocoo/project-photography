@@ -35,7 +35,7 @@
                                     <tr data-review-type="{{ $review['type'] }}" data-review-id="{{ $review['id'] }}">
                                         <td>{{ $review['provider_name'] ?: 'N/A' }} <span class="badge badge-soft-secondary">{{ ucfirst($review['type']) }}</span></td>
                                         <td>{{ $review['client_name'] ?: 'N/A' }}</td>
-                                        <td>{{ $review['rating'] }} <i class="ti ti-star-filled text-warning"></i></td>
+                                        <td>@if($review['rating'] !== null){{ $review['rating'] }} <i class="ti ti-star-filled text-warning" aria-hidden="true"></i>@else Comment only @endif</td>
                                         <td style="max-width: 300px;" class="text-truncate">{{ $review['review_text'] }}</td>
                                         <td>
                                             @php
