@@ -25,6 +25,7 @@
     {{-- Sidebar --}}
     <div class="scrollbar" data-simplebar>
         <ul class="side-nav">
+            @include('partials.chat-sidebar-link')
             <li class="side-nav-title mt-2" data-lang="apps-title">Studio Photographer Panel</li>
 
             {{-- Dashboard --}}

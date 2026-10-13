@@ -58,6 +58,7 @@
                                             <td data-sort-value="{{ $assignment->booking->booking_reference ?? 'N/A' }}">
                                                 <div class="d-flex align-items-center">
                                                     <span class="fw-medium">{{ $assignment->booking->booking_reference ?? 'N/A' }}</span>
+                                                    <a class="d-inline-flex align-items-center ms-2" style="min-height:44px" href="{{ route('studio-photographer.messages.index', ['booking' => $assignment->booking_id]) }}">Message</a>
                                                 </div>
                                             </td>
                                             <td>

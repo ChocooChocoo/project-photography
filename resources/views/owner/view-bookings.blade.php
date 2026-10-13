@@ -1040,6 +1040,8 @@
                 $('#bookingReference').text(booking.booking_reference);
                 $('#bookingModalBody').html(modalContent);
                 $('#bookingModalBody').prepend(window.renderContractBlock(data.contract, 'owner'));
+                $('<a class="btn btn-outline-secondary mt-3" style="min-height:44px">Message booking contact</a>')
+                    .attr('href', @json(route('owner.messages.index', [], false)) + '?booking=' + booking.id).appendTo('#bookingModalBody');
                 $('#bookingModalBody').append('<section id="ownerEquipmentPanel" class="mt-4 border-top pt-3"></section>');
                 window.mountBookingEquipment(document.getElementById('ownerEquipmentPanel'), booking, assignedPhotographers || []);
                 $('#bookingModalBody').append('<section id="ownerHardcopyPanel" class="mt-4 border-top pt-3"></section>');

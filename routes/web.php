@@ -39,6 +39,18 @@ Route::prefix('admin')->middleware('guest')->group(function () {
 
 // Authenticated Routes ================================================================================================================================================
 Route::middleware(['auth', 'password.changed'])->group(function () {
+    foreach (['admin', 'owner', 'client', 'freelancer', 'studio-photographer', 'studio-hr', 'studio-finance'] as $portal) {
+        Route::prefix($portal.'/messages')->middleware(\App\Http\Middleware\ChatPortalMiddleware::class.':'.$portal)->name($portal.'.messages.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\ChatController::class, 'index'])->name('index');
+            Route::get('/inbox', [\App\Http\Controllers\ChatController::class, 'inbox'])->name('inbox');
+            Route::get('/unread', [\App\Http\Controllers\ChatController::class, 'unread'])->name('unread');
+            Route::post('/', [\App\Http\Controllers\ChatController::class, 'open'])->middleware('throttle:30,1,chat-open')->name('open');
+            Route::get('/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])->name('show');
+            Route::get('/{conversation}/messages', [\App\Http\Controllers\ChatController::class, 'messages'])->name('poll');
+            Route::post('/{conversation}/send', [\App\Http\Controllers\ChatController::class, 'send'])->middleware('throttle:30,1,chat-send')->name('send');
+            Route::post('/{conversation}/read', [\App\Http\Controllers\ChatController::class, 'read'])->name('read');
+        });
+    }
 
     // Onboarding (optional cross-portal, Next/Skip)
     Route::get('/onboarding', [\App\Http\Controllers\OnboardingController::class, 'show'])->name('onboarding');

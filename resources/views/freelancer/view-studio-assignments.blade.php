@@ -22,6 +22,7 @@
         <section class="border-top py-4">
             <h2 class="h5">{{ $booking->booking_reference }}: {{ $booking->event_name }}</h2>
             <p>{{ $assignment->studio->studio_name }}. Status: {{ str_replace('_', ' ', $assignment->status) }}.</p>
+            <a class="btn btn-outline-secondary mb-3" href="{{ route('freelancer.messages.index', ['booking' => $booking->id]) }}">Message booking contact</a>
             <p><strong>Access ends {{ app(\App\Services\FreelancerBookingAccess::class)->eventEnd($booking)->format('M d, Y H:i') }} Asia/Manila.</strong></p>
             @if($nextStatuses)
             <form action="{{ route('freelancer.studio-assignments.status', $assignment->id) }}" method="post" enctype="multipart/form-data" data-work-form class="mb-4">

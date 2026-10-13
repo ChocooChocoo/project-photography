@@ -1311,6 +1311,8 @@
                 $('#bookingReference').text(booking.booking_reference);
                 $('#bookingModalBody').html(modalContent);
                 $('#bookingModalBody').prepend(window.renderContractBlock(data.contract, 'client'));
+                $('<a class="btn btn-outline-secondary mt-3" style="min-height:44px">Message booking contact</a>')
+                    .attr('href', @json(route('client.messages.index', [], false)) + '?booking=' + booking.id).appendTo('#bookingModalBody');
                 if (booking.status === 'completed') {
                     $('<a class="btn btn-outline-secondary mt-3" style="min-height:44px">Feedback / report</a>')
                         .attr('href', @json(route('client.feedback.show', ['booking' => '__ID__'], false)).replace('__ID__', booking.id)).appendTo('#bookingModalBody');

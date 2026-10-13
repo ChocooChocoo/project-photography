@@ -646,16 +646,17 @@ trait Notifiable
      */
     public function notifyNewMessage($message, $user)
     {
+        $senderName = e($message->sender->full_name);
         return $this->createNotification(
             $user->id,
             'new_message',
             'New Message',
-            "You have a new message from {$message->sender->full_name}",
+            "You have a new message from {$senderName}",
             [
                 'message_id' => $message->id,
                 'sender_id' => $message->sender_id,
                 'sender_name' => $message->sender->full_name,
-                'route' => route('messages.show', $message->conversation_id, false)
+                'route' => route($user->role.'.messages.show', $message->conversation_id, false)
             ],
             'message-circle',
             'primary'

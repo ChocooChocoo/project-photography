@@ -56,6 +56,8 @@ class FreshResetSeeder
      * @var array<int, string>
      */
     public const TRUNCATE_TABLES = [
+        'tbl_messages',
+        'tbl_conversations',
         // Procurement, deepest first.
         'tbl_procurement_defect_returns',
         'tbl_procurement_inventory_stocks',

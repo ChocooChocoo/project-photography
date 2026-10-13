@@ -48,3 +48,4 @@
 
     {{-- SHARED NOTIFICATIONS --}}
     <script src="{{ asset('assets/js/pages/notifications.js') }}"></script>
+    <script src="{{ asset('assets/js/user-chat.js') }}"></script>
