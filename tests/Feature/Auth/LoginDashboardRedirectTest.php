@@ -36,6 +36,7 @@ class LoginDashboardRedirectTest extends TestCase
             'password' => Hash::make('Password_123'),
             'status' => 'active',
             'email_verified' => true,
+            'onboarding_completed_at' => now(),
         ]);
 
         $login = $this->postJson(route('auth.login.store'), [

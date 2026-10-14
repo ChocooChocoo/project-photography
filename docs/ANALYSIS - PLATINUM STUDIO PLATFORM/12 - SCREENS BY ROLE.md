@@ -44,6 +44,7 @@ The source material describes portal needs and the current code exposes routes a
 | S-08 | Provider and service discovery | Provider, category, location, service, package, and availability information. | Booking details. | P-03 | Client controllers and frozen marketplace requirements |
 | S-09 | Booking and payment | Chosen service, dates, booking details, payment state, and confirmation or failure. | My bookings. | P-04 | Booking controllers and payment routes |
 | S-10 | My bookings and gallery | Booking state, payment result, published gallery, and review entry. | Booking detail, gallery, or review. | P-04, P-06, P-11 | Frozen plain analysis and client routes |
+| S-24 | Studio profile | Eligible studio information, active portfolio images and packages, and published reviews. | Full-size portfolio image or studio booking form. | P-03, P-06 | `client.studios.show`, `BookingDetailsController::showStudio`, `StudioProfileTest`; Phase 13 locally verified 14 October 2026. |
 
 ## Freelancer
 
@@ -79,11 +80,13 @@ The source material describes portal needs and the current code exposes routes a
 
 ## Where the levels overlap
 
+The shared account tutorial (`S-23`) introduces client, owner and freelancer tools after first login. Finish or Skip saves completion; profile-menu Replay keeps it. Required password change comes first, and staff/admin keep their existing dashboard flow. Evidence: `OnboardingController`, auth controllers, `OnboardingFlowTest`, and [Phase 13](../plans/thesis-panel-revisions/phase-13.md). Locally verified 14 October 2026; production unverified.
+
 | Screen or area | Administrator | Owner | Client | Freelancer | HR | Finance | Photographer |
 |---|---|---|---|---|---|---|---|
 | Dashboard | Platform | Studio | Client | Work | HR | Finance | Assigned work |
 | Booking | Oversight | Manage | Own | Assigned | No | Financial view | Assigned |
-| Gallery | Moderate | Manage | Published own result | Deliver own work | No | No | Deliver assigned work |
+| Gallery | Moderate | Manage | Published own result; studio portfolio | Deliver own work | No | No | Deliver assigned work |
 | People and permissions | Platform users | Studio scope | Own profile | Own profile | Assigned staff | Assigned finance staff | Own profile |
 | Procurement | Oversight | Approve or report | No | Permitted requests only | Permitted requests | Review and pay | Permitted requests |
 

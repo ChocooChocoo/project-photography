@@ -18,8 +18,6 @@ class EnsurePasswordChangedMiddleware
             $allowedRoutes = [
                 'password.change',
                 'password.change.store',
-                'onboarding',
-                'onboarding.complete',
                 'auth.logout',
             ];
 

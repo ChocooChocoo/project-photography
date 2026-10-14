@@ -101,6 +101,10 @@
                             <i class="ti ti-user-circle me-1 fs-17 align-middle"></i>
                             <span class="align-middle">Profile</span>
                         </a>
+                        <a href="{{ route('onboarding', ['replay' => 1]) }}" class="dropdown-item studio-profile-link py-2">
+                            <i class="ti ti-book me-1 fs-17 align-middle" aria-hidden="true"></i>
+                            <span class="align-middle">Replay tutorial</span>
+                        </a>
                         <div class="dropdown-divider"></div>
                         <form id="logoutForm" action="{{ route('auth.logout') }}" method="POST" class="d-inline">
                             @csrf

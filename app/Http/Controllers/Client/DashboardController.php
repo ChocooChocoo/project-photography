@@ -143,6 +143,7 @@ class DashboardController extends Controller
                     'starting_price' => number_format($studio->starting_price, 2),
                     'description' => $studio->studio_description,
                     'type_label' => 'Studio',
+                    'profile_url' => route('client.studios.show', $studio->id),
                     'rating' => $averageRating,
                     'total_ratings' => $studio->ratings_count,
                     'rating_display' => $this->getRatingDisplay($averageRating, $studio->ratings_count)

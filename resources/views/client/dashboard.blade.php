@@ -247,12 +247,13 @@
                                 </div>
                                 
                                 <div class="card-footer bg-transparent border-top">
-                                    <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                                         <div>
                                             <p class="text-muted small mb-1">Starting Price</p>
                                             <h5 class="text-success d-flex align-items-center gap-2 mb-0">PHP {{ number_format($studio->starting_price, 2) }}</h5>
                                         </div>                                            
-                                        <a class="btn btn-primary w-10" href="{{ route('client.booking-details', ['type' => 'studio', 'id' => $studio->id]) }}">Book Service</a>
+                                        <a class="btn btn-outline-primary studio-profile-link text-nowrap" href="{{ route('client.studios.show', $studio->id) }}">View studio</a>
+                                        <a class="btn btn-primary studio-profile-link text-nowrap" href="{{ route('client.booking-details', ['type' => 'studio', 'id' => $studio->id]) }}">Book Service</a>
                                     </div>
                                 </div>
                             </div>
@@ -421,12 +422,13 @@
                                 </div>
                                 
                                 <div class="card-footer bg-transparent border-top">
-                                    <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                                         <div>
                                             <p class="text-muted small mb-1">Starting Price</p>
                                             <h5 class="text-success d-flex align-items-center gap-2 mb-0">PHP ${photographer.starting_price}</h5>
-                                        </div>                                            
-                                        <a class="btn btn-primary w-10" href="/client/booking-details/${photographer.type}/${photographer.id}">Book Service</a>
+                                        </div>
+                                        ${photographer.type === 'studio' ? `<a class="btn btn-outline-primary studio-profile-link text-nowrap" href="${photographer.profile_url}">View studio</a>` : ''}
+                                        <a class="btn btn-primary studio-profile-link text-nowrap" href="/client/booking-details/${photographer.type}/${photographer.id}">Book Service</a>
                                     </div>
                                 </div>
                             </div>

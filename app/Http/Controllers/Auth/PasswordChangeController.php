@@ -40,7 +40,7 @@ class PasswordChangeController extends Controller
             'must_change_password' => false,
         ]);
 
-        return redirect()->route($this->dashboardRoute($user->role))
+        return redirect()->route($user->needsOnboarding() ? 'onboarding' : $this->dashboardRoute($user->role))
             ->with('success', 'Password changed successfully.');
     }
 

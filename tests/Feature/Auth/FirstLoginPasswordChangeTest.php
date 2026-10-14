@@ -91,7 +91,7 @@ class FirstLoginPasswordChangeTest extends TestCase
             ->assertRedirect(route('password.change'));
     }
 
-    public function test_employee_with_flag_can_access_password_change_and_onboarding(): void
+    public function test_employee_with_flag_can_access_password_change_but_not_onboarding(): void
     {
         $employee = $this->createEmployeeWithFlag();
 
@@ -101,7 +101,7 @@ class FirstLoginPasswordChangeTest extends TestCase
 
         $this->actingAs($employee)
             ->get(route('onboarding'))
-            ->assertOk();
+            ->assertRedirect(route('password.change'));
     }
 
     public function test_logout_always_works_even_with_flag(): void

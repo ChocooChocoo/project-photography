@@ -93,6 +93,55 @@ class PortalLayoutRegressionTest extends TestCase
         $this->assertStringContainsString('padding-bottom: 6rem;', $contents);
     }
 
+    public function test_tutorial_can_be_replayed_from_business_and_client_profile_menus(): void
+    {
+        foreach (['client', 'owner', 'freelancer'] as $role) {
+            $contents = $this->readView("resources/views/layouts/{$role}/topbar.blade.php");
+            $this->assertStringContainsString("route('onboarding', ['replay' => 1])", $contents);
+            $this->assertStringContainsString('Replay tutorial', $contents);
+            $this->assertStringContainsString('dropdown-item studio-profile-link py-2', $contents);
+        }
+    }
+
+    public function test_long_topbar_names_are_bounded_without_removing_accessible_text(): void
+    {
+        $contents = $this->readView('resources/views/layouts/partials/portal-base-scripts.blade.php');
+        $this->assertStringContainsString('.nav-user h5', $contents);
+        $this->assertStringContainsString('max-width: min(16rem, 20vw);', $contents);
+        $this->assertStringContainsString('text-overflow: ellipsis;', $contents);
+        foreach (['admin', 'owner', 'client', 'freelancer', 'studio-hr', 'studio-finance', 'studio-photographer'] as $role) {
+            $this->assertStringContainsString('layouts.partials.portal-base-scripts', $this->readView("resources/views/layouts/{$role}/app.blade.php"));
+            $this->assertStringContainsString('full_name', $this->readView("resources/views/layouts/{$role}/topbar.blade.php"));
+        }
+    }
+
+    public function test_studio_listing_actions_wrap_and_keep_tap_targets(): void
+    {
+        $contents = $this->readView('resources/views/client/dashboard.blade.php');
+        $this->assertStringContainsString('d-flex flex-wrap justify-content-between align-items-center gap-2', $contents);
+        $this->assertStringContainsString('studio-profile-link text-nowrap', $contents);
+        $styles = $this->readView('resources/views/layouts/partials/portal-base-scripts.blade.php');
+        $this->assertStringContainsString('.studio-profile-link', $styles);
+        $this->assertStringContainsString('min-height: 44px;', $styles);
+    }
+
+    public function test_new_controls_use_existing_ins_theme_tokens_for_accessible_contrast(): void
+    {
+        foreach (['resources/views/onboarding.blade.php', 'resources/views/layouts/partials/portal-base-scripts.blade.php'] as $path) {
+            $contents = $this->readView($path);
+            $this->assertStringContainsString('var(--ins-body-color)', $contents);
+            $this->assertStringContainsString('outline: 3px solid var(--ins-body-color) !important;', $contents);
+            $this->assertStringNotContainsString('var(--bs-primary)', $contents);
+        }
+    }
+
+    public function test_tutorial_avoids_the_auth_layouts_fixed_mobile_padding(): void
+    {
+        $contents = $this->readView('resources/views/onboarding.blade.php');
+        $this->assertStringContainsString('.auth-box { padding: 0; }', $contents);
+        $this->assertStringContainsString('padding: clamp(1rem, 3vw, 2rem);', $contents);
+    }
+
     private function readView(string $relativePath): string
     {
         $path = base_path($relativePath);

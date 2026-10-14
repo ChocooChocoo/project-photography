@@ -1,5 +1,5 @@
 @extends('layouts.client.app')
-@section('title', 'Booking Details')
+@section('title', ($studioProfile ?? false) ? 'Studio profile' : 'Booking Details')
 
 {{-- CONTENTS --}}
 @section('content')
@@ -88,7 +88,7 @@
                                                 @endif
                                             </h3>
                                         </div>
-                                        <a href="{{ route('client.booking-forms', ['type' => $type, 'id' => $type === 'studio' ? $studio->id : $freelancer->user_id]) }}" class="btn btn-primary w-md-auto">
+                                        <a href="{{ route('client.booking-forms', ['type' => $type, 'id' => $type === 'studio' ? $studio->id : $freelancer->user_id]) }}" class="btn btn-primary studio-profile-link w-md-auto">
                                             <i class="ti ti-calendar-check me-2"></i> Book Now
                                         </a>
                                     </div>
@@ -116,21 +116,7 @@
                                         </p>
                                     </div>
 
-                                    {{-- PORTFOLIO --}}
-                                    @if($portfolioGalleries->isNotEmpty())
-                                    <div class="mb-4">
-                                        <h5 class="card-title text-primary mb-3">Portfolio</h5>
-                                        <div class="row g-2">
-                                            @foreach($portfolioGalleries as $gallery)
-                                                @foreach(($gallery->images ?? []) as $image)
-                                                    <div class="col-md-4 col-6">
-                                                        <img src="{{ asset('storage/' . $image) }}" class="rounded w-100" style="height: 140px; object-fit: cover;" alt="{{ $gallery->gallery_name }}">
-                                                    </div>
-                                                @endforeach
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                    @endif
+                                    @include('client.portfolio-images', ['galleries' => $portfolioGalleries])
 
                                     {{-- SERVICES OFFERED --}}
                                     @php

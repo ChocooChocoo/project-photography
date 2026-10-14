@@ -244,6 +244,10 @@ class AuthController extends Controller
      */
     private function getDashboardRoute($role): string
     {
+        if (Auth::user()?->needsOnboarding()) {
+            return route('onboarding');
+        }
+
         $routes = [
             'admin' => 'admin.dashboard',
             'owner' => 'owner.dashboard',

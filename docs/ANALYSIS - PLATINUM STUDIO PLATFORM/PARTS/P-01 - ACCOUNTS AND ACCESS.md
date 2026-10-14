@@ -54,6 +54,14 @@ The material does not authorize a broader permission merely because it would be 
 
 Signed out → verified → signed in → signed out
 
+### First-login tutorial (locally verified, 14 October 2026)
+
+- Client, owner and freelancer accounts with no `onboarding_completed_at` timestamp receive the role-specific tutorial after successful login. Completed accounts go to their role dashboard.
+- A required password change takes priority. Tutorial GET and completion POST cannot bypass that gate. Staff and administrator accounts keep their dashboard flow; they are not sent to the business tutorial.
+- Next and Back move through the guide. Finish and Skip submit the same completion action, which stores the timestamp once. Profile-menu Replay opens the guide without clearing or replacing that timestamp.
+- Existing sessions and portal access rules remain in place. No new onboarding column or production data update was needed.
+- Evidence: `UserModel::needsOnboarding`, auth/password-change/onboarding controllers, `EnsurePasswordChangedMiddleware`, `OnboardingFlowTest`, `LoginDashboardRedirectTest`, `FirstLoginPasswordChangeTest`, `Onboarding.test.cjs`, and authenticated browser acceptance in [Phase 13](../../plans/thesis-panel-revisions/phase-13.md). Production verification remains open.
+
 ## What it checks before it agrees
 
 | # | Check | If it fails | Evidence |

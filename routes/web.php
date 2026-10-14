@@ -701,6 +701,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/booking-terms/{type}/{id}', [\App\Http\Controllers\BookingContractController::class, 'terms'])->name('client.booking-terms');
 
         // Booking Details
+        Route::get('/studios/{id}', [\App\Http\Controllers\Client\BookingDetailsController::class, 'showStudio'])->whereNumber('id')->name('client.studios.show');
         Route::get('/booking-details/{type}/{id}', [\App\Http\Controllers\Client\BookingDetailsController::class, 'index'])->name('client.booking-details');
 
         // Client Bookings

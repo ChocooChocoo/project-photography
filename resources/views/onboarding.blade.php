@@ -1,116 +1,62 @@
 @extends('layouts.auth.app')
-@section('title', 'Welcome')
+@section('title', 'Account tutorial')
 
-{{-- STYLES --}}
 @section('styles')
     <style>
-        .onboarding-step {
-            display: none;
+        .auth-box { padding: 0; }
+        .tutorial { overflow-wrap: anywhere; }
+        .tutorial .card { padding: clamp(1rem, 3vw, 2rem); }
+        .tutorial .btn { min-height: 44px; }
+        .tutorial .btn-primary {
+            --ins-btn-bg: color-mix(in srgb, var(--ins-primary) 90%, black);
+            --ins-btn-border-color: var(--ins-btn-bg);
+            --ins-btn-hover-bg: color-mix(in srgb, var(--ins-primary) 80%, black);
+            --ins-btn-hover-border-color: var(--ins-btn-hover-bg);
         }
-
-        .onboarding-step.active {
-            display: block;
+        .tutorial .btn-outline-secondary {
+            color: var(--ins-body-color);
+            border-color: currentColor;
         }
+        .tutorial .btn-outline-secondary:hover {
+            background-color: var(--ins-body-color);
+            color: var(--ins-body-bg);
+        }
+        .tutorial :focus-visible { outline: 3px solid var(--ins-body-color) !important; outline-offset: 3px; }
+        .tutorial [hidden] { display: none !important; }
     </style>
 @endsection
 
-{{-- CONTENTS --}}
 @section('content')
-    <div class="container">
+    <main class="container py-4 tutorial" data-tutorial>
         <div class="row justify-content-center">
-            <div class="col-xxl-5 col-md-7 col-sm-9">
-                <div class="card p-4">
-                    <div class="auth-brand text-center mb-4">
-                        <a href="" class="logo-dark">
-                            <img src="{{ asset('assets/images/logo-black.png') }}" alt="dark logo" height="28">
-                        </a>
-                        <a href="" class="logo-light">
-                            <img src="{{ asset('assets/images/logo.png') }}" alt="logo" height="28">
-                        </a>
-                        <p class="text-muted w-lg-75 mt-3 mx-auto">Welcome! A few quick steps to get you started.</p>
-                    </div>
+            <div class="col-12 col-md-8 col-xl-6">
+                <div class="card">
+                    <h1 class="h3 mb-2">Your account tutorial</h1>
+                    <p class="mb-4">A short guide to your {{ auth()->user()->role === 'client' ? 'client' : (auth()->user()->role === 'owner' ? 'studio owner' : 'freelancer') }} tools. You can replay it from your profile menu.</p>
+                    <p id="tutorial-progress" class="fw-semibold" role="status" aria-live="polite">Step 1 of {{ count($steps) }}</p>
 
-                    {{-- STEP 1 --}}
-                    <div class="onboarding-step active" data-step="1">
-                        <div class="text-center mb-4">
-                            <i class="ti ti-hand-wave fs-1 text-primary"></i>
-                            <h4 class="card-title fw-bold mt-2 mb-2">Welcome to Lumora</h4>
-                            <p class="text-muted mb-0">Your photography service platform for booking studios, freelancers, and everything in between.</p>
+                    @foreach($steps as [$heading, $description])
+                        <section data-tutorial-step @if(!$loop->first) hidden @endif aria-labelledby="tutorial-heading-{{ $loop->index }}">
+                            <h2 id="tutorial-heading-{{ $loop->index }}" class="h4 mb-3" tabindex="-1">{{ $heading }}</h2>
+                            <p class="mb-4">{{ $description }}</p>
+                        </section>
+                    @endforeach
+
+                    <noscript><p>Use Skip to open your dashboard. Enable JavaScript to move through each tutorial step.</p></noscript>
+                    <form method="POST" action="{{ route('onboarding.complete') }}" data-tutorial-form>
+                        @csrf
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <button type="button" class="btn btn-outline-secondary" data-tutorial-back hidden>Back</button>
+                            <button type="submit" class="btn btn-outline-secondary" data-tutorial-skip>Skip</button>
+                            <button type="button" class="btn btn-primary ms-auto" data-tutorial-next hidden>Next</button>
                         </div>
-                    </div>
-
-                    {{-- STEP 2 --}}
-                    <div class="onboarding-step" data-step="2">
-                        <div class="text-center mb-4">
-                            <i class="ti ti-user-heart fs-1 text-primary"></i>
-                            <h4 class="card-title fw-bold mt-2 mb-2">Complete Your Profile</h4>
-                            <p class="text-muted mb-0">Keep your contact details up to date so photographers and studios can reach you easily.</p>
-                        </div>
-                    </div>
-
-                    {{-- STEP 3 --}}
-                    <div class="onboarding-step" data-step="3">
-                        <div class="text-center mb-4">
-                            <i class="ti ti-compass fs-1 text-primary"></i>
-                            <h4 class="card-title fw-bold mt-2 mb-2">Explore & Book</h4>
-                            <p class="text-muted mb-0">Browse verified studios and freelancers, compare packages, and book your next shoot.</p>
-                        </div>
-                    </div>
-
-                    {{-- NAVIGATION --}}
-                    <div class="d-flex justify-content-between align-items-center">
-                        <button type="button" class="btn btn-soft-primary" id="backBtn">Back</button>
-
-                        <form method="POST" action="{{ route('onboarding.complete') }}" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-link text-muted text-decoration-none" id="skipBtn">Skip</button>
-                        </form>
-
-                        <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 @endsection
 
-{{-- SCRIPTS --}}
 @section('scripts')
-    <script>
-        $(document).ready(function() {
-            let currentStep = 1;
-            const totalSteps = 3;
-
-            function showStep(step) {
-                $('.onboarding-step').removeClass('active');
-                $(`.onboarding-step[data-step="${step}"]`).addClass('active');
-
-                $('#backBtn').toggle(step > 1);
-
-                if (step === totalSteps) {
-                    $('#nextBtn').text('Finish');
-                } else {
-                    $('#nextBtn').text('Next');
-                }
-            }
-
-            $('#nextBtn').on('click', function() {
-                if (currentStep < totalSteps) {
-                    currentStep++;
-                    showStep(currentStep);
-                } else {
-                    $('#skipBtn').trigger('click');
-                }
-            });
-
-            $('#backBtn').on('click', function() {
-                if (currentStep > 1) {
-                    currentStep--;
-                    showStep(currentStep);
-                }
-            });
-
-            showStep(currentStep);
-        });
-    </script>
+    <script src="{{ asset('assets/js/onboarding.js') }}"></script>
 @endsection

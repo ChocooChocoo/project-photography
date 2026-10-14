@@ -134,6 +134,13 @@ class UserModel extends Authenticatable
         return $this->role === 'client';
     }
 
+    public function needsOnboarding(): bool
+    {
+        return in_array($this->role, ['client', 'owner', 'freelancer'], true)
+            && !$this->must_change_password
+            && $this->onboarding_completed_at === null;
+    }
+
     /**
      * Check if email is verified
      */

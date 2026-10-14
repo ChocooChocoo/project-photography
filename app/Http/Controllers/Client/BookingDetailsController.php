@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\DB;
 
 class BookingDetailsController extends Controller
 {
+    public function showStudio($id)
+    {
+        return $this->index('studio', $id)->with('studioProfile', true);
+    }
+
     /**
      * Display booking details for studio or freelancer.
      */
@@ -148,6 +153,7 @@ class BookingDetailsController extends Controller
         ];
 
         $counts = $modelClass::query()
+            ->published()
             ->select('rating', DB::raw('COUNT(*) as total'))
             ->where($foreignKey, $entityId)
             ->groupBy('rating')

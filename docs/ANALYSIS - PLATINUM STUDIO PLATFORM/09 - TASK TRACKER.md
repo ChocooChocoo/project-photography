@@ -2,7 +2,7 @@
 
 [Back to start](00%20-%20START%20HERE.md) · Previous: [08 - ROADMAP TRACKER](08%20-%20ROADMAP%20TRACKER.md) · Next: [10 - WORD LIST](10%20-%20WORD%20LIST.md)
 
-**Last checked:** 14 August 2026
+**Last checked:** 14 October 2026 (Phase 13 entry; historical task statuses retained)
 
 Every task below is a piece of work from a frozen user-authored prompt. The prompt remains exact under `MATERIAL/LEGACY DOCUMENTATION/tasks/`.
 
@@ -24,6 +24,14 @@ Every task below is a piece of work from a frozen user-authored prompt. The prom
 ## Tasks that serve no roadmap item
 
 Every task in this source set serves one of the roadmap items above. There is no unassigned task row.
+
+## Thesis-panel revisions
+
+| Phase | Scope | Source and verification | Status |
+|---|---|---|---|
+| 13 | First-login client/owner/freelancer tutorial with replay, password-change priority, client-only studio portfolio page, and confirmed long-name topbar overflow fix. | [Phase 13](../plans/thesis-panel-revisions/phase-13.md): 671 PHP tests / 3342 assertions, 9 JavaScript regressions, build and authenticated browser checks passed. Seven dashboards checked at desktop/phone widths in both themes. | ✅ Locally verified, 14 October 2026; production unverified. |
+
+This entry does not close Phase 1's unreproduced production login issue. Portfolio pages exclude private booking galleries and unavailable studios; existing public image storage remains unchanged. Optional TourGuide and unconfirmed KPI/date-filter/chatbot changes were not added.
 
 ## Status legend
 

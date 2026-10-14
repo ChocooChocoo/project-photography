@@ -124,6 +124,9 @@
                     <div class="card">
                         <div class="card-header card-title">
                             <h4 class="card-title">Booking Form</h4>
+                            @if($type === 'studio')
+                                <a href="{{ route('client.studios.show', $provider->id) }}" class="btn btn-outline-primary studio-profile-link mb-2">View studio portfolio</a>
+                            @endif
                             <p class="text-muted mb-0">Booking for
                                 {{ $type === 'studio' ? $provider->studio_name : $provider->brand_name }}</p>
                         </div>

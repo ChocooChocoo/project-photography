@@ -1,4 +1,39 @@
     <style>
+        .studio-profile-link {
+            min-height: 44px;
+            align-content: center;
+        }
+
+        .studio-profile-link.btn-outline-primary {
+            color: var(--ins-body-color);
+            border-color: currentColor;
+        }
+
+        .studio-profile-link.btn-outline-primary:hover {
+            background-color: var(--ins-body-color);
+            color: var(--ins-body-bg);
+        }
+
+        .studio-profile-link.btn-primary {
+            --ins-btn-bg: color-mix(in srgb, var(--ins-primary) 90%, black);
+            --ins-btn-border-color: var(--ins-btn-bg);
+            --ins-btn-hover-bg: color-mix(in srgb, var(--ins-primary) 80%, black);
+            --ins-btn-hover-border-color: var(--ins-btn-hover-bg);
+        }
+
+        .studio-profile-link:focus-visible,
+        #portfolio-heading ~ div a:focus-visible {
+            outline: 3px solid var(--ins-body-color) !important;
+            outline-offset: 3px;
+        }
+
+        .nav-user h5 {
+            max-width: min(16rem, 20vw);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         #notificationMenu {
             width: min(420px, calc(100vw - 2rem));
             max-height: min(70vh, 560px);

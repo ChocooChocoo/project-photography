@@ -27,6 +27,15 @@ Turns completed photographic work into a controlled client-visible result. It is
 
 The material does not authorize a broader permission merely because it would be convenient. Any missing action boundary is Q-09 or the question named below.
 
+### Client studio profile (locally verified, 14 October 2026)
+
+- Signed-in clients can open `/client/studios/{id}` from studio discovery (including filtered results) and the studio booking form. It reuses the existing studio detail query and view.
+- The studio must have an eligible discovery status and an accessible subscription. Pending, expired-subscription, missing and deleted studios are not exposed by this page.
+- The page shows studio information, active packages, published reviews and active portfolio images for that studio. Booking galleries, inactive portfolios, other studios' images and removed reviews are excluded. Rating-distribution counts use published reviews too.
+- Portfolio images open at full size. Missing files produce an explicit empty state; browser decode failures show recovery text. Image dimensions are reserved during lazy loading.
+- The page is client-only, not a public studio page. Portfolio image files still use the existing public disk; this change does not make those URLs private or change booking-gallery delivery policy.
+- Evidence: `client.studios.show`, `BookingDetailsController::showStudio`, `client/portfolio-images.blade.php`, `StudioProfileTest` and authenticated browser acceptance in [Phase 13](../../plans/thesis-panel-revisions/phase-13.md). Production verification remains open.
+
 ## The information it handles
 
 | Information | Purpose | Where it is kept | Source |
