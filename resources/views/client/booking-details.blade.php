@@ -184,9 +184,6 @@
                                                                 @if ($package->cover_thumbnail)
                                                                     <img src="{{ asset('storage/' . $package->cover_thumbnail) }}" alt="{{ $package->package_name }}" class="w-100" style="height: 140px; object-fit: cover;">
                                                                 @endif
-                                                                @if(!empty($package->cover_videos))
-                                                                    @include('partials.media-strip', ['images' => [], 'videos' => $package->cover_videos, 'class' => 'p-2 pb-0'])
-                                                                @endif
                                                                 <div class="card-body">
                                                                     <!-- Package Name & Price -->
                                                                     <div class="d-flex justify-content-between align-items-start mb-2">

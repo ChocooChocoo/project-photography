@@ -43,4 +43,8 @@ test('package extras helper sends the photo editing prices', () => {
     assert.equal(sent.get('editing_prices[color_grading]'), '400');
     assert.equal(sent.get('editing_prices[brightness_contrast]'), '');
     assert.equal(sent.get('editing_prices[retouching]'), '1200');
+
+    // Videos are hidden (photo-only studios). Sending no video fields keeps stored videos.
+    assert.ok(!source.includes('name="cover_videos[]"'));
+    assert.ok(![...sent.keys()].some((key) => key.includes('cover_videos')));
 });

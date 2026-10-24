@@ -1,27 +1,12 @@
-{{-- Shared package fields: cover videos, materials, photo editing prices. Include inside the package form.
+{{-- Shared package fields: materials, photo editing prices. Include inside the package form.
+     Cover videos are hidden (T02 Phase 10: the studios are photo-only). Stored videos are kept,
+     because the form sends no video fields and syncMedia then leaves them as they are.
      Call window.appendPackageExtras(formData, formElement) before submitting. --}}
 @php
-    $extrasVideos = $package->cover_videos ?? [];
     $extrasMaterials = $package->materials ?? [];
     $extrasLegacyPrice = $package->enhanced_photos_price ?? null;
     $extrasEditingPrices = $package->editing_prices ?? [];
 @endphp
-
-<div class="col-12 mb-3 package-extras">
-    <label class="form-label">Cover Videos <small class="text-muted">(optional, up to 5)</small></label>
-    @if (!empty($extrasVideos))
-        <div class="d-flex flex-wrap gap-2 mb-2" id="existingCoverVideos">
-            @foreach ($extrasVideos as $video)
-                <div class="position-relative existing-cover-video" data-path="{{ $video }}">
-                    <video src="{{ asset('storage/' . $video) }}" style="width:120px;height:80px;object-fit:cover;border-radius:6px;" muted preload="metadata"></video>
-                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-existing-video" style="padding:0 6px;line-height:1.4;">&times;</button>
-                </div>
-            @endforeach
-        </div>
-    @endif
-    <input type="file" class="form-control" name="cover_videos[]" id="coverVideos" accept=".mp4,.webm,.mov" multiple>
-    <div class="form-text">MP4/WebM/MOV, max 50MB each. Shown to clients when choosing this package.</div>
-</div>
 
 <div class="col-12 mb-3 package-extras">
     <label class="form-label">Materials Included <small class="text-muted">(optional, e.g. photo frames)</small></label>
@@ -69,9 +54,9 @@
             container.insertAdjacentHTML('beforeend', rowHtml);
         });
         document.addEventListener('click', (e) => {
-            const btn = e.target.closest('.remove-material-btn, .remove-existing-video');
+            const btn = e.target.closest('.remove-material-btn');
             if (!btn) return;
-            btn.closest('.material-row, .existing-cover-video').remove();
+            btn.closest('.material-row').remove();
         });
         container.closest('form').addEventListener('reset', () => { container.innerHTML = ''; });
 
@@ -82,13 +67,6 @@
                 if (name) materials.push({ name, quantity: parseInt(row.querySelector('.material-qty').value, 10) || 1 });
             });
             formData.set('materials', JSON.stringify(materials));
-
-            formData.delete('cover_videos[]');
-            Array.from(form.querySelector('#coverVideos').files).forEach((f) => formData.append('cover_videos[]', f));
-
-            formData.delete('keep_cover_videos[]');
-            formData.set('keep_cover_videos_sent', '1');
-            document.querySelectorAll('.existing-cover-video').forEach((el) => formData.append('keep_cover_videos[]', el.dataset.path));
 
             // Freelancer forms build FormData by hand, so add the editing prices here.
             form.querySelectorAll('[name^="editing_prices["]').forEach((input) => formData.set(input.name, input.value));

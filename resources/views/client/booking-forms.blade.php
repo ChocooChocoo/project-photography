@@ -1098,11 +1098,6 @@
                                             ${package.cover_thumbnail ? `
                                                 <img src="${package.cover_thumbnail}" alt="${package.package_name}" class="w-100" style="height: 140px; object-fit: cover;">
                                             ` : ''}
-                                            ${(package.cover_videos || []).length ? `
-                                                <div class="d-flex flex-wrap gap-2 p-2 pb-0">
-                                                    ${package.cover_videos.map(v => `<video src="${v}" controls preload="metadata" style="width:140px;height:70px;object-fit:cover;border-radius:6px;background:#000;"></video>`).join('')}
-                                                </div>
-                                            ` : ''}
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-start mb-2 mt-3">
                                                     <h6 class="card-title fw-bold mb-0">${package.package_name}</h6>
