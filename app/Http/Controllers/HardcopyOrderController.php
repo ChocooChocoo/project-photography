@@ -60,7 +60,8 @@ class HardcopyOrderController extends Controller
             abort_if(HardcopyOrderModel::where('booking_id', $booking->id)->whereNotIn('status', ['cancelled', 'delivered'])->exists(), 409, 'An active hardcopy order already exists.');
             $cents = collect($data['items'])->sum(fn ($item) => (int) round($item['unit_price'] * 100) * $item['quantity']);
             abort_if($cents > 100000000, 422, 'Hardcopy total cannot exceed PHP 1,000,000.');
-            $order = HardcopyOrderModel::create(['booking_id' => $booking->id, 'fulfillment_method' => $data['fulfillment_method'], 'amount' => $cents / 100, 'status' => 'pending']);
+            // The studio only suggests a method; the client's accepted choice is final.
+            $order = HardcopyOrderModel::create(['booking_id' => $booking->id, 'fulfillment_method' => $data['fulfillment_method'], 'suggested_fulfillment_method' => $data['fulfillment_method'], 'amount' => $cents / 100, 'status' => 'pending']);
             $order->items()->createMany($data['items']);
             app(BookingEventRecorder::class)->record($booking->id, 'hardcopy_quoted', 'Hardcopy order quoted', 'hardcopy:'.$order->id.':quoted');
 
@@ -127,6 +128,7 @@ class HardcopyOrderController extends Controller
                 abort_unless($order->status === 'pending', 422, 'Only pending quotes can be cancelled here.');
             } else {
                 abort_unless($order->accepted_at && $booking->isFullyPaid(), 422, 'Client acceptance and full payment are required.');
+                abort_unless($booking->eventHasEnded(), 422, 'Printed photo delivery can start after the event ends on '.$booking->eventEndsAt()->format('M d, Y g:i A').'.');
                 $transitions = ['pending' => 'preparing', 'preparing' => 'ready', 'ready' => $order->fulfillment_method === 'pickup' ? 'delivered' : 'shipped', 'shipped' => 'delivered'];
                 abort_unless(($transitions[$order->status] ?? null) === $next, 422, 'Invalid hardcopy status transition.');
             }

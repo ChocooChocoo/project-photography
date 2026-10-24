@@ -621,6 +621,32 @@ class BookingModel extends Model
         return null;
     }
 
+    /**
+     * When the event ends, in Asia/Manila. Uses the last event day and the end
+     * time; a single-day booking whose end time is not after its start time
+     * runs past midnight. With no end time, the event ends at the end of the day.
+     */
+    public function eventEndsAt(): \Carbon\Carbon
+    {
+        $day = ($this->event_end_date ?? $this->event_date)->format('Y-m-d');
+
+        if (! $this->end_time) {
+            return \Carbon\Carbon::parse($day, 'Asia/Manila')->endOfDay();
+        }
+
+        $end = \Carbon\Carbon::parse($day.' '.$this->end_time, 'Asia/Manila');
+        if (! $this->event_end_date && $this->start_time && $this->end_time <= $this->start_time) {
+            $end->addDay();
+        }
+
+        return $end;
+    }
+
+    public function eventHasEnded(): bool
+    {
+        return $this->eventEndsAt()->isPast();
+    }
+
     public function getDeliveryCompletionBlockReason(): ?string
     {
         // Null delivery_type preserves pre-migration bookings while still enforcing their orders.

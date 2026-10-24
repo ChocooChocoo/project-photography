@@ -17,12 +17,7 @@ class FreelancerBookingAccess
 
     public function eventEnd(BookingModel $booking): Carbon
     {
-        $end = Carbon::parse(($booking->event_end_date ?? $booking->event_date)->format('Y-m-d').' '.$booking->end_time, 'Asia/Manila');
-        if (! $booking->event_end_date && $booking->end_time <= $booking->start_time) {
-            $end->addDay();
-        }
-
-        return $end;
+        return $booking->eventEndsAt();
     }
 
     public function grant(BookingAssignedPhotographerModel $assignment): void

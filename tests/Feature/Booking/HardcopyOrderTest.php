@@ -25,6 +25,7 @@ class HardcopyOrderTest extends TestCase
         $fixture = new EquipmentAssignmentTest('test_owner_can_assign_equipment_to_booking');
         (new \ReflectionMethod($fixture, 'createSchema'))->invoke($fixture);
         (require database_path('migrations/2026_10_09_150000_add_hardcopy_orders.php'))->up();
+        (require database_path('migrations/2026_10_24_120000_add_suggested_fulfillment_to_hardcopy_orders.php'))->up();
         (require database_path('migrations/2026_02_22_145351_create_tbl_notifications_table.php'))->up();
         Schema::table('tbl_payments', function ($table) {
             $table->string('stripe_session_id')->nullable();
@@ -122,6 +123,61 @@ class HardcopyOrderTest extends TestCase
         $accepted = $this->quote();
         $this->actingAs($this->client)->postJson("/_hc/{$this->booking->id}/accept/{$accepted}", ['fulfillment_method' => 'pickup'])->assertOk();
         $this->actingAs($this->owner)->postJson("/_hc/{$this->booking->id}/status/{$accepted}", ['status' => 'cancelled'])->assertUnprocessable();
+    }
+
+    public function test_delivery_cannot_start_before_the_event_ends(): void
+    {
+        $this->travelTo(\Carbon\Carbon::parse('2026-10-20 12:00', 'Asia/Manila'));
+        $order = $this->quote();
+        $this->actingAs($this->client)->postJson("/_hc/{$this->booking->id}/accept/{$order}", ['fulfillment_method' => 'pickup'])->assertOk();
+        PaymentModel::where('status', 'pending')->first()->markAsPaid();
+
+        $this->actingAs($this->owner)->postJson("/_hc/{$this->booking->id}/status/{$order}", ['status' => 'preparing'])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Printed photo delivery can start after the event ends on Oct 20, 2026 11:59 PM.');
+        $this->get('/_hc/'.$this->booking->id.'/owner')->assertOk()
+            ->assertSee('Delivery can start after the event ends on Oct 20, 2026 11:59 PM.')
+            ->assertDontSee('Mark preparing');
+        $this->assertDatabaseHas('tbl_booking_hardcopy_orders', ['id' => $order, 'status' => 'pending']);
+
+        $this->travelTo(\Carbon\Carbon::parse('2026-10-21 00:01', 'Asia/Manila'));
+        $this->get('/_hc/'.$this->booking->id.'/owner')->assertOk()->assertSee('Mark preparing');
+        $this->postJson("/_hc/{$this->booking->id}/status/{$order}", ['status' => 'preparing'])->assertOk();
+    }
+
+    public function test_client_choice_wins_and_the_studio_suggestion_is_kept(): void
+    {
+        $order = $this->quote();
+        $this->actingAs($this->client)->get('/_hc/'.$this->booking->id.'/client')->assertOk()
+            ->assertSee('Studio suggests: Studio pickup.')
+            ->assertSee('Your choice is final once you accept.')
+            ->assertSee('<option value="pickup" selected>', false);
+
+        $this->postJson("/_hc/{$this->booking->id}/accept/{$order}", ['fulfillment_method' => 'courier', 'delivery_address' => '123 Example Road', 'contact_number' => '09123456789'])->assertOk();
+        $this->postJson("/_hc/{$this->booking->id}/accept/{$order}", ['fulfillment_method' => 'pickup'])->assertOk();
+        $this->assertDatabaseHas('tbl_booking_hardcopy_orders', ['id' => $order, 'fulfillment_method' => 'courier', 'suggested_fulfillment_method' => 'pickup']);
+
+        $this->get('/_hc/'.$this->booking->id.'/client')->assertOk()
+            ->assertSee('You chose Third-party courier (the studio suggested Studio pickup).')
+            ->assertSee('Your choice is final.')
+            ->assertDontSee("The client's choice is final.");
+        $this->actingAs($this->owner)->get('/_hc/'.$this->booking->id.'/owner')->assertOk()
+            ->assertSee('The client chose Third-party courier (you suggested Studio pickup).')
+            ->assertSee("The client's choice is final.");
+        $this->postJson('/_hc/'.$this->booking->id, ['fulfillment_method' => 'pickup', 'items' => [['name' => 'Frame', 'quantity' => 1, 'unit_price' => 10]]])
+            ->assertStatus(409);
+        $this->assertSame('courier', DB::table('tbl_booking_hardcopy_orders')->where('id', $order)->value('fulfillment_method'));
+    }
+
+    public function test_suggestion_migration_backfills_and_rolls_back(): void
+    {
+        $migration = require database_path('migrations/2026_10_24_120000_add_suggested_fulfillment_to_hardcopy_orders.php');
+        $migration->down();
+        $this->assertFalse(Schema::hasColumn('tbl_booking_hardcopy_orders', 'suggested_fulfillment_method'));
+        $id = DB::table('tbl_booking_hardcopy_orders')->insertGetId(['booking_id' => $this->booking->id, 'fulfillment_method' => 'courier', 'amount' => 10, 'status' => 'pending']);
+
+        $migration->up();
+        $this->assertSame('courier', DB::table('tbl_booking_hardcopy_orders')->where('id', $id)->value('suggested_fulfillment_method'));
     }
 
     public function test_accepted_hardcopy_balance_uses_existing_checkout(): void
