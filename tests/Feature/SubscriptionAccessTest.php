@@ -180,6 +180,11 @@ class SubscriptionAccessTest extends TestCase
         Route::post('/_test/photographer/equipment/{id}/confirm', fn () => response()->json(['ok' => true]))
             ->middleware('subscription.access:manage')
             ->name('_test.assignment.equipment.confirm');
+        // The owner's "Remove equipment" route also has an equipment row as {id},
+        // and its name contains "booking" (found on production, T02 Phase 10).
+        Route::delete('/_test/owner/equipment/{id}', fn () => response()->json(['ok' => true]))
+            ->middleware('subscription.access:manage')
+            ->name('_test.booking.equipment.destroy');
 
         $active = $this->createStudio('Active Studio');
         $this->createSubscription($active);
@@ -193,6 +198,8 @@ class SubscriptionAccessTest extends TestCase
 
         $this->assertSame(1, $equipment->id);
         $this->postJson("/_test/photographer/equipment/{$equipment->id}/confirm")->assertOk();
+        $this->assertSame(1, $expiredBooking->id, 'booking #1 belongs to the expired studio');
+        $this->deleteJson("/_test/owner/equipment/{$equipment->id}")->assertOk();
     }
 
     public function test_refund_recovery_actions_resolve_the_recoverys_studio_and_allow_paid_bookings(): void

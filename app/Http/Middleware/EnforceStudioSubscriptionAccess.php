@@ -107,8 +107,16 @@ class EnforceStudioSubscriptionAccess
     private function resolveBooking(Request $request): ?BookingModel
     {
         $bookingId = $request->route('bookingId') ?? $request->input('booking_id');
+        $routeName = (string) $request->route()?->getName();
 
-        if (! is_numeric($bookingId) && (str_contains((string) $request->route()?->getName(), 'booking') || str_contains($request->path(), 'booking'))) {
+        // On these equipment routes the {id} is an equipment row, not a booking
+        // or an assignment, so read the booking from that row first.
+        if (! is_numeric($bookingId) && $request->route('id')
+            && (str_ends_with($routeName, 'assignment.equipment.confirm') || str_ends_with($routeName, 'booking.equipment.destroy'))) {
+            $bookingId = \App\Models\StudioOwner\BookingEquipmentModel::find($request->route('id'))?->booking_id;
+        }
+
+        if (! is_numeric($bookingId) && (str_contains($routeName, 'booking') || str_contains($request->path(), 'booking'))) {
             $bookingId = $request->route('id');
         }
 
@@ -122,11 +130,6 @@ class EnforceStudioSubscriptionAccess
 
         if (! is_numeric($bookingId) && $request->route('recoveryId')) {
             $bookingId = \App\Models\BookingCancellationRecoveryModel::find($request->route('recoveryId'))?->booking_id;
-        }
-
-        // On equipment routes the {id} is an equipment row, not an assignment.
-        if (! is_numeric($bookingId) && $request->route('id') && str_ends_with((string) $request->route()?->getName(), 'assignment.equipment.confirm')) {
-            $bookingId = \App\Models\StudioOwner\BookingEquipmentModel::find($request->route('id'))?->booking_id;
         }
 
         if (! is_numeric($bookingId) && $request->route('id') && str_contains((string) $request->route()?->getName(), 'assignment')) {

@@ -133,7 +133,14 @@ Test data left in the dev database:
 - Scope: 43 jQuery PUT/PATCH/DELETE calls in 34 views (booking status, galleries, employees, leave and overtime, packages, services and more).
 - Fix: the shared prefilter in `public/assets/js/pages/session-token.js` now sends form-encoded and FormData PUT/PATCH/DELETE requests as POST with `_method`. JSON bodies are left unchanged. Every portal layout loads this script.
 - Check: the same rule, injected into the live page, changed booking 76 to In Progress with one POST (200). `tests/Integration/SessionTokenRetry.test.cjs` has a new test for the method spoofing, and the retry test now expects POST with `_method=PUT`. Node: 22 passed.
-- Needs a redeploy of `public/assets/js/pages/session-token.js`.
+- Deployed in `dfa08541` (Hostinger auto-deploy). Production now serves the script with `spoofMethod`.
+
+**Second bug found on production and fixed: "Remove equipment" was refused with 403.**
+
+- Symptom: removing equipment from booking 76 returned 403 "An active subscription or grace period is required for this studio." Quarry Road has an active plan.
+- Cause: `EnforceStudioSubscriptionAccess::resolveBooking()` read the `{id}` of `owner.booking.equipment.destroy` (an equipment row, here 10) as a booking id, because the route name contains "booking". Booking 10 belongs to another studio. This is the same family as the Phase 3 equipment-confirm fix, which only covered `assignment.equipment.confirm`.
+- Fix: both equipment routes now read the booking from the equipment row before the generic "booking" rule runs.
+- Test: `SubscriptionAccessTest::test_equipment_confirm_is_checked_against_the_equipments_own_booking` now also deletes through a `booking.equipment.destroy` route where equipment #1 and booking #1 belong to different studios. It failed with 403 before the fix. Full suite: 725 passed (3678 assertions).
 
 Other notes from production:
 
