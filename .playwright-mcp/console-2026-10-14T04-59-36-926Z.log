@@ -1,0 +1,28 @@
+[    4729ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[   19234ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js:0
+[   19234ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js:0
+[   19234ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js:0
+[   19234ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js:0
+[   34022ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[   47865ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js:0
+[   47865ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js:0
+[   47865ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js:0
+[   47865ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js:0
+[   47865ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js:0
+[   47865ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js:0
+[   47865ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js:0
+[   58077ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js:0
+[   58077ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js:0
+[   58077ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js:0
+[   58077ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js:0
+[   58077ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js:0
+[   58077ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js:0
+[   58077ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js:0
+[   67062ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js:0
+[   67062ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js:0
+[   67062ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js:0
+[   67063ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js:0
+[   67063ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js:0
+[   67063ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js:0
+[   67063ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js:0
+[   77625ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/admin/login:0

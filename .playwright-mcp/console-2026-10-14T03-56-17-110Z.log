@@ -1,0 +1,85 @@
+[    5886ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[    7321ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[   46950ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/auth/login:0
+[   51238ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[   52496ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[   59566ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/owner/dashboard:0
+[   65556ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/owner/dashboard:581
+[   71786ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/owner/dashboard:0
+[   77755ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/owner/dashboard:0
+[   84615ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[   84616ms] [WARNING] Missing translation for key: apps-title @ http://127.0.0.1:8013/assets/js/app.js:0
+[   84616ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js:0
+[   84616ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js:0
+[   84616ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js:0
+[   84616ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js:0
+[   88601ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/auth/login:0
+[   92524ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[   93798ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[  100535ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/client/dashboard:0
+[  103174ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/client/dashboard:0
+[  108612ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/client/dashboard:0
+[  114139ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/client/dashboard:358
+[  121115ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[  121115ms] [WARNING] Missing translation for key: apps-title @ http://127.0.0.1:8013/assets/js/app.js:0
+[  121115ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js:0
+[  121115ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js:0
+[  121115ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js:0
+[  121115ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js:0
+[  121115ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js:0
+[  121115ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js:0
+[  121115ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js:0
+[  124633ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/auth/login:0
+[  128695ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  130001ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[  136237ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/freelancer/dashboard:0
+[  140242ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/freelancer/dashboard:798
+[  145133ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/freelancer/dashboard:0
+[  150578ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/freelancer/dashboard:795
+[  156953ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: apps-title @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: manage-profile @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: view-profile @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: setup-profile @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: member-invitation @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: view-invitation @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: services @ http://127.0.0.1:8013/assets/js/app.js:0
+[  156953ms] [WARNING] Missing translation for key: create-service @ http://127.0.0.1:8013/assets/js/app.js:0
+[  161187ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/auth/login:0
+[  164924ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  166141ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[  171674ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/studio-hr/dashboard:804
+[  176906ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/studio-hr/dashboard:0
+[  183143ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/studio-hr/dashboard:0
+[  189978ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/studio-hr/dashboard:0
+[  197676ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[  197676ms] [WARNING] Missing translation for key: apps-title @ http://127.0.0.1:8013/assets/js/app.js:0
+[  197676ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js:0
+[  201650ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/auth/login:0
+[  205672ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  206999ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[  213614ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/studio-finance/dashboard:0
+[  219885ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/studio-finance/dashboard:0
+[  239571ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[  239571ms] [WARNING] Missing translation for key: apps-title @ http://127.0.0.1:8013/assets/js/app.js:0
+[  239571ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js:0
+[  247555ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  249893ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[  273612ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[  273613ms] [WARNING] Missing translation for key: apps-title @ http://127.0.0.1:8013/assets/js/app.js:0
+[  273613ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js:0
+[  311201ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://127.0.0.1:8013/assets/css/fonts/tabler-icons.woff2?v3.33.0 @ http://127.0.0.1:8013/auth/login:0
+[  315551ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  316911ms] [ERROR] Translation load error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON @ http://127.0.0.1:8013/assets/js/app.js:0
+[  320119ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/auth/login:0
