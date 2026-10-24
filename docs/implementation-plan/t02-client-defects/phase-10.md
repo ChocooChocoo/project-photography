@@ -107,6 +107,41 @@ Test data left in the dev database:
 - T02 Annex Studio (id 6), created directly in Phase 2, lacked what the app gives a new studio: the owner's `owner-super-admin` role for that studio, and a schedule. Both were added so the pages would open. The real path (`StudioOwner\StudioController`, line 282) assigns the role.
 - The Annex now has a Studio Growth trial (plan 6), package 48, Lorena as an approved member (invitation 13), and completed booking 66 with its event date moved to 23 Oct 2026.
 
+## Production check (2026-10-25, https://lumoraphotography.online, Stripe sandbox)
+
+`main` was deployed at `9c05c3f8`. The 4 T02 migrations were applied through phpMyAdmin, because the host has no SSH. Before that, saving a studio failed with `Unknown column 'downpayment_type'`.
+
+| Phase | Result | Evidence |
+|---|---|---|
+| 1 Employees page | Pass | `/owner/view/employee` returns 200 (it returned 500 before the deploy). |
+| 1 Gallery notification | Pass | HR Zacarias submitted "Production T02 approval check" for FS-BKS-00020. The owner's bell lists "Gallery Awaiting Approval". `prod-p1-owner-bell.png`. |
+| 1 Status change / token retry | **Fail, fixed below** | Every status change failed: 419, then 422 "Please select a booking status." |
+| 3 Equipment | Pass | Empty-catalog message, catalog item "Camera EOS R6 / Canon", assignment, photographer "You confirmed this equipment.", and the client sees "Photographer confirmed". |
+| 4 Printed photos | Pass | Courier suggested, the client chose pickup ("Your choice is final."), the balance went up by ₱500, and before the event: "Delivery can start after the event ends on Dec 04, 2026 5:00 PM." A forced request got 422. |
+| 5 Downpayment setting | Pass | Off: the client sees "Full Payment" only. On: "30% downpayment / Full payment". |
+| 6 Cancel and refund | Pass | The downpayment booking BK-6ADCE71B5F827 was kept as non-refundable. Fully paid BK-6ADCE75E53395: the owner entered ₱3,000, the admin recorded it, and the client sees "Target ₱3,000, Paid ₱7,900, Refunded ₱3,000, REFUNDED". |
+| 7 Editing prices | Pass | Package 31 has color grading ₱400 and retouching ₱600. The client sees only those two. The summary shows ₱7,900 + ₱400 = ₱8,300 and a 30% downpayment of ₱2,490, which Stripe sandbox charged (BK-6ADCE2471C46E). |
+| 8 Rescheduling | Pass | Monday refused ("The studio does not work on Mondays."), two dates offered, and the client chose Dec 4: "Your booking has been moved." |
+| 9 Freelancer editing prices | Pass | Lorena's package 3 keeps ₱450 / ₱250 after reload. No video field. |
+| 10 Videos hidden | Pass | No video field on owner or freelancer package forms. |
+| 2/10 Second studio, S19/RC fallback | Not testable on production | Every plan has `max_studios = 1`, so a second studio is refused ("Your subscription plan only allows up to 1 studio(s)."). The fallback needs every Quarry photographer to be busy, and the after-event steps need a past date. Covered by the dev browser check above. |
+
+**Bug found on production and fixed: PUT, PATCH and DELETE bodies are dropped by the host.**
+
+- Symptom: the owner's status modal got 419 "Your session expired" on a fresh page. The token retry then got 422 "Please select a booking status."
+- Cause: the production server does not pass form-encoded PUT bodies to PHP. Laravel saw neither `_token` nor `status`. JSON PUT and POST with `_method=PUT` both worked (`status=zzz` was read and refused as invalid). Dev reads PUT bodies, so the dev checks passed.
+- Scope: 43 jQuery PUT/PATCH/DELETE calls in 34 views (booking status, galleries, employees, leave and overtime, packages, services and more).
+- Fix: the shared prefilter in `public/assets/js/pages/session-token.js` now sends form-encoded and FormData PUT/PATCH/DELETE requests as POST with `_method`. JSON bodies are left unchanged. Every portal layout loads this script.
+- Check: the same rule, injected into the live page, changed booking 76 to In Progress with one POST (200). `tests/Integration/SessionTokenRetry.test.cjs` has a new test for the method spoofing, and the retry test now expects POST with `_method=PUT`. Node: 22 passed.
+- Needs a redeploy of `public/assets/js/pages/session-token.js`.
+
+Other notes from production:
+
+- `APP_DEBUG` is still on. Error responses include `exception` and server paths.
+- If the owner clicks Update on Edit Studio before the barangay list loads, the save fails with "The barangay field is required." This predates T02.
+
+Test data left on production: bookings BK-6ADCE2471C46E (in progress, paid, print order #9, reschedule history), BK-6ADCE71B5F827 and BK-6ADCE75E53395 (cancelled), gallery 13 on FS-BKS-00020 (pending approval), catalog item "Camera EOS R6", and editing prices on owner package 31 and freelancer package 3.
+
 ## Open
 
 - **Service videos.** Services still accept and show videos (`partials/service-media.blade.php`). The panel's note may cover them too. Ask before hiding them.
