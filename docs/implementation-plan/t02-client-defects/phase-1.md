@@ -48,6 +48,16 @@
 - Not measured: the browser was not available in this session, so the modal's 419 behaviour was checked by the Node test, not by clicking in a browser.
 - No UI markup changed in this phase, so no design review was needed.
 
+## Browser check (2026-10-24, Playwright, 1920×1080, dev database)
+
+- **Employees page.** Owner `adrian.alcantara@gmail.com` opened `/owner/view/employee` with status 200. The staff badge and employee table render. Screenshot: `.playwright-mcp/p1-employees.png`.
+- **Status modal, mocked server.** Owner `yolanda.inocencio@gmail.com`, booking FS-BKS-00022.
+  - The page's token was set to a stale value. "Update Status" → In Progress → confirm.
+  - The first PUT carried the stale token and got 419. The helper fetched `/csrf-token` once and retried with the live token, and the modal showed only the success message.
+  - Both server responses were mocked, so the booking did not change. Screenshot: `.playwright-mcp/p1-csrf-retry.png`.
+- **Same path against the real server.** A PUT with a stale token returned 419, and the retry passed the CSRF check and reached validation (422 "Invalid booking status selected." for a deliberately invalid status). The caller saw only the final result.
+- **Gallery notification (follow-up check).** HR `zacarias.panganiban@gmail.com` uploaded a draft gallery for booking 21 and clicked "Submit for approval" (200, "Gallery submitted for owner approval."). The owner's unread count went from 3 to 4, and the bell lists "Gallery Awaiting Approval: The gallery \"T02 approval check\" is waiting for your approval." Screenshots: `.playwright-mcp/gap4-hr-submitted.png`, `gap4-owner-bell.png`.
+
 ## Files changed
 
 - `resources/views/owner/view-employee.blade.php`

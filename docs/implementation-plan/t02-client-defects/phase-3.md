@@ -62,6 +62,32 @@ Root cause of the client's chat issue: the confirm endpoint existed, but no page
 - Pint flags style issues already present in the two equipment controllers; the new model and freelancer controller pass.
 - Not measured: no browser in this session, so the photographer and freelancer screens were not clicked.
 
+## Browser check (2026-10-24, Playwright, 1920×1080, dev database)
+
+Bug found and fixed:
+
+- **Symptom.** Photographer `eduardo.katigbak@gmail.com` clicked "Confirm equipment" on booking FS-BKS-00022 and got 403 "An active subscription or grace period is required for this studio."
+- **Cause.** `EnforceStudioSubscriptionAccess::resolveBooking()` read the `{id}` in `/studio-photographer/equipment/{id}/confirm` as an assignment id, because the route name contains "assignment". Equipment #1 was therefore matched to assignment #1, which belongs to another studio whose plan had ended. The feature tests used routes without that middleware, so they missed it.
+- **Fix.** `resolveBooking()` now looks up the equipment row's own booking for routes ending in `assignment.equipment.confirm`. The freelancer route has an `{equipmentId}` parameter and no subscription middleware, so it is unaffected.
+- **Test.** New `SubscriptionAccessTest::test_equipment_confirm_is_checked_against_the_equipments_own_booking`. It failed with 403 before the fix and passes after.
+
+Checked in the browser after the fix:
+
+- **Owner (`yolanda.inocencio@gmail.com`).**
+  - With an empty catalog, the panel shows "No available equipment. Add equipment to the studio catalog below first." and opens the catalog, with no free-text inputs.
+  - After adding "Camera MARK VI / NIKON", the option reads "(not the preferred brand)".
+  - Once assigned, the panel shows "Brand differs from the client's preference (Canon). Waiting for the photographer to confirm".
+- **Photographer.** The Equipment section shows the warning; "Confirm equipment" returns 200 and changes to "You confirmed this equipment."
+- **Client (`cristian.panganiban@gmail.com`).** `/client/bookings/22/preparation` shows "Photographer confirmed" and "Brand differs from your preference (Canon)."
+- **Freelancer fallback (follow-up check).** Created future booking 61 (T02-FUTURE, Nov 28, preferred brand Canon) with a fallback assignment for approved member `lorena.novilla@gmail.com`, access granted through `FreelancerBookingAccess::grant`, and Camera MARK VI (NIKON) assigned.
+  - `/freelancer/studio-assignments` shows the Equipment block with the brand warning.
+  - "Confirm equipment" returned 200, and after the reload it shows "You confirmed this equipment."
+  - Screenshots: `.playwright-mcp/gap5-freelancer-before.png`, `gap5-freelancer-after.png`.
+
+Test data added to the dev database during this check: booking 22 `preferred_camera_brand` = Canon, catalog item "Camera MARK VI" (NIKON) for studio 4, and that item assigned to booking 22 and confirmed.
+
+Screenshots: `.playwright-mcp/p3-owner-panel-empty.png`, `p3-owner-assigned.png`, `p3-photographer-before.png`, `p3-photographer-after.png`, `p3-client-preparation.png`.
+
 ## Notes
 
 - Dev data has no `tbl_studio_equipment` rows, so owners must add catalog items before assigning equipment. That is now the only way to assign it.

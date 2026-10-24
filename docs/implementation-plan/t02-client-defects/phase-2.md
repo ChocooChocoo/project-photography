@@ -64,6 +64,17 @@ Root cause (from code; not reproduced locally, because the local database has on
 - An owner whose studios are all unverified is stopped earlier by `PermitVerificationMiddleware`. A JSON request there gets a redirect, not a JSON message, so the form would fail without a message. Not changed here.
 - Security note, not fixed here: `EnforceStudioSubscriptionAccess` skips the check for any request with `type=freelancer` (line 33). An owner could add that field to bypass the subscription rule. Track it as a separate defect.
 
+## Browser check (2026-10-24, Playwright, 1920×1080, dev database)
+
+- **Owner `adrian.alcantara@gmail.com`.** Their only studio's plan has ended, so Create Package redirects to the subscription page with "Meridian Light Studio has no active subscription…". This is the intended rule.
+- **Owner `yolanda.inocencio@gmail.com`.** Create Package opens with "Quarry Road Studio" enabled.
+- **Validation.** Submitting with time customisation off and no duration shows "Duration is required when time customization is not allowed." with no JavaScript error. The old code threw a ReferenceError on this branch. Screenshot: `.playwright-mcp/p2-validation.png`.
+- **Subscription error, mocked.** A mocked 403 response shows "Studio not ready" with the server message, a "Go to subscription" button and "Close". Screenshot: `.playwright-mcp/p2-subscription-error.png`.
+- **Two-studio owner, the client's Step 7 case (follow-up check).** Added test studio "T02 Annex Studio" (no subscription) to `yolanda.inocencio@gmail.com`.
+  - Create Package opens. Quarry Road is selectable; Annex shows "(needs an active subscription)", is disabled, and the help line links to the subscription page. Screenshot: `.playwright-mcp/gap1-two-studios.png`.
+  - Forcing the Annex studio gets a real 403, shown as "Studio not ready" with "Go to subscription". Screenshot: `gap1-annex-refused.png`.
+  - A real save for Quarry Road with `photographer_count = 0` returned 200 "Package created successfully!". Screenshot: `gap1-quarry-saved.png`.
+
 ## Files changed
 
 - `app/Http/Middleware/EnforceStudioSubscriptionAccess.php`

@@ -159,6 +159,42 @@ class SubscriptionAccessTest extends TestCase
         ], $overrides));
     }
 
+    public function test_equipment_confirm_is_checked_against_the_equipments_own_booking(): void
+    {
+        Schema::create('tbl_booking_assigned_photographers', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('booking_id');
+            $table->unsignedBigInteger('studio_id')->nullable();
+            $table->unsignedBigInteger('photographer_id');
+            $table->string('status')->default('assigned');
+            $table->timestamps();
+        });
+        Schema::create('tbl_booking_equipment', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('booking_id');
+            $table->string('equipment_name');
+            $table->string('equipment_type');
+            $table->boolean('confirmed')->default(false);
+            $table->timestamps();
+        });
+        Route::post('/_test/photographer/equipment/{id}/confirm', fn () => response()->json(['ok' => true]))
+            ->middleware('subscription.access:manage')
+            ->name('_test.assignment.equipment.confirm');
+
+        $active = $this->createStudio('Active Studio');
+        $this->createSubscription($active);
+        $expired = $this->createStudio('Expired Studio');
+
+        // Assignment #1 belongs to the expired studio; equipment #1 to the active one.
+        $expiredBooking = $this->createBooking($expired, 'unpaid');
+        \App\Models\StudioOwner\BookingAssignedPhotographerModel::create(['booking_id' => $expiredBooking->id, 'studio_id' => $expired->id, 'photographer_id' => $this->owner->id]);
+        $activeBooking = $this->createBooking($active, 'unpaid');
+        $equipment = \App\Models\StudioOwner\BookingEquipmentModel::create(['booking_id' => $activeBooking->id, 'equipment_name' => 'Camera', 'equipment_type' => 'DSLR']);
+
+        $this->assertSame(1, $equipment->id);
+        $this->postJson("/_test/photographer/equipment/{$equipment->id}/confirm")->assertOk();
+    }
+
     private function createBooking(StudiosModel $studio, string $paymentStatus): BookingModel
     {
         return BookingModel::create([

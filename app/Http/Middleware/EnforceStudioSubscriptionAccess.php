@@ -112,6 +112,11 @@ class EnforceStudioSubscriptionAccess
             $bookingId = StudioOnlineGalleryModel::find($request->route('galleryId'))?->booking_id;
         }
 
+        // On equipment routes the {id} is an equipment row, not an assignment.
+        if (! is_numeric($bookingId) && $request->route('id') && str_ends_with((string) $request->route()?->getName(), 'assignment.equipment.confirm')) {
+            $bookingId = \App\Models\StudioOwner\BookingEquipmentModel::find($request->route('id'))?->booking_id;
+        }
+
         if (! is_numeric($bookingId) && $request->route('id') && str_contains((string) $request->route()?->getName(), 'assignment')) {
             $bookingId = BookingAssignedPhotographerModel::find($request->route('id'))?->booking_id;
         }
