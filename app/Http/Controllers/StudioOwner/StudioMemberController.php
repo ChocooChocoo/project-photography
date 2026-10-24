@@ -20,13 +20,12 @@ class StudioMemberController extends Controller
     public function index()
     {
         $userId = auth()->id();
-        
-        // Get studio owned by the current user
-        $studio = StudiosModel::where('user_id', $userId)->first();
+        [$studios, $studio] = $this->chosenStudio();
         
         if (!$studio) {
             return view('owner.view-members', [
                 'members' => collect(),
+                'studios' => $studios,
                 'studio' => null
             ]);
         }
@@ -43,6 +42,7 @@ class StudioMemberController extends Controller
             ->get();
 
         return view('owner.view-members', [
+            'studios' => $studios,
             'members' => $members,
             'studio' => $studio
         ]);
@@ -54,13 +54,12 @@ class StudioMemberController extends Controller
     public function invite()
     {
         $userId = auth()->id();
-        
-        // Get studio owned by the current user
-        $studio = StudiosModel::where('user_id', $userId)->first();
+        [$studios, $studio] = $this->chosenStudio();
         
         if (!$studio) {
             return view('owner.invite-members', [
                 'freelancers' => collect(),
+                'studios' => $studios,
                 'studio' => null,
                 'invitedFreelancerIds' => collect()
             ]);
@@ -85,6 +84,7 @@ class StudioMemberController extends Controller
 
         return view('owner.invite-members', [
             'freelancers' => $freelancers,
+            'studios' => $studios,
             'studio' => $studio,
             'invitedFreelancerIds' => $invitedFreelancerIds
         ]);
@@ -213,5 +213,16 @@ class StudioMemberController extends Controller
     public function apply()
     {
         return view('owner.apply-members');
+    }
+
+    /**
+     * The owner's studios and the one picked with ?studio_id= (default: the first).
+     * An owner can invite freelancers to any studio they own, not only the first.
+     */
+    private function chosenStudio(): array
+    {
+        $studios = StudiosModel::where('user_id', auth()->id())->orderBy('id')->get();
+
+        return [$studios, $studios->firstWhere('id', request()->integer('studio_id')) ?? $studios->first()];
     }
 }

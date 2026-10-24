@@ -33,7 +33,7 @@ class StudioMemberInviteRequest extends FormRequest
                                  ->whereIn('status', ['pending', 'approved']);
                 })
             ],
-            'studio_id' => 'required|exists:tbl_studios,id',
+            'studio_id' => ['required', \Illuminate\Validation\Rule::exists('tbl_studios', 'id')->where('user_id', auth()->id())],
             'invitation_message' => 'required|string|min:10|max:1000',
         ];
     }

@@ -14,10 +14,12 @@
                             <a href="{{ route('owner.studio.create') }}" class="alert-link">Create Studio</a>
                         </div>
                     @else
+                        @include('partials.studio-picker', ['route' => 'owner.members.invite', 'label' => 'Invite freelancers to', 'help' => 'Each studio has its own freelancer members.'])
+
                         {{-- TABLE --}}
                         <div data-table data-table-rows-per-page="5" class="card">
                             <div class="card-header">
-                                <h4 class="card-title">List of Freelancers</h4>
+                                <h4 class="card-title">List of Freelancers &middot; {{ $studio->studio_name }}</h4>
                             </div>
 
                             <div class="card-header border-light justify-content-between">
