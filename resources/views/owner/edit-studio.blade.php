@@ -290,6 +290,34 @@
                                         </div>
                                     </div>
 
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <label class="form-label">Downpayment Percentage (%)</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" placeholder="Enter downpayment percentage" name="downpayment_percentage" step="0.01" min="0" max="100" value="{{ $studio->downpayment_percentage }}">
+                                            <span class="input-group-text">%</span>
+                                            <div class="invalid-feedback">
+                                                Please enter a valid percentage between 0 and 100.
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">Used when the downpayment type is Percentage.</small>
+                                    </div>
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <label class="form-label" for="downpaymentType">Downpayment Type</label>
+                                        <select class="form-select" id="downpaymentType" name="downpayment_type" aria-describedby="downpaymentTypeHelp">
+                                            <option value="percentage" {{ ($studio->downpayment_type ?? 'percentage') === 'percentage' ? 'selected' : '' }}>Percentage of the booking total</option>
+                                            <option value="fixed" {{ ($studio->downpayment_type ?? 'percentage') === 'fixed' ? 'selected' : '' }}>Fixed amount</option>
+                                        </select>
+                                        <small id="downpaymentTypeHelp" class="form-text text-muted">Clients who choose a downpayment pay this now and the rest later.</small>
+                                    </div>
+
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <label class="form-label" for="downpaymentAmount">Fixed Downpayment Amount (PHP)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="downpaymentAmount" name="downpayment_amount" step="0.01" min="1" placeholder="e.g. 2000" value="{{ $studio->downpayment_amount }}" aria-describedby="downpaymentAmountHelp">
+                                        </div>
+                                        <small id="downpaymentAmountHelp" class="form-text text-muted">Required when the type is Fixed amount. A fixed amount at or above the booking total means full payment.</small>
+                                    </div>
                                 </div>
 
                                     <div class="col-12 col-md-6 mb-3">
@@ -303,6 +331,14 @@
                                         </div>
                                     </div>
 
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <div class="form-check form-switch mt-4">
+                                            <input type="hidden" name="requires_downpayment" value="0">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="requiresDownpayment" name="requires_downpayment" value="1" {{ $studio->requires_downpayment !== false ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="requiresDownpayment">Offer a downpayment option</label>
+                                        </div>
+                                        <small class="form-text text-muted">When on, clients choose a downpayment or full payment. When off, clients pay in full.</small>
+                                    </div>
                                 </div>
 
                                 <div class="row">

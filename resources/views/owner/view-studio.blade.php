@@ -603,6 +603,7 @@
                                         </div>
                                         @endif
 
+                                        @php $depositTerms = \App\Models\BookingModel::depositTerms('studio', $studio); @endphp
                                         <div class="col-12 col-md-6 mb-3">
                                             <div class="d-flex align-items-start">
                                                 <div class="flex-shrink-0">
@@ -611,9 +612,14 @@
                                                     </div>
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
-                                                    <label class="text-muted small mb-1">Payment Requirement</label>
-                                                    <p class="mb-0 fw-medium">Full payment</p>
-                                                    <small class="text-muted">Clients pay the full amount when booking</small>
+                                                    <label class="text-muted small mb-1">Downpayment</label>
+                                                    @if($depositTerms)
+                                                        <p class="mb-0 fw-medium">{{ $depositTerms['type'] === 'fixed' ? '₱'.number_format($depositTerms['value'], 2).' fixed amount' : rtrim(rtrim(number_format($depositTerms['value'], 2), '0'), '.').'% of the booking total' }}</p>
+                                                        <small class="text-muted">Clients choose this downpayment or full payment when booking</small>
+                                                    @else
+                                                        <p class="mb-0 fw-medium">Not offered</p>
+                                                        <small class="text-muted">Clients pay the full amount when booking</small>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>

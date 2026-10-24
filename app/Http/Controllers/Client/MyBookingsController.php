@@ -105,46 +105,23 @@ class MyBookingsController extends Controller
         $freelancerIds = $bookingCollection->where('booking_type', '!=', 'studio')->pluck('provider_id')->filter()->unique()->values();
 
         $studios = StudiosModel::whereIn('id', $studioIds)
-            ->select('id', 'studio_name', 'studio_logo', 'downpayment_percentage')
+            ->select('id', 'studio_name', 'studio_logo')
             ->get()
             ->keyBy('id');
 
         $freelancers = ProfileModel::whereIn('user_id', $freelancerIds)
-            ->select('user_id', 'brand_name', 'brand_logo', 'deposit_policy', 'deposit_type', 'deposit_amount')
+            ->select('user_id', 'brand_name', 'brand_logo')
             ->get()
             ->keyBy('user_id');
 
         $bookings->setCollection(
             $bookingCollection->map(function ($booking) use ($studios, $freelancers, $includePaymentDisplay) {
-                if ($booking->booking_type === 'studio') {
-                    $studio = $studios->get($booking->provider_id);
-                    $booking->provider = $studio;
-                    $booking->downpayment_percentage = $studio->downpayment_percentage ?? 30;
+                $booking->provider = $booking->booking_type === 'studio'
+                    ? $studios->get($booking->provider_id)
+                    : $freelancers->get($booking->provider_id);
 
-                    return $booking;
-                }
-
-                $freelancer = $freelancers->get($booking->provider_id);
-                $booking->provider = $freelancer;
-
-                if (! $includePaymentDisplay) {
-                    return $booking;
-                }
-
-                if ($freelancer && $freelancer->deposit_policy === 'required') {
-                    if ($freelancer->deposit_type === 'percentage') {
-                        $booking->downpayment_percentage = $freelancer->deposit_amount ?? 30;
-                        $booking->payment_display = $booking->downpayment_percentage.'% Downpayment';
-                    } elseif ($freelancer->deposit_type === 'fixed') {
-                        $booking->downpayment_percentage = 0;
-                        $booking->payment_display = 'Fixed: PHP '.number_format($freelancer->deposit_amount, 2);
-                    } else {
-                        $booking->downpayment_percentage = 30;
-                        $booking->payment_display = '30% Downpayment';
-                    }
-                } else {
-                    $booking->downpayment_percentage = 100;
-                    $booking->payment_display = 'Full Payment';
+                if ($includePaymentDisplay) {
+                    $booking->payment_display = $booking->depositInfo()['display'];
                 }
 
                 return $booking;
@@ -172,12 +149,6 @@ class MyBookingsController extends Controller
 
             $provider = null;
             $providerType = null;
-            $downpaymentPercentage = 30;
-
-            $depositPolicy = 'required';
-            $depositType = 'percentage';
-            $depositAmount = 30;
-            $depositDisplay = '30% Downpayment';
 
             if ($booking->booking_type === 'studio') {
                 $provider = StudiosModel::where('id', $booking->provider_id)
@@ -185,13 +156,6 @@ class MyBookingsController extends Controller
                     ->first();
                 $providerType = 'studio';
 
-                if ($provider && $provider->downpayment_percentage) {
-                    $downpaymentPercentage = $provider->downpayment_percentage;
-                }
-
-                $depositType = 'percentage';
-                $depositAmount = $downpaymentPercentage;
-                $depositDisplay = $downpaymentPercentage.'% Downpayment';
             } else {
                 $provider = ProfileModel::where('user_id', $booking->provider_id)
                     ->select(
@@ -214,38 +178,11 @@ class MyBookingsController extends Controller
                     $provider->contact_number = $user->mobile_number ?? null;
                 }
 
-                if ($provider) {
-                    $depositPolicy = $provider->deposit_policy ?? 'not_required';
-
-                    if ($depositPolicy === 'required') {
-                        $depositType = $provider->deposit_type ?? 'percentage';
-                        $depositAmount = $provider->deposit_amount ?? 30;
-
-                        if ($depositType === 'percentage') {
-                            $downpaymentPercentage = $depositAmount;
-                            $depositDisplay = $depositAmount.'% Downpayment';
-                        } else {
-                            $downpaymentPercentage = 0;
-                            $depositDisplay = 'Fixed Deposit: PHP '.number_format($depositAmount, 2);
-                        }
-                    } else {
-                        $depositPolicy = 'not_required';
-                        $depositType = null;
-                        $depositAmount = 0;
-                        $downpaymentPercentage = 100;
-                        $depositDisplay = 'Full Payment (No Deposit)';
-                    }
-                } else {
-                    $depositPolicy = 'required';
-                    $depositType = 'percentage';
-                    $depositAmount = 30;
-                    $downpaymentPercentage = 30;
-                    $depositDisplay = '30% Downpayment';
-                }
             }
 
             $totalPaid = $booking->payments->where('status', 'succeeded')->sum('amount');
             $remainingBalance = $booking->total_amount - $totalPaid;
+            $depositInfo = $booking->depositInfo();
 
             return response()->json([
                 'success' => true,
@@ -258,16 +195,8 @@ class MyBookingsController extends Controller
                 'assignedPhotographers' => $booking->assignedPhotographers,
                 'contract' => $booking->contractSummary('client'),
                 'preparation_url' => $booking->preparationVisible() ? route('client.booking.preparation', $booking->id, false) : null,
-                'downpayment_percentage' => $downpaymentPercentage,
-                'deposit_info' => [
-                    'policy' => $depositPolicy,
-                    'type' => $depositType,
-                    'amount' => $depositAmount,
-                    'display' => $depositDisplay,
-                    'is_percentage' => $depositType === 'percentage',
-                    'is_fixed' => $depositType === 'fixed',
-                    'is_no_deposit' => $depositPolicy === 'not_required',
-                ],
+                'downpayment_percentage' => $depositInfo['is_percentage'] ? $depositInfo['amount'] : ($depositInfo['is_no_deposit'] ? 100 : 0),
+                'deposit_info' => $depositInfo,
                 'payment_summary' => [
                     'total_amount' => $booking->total_amount,
                     'down_payment' => $booking->down_payment,

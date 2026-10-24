@@ -186,8 +186,51 @@
                                         </div>
                                     </div>
 
-                                    {{-- Downpayments are disabled: clients always pay in full --}}
-                                    <input type="hidden" name="deposit_policy" value="not_required">
+                                    {{-- ==== Start: Deposit Policy Enhancement ==== --}}
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <label class="form-label mb-2">Deposit Policy</label>
+                                        <div class="mb-2">
+                                            <div class="btn-group w-100 mb-1" role="group" aria-label="Deposit policy toggle button group" id="depositPolicyGroup">
+                                                <input type="radio" class="btn-check" id="btnDepositRequired" name="deposit_policy" value="required" autocomplete="off">
+                                                <label class="btn btn-outline-primary" for="btnDepositRequired">Required</label>
+
+                                                <input type="radio" class="btn-check" id="btnDepositNotRequired" name="deposit_policy" value="not_required" autocomplete="off" checked>
+                                                <label class="btn btn-outline-primary" for="btnDepositNotRequired">Not Required</label>
+                                            </div>
+                                            <small class="d-block text-muted">Do you require a deposit from clients? If not required, client pays full amount upon booking.</small>
+                                            <div class="invalid-feedback" id="deposit_policy_error">Please select a deposit policy.</div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Deposit Configuration Fields (Hidden by default) --}}
+                                    <div class="col-12" id="depositConfigSection" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-12 col-md-6 mb-3">
+                                                <label class="form-label">Deposit Type</label>
+                                                <select class="form-control" name="deposit_type" id="depositType">
+                                                    <option value="" disabled selected>Select deposit type</option>
+                                                    <option value="fixed">Fixed Amount (PHP)</option>
+                                                    <option value="percentage">Percentage (%)</option>
+                                                </select>
+                                                <div class="invalid-feedback">
+                                                    Please select a deposit type.
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12 col-md-6 mb-3">
+                                                <label class="form-label" id="depositAmountLabel">Deposit Amount</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text" id="depositAmountSymbol">PHP</span>
+                                                    <input type="number" class="form-control" name="deposit_amount" id="depositAmount" placeholder="Enter amount" step="0.01" min="0.01">
+                                                </div>
+                                                <small class="text-muted" id="depositAmountHint">Enter the fixed amount required as deposit</small>
+                                                <div class="invalid-feedback">
+                                                    Please enter a valid deposit amount.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {{-- ==== End: Deposit Policy Enhancement ==== --}}
                                 </div>
 
                                 <div class="row">

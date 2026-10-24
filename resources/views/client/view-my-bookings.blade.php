@@ -119,22 +119,7 @@
                                             <td data-sort-value="{{ $booking->total_amount }}">
                                                 <span class="fw-semibold">₱{{ number_format($booking->total_amount, 2) }}</span>
                                                 <small class="text-muted d-block">
-                                                    @if($booking->booking_type === 'studio')
-                                                        @if($booking->payment_type === 'downpayment')
-                                                            {{ $booking->downpayment_percentage ?? 30 }}% Downpayment
-                                                        @else
-                                                            Full Payment
-                                                        @endif
-                                                    @else
-                                                        {{-- Freelancer dynamic display --}}
-                                                        @if(isset($booking->payment_display))
-                                                            {{ $booking->payment_display }}
-                                                        @elseif($booking->payment_type === 'downpayment')
-                                                            30% Downpayment
-                                                        @else
-                                                            Full Payment
-                                                        @endif
-                                                    @endif
+                                                    {{ $booking->depositInfo()['display'] }}
                                                 </small>
                                             </td>
                                             <td>
@@ -746,15 +731,7 @@
                 const payments = data.payments;
                 const assignedPhotographers = data.assignedPhotographers;
                 const paymentSummary = data.payment_summary;
-                const depositInfo = data.deposit_info || {
-                    policy: 'required',
-                    type: 'percentage',
-                    amount: 30,
-                    display: '30% Downpayment',
-                    is_percentage: true,
-                    is_fixed: false,
-                    is_no_deposit: false
-                };
+                const depositInfo = data.deposit_info || {display: 'Full Payment', is_no_deposit: true, is_fixed: false, amount: 0};
 
                 // Format date
                 const eventDate = new Date(booking.event_date);
@@ -1003,57 +980,17 @@
                     `;
                 }
                 
-                // ========== FIX: Get deposit display based on provider type ==========
+                // The booking keeps its own terms; show what was agreed.
                 let depositDisplayHtml = '';
-                let paymentTypeDisplay = '';
-                
-                if (providerType === 'freelancer') {
-                    if (depositInfo.is_no_deposit) {
-                        depositDisplayHtml = `
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted">Payment Type:</span>
-                                <span class="fw-medium text-success">Full Payment (No Deposit Required)</span>
-                            </div>
-                        `;
-                        paymentTypeDisplay = 'Full Payment';
-                    } else if (depositInfo.is_fixed) {
-                        depositDisplayHtml = `
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted">Fixed Deposit:</span>
-                                <span class="fw-medium">₱${parseFloat(depositInfo.amount).toFixed(2)}</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted">Package Price:</span>
-                                <span class="fw-medium">₱${parseFloat(paymentSummary.total_amount).toFixed(2)}</span>
-                            </div>
-                        `;
-                        paymentTypeDisplay = 'Fixed Deposit';
-                    } else if (depositInfo.is_percentage) {
-                        depositDisplayHtml = `
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted">Down Payment (${depositInfo.amount}%):</span>
-                                <span class="fw-medium">- ₱${parseFloat(paymentSummary.down_payment).toFixed(2)}</span>
-                            </div>
-                        `;
-                        paymentTypeDisplay = depositInfo.amount + '% Down Payment';
-                    }
-                } else {
-                    // Studio display
+                const paymentTypeDisplay = depositInfo.display;
+                if (!depositInfo.is_no_deposit) {
                     depositDisplayHtml = `
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted">Down Payment (${depositInfo.amount}%):</span>
-                            <span class="fw-medium">- ₱${parseFloat(paymentSummary.down_payment).toFixed(2)}</span>
+                            <span class="text-muted">${depositInfo.is_fixed ? 'Downpayment (fixed amount)' : `Downpayment (${depositInfo.amount}%)`}:</span>
+                            <span class="fw-medium">₱${parseFloat(paymentSummary.down_payment).toFixed(2)}</span>
                         </div>
                     `;
-                    paymentTypeDisplay = depositInfo.amount + '% Down Payment';
                 }
-                
-                // For full payment bookings
-                if (booking.payment_type === 'full_payment') {
-                    depositDisplayHtml = '';
-                    paymentTypeDisplay = 'Full Payment';
-                }
-                // ========== End of deposit display logic ==========
                 
                 const modalContent = `
                     <div class="row align-items-center mb-4">
@@ -1669,34 +1606,6 @@
             // Call on page load
             loadPendingConfirmations();
 
-            // Load downpayment percentages for all bookings in the table
-            function loadDownpaymentPercentages() {
-                $('.downpayment-label').each(function() {
-                    const $label = $(this);
-                    const bookingId = $label.data('booking-id');
-                    const bookingType = $label.data('booking-type');
-                    const providerId = $label.data('provider-id');
-                    
-                    if (bookingType === 'studio') {
-                        // For studio bookings, we need to fetch the percentage
-                        // You can either pre-load this data or make an API call
-                        // Option 1: Use data attribute if available (recommended - add to booking object)
-                        // Option 2: Make an API call (less efficient)
-                        
-                        // For now, we'll use the value from the booking object if available
-                        // This requires adding downpayment_percentage to the booking object in the controller
-                        
-                        // Since we don't have it in the current implementation, 
-                        // we'll set a default and update when booking details are loaded
-                        $label.text('30% Downpayment');
-                    } else {
-                        $label.text('30% Downpayment');
-                    }
-                });
-            }
-
-            // Call on page load
-            loadDownpaymentPercentages();
 
             // Initialize icons
             loadIcons();

@@ -622,6 +622,113 @@ class BookingModel extends Model
     }
 
     /**
+     * The provider's downpayment setting, or null when bookings are full payment only.
+     *
+     * Studios: owner switch requires_downpayment, with downpayment_type percentage
+     * (downpayment_percentage) or fixed (downpayment_amount). Freelancers:
+     * deposit_policy, deposit_type and deposit_amount on the profile.
+     *
+     * @return array{type: string, value: float, label: string}|null
+     */
+    public static function depositTerms(string $providerType, $provider): ?array
+    {
+        if ($providerType === 'studio') {
+            if (! $provider || $provider->requires_downpayment === false) {
+                return null;
+            }
+            $type = $provider->downpayment_type === 'fixed' ? 'fixed' : 'percentage';
+            $value = (float) ($type === 'fixed' ? $provider->downpayment_amount : ($provider->downpayment_percentage ?? 30));
+        } else {
+            if (! $provider || $provider->deposit_policy !== 'required') {
+                return null;
+            }
+            $type = $provider->deposit_type === 'fixed' ? 'fixed' : 'percentage';
+            $value = (float) ($provider->deposit_amount ?? 30);
+        }
+
+        if ($value <= 0) {
+            return null;
+        }
+
+        $label = $type === 'fixed'
+            ? '₱'.number_format($value, 2).' downpayment'
+            : rtrim(rtrim(number_format($value, 2), '0'), '.').'% downpayment';
+
+        return ['type' => $type, 'value' => $value, 'label' => $label];
+    }
+
+    /**
+     * Work out what the client pays now. Studio clients choose a downpayment or
+     * full payment when the studio allows it; a freelancer's policy decides.
+     *
+     * @return array{payment_type: string, down_payment: float, remaining_balance: float, deposit_policy: string, downpayment_percentage: float, deposit_type: ?string, deposit_amount: float}
+     */
+    public static function paymentTerms(string $providerType, $provider, float $total, ?string $requested): array
+    {
+        $terms = self::depositTerms($providerType, $provider);
+        $wantsDownpayment = $providerType === 'studio' ? $requested === 'downpayment' : true;
+
+        if ($terms && $wantsDownpayment) {
+            $down = $terms['type'] === 'fixed'
+                ? min($terms['value'], $total)
+                : round($total * $terms['value'] / 100, 2);
+
+            if ($down < $total) {
+                return [
+                    'payment_type' => 'downpayment',
+                    'down_payment' => $down,
+                    'remaining_balance' => round($total - $down, 2),
+                    'deposit_policy' => $terms['type'] === 'fixed'
+                        ? 'Fixed: ₱'.number_format($terms['value'], 2)
+                        : rtrim(rtrim(number_format($terms['value'], 2), '0'), '.').'%',
+                    'downpayment_percentage' => $terms['type'] === 'percentage' ? $terms['value'] : 0,
+                    'deposit_type' => $terms['type'],
+                    'deposit_amount' => $terms['value'],
+                ];
+            }
+        }
+
+        return [
+            'payment_type' => 'full_payment',
+            'down_payment' => $total,
+            'remaining_balance' => 0,
+            'deposit_policy' => '100% (Full payment)',
+            'downpayment_percentage' => 100,
+            'deposit_type' => null,
+            'deposit_amount' => 0,
+        ];
+    }
+
+    /**
+     * The payment terms this booking was made with, for display. Read from the
+     * booking itself so a later change to the provider's setting does not
+     * rewrite what the client agreed to.
+     *
+     * @return array{policy: string, type: ?string, amount: float, display: string, is_percentage: bool, is_fixed: bool, is_no_deposit: bool}
+     */
+    public function depositInfo(): array
+    {
+        if ($this->payment_type !== 'downpayment') {
+            return ['policy' => 'not_required', 'type' => null, 'amount' => 0.0, 'display' => 'Full Payment',
+                'is_percentage' => false, 'is_fixed' => false, 'is_no_deposit' => true];
+        }
+
+        $down = (float) $this->getRawOriginal('down_payment');
+        if (str_starts_with((string) $this->deposit_policy, 'Fixed')) {
+            return ['policy' => 'required', 'type' => 'fixed', 'amount' => $down,
+                'display' => 'Fixed downpayment: ₱'.number_format($down, 2),
+                'is_percentage' => false, 'is_fixed' => true, 'is_no_deposit' => false];
+        }
+
+        $total = (float) $this->total_amount;
+        $percent = (float) $this->deposit_policy ?: ($total > 0 ? round($down / $total * 100, 2) : 0);
+
+        return ['policy' => 'required', 'type' => 'percentage', 'amount' => $percent,
+            'display' => rtrim(rtrim(number_format($percent, 2), '0'), '.').'% Downpayment',
+            'is_percentage' => true, 'is_fixed' => false, 'is_no_deposit' => false];
+    }
+
+    /**
      * When the event ends, in Asia/Manila. Uses the last event day and the end
      * time; a single-day booking whose end time is not after its start time
      * runs past midnight. With no end time, the event ends at the end of the day.

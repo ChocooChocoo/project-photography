@@ -51,26 +51,7 @@
                                         <div class="col-md-6">
                                             <p class="text-muted small mb-1">Payment Type:</p>
                                             <p class="fw-medium mb-3">
-                                                @if($booking->payment_type === 'downpayment')
-                                                    @php
-                                                        // Get downpayment percentage based on booking type
-                                                        $downpaymentPercentage = 30; // Default fallback
-                                                        
-                                                        if ($booking->booking_type === 'studio') {
-                                                            // For studio bookings, get from studio record
-                                                            $studio = \App\Models\StudioOwner\StudiosModel::find($booking->provider_id);
-                                                            if ($studio && $studio->downpayment_percentage) {
-                                                                $downpaymentPercentage = $studio->downpayment_percentage;
-                                                            }
-                                                        } else {
-                                                            // For freelancer bookings, you could add freelancer-specific logic here
-                                                            // For now, keep default 30%
-                                                        }
-                                                    @endphp
-                                                    {{ $downpaymentPercentage }}% Downpayment
-                                                @else
-                                                    Full Payment
-                                                @endif
+                                                {{ $booking->depositInfo()['display'] }}
                                             </p>
                                         </div>
                                         <div class="col-md-6">

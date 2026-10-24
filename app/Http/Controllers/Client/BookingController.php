@@ -125,6 +125,9 @@ class BookingController extends Controller
             $equipmentBrands = null;
         }
 
+        // Downpayment option shown on the form; the server recomputes on save.
+        $depositTerms = BookingModel::depositTerms($type, $provider);
+
         // Get all active municipalities for dropdown
         $municipalities = \App\Models\Admin\LocationModel::where('status', 'active')
             ->whereNotNull('municipality')
@@ -157,7 +160,8 @@ class BookingController extends Controller
             'operatingDays',
             'clientBudgets', // ADD THIS
             'discounts', // ADD THIS
-            'equipmentBrands'
+            'equipmentBrands',
+            'depositTerms'
         ));
     }
 
@@ -525,7 +529,8 @@ class BookingController extends Controller
         }
         // ==== END: Conditional validation based on location type ====
 
-        // Downpayments are disabled: any submitted payment_type is ignored and bookings are always full payment.
+        // Studio clients choose; a freelancer's deposit policy overrides the request.
+        $rules['payment_type'] = 'nullable|in:downpayment,full_payment';
         $rules['photo_edit_option'] = 'nullable|in:raw,enhanced';
 
         $request->validate($rules, [
@@ -593,15 +598,16 @@ class BookingController extends Controller
 
             $totalAmount = $package->package_price + $enhancementAmount;
 
-            if ($request->type === 'studio') {
-                // Throws when the studio's subscription no longer allows bookings
-                StudiosModel::subscriptionAccessible()->findOrFail($request->provider_id);
-            }
+            // Throws when the studio's subscription no longer allows bookings
+            $provider = $request->type === 'studio'
+                ? StudiosModel::subscriptionAccessible()->findOrFail($request->provider_id)
+                : ProfileModel::where('user_id', $request->provider_id)->first();
 
-            $paymentType = 'full_payment';
-            $downPayment = $totalAmount;
-            $remainingBalance = 0;
-            $depositPolicy = '100% (Full payment)';
+            $terms = BookingModel::paymentTerms($request->type, $provider, (float) $totalAmount, $request->input('payment_type'));
+            $paymentType = $terms['payment_type'];
+            $downPayment = $terms['down_payment'];
+            $remainingBalance = $terms['remaining_balance'];
+            $depositPolicy = $terms['deposit_policy'];
             $paymentStatus = 'pending';
             $bookingStatus = 'pending';
             // ========== End of deposit logic ==========
@@ -1134,18 +1140,10 @@ class BookingController extends Controller
             $totalPaid = $booking->payments()->where('status', 'succeeded')->sum('amount');
             $isBalancePayment = $totalPaid > 0;
 
-            // Get the downpayment percentage for display
-            $downpaymentText = '30%'; // Default
-            if ($booking->booking_type === 'studio') {
-                $studio = StudiosModel::find($booking->provider_id);
-                if ($studio && $studio->downpayment_percentage) {
-                    $downpaymentText = $studio->downpayment_percentage . '%';
-                }
-            }
-
-            $description = $isBalancePayment 
-                ? 'Balance Payment - ' . $booking->booking_reference 
-                : 'Booking ' . ($booking->payment_type === 'downpayment' ? $downpaymentText . ' Deposit' : 'Payment') . ' - ' . $booking->booking_reference;
+            // The booking keeps the terms it was made with (e.g. "30%" or "Fixed: ₱2,000.00").
+            $description = $isBalancePayment
+                ? 'Balance Payment - ' . $booking->booking_reference
+                : 'Booking ' . ($booking->payment_type === 'downpayment' ? 'Downpayment (' . $booking->deposit_policy . ')' : 'Payment') . ' - ' . $booking->booking_reference;
 
             // Create Stripe checkout session
             $checkoutSession = $this->stripeService->createCheckoutSession(
@@ -1746,13 +1744,15 @@ class BookingController extends Controller
             'package_id' => 'required|integer',
             'type' => 'required|in:studio,freelancer',
             'photo_edit_option' => 'nullable|in:raw,enhanced',
+            'payment_type' => 'nullable|in:downpayment,full_payment',
         ]);
 
         if ($request->type === 'studio') {
             $package = StudioPackagesModel::findOrFail($request->package_id);
-            StudiosModel::subscriptionAccessible()->findOrFail($package->studio_id);
+            $provider = StudiosModel::subscriptionAccessible()->findOrFail($package->studio_id);
         } else {
             $package = FreelancerPackagesModel::findOrFail($request->package_id);
+            $provider = ProfileModel::where('user_id', $package->user_id)->first();
         }
 
         $photoEdit = $this->resolvePhotoEdit($package, $request->input('photo_edit_option'));
@@ -1764,12 +1764,12 @@ class BookingController extends Controller
         }
         [$photoEditOption, $enhancementAmount] = $photoEdit;
 
-        // Downpayments are disabled: the full amount is due up front.
-        $paymentType = 'full_payment';
-        $downpaymentPercentage = 100;
         $totalAmount = $package->package_price + $enhancementAmount;
-        $downPayment = $totalAmount;
-        $remainingBalance = 0;
+        $terms = BookingModel::paymentTerms($request->type, $provider, (float) $totalAmount, $request->input('payment_type'));
+        $paymentType = $terms['payment_type'];
+        $downpaymentPercentage = $terms['downpayment_percentage'];
+        $downPayment = $terms['down_payment'];
+        $remainingBalance = $terms['remaining_balance'];
 
         $packageData = [
             'package_name' => $package->package_name,
@@ -1785,6 +1785,8 @@ class BookingController extends Controller
             'duration' => $package->duration,
             'maximum_edited_photos' => $package->maximum_edited_photos,
             'payment_type' => $paymentType,
+            'deposit_type' => $terms['deposit_type'],
+            'deposit_amount' => number_format($terms['deposit_amount'], 2),
             'online_gallery' => $package->online_gallery ?? false,
             'gallery_status' => ($package->online_gallery ?? false) ? 'Included' : 'Not Included',
             'package_location' => $package->package_location ?? 'In-Studio',

@@ -300,6 +300,26 @@
                                             </div>
                                         </div>
 
+                                        {{-- ==== Start: Deposit Policy Enhancement ==== --}}
+                                        <div class="col-12 col-md-6">
+                                            <div class="d-flex align-items-start">
+                                                <div class="flex-shrink-0">
+                                                    <div class="bg-light-primary rounded-circle p-2">
+                                                        <i data-lucide="banknote-arrow-down" class="fs-20 text-primary"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <label class="text-muted small mb-1">Deposit Policy</label>
+                                                    <p class="mb-0 fw-medium">{{ $profile->deposit_display }}</p>
+                                                    @if($profile->deposit_policy === 'required' && $profile->hasValidDepositConfiguration())
+                                                        <span class="badge bg-light-info text-info mt-1">
+                                                            {{ $profile->deposit_type_label }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {{-- ==== End: Deposit Policy Enhancement ==== --}}
                                     </div>
                                 </div>
 

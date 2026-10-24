@@ -322,14 +322,33 @@
                                     })();
                                 </script>
 
-                                {{-- PAYMENT: downpayment is disabled, full payment only --}}
+                                {{-- PAYMENT: the provider's downpayment setting decides the options --}}
                                 <h4 class="card-title text-primary mb-3">Payment Details</h4>
                                 <div class="mb-4">
-                                    <input class="d-none" type="radio" name="payment_type" value="full_payment" checked>
-                                    <div class="alert alert-success mb-2">
-                                        <i class="ti ti-check-circle me-2"></i>
-                                        <strong>Full Payment:</strong> The full amount is collected upon booking.
-                                    </div>
+                                    @if($depositTerms && $type === 'studio')
+                                        <fieldset>
+                                            <legend class="form-label fw-medium fs-6">How would you like to pay?</legend>
+                                            <div class="btn-group w-100" role="group" aria-describedby="paymentTypeHelp">
+                                                <input class="btn-check" type="radio" name="payment_type" id="payment_type_downpayment" value="downpayment" checked>
+                                                <label class="btn btn-outline-primary" for="payment_type_downpayment">{{ ucfirst($depositTerms['label']) }}</label>
+                                                <input class="btn-check" type="radio" name="payment_type" id="payment_type_full" value="full_payment">
+                                                <label class="btn btn-outline-primary" for="payment_type_full">Full payment</label>
+                                            </div>
+                                            <small id="paymentTypeHelp" class="form-text text-muted">With a downpayment, you pay part now and the remaining balance before the event.</small>
+                                        </fieldset>
+                                    @elseif($depositTerms)
+                                        <input class="d-none" type="radio" name="payment_type" value="downpayment" checked>
+                                        <div class="alert alert-info mb-2">
+                                            <i class="ti ti-info-circle me-2"></i>
+                                            <strong>Downpayment required:</strong> {{ $depositTerms['label'] }} now, and the remaining balance before the event.
+                                        </div>
+                                    @else
+                                        <input class="d-none" type="radio" name="payment_type" value="full_payment" checked>
+                                        <div class="alert alert-success mb-2">
+                                            <i class="ti ti-check-circle me-2"></i>
+                                            <strong>Full Payment:</strong> The full amount is collected upon booking.
+                                        </div>
+                                    @endif
 
                                     @if($type === 'studio' && !empty($discounts) && $discounts->count() > 0)
                                         <div class="mt-2">
@@ -2034,33 +2053,7 @@
                                 updateSummaryPriceDisplay(response.summary);
                             }
                             
-                            // Handle fixed deposit display for freelancer
-                            @if($type === 'freelancer')
-                                if (response.summary.deposit_type === 'fixed') {
-                                    $('#downPaymentLabel').text('Fixed Deposit:');
-                                    $('#downPayment').text('₱' + response.summary.down_payment);
-                                    
-                                    const depositInfo = `
-                                        <div class="alert alert-info mt-2 py-2 small">
-                                            <i class="ti ti-info-circle me-1"></i>
-                                            This freelancer requires a fixed deposit of ₱${response.summary.deposit_amount}.
-                                            ${parseFloat(response.summary.down_payment) < parseFloat(response.summary.total_amount.replace(/,/g, '')) ? 
-                                                'The remaining balance will be paid after the event.' : 
-                                                'This covers the full amount.'}
-                                        </div>
-                                    `;
-                                    
-                                    $('.fixed-deposit-info').remove();
-                                    $('#downPaymentRow').after(depositInfo);
-                                } else {
-                                    const percentage = response.summary.downpayment_percentage || 30;
-                                    $('#downPaymentLabel').text(`Down Payment (${percentage}%):`);
-                                    $('.fixed-deposit-info').remove();
-                                }
-                            @else
-                                const percentage = response.summary.downpayment_percentage || 30;
-                                $('#downPaymentLabel').text(`Down Payment (${percentage}%):`);
-                            @endif
+                            renderDepositRows(response.summary);
                         } else {
                             console.error('Summary response error:', response.message);
                         }
@@ -2630,43 +2623,7 @@
                     $('#remainingBalance').text('₱' + window.bookingSummary.remaining_balance);
                     $('#totalAmount').text('₱' + window.bookingSummary.total_amount);
 
-                    // Handle different deposit types for freelancer
-                    @if($type === 'freelancer')
-                        if (window.bookingSummary.deposit_type === 'fixed') {
-                            $('#downPaymentLabel').text('Fixed Deposit:');
-                            $('#downPayment').text('₱' + window.bookingSummary.down_payment);
-
-                            const depositInfo = `
-                                <div class="alert alert-info mt-2 py-2 small fixed-deposit-info">
-                                    <i class="ti ti-info-circle me-1"></i>
-                                    Fixed deposit of ₱${window.bookingSummary.deposit_amount}.
-                                    ${parseFloat(window.bookingSummary.remaining_balance.replace(/,/g, '')) > 0 ?
-                                        'Balance of ₱' + window.bookingSummary.remaining_balance + ' payable after event.' :
-                                        'This is the full amount.'}
-                                </div>
-                            `;
-                            $('#downPaymentRow').after(depositInfo);
-                        } else {
-                            const downpaymentPercentage = window.bookingSummary.downpayment_percentage || 30;
-                            $('#downPaymentLabel').text(`Down Payment (${downpaymentPercentage}%):`);
-                            $('.fixed-deposit-info').remove();
-                        }
-                    @else
-                        const downpaymentPercentage = window.bookingSummary.downpayment_percentage || 30;
-                        $('#downPaymentLabel').text(`Down Payment (${downpaymentPercentage}%):`);
-                    @endif
-
-                    // Show the selected payment type and hide deposit rows for full payment.
-                    if (window.bookingSummary.payment_type === 'full_payment') {
-                        $('#paymentTypeDisplay').text('Full Payment');
-                        $('#paymentTypeRow').show();
-                        $('#downPaymentRow').hide();
-                        $('#remainingBalanceRow').hide();
-                    } else {
-                        $('#paymentTypeRow').hide();
-                        $('#downPaymentRow').show();
-                        $('#remainingBalanceRow').show();
-                    }
+                    renderDepositRows(window.bookingSummary);
 
                     // Display gallery info
                     const galleryHtml = `
@@ -2959,6 +2916,21 @@
                 $('#enhancementRow').toggleClass('d-none', summary.photo_edit_option !== 'enhanced');
             }
 
+            /**
+             * Show what is paid now. Bootstrap's d-none wins over jQuery show(),
+             * so the rows are toggled by class.
+             */
+            function renderDepositRows(summary) {
+                const isFull = summary.payment_type === 'full_payment';
+                $('#paymentTypeDisplay').text(isFull ? 'Full Payment' : 'Downpayment');
+                $('#downPaymentLabel').text(summary.deposit_type === 'fixed'
+                    ? 'Downpayment (fixed amount):'
+                    : `Downpayment (${summary.downpayment_percentage}%):`);
+                $('#downPayment').text('₱' + summary.down_payment);
+                $('#remainingBalance').text('₱' + summary.remaining_balance);
+                $('#downPaymentRow, #remainingBalanceRow').toggleClass('d-none', isFull);
+            }
+
             function updateSummaryPriceDisplay(summary) {
                 renderEnhancementRow(summary);
                 $('#packagePrice').text('₱' + summary.package_price);
@@ -2966,43 +2938,7 @@
                 $('#remainingBalance').text('₱' + summary.remaining_balance);
                 $('#totalAmount').text('₱' + summary.total_amount);
                 
-                // Update down payment label with dynamic percentage or fixed amount
-                @if($type === 'freelancer')
-                    if (summary.deposit_type === 'fixed') {
-                        $('#downPaymentLabel').text('Fixed Deposit:');
-                        $('.fixed-deposit-info').remove();
-                        
-                        const depositInfo = `
-                            <div class="alert alert-info mt-2 py-2 small fixed-deposit-info">
-                                <i class="ti ti-info-circle me-1"></i>
-                                Fixed deposit of ₱${summary.deposit_amount}. 
-                                ${parseFloat(summary.remaining_balance.replace(/,/g, '')) > 0 ? 
-                                    'Balance of ₱' + summary.remaining_balance + ' payable after event.' : 
-                                    'This is the full amount.'}
-                            </div>
-                        `;
-                        $('#downPaymentRow').after(depositInfo);
-                    } else {
-                        const downpaymentPercentage = summary.downpayment_percentage || 30;
-                        $('#downPaymentLabel').text(`Down Payment (${downpaymentPercentage}%):`);
-                        $('.fixed-deposit-info').remove();
-                    }
-                @else
-                    const downpaymentPercentage = summary.downpayment_percentage || 30;
-                    $('#downPaymentLabel').text(`Down Payment (${downpaymentPercentage}%):`);
-                @endif
-                
-                // Show the selected payment type and hide deposit rows for full payment.
-                if (summary.payment_type === 'full_payment') {
-                    $('#paymentTypeDisplay').text('Full Payment');
-                    $('#paymentTypeRow').show();
-                    $('#downPaymentRow').hide();
-                    $('#remainingBalanceRow').hide();
-                } else {
-                    $('#paymentTypeRow').hide();
-                    $('#downPaymentRow').show();
-                    $('#remainingBalanceRow').show();
-                }
+                renderDepositRows(summary);
             }
 
             /**

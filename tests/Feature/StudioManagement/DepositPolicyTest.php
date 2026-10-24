@@ -36,11 +36,10 @@ class DepositPolicyTest extends TestCase
         Route::get('/_test/owner/bookings', fn () => 'ok')->name('owner.booking.index');
     }
 
-    public function test_studio_booking_is_always_full_payment_even_when_studio_requires_downpayment(): void
+    public function test_client_can_choose_the_studios_percentage_downpayment(): void
     {
         $studio = $this->createStudio(['requires_downpayment' => true, 'downpayment_percentage' => 30]);
 
-        // The payload still asks for a downpayment; the server must ignore it.
         $this->actingAs($this->client)
             ->postJson('/_test/client/booking', $this->bookingPayload($studio))
             ->assertOk()
@@ -49,16 +48,39 @@ class DepositPolicyTest extends TestCase
         $booking = BookingModel::latest('id')->first();
         $payment = PaymentModel::latest('id')->first();
 
-        $this->assertSame('full_payment', $booking->payment_type);
-        $this->assertSame(10000, $booking->getRawOriginal('down_payment'));
-        $this->assertSame(0, $booking->getRawOriginal('remaining_balance'));
-        $this->assertSame('100% (Full payment)', $booking->deposit_policy);
-        $this->assertSame(10000, $payment->getRawOriginal('amount'));
+        $this->assertSame('downpayment', $booking->payment_type);
+        $this->assertEquals(3000, $booking->down_payment);
+        $this->assertEquals(7000, $booking->getRawOriginal('remaining_balance'));
+        $this->assertSame('30%', $booking->deposit_policy);
+        $this->assertEquals(3000, $payment->amount);
+
+        // Billing shows the terms the booking was made with, even after the owner changes them.
+        $studio->update(['downpayment_percentage' => 50]);
+        $this->assertSame('30% Downpayment', $booking->fresh()->depositInfo()['display']);
+        $this->assertSame(30.0, $booking->fresh()->depositInfo()['amount']);
     }
 
-    public function test_studio_without_a_downpayment_flag_is_full_payment_too(): void
+    public function test_client_can_still_choose_full_payment_when_downpayments_are_on(): void
     {
-        $studio = $this->createStudio(['downpayment_percentage' => 50]);
+        $studio = $this->createStudio(['requires_downpayment' => true, 'downpayment_percentage' => 30]);
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', ['payment_type' => 'full_payment'] + $this->bookingPayload($studio))
+            ->assertOk();
+
+        $booking = BookingModel::latest('id')->first();
+
+        $this->assertSame('full_payment', $booking->payment_type);
+        $this->assertEquals(10000, $booking->down_payment);
+        $this->assertEquals(0, $booking->getRawOriginal('remaining_balance'));
+        $this->assertSame('100% (Full payment)', $booking->deposit_policy);
+        $this->assertEquals(10000, PaymentModel::latest('id')->first()->amount);
+        $this->assertSame('Full Payment', $booking->depositInfo()['display']);
+    }
+
+    public function test_downpayments_turned_off_means_full_payment_even_if_requested(): void
+    {
+        $studio = $this->createStudio(['requires_downpayment' => false, 'downpayment_percentage' => 50]);
 
         $this->actingAs($this->client)
             ->postJson('/_test/client/booking', $this->bookingPayload($studio))
@@ -67,10 +89,34 @@ class DepositPolicyTest extends TestCase
         $booking = BookingModel::latest('id')->first();
 
         $this->assertSame('full_payment', $booking->payment_type);
-        $this->assertSame(10000, $booking->getRawOriginal('down_payment'));
+        $this->assertEquals(10000, $booking->down_payment);
     }
 
-    public function test_summary_is_full_payment_regardless_of_requested_type(): void
+    public function test_fixed_amount_downpayment_is_charged_and_capped_at_the_total(): void
+    {
+        $studio = $this->createStudio(['requires_downpayment' => true, 'downpayment_type' => 'fixed', 'downpayment_amount' => 2000]);
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', $this->bookingPayload($studio))
+            ->assertOk();
+
+        $booking = BookingModel::latest('id')->first();
+        $this->assertSame('downpayment', $booking->payment_type);
+        $this->assertEquals(2000, $booking->down_payment);
+        $this->assertEquals(8000, $booking->getRawOriginal('remaining_balance'));
+        $this->assertSame('Fixed: ₱2,000.00', $booking->deposit_policy);
+        $this->assertSame('Fixed downpayment: ₱2,000.00', $booking->depositInfo()['display']);
+        $this->assertTrue($booking->depositInfo()['is_fixed']);
+        $this->assertEquals(2000, PaymentModel::latest('id')->first()->amount);
+
+        // A fixed amount at or above the total is simply full payment.
+        $terms = BookingModel::paymentTerms('studio', $studio->fill(['downpayment_amount' => 25000]), 10000, 'downpayment');
+        $this->assertSame('full_payment', $terms['payment_type']);
+        $this->assertEquals(10000, $terms['down_payment']);
+        $this->assertEquals(0, $terms['remaining_balance']);
+    }
+
+    public function test_summary_shows_the_downpayment_and_balance(): void
     {
         $studio = $this->createStudio(['requires_downpayment' => true, 'downpayment_percentage' => 30]);
         $payload = $this->bookingPayload($studio);
@@ -82,17 +128,45 @@ class DepositPolicyTest extends TestCase
                 'payment_type' => 'downpayment',
             ])
             ->assertOk()
-            ->assertJsonPath('summary.payment_type', 'full_payment')
-            ->assertJsonPath('summary.down_payment', '10,000.00')
-            ->assertJsonPath('summary.remaining_balance', '0.00')
+            ->assertJsonPath('summary.payment_type', 'downpayment')
+            ->assertJsonPath('summary.down_payment', '3,000.00')
+            ->assertJsonPath('summary.remaining_balance', '7,000.00')
+            ->assertJsonPath('summary.downpayment_percentage', 30)
+            ->assertJsonPath('summary.deposit_type', 'percentage')
             ->assertJsonPath('summary.enhancement_amount', '0.00')
             ->assertJsonPath('summary.photo_edit_option', 'raw');
+
+        $this->postJson('/_test/client/booking-summary', [
+            'package_id' => $payload['package_id'],
+            'type' => 'studio',
+            'payment_type' => 'full_payment',
+        ])->assertOk()
+            ->assertJsonPath('summary.payment_type', 'full_payment')
+            ->assertJsonPath('summary.down_payment', '10,000.00')
+            ->assertJsonPath('summary.remaining_balance', '0.00');
+    }
+
+    public function test_freelancer_deposit_policy_decides_the_payment_type(): void
+    {
+        $required = new \App\Models\Freelancer\ProfileModel(['deposit_policy' => 'required', 'deposit_type' => 'percentage', 'deposit_amount' => 25]);
+        $terms = BookingModel::paymentTerms('freelancer', $required, 8000, 'full_payment');
+        $this->assertSame('downpayment', $terms['payment_type']);
+        $this->assertEquals(2000, $terms['down_payment']);
+        $this->assertEquals(6000, $terms['remaining_balance']);
+
+        $fixed = new \App\Models\Freelancer\ProfileModel(['deposit_policy' => 'required', 'deposit_type' => 'fixed', 'deposit_amount' => 1500]);
+        $this->assertEquals(1500, BookingModel::paymentTerms('freelancer', $fixed, 8000, null)['down_payment']);
+
+        $none = new \App\Models\Freelancer\ProfileModel(['deposit_policy' => 'not_required']);
+        $terms = BookingModel::paymentTerms('freelancer', $none, 8000, 'downpayment');
+        $this->assertSame('full_payment', $terms['payment_type']);
+        $this->assertEquals(8000, $terms['down_payment']);
     }
 
     public function test_enhanced_photos_add_the_price_to_summary_total_and_booking_snapshot(): void
     {
         $studio = $this->createStudio();
-        $payload = $this->bookingPayload($studio);
+        $payload = ['payment_type' => 'full_payment'] + $this->bookingPayload($studio);
         StudioPackagesModel::whereKey($payload['package_id'])->update([
             'enhanced_photos_price' => 750,
             'materials' => json_encode([['name' => 'Photo frame', 'quantity' => 2]]),
@@ -261,6 +335,8 @@ class DepositPolicyTest extends TestCase
             $table->string('status');
             $table->decimal('downpayment_percentage', 8, 2)->nullable();
             $table->boolean('requires_downpayment')->default(true);
+            $table->string('downpayment_type', 20)->default('percentage');
+            $table->decimal('downpayment_amount', 10, 2)->nullable();
             $table->integer('max_clients_per_day')->nullable();
             $table->integer('advance_booking_days')->nullable();
             $table->softDeletes();

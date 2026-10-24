@@ -110,6 +110,29 @@ class StudioCommercialSettingsTest extends TestCase
             ->assertJsonValidationErrors('permit_expiry_date');
     }
 
+    public function test_owner_can_set_a_fixed_downpayment_amount(): void
+    {
+        $this->withoutMiddleware([
+            \App\Http\Middleware\OwnerMiddleware::class,
+            \App\Http\Middleware\EnforceStudioSubscriptionAccess::class,
+            \App\Http\Middleware\CheckStudioRegistrationLimit::class,
+            \App\Http\Middleware\CheckPermissionMiddleware::class,
+        ]);
+        $studio = StudiosModel::create(['user_id' => $this->owner->id, 'studio_name' => 'Fixed Studio', 'status' => 'verified', 'permit_expiry_date' => '2027-01-31']);
+        $update = fn (array $fields) => $this->actingAs($this->owner)->putJson(route('owner.studio.update', $studio->id), $this->validStudioPayload(['studio_name' => 'Fixed Studio', 'requires_downpayment' => 1] + $fields));
+
+        $update(['downpayment_type' => 'fixed'])->assertUnprocessable()->assertJsonValidationErrors('downpayment_amount');
+
+        $update(['downpayment_type' => 'fixed', 'downpayment_amount' => 2000])->assertOk();
+        $this->assertSame('fixed', $studio->fresh()->downpayment_type);
+        $this->assertSame('2000.00', $studio->fresh()->downpayment_amount);
+
+        // Switching back to a percentage clears the fixed amount.
+        $update(['downpayment_type' => 'percentage', 'downpayment_percentage' => 25, 'downpayment_amount' => 2000])->assertOk();
+        $this->assertSame('percentage', $studio->fresh()->downpayment_type);
+        $this->assertNull($studio->fresh()->downpayment_amount);
+    }
+
     public function test_updating_studio_stores_commercial_fields_and_allows_nullable_permit_expiry_date(): void
     {
         $this->withoutMiddleware([
@@ -277,6 +300,8 @@ class StudioCommercialSettingsTest extends TestCase
             $table->decimal('maximum_price', 10, 2)->nullable();
             $table->decimal('downpayment_percentage', 8, 2)->nullable();
             $table->boolean('requires_downpayment')->default(true);
+            $table->string('downpayment_type', 20)->default('percentage');
+            $table->decimal('downpayment_amount', 10, 2)->nullable();
             $table->date('permit_expiry_date')->nullable();
             $table->unsignedInteger('resubmission_count')->default(0);
             $table->string('linkedin_url')->nullable();

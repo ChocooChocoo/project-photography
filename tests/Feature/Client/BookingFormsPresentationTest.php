@@ -79,6 +79,27 @@ class BookingFormsPresentationTest extends TestCase
         $this->assertStringNotContainsString('5% off', $html);
     }
 
+    public function test_payment_section_offers_the_studios_downpayment_or_full_payment(): void
+    {
+        $html = $this->actingAs($this->client)
+            ->get(route('client.booking-forms', ['type' => 'studio', 'id' => $this->studio->id]))
+            ->assertOk()
+            ->getOriginalContent()->render();
+
+        $this->assertStringContainsString('id="payment_type_downpayment" value="downpayment" checked', $html);
+        $this->assertStringContainsString('>30% downpayment</label>', $html);
+        $this->assertStringContainsString('id="payment_type_full" value="full_payment"', $html);
+
+        $this->studio->update(['downpayment_type' => 'fixed', 'downpayment_amount' => 2000]);
+        $html = $this->get(route('client.booking-forms', ['type' => 'studio', 'id' => $this->studio->id]))->getOriginalContent()->render();
+        $this->assertStringContainsString('>₱2,000.00 downpayment</label>', $html);
+
+        $this->studio->update(['requires_downpayment' => false]);
+        $html = $this->get(route('client.booking-forms', ['type' => 'studio', 'id' => $this->studio->id]))->getOriginalContent()->render();
+        $this->assertStringNotContainsString('payment_type_downpayment', $html);
+        $this->assertStringContainsString('<strong>Full Payment:</strong> The full amount is collected upon booking.', $html);
+    }
+
     public function test_preferred_brand_is_a_dropdown_of_the_studios_equipment_brands(): void
     {
         foreach ([['NIKON', 'available'], ['Canon', 'maintenance'], ['canon', 'available'], ['Sony', 'retired'], [null, 'available']] as [$brand, $status]) {
@@ -248,6 +269,9 @@ class BookingFormsPresentationTest extends TestCase
             $table->unsignedInteger('total_reviews')->default(0);
             $table->decimal('starting_price', 10, 2)->default(0);
             $table->decimal('downpayment_percentage', 5, 2)->default(30);
+            $table->boolean('requires_downpayment')->default(true);
+            $table->string('downpayment_type', 20)->default('percentage');
+            $table->decimal('downpayment_amount', 10, 2)->nullable();
             
             $table->softDeletes();$table->timestamps();
         });

@@ -189,6 +189,8 @@ class StudioUpdateTest extends TestCase
             $table->decimal('maximum_price', 10, 2)->nullable();
             $table->decimal('downpayment_percentage', 8, 2)->nullable();
             $table->boolean('requires_downpayment')->default(true);
+            $table->string('downpayment_type', 20)->default('percentage');
+            $table->decimal('downpayment_amount', 10, 2)->nullable();
             $table->date('permit_expiry_date')->nullable();
             $table->unsignedInteger('resubmission_count')->default(0);
             $table->string('linkedin_url')->nullable();
