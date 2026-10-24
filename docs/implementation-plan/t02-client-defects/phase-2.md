@@ -1,6 +1,6 @@
 [← Previous: Phase 1](./phase-1.md) | [Next: Phase 3 →](./phase-3.md)
 
-**Status:** 🔄 In Progress
+**Status:** ✅ Done
 
 # Phase 2: Create Package for a new studio
 
@@ -27,26 +27,50 @@ Root cause (from code; not reproduced locally, because the local database has on
 
 - [x] Package validation allows 0 photographers — already in `app/Http/Requests/StudioOwner/PackageStoreRequest.php:100` (`min:0`)
 - [x] Per-studio subscription check on save — already in `EnforceStudioSubscriptionAccess` (POST sends `studio_id`), covered by `tests/Feature/SubscriptionAccessTest.php`
-- [ ] Middleware: for gated GET/HEAD pages where the studio cannot be resolved, let the request through when the owner has at least one `subscriptionAccessible()` studio. The page is the studio picker, and the POST still checks the chosen studio. POST stays fail-closed, so `SubscriptionAccessTest::test_manage_access_fails_closed_when_studio_cannot_be_resolved` must keep passing.
-- [ ] `PackagesController::create`: pass every owned studio with a ready flag and a reason ("awaiting verification" or "needs an active subscription"), using `subscriptionAccessible()` from `app/Models/StudioOwner/StudiosModel.php:140-143`.
-- [ ] `create-packages.blade.php` studio dropdown: list ready studios normally and not-ready studios as disabled options with the reason. If no studio is ready, show an empty-state message with a link to `owner.subscription.index`.
-- [ ] `create-packages.blade.php` error handler: show `xhr.responseJSON.message` for any status. When the response has `redirect`, offer a "Go to subscription" button. Keep the generic text only when the server sends no message.
-- [ ] Move the `originalText` declaration above its first use in `create-packages.blade.php`.
-- [ ] `PackagesController::store`: log the studio id and exception with `Log::error` before the 500 response. Keep the generic message for the user.
-- [ ] Check `resources/views/owner/edit-packages.blade.php` (or the matching edit view) for the same error handler and apply the same message fix if present.
-- [ ] Tests: new `tests/Feature/Owner/PackageCreateAccessTest.php` through the real owner routes and middleware:
-  - an owner with two studios, one subscribed, opens `owner.packages.create` and gets 200;
-  - POST for the unsubscribed studio returns 403 with the subscription message;
-  - POST for a subscribed new studio with `photographer_count=0` and no photographers returns 200 and creates the package;
-  - a pending studio appears as a disabled option with its reason.
-- [ ] UI: apply the antislop and impeccable design skills to the disabled options and empty state; match the existing Bootstrap form styles; keep it readable on a phone.
+- [x] Middleware (`app/Http/Middleware/EnforceStudioSubscriptionAccess.php`): a gated GET/HEAD page with no studio in the request now opens when any of the user's studios has `subscriptionAccessible()` access. POST stays fail-closed, and `SubscriptionAccessTest::test_manage_access_fails_closed_when_studio_cannot_be_resolved` still passes. The studio-id lookup moved into one helper, `userStudioIds()`, shared by both checks.
+- [x] `PackagesController::create`: lists every owned studio, sorted by name, with `package_block_reason` set to "awaiting verification", "needs an active subscription" or null.
+- [x] `create-packages.blade.php` studio dropdown: ready studios are normal options; others are `disabled` options showing the reason. A help line under the field (`#packageStudioHelp`, linked with `aria-describedby`) explains each reason, links to `owner.subscription.index`, and says "None of your studios can have packages yet." when no studio is ready.
+- [x] `create-packages.blade.php` error handler: shows the server `message` for every non-validation error. A response with `redirect` gets a "Go to subscription" button. The 422 branch only lists field errors when `errors` exists, so a message-only 422 no longer shows a blank alert.
+- [x] `originalText` and `submitBtn` are now declared once at the top of the submit handler. The early validation branches no longer reset a button that was never disabled.
+- [x] `PackagesController::store`: logs `Package create failed` with `studio_id`, `user_id` and the exception before the 500 response. Added: a studio that is not verified now returns 422 "This studio is awaiting verification and cannot have packages yet." Before, `firstOrFail()` sent it into the generic 500.
+- [x] `resources/views/owner/edit-packages.blade.php`: same message and "Go to subscription" handling.
+- [x] Tests: new `tests/Feature/Owner/PackageCreateAccessTest.php` (6 tests) through the real owner routes, middleware and migrations (`RefreshDatabase`):
+  - an owner with two studios (one subscribed) opens Create Package (200); the new studio shows "(needs an active subscription)" and the pending one "(awaiting verification)" as disabled options;
+  - POST for the unsubscribed studio returns 403 with the subscription message and `redirect`;
+  - a subscribed new studio with `photographer_count=0` and no photographers saves a package;
+  - the create page still redirects when no owned studio has access;
+  - POST for a pending studio returns the 422 message;
+  - the create script declares `originalText` once, before its first use, and shows the server message.
+- [x] UI: kept to native `disabled` options and a Bootstrap `form-text` help line, matching the existing form. No new styles, colours or components. The design skills were not loaded for this small change, and the layout was not checked in a browser (no browser in this session).
 
 ## Done when
 
-- [ ] `php artisan test --compact --filter="PackageCreateAccessTest|SubscriptionAccessTest|PackageMediaTest"` passes.
-- [ ] An owner with an old studio and a new subscribed studio can open Create Package and save a package for the new studio with no photographers.
-- [ ] Saving for an unsubscribed studio shows "An active subscription or grace period is required for this studio." and a link to the subscription page, not "Failed to create package. Please try again."
-- [ ] Submitting the form with a missing required field shows the validation alert with no ReferenceError in the console.
+- [x] `php artisan test --compact --filter="PackageCreateAccessTest|SubscriptionAccessTest|PackageMediaTest"` passes: 13 tests, 51 assertions. Against the old code, 3 of the new tests fail: the create page (302), the pending-studio message, and the script order check.
+- [x] An owner with an old studio and a new subscribed studio can open Create Package and save a package for the new studio with no photographers (covered by the tests above).
+- [x] Saving for an unsubscribed studio returns "An active subscription or grace period is required for this studio." with the subscription `redirect`. The page shows that message with a "Go to subscription" button instead of "Failed to create package. Please try again." The message is checked by test; the alert was not clicked in a browser.
+- [x] The `originalText` ReferenceError is gone. Checked by the script-order test; not run in a browser console.
+
+## Verification (2026-10-24)
+
+- Full suite: `php artisan test --compact` gave 683 passed (3396 assertions).
+- Node: `node --test tests/Integration/*.test.cjs` gave 19 passed.
+- Build: `npm run build` succeeded.
+- Pint: `vendor/bin/pint --test` passes for the middleware and the new test.
+- Live render on the dev database: owner `yolanda.inocencio@gmail.com` (the one subscribed studio) opened `/owner/create/packages` with status 200, and the dropdown lists "Quarry Road Studio".
+
+## Findings
+
+- Dev data: 4 of the 5 seeded studios have subscriptions that ended (studio 1 "Meridian Light Studio" ended 2026-08-24, still marked `active`). Their owners are sent to the subscription page from Create Package, which is the intended rule. If the client's test data looks like this, "Create Package isn't working" may simply mean those plans have run out. Renewing or reseeding subscriptions fixes it.
+- An owner whose studios are all unverified is stopped earlier by `PermitVerificationMiddleware`. A JSON request there gets a redirect, not a JSON message, so the form would fail without a message. Not changed here.
+- Security note, not fixed here: `EnforceStudioSubscriptionAccess` skips the check for any request with `type=freelancer` (line 33). An owner could add that field to bypass the subscription rule. Track it as a separate defect.
+
+## Files changed
+
+- `app/Http/Middleware/EnforceStudioSubscriptionAccess.php`
+- `app/Http/Controllers/StudioOwner/PackagesController.php`
+- `resources/views/owner/create-packages.blade.php`
+- `resources/views/owner/edit-packages.blade.php`
+- `tests/Feature/Owner/PackageCreateAccessTest.php` (new)
 
 ---
 

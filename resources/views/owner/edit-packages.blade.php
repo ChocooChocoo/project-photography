@@ -498,15 +498,27 @@
                         }
                     },
                     error: function(xhr) {
-                        if (xhr.status === 422) {
-                            const errors = xhr.responseJSON.errors;
+                        const body = xhr.responseJSON || {};
+                        if (xhr.status === 422 && body.errors) {
+                            const errors = body.errors;
                             let errorMessages = '';
                             for (let field in errors) {
                                 errorMessages += errors[field].join('<br>') + '<br>';
                             }
                             Swal.fire({ icon: 'error', title: 'Validation Error', html: errorMessages });
                         } else {
-                            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update package. Please try again.' });
+                            Swal.fire({
+                                icon: 'error',
+                                title: xhr.status === 403 ? 'Studio not ready' : 'Error',
+                                text: body.message || 'Failed to update package. Please try again.',
+                                confirmButtonText: body.redirect ? 'Go to subscription' : 'OK',
+                                showCancelButton: Boolean(body.redirect),
+                                cancelButtonText: 'Close'
+                            }).then((result) => {
+                                if (body.redirect && result.isConfirmed) {
+                                    window.location.href = body.redirect;
+                                }
+                            });
                         }
                     },
                     complete: function() {

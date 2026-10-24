@@ -75,8 +75,14 @@ class EnforceStudioSubscriptionAccess
         }
 
         $studioId = $this->resolveStudioId($request);
+
+        // A create or setup page with no studio in the request is a studio
+        // picker. Open it when any of the user's studios has access; the save
+        // request names one studio and is checked against that studio.
         $hasAccess = $studioId !== null
-            && StudiosModel::whereKey($studioId)->subscriptionAccessible()->exists();
+            ? StudiosModel::whereKey($studioId)->subscriptionAccessible()->exists()
+            : in_array($request->method(), ['GET', 'HEAD'], true)
+                && StudiosModel::whereIn('id', $this->userStudioIds($user))->subscriptionAccessible()->exists();
 
         if ($hasAccess) {
             return $next($request);
@@ -153,16 +159,20 @@ class EnforceStudioSubscriptionAccess
             }
         }
 
-        $user = Auth::user();
-        if (! $user) {
-            return null;
-        }
-
-        $studioIds = in_array($user->role, ['owner', 'owner-super-admin'], true)
-            ? StudiosModel::where('user_id', $user->id)->pluck('id')
-            : (method_exists($user, 'getAssignedStudioIds') ? $user->getAssignedStudioIds($user->role) : collect());
+        $studioIds = $this->userStudioIds(Auth::user());
 
         return $studioIds->count() === 1 ? (int) $studioIds->first() : null;
+    }
+
+    private function userStudioIds($user): \Illuminate\Support\Collection
+    {
+        if (! $user) {
+            return collect();
+        }
+
+        return in_array($user->role, ['owner', 'owner-super-admin'], true)
+            ? StudiosModel::where('user_id', $user->id)->pluck('id')
+            : (method_exists($user, 'getAssignedStudioIds') ? $user->getAssignedStudioIds($user->role) : collect());
     }
 
     private function redirectForUser($user): string

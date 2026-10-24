@@ -41,10 +41,19 @@ class PackagesController extends Controller
     {
         $userId = Auth::id();
         
-        // Get verified studios for the current user
+        // List every owned studio. A studio that cannot take packages yet is
+        // shown disabled with the reason, so the owner knows what to fix.
+        $accessibleIds = StudiosModel::where('user_id', $userId)->subscriptionAccessible()->pluck('id');
         $studios = StudiosModel::where('user_id', $userId)
-            ->where('status', 'verified')
-            ->get();
+            ->orderBy('studio_name')
+            ->get()
+            ->each(function (StudiosModel $studio) use ($accessibleIds) {
+                $studio->package_block_reason = match (true) {
+                    $studio->status !== 'verified' => 'awaiting verification',
+                    ! $accessibleIds->contains($studio->id) => 'needs an active subscription',
+                    default => null,
+                };
+            });
 
         // Get all active categories
         $categories = CategoriesModel::where('status', 'active')->get();
@@ -62,7 +71,14 @@ class PackagesController extends Controller
             $studio = StudiosModel::where('id', $request->studio_id)
                 ->where('user_id', Auth::id())
                 ->where('status', 'verified')
-                ->firstOrFail();
+                ->first();
+
+            if (! $studio) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This studio is awaiting verification and cannot have packages yet.',
+                ], 422);
+            }
 
             // Get validated data from the request
             $validatedData = $request->validated();
@@ -105,6 +121,12 @@ class PackagesController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Package create failed', [
+                'studio_id' => $request->studio_id,
+                'user_id' => Auth::id(),
+                'exception' => $e,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create package. Please try again.',

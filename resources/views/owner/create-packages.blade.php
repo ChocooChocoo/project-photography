@@ -16,14 +16,34 @@
                                 @csrf
                                 <div class="row">
                                     <div class="col-12 mb-3">
-                                        <label class="form-label">Select Studio</label>
-                                        <select class="form-select" name="studio_id" required>
+                                        <label class="form-label" for="packageStudio">Select Studio</label>
+                                        <select class="form-select" id="packageStudio" name="studio_id" required aria-describedby="packageStudioHelp">
                                             <option value="">Select Studio</option>
                                             @foreach($studios as $studio)
-                                                <option value="{{ $studio->id }}">{{ $studio->studio_name }}</option>
+                                                @if($studio->package_block_reason)
+                                                    <option value="{{ $studio->id }}" disabled>
+                                                        {{ $studio->studio_name }} ({{ $studio->package_block_reason }})
+                                                    </option>
+                                                @else
+                                                    <option value="{{ $studio->id }}">
+                                                        {{ $studio->studio_name }}
+                                                    </option>
+                                                @endif
                                             @endforeach
                                         </select>
                                         <div class="invalid-feedback">Please select a studio.</div>
+                                        <div id="packageStudioHelp" class="form-text">
+                                            @if($studios->every(fn ($studio) => $studio->package_block_reason))
+                                                None of your studios can have packages yet.
+                                            @endif
+                                            @if($studios->contains(fn ($studio) => $studio->package_block_reason === 'needs an active subscription'))
+                                                A studio marked "needs an active subscription" can have packages after you
+                                                <a href="{{ route('owner.subscription.index') }}">subscribe it to a plan</a>.
+                                            @endif
+                                            @if($studios->contains(fn ($studio) => $studio->package_block_reason === 'awaiting verification'))
+                                                A studio marked "awaiting verification" can have packages once an admin approves it.
+                                            @endif
+                                        </div>
                                     </div>
 
                                     <div class="col-12 mb-3">
@@ -591,6 +611,9 @@
             $('#createPackageForm').submit(function(e) {
                 e.preventDefault();
 
+                const submitBtn = $(this).find('button[type="submit"]');
+                const originalText = submitBtn.html();
+
                 // Get form data
                 const formData = new FormData(this);
                 
@@ -622,9 +645,6 @@
                         confirmButtonText: 'OK'
                     });
                     
-                    // Re-enable submit button
-                    const submitBtn = $(this).find('button[type="submit"]');
-                    submitBtn.prop('disabled', false).html(originalText);
                     return false;
                 }
                 
@@ -650,9 +670,6 @@
                         confirmButtonText: 'OK'
                     });
                     
-                    // Re-enable submit button
-                    const submitBtn = $(this).find('button[type="submit"]');
-                    submitBtn.prop('disabled', false).html(originalText);
                     return false;
                 } else {
                     $('#locationError').hide();
@@ -678,9 +695,6 @@
                         confirmButtonText: 'OK'
                     });
                     
-                    // Re-enable submit button
-                    const submitBtn = $(this).find('button[type="submit"]');
-                    submitBtn.prop('disabled', false).html(originalText);
                     return false;
                 }
                 // ==== End: Handle coverage scope validation based on on-location selection ====
@@ -698,9 +712,6 @@
                             confirmButtonColor: '#3475db'
                         });
                         
-                        // Re-enable submit button
-                        const submitBtn = $(this).find('button[type="submit"]');
-                        submitBtn.prop('disabled', false).html(originalText);
                         return false;
                     }
                     
@@ -720,8 +731,6 @@
                 // ==== END: Validate multiple locations fields ====
                 
                 // Show loading state
-                const submitBtn = $(this).find('button[type="submit"]');
-                const originalText = submitBtn.html();
                 submitBtn.prop('disabled', true).html('<i class="ti ti-loader me-1"></i> Creating...');
                 
                 // Submit via AJAX
@@ -784,7 +793,7 @@
                         }
                     },
                     error: function(xhr) {
-                        if (xhr.status === 422) {
+                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                             let errors = xhr.responseJSON.errors;
                             let errorMessages = '';
                             
@@ -801,12 +810,19 @@
                                 confirmButtonText: 'OK'
                             });
                         } else {
+                            const body = xhr.responseJSON || {};
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Error',
-                                text: 'Failed to create package. Please try again.',
+                                title: xhr.status === 403 ? 'Studio not ready' : 'Error',
+                                text: body.message || 'Failed to create package. Please try again.',
                                 confirmButtonColor: '#3475db',
-                                confirmButtonText: 'OK'
+                                confirmButtonText: body.redirect ? 'Go to subscription' : 'OK',
+                                showCancelButton: Boolean(body.redirect),
+                                cancelButtonText: 'Close'
+                            }).then((result) => {
+                                if (body.redirect && result.isConfirmed) {
+                                    window.location.href = body.redirect;
+                                }
                             });
                         }
                     },
