@@ -638,7 +638,7 @@
                                 <span class="text-muted">${pkg.package_name}:</span>
                                 <span class="fw-medium">PHP ${parseFloat(pkg.package_price).toFixed(2)}</span>
                             </div>
-                            ${parseFloat(pkg.enhancement_amount) > 0 ? `<div class="d-flex justify-content-between mb-1"><span class="text-muted">Enhanced photos:</span><span class="fw-medium">PHP ${parseFloat(pkg.enhancement_amount).toFixed(2)}</span></div>` : ''}
+                            <div class="d-flex justify-content-between mb-1"><span class="text-muted">Photo editing:</span><span class="fw-medium text-end">${pkg.editing_summary || 'Unedited (RAW) photos'}${parseFloat(pkg.enhancement_amount) > 0 ? ` (PHP ${parseFloat(pkg.enhancement_amount).toFixed(2)})` : ''}</span></div>
                             ${(pkg.materials || []).map(m => `<div class="small text-muted">${parseInt(m.quantity) || 1} &times; ${$('<div>').text(m.name || '').html()}</div>`).join('')}
                         `;
                     });

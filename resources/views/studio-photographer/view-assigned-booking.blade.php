@@ -348,6 +348,7 @@
                                 <span class="text-muted">${pkg.package_name}:</span>
                                 <span class="fw-medium">PHP ${parseFloat(pkg.package_price).toFixed(2)}</span>
                             </div>
+                            <p class="small mb-2"><span class="text-muted">Photo editing:</span> <strong>${pkg.editing_summary || 'Unedited (RAW) photos'}</strong></p>
                         `;
                     });
                 }

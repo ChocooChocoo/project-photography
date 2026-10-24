@@ -360,20 +360,12 @@
                                         </div>
                                     @endif
 
-                                    {{-- Shown by JS only when the selected package offers enhanced photos --}}
-                                    <div id="photoEditOptions" class="mt-3" style="display: none;">
-                                        <label class="form-label fw-medium">Photo Delivery</label>
-                                        <div class="btn-group w-100" role="group" aria-label="Photo delivery option">
-                                            <input class="btn-check" type="radio" name="photo_edit_option" id="photo_edit_raw" value="raw" checked>
-                                            <label class="btn btn-outline-primary" for="photo_edit_raw">
-                                                <i class="ti ti-photo me-1"></i> Raw photos
-                                            </label>
-                                            <input class="btn-check" type="radio" name="photo_edit_option" id="photo_edit_enhanced" value="enhanced">
-                                            <label class="btn btn-outline-primary" for="photo_edit_enhanced">
-                                                <i class="ti ti-sparkles me-1"></i> Enhanced photos <span id="enhancedPriceLabel"></span>
-                                            </label>
-                                        </div>
-                                    </div>
+                                    {{-- Shown by JS only when the selected package offers photo editing --}}
+                                    <fieldset id="photoEditOptions" class="mt-3" style="display: none;" aria-describedby="photoEditHelp">
+                                        <legend class="form-label fw-medium fs-6">Photo Editing</legend>
+                                        <div id="editingServiceList"></div>
+                                        <small id="photoEditHelp" class="form-text text-muted">Leave all unchecked to receive unedited (RAW) photos. Each service adds its price to the total.</small>
+                                    </fieldset>
                                 </div>
 
                                 {{-- EVENT LOCATION --}}
@@ -570,7 +562,7 @@
                             <span class="fw-medium" id="packagePrice">₱0</span>
                         </div>
                         <div class="d-flex d-none justify-content-between mb-2" id="enhancementRow">
-                            <span>Enhanced Photos:</span>
+                            <span id="enhancementLabel">Photo editing:</span>
                             <span class="fw-medium" id="enhancementAmount">₱0</span>
                         </div>
 
@@ -884,7 +876,7 @@
             $('input[name="payment_type"]:checked').trigger('change');
 
             // Re-price the summary when the client switches between raw and enhanced photos
-            $('input[name="photo_edit_option"]').on('change', function() {
+            $(document).on('change', '.editing-service', function() {
                 if (!selectedPackageId) return;
                 const packageData = $(`.package-radio[value="${selectedPackageId}"]`).data('package');
                 if (packageData) {
@@ -1219,12 +1211,12 @@
                                                             </li>
                                                         `).join('')}
 
-                                                        ${package.enhanced_photos_price !== null && package.enhanced_photos_price !== undefined ? `
+                                                        ${Object.values(package.editing_options || {}).map(option => `
                                                             <li class="mb-1">
                                                                 <i class="ti ti-sparkles text-success me-2"></i>
-                                                                Enhanced photos available: +₱${parseFloat(package.enhanced_photos_price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                                                ${$('<div>').text(option.label).html()} available: +₱${parseFloat(option.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                                             </li>
-                                                        ` : ''}
+                                                        `).join('')}
 
                                                         ${package.coverage_scope ? `
                                                             <li class="mb-1">
@@ -1330,11 +1322,17 @@
                     return;
                 }
                 
-                // Offer raw/enhanced only when the package has an enhanced-photos price
-                const hasEnhanced = packageData.enhanced_photos_price !== null && packageData.enhanced_photos_price !== undefined;
-                $('#photo_edit_raw').prop('checked', true);
-                $('#enhancedPriceLabel').text(hasEnhanced ? '(+₱' + parseFloat(packageData.enhanced_photos_price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')' : '');
-                $('#photoEditOptions').toggle(hasEnhanced);
+                // Offer the editing services this package prices; none checked means RAW photos
+                const editingOptions = Object.entries(packageData.editing_options || {});
+                $('#editingServiceList').html(editingOptions.map(([key, option]) => `
+                    <div class="form-check">
+                        <input class="form-check-input editing-service" type="checkbox" name="editing_services[]" id="editing_${key}" value="${key}">
+                        <label class="form-check-label" for="editing_${key}">
+                            ${$('<div>').text(option.label).html()} <span class="text-muted">(+₱${parseFloat(option.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})})</span>
+                        </label>
+                    </div>
+                `).join(''));
+                $('#photoEditOptions').toggle(editingOptions.length > 0);
 
                 // ==== START: Reset and prepare location UI based on booking type ====
                 resetLocationUI();
@@ -1826,7 +1824,7 @@
                 }
                 // ==== END: Handle recurring booking fields ====
                 
-                bookingData.photo_edit_option = $('input[name="photo_edit_option"]:checked').val() || 'raw';
+                bookingData.editing_services = selectedEditingServices();
 
                 // ==== FIXED: Handle payment type based on booking type and policy ====
                 if (bookingType === 'freelancer') {
@@ -2040,7 +2038,7 @@
                         package_id: packageData.id,
                         type: $('#bookingType').val(),
                         payment_type: paymentType,
-                        photo_edit_option: $('input[name="photo_edit_option"]:checked').val(),
+                        editing_services: selectedEditingServices(),
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
@@ -2474,7 +2472,7 @@
                         package_id: packageData.id,
                         type: $('#bookingType').val(),
                         payment_type: $('input[name="payment_type"]:checked').val(),
-                        photo_edit_option: $('input[name="photo_edit_option"]:checked').val(),
+                        editing_services: selectedEditingServices(),
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
@@ -2912,8 +2910,13 @@
              * Update summary price display
              */
             function renderEnhancementRow(summary) {
+                $('#enhancementLabel').text('Photo editing (' + (summary.editing_services || []).join(', ') + '):');
                 $('#enhancementAmount').text('₱' + summary.enhancement_amount);
                 $('#enhancementRow').toggleClass('d-none', summary.photo_edit_option !== 'enhanced');
+            }
+
+            function selectedEditingServices() {
+                return $('.editing-service:checked').map((i, el) => el.value).get();
             }
 
             /**

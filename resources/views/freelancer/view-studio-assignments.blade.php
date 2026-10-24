@@ -24,6 +24,9 @@
             <p>{{ $assignment->studio->studio_name }}. Status: {{ str_replace('_', ' ', $assignment->status) }}.</p>
             <a class="btn btn-outline-secondary mb-3" href="{{ route('freelancer.messages.index', ['booking' => $booking->id]) }}">Message booking contact</a>
             <p><strong>Access ends {{ app(\App\Services\FreelancerBookingAccess::class)->eventEnd($booking)->format('M d, Y H:i') }} Asia/Manila.</strong></p>
+            @foreach($booking->packages as $bookedPackage)
+                <p class="mb-2">{{ $bookedPackage->package_name }}. Photo editing: <strong>{{ $bookedPackage->editing_summary }}</strong>.</p>
+            @endforeach
             <h3 class="h6">Equipment</h3>
             <p>Client's preferred camera brand: <strong>{{ $booking->preferred_camera_brand ?: 'No preference' }}</strong></p>
             <ul class="list-unstyled mb-4">

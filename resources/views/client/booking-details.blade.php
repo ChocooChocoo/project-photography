@@ -320,12 +320,12 @@
                                                                                 </li>
                                                                             @endforeach
 
-                                                                            @if($package->enhanced_photos_price !== null)
+                                                                            @foreach($package->editingOptions() as $editing)
                                                                                 <li class="mb-1">
                                                                                     <i class="ti ti-sparkles text-success me-2"></i>
-                                                                                    Enhanced photos available: +₱{{ number_format($package->enhanced_photos_price, 2) }}
+                                                                                    {{ $editing['label'] }} available: +₱{{ number_format($editing['price'], 2) }}
                                                                                 </li>
-                                                                            @endif
+                                                                            @endforeach
 
                                                                             @php
                                                                                 $coverageScope = $package->coverage_scope;

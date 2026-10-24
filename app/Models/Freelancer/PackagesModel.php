@@ -2,12 +2,15 @@
 
 namespace App\Models\Freelancer;
 
+use App\Models\Concerns\HasEditingOptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
 class PackagesModel extends Model
 {
+    use HasEditingOptions;
+
     /**
      * The table associated with the model.
      *
@@ -41,6 +44,7 @@ class PackagesModel extends Model
         'cover_videos',
         'materials',
         'enhanced_photos_price',
+        'editing_prices',
     ];
 
     /**
@@ -61,6 +65,7 @@ class PackagesModel extends Model
         'cover_videos' => 'array',
         'materials' => 'array',
         'enhanced_photos_price' => 'decimal:2',
+        'editing_prices' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

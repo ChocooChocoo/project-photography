@@ -140,6 +140,14 @@ class FreelancerAccessTest extends TestCase
             $t->timestamp('confirmed_at')->nullable();
             $t->timestamps();
         });
+        Schema::create('tbl_booking_packages', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('booking_id');
+            $t->unsignedBigInteger('package_id');
+            $t->string('package_type');
+            $t->string('package_name');
+            $t->timestamps();
+        });
         $owner = $this->user('owner');
         $this->freelancer = $this->user('freelancer');
         $studio = StudiosModel::create(['user_id' => $owner->id, 'studio_name' => 'Access studio', 'status' => 'verified']);
@@ -232,14 +240,6 @@ class FreelancerAccessTest extends TestCase
             $t->text('assignment_notes')->nullable();
             $t->timestamp('assigned_at')->nullable();
             $t->timestamp('response_deadline')->nullable();
-        });
-        Schema::create('tbl_booking_packages', function (Blueprint $t) {
-            $t->id();
-            $t->unsignedBigInteger('booking_id');
-            $t->unsignedBigInteger('package_id');
-            $t->string('package_type');
-            $t->string('package_name');
-            $t->timestamps();
         });
         Schema::create('tbl_packages', function (Blueprint $t) {
             $t->id();

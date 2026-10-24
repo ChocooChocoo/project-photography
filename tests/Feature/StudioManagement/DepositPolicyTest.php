@@ -374,6 +374,7 @@ class DepositPolicyTest extends TestCase
             $table->string('coverage_scope')->nullable();
             $table->json('materials')->nullable();
             $table->decimal('enhanced_photos_price', 10, 2)->nullable();
+            $table->json('editing_prices')->nullable();
             $table->decimal('package_price', 10, 2);
             $table->json('package_location')->nullable();
             $table->boolean('allow_multiple_locations')->default(false);
@@ -432,6 +433,7 @@ class DepositPolicyTest extends TestCase
             $table->json('materials')->nullable();
             $table->string('photo_edit_option', 20)->nullable();
             $table->decimal('enhancement_amount', 10, 2)->default(0);
+            $table->json('editing_services')->nullable();
             $table->timestamps();
         });
         Schema::create('tbl_payments', function (Blueprint $table) {

@@ -21,7 +21,7 @@ class StudioAssignmentController extends Controller
         if (Schema::hasColumn('tbl_user_roles', 'booking_id')) {
             $assignments = BookingAssignedPhotographerModel::where('photographer_id', $request->user()->id)
                 ->where('is_freelancer', true)->whereNotIn('status', ['cancelled', 'completed'])
-                ->with('booking.equipment', 'studio')->latest()->get()
+                ->with('booking.equipment', 'booking.packages', 'studio')->latest()->get()
                 ->filter(fn ($assignment) => $access->allows($request->user(), $assignment));
         }
 

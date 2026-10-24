@@ -532,6 +532,8 @@ class BookingController extends Controller
         // Studio clients choose; a freelancer's deposit policy overrides the request.
         $rules['payment_type'] = 'nullable|in:downpayment,full_payment';
         $rules['photo_edit_option'] = 'nullable|in:raw,enhanced';
+        $rules['editing_services'] = 'nullable|array|max:4';
+        $rules['editing_services.*'] = 'distinct|in:'.implode(',', array_keys(StudioPackagesModel::EDITING_SERVICES)).',enhanced';
 
         $request->validate($rules, [
             'terms_agree.required' => 'You must agree to the booking terms and conditions.',
@@ -587,14 +589,11 @@ class BookingController extends Controller
             }
 
             // 4. Calculate amounts: full payment only, plus the optional photo enhancement
-            $photoEdit = $this->resolvePhotoEdit($package, $request->input('photo_edit_option'));
-            if ($photoEdit === null) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Enhanced photos are not offered for this package.',
-                ], 422);
+            $photoEdit = $this->resolvePhotoEdit($package, $request);
+            if (isset($photoEdit['error'])) {
+                return response()->json(['success' => false, 'message' => $photoEdit['error']], 422);
             }
-            [$photoEditOption, $enhancementAmount] = $photoEdit;
+            ['option' => $photoEditOption, 'amount' => $enhancementAmount, 'services' => $editingServices] = $photoEdit;
 
             $totalAmount = $package->package_price + $enhancementAmount;
 
@@ -685,7 +684,7 @@ class BookingController extends Controller
             }
 
             // Create booking (with child sessions for recurring bookings)
-            $booking = DB::transaction(function () use ($bookingData, $package, $request, $photoEditOption, $enhancementAmount) {
+            $booking = DB::transaction(function () use ($bookingData, $package, $request, $photoEditOption, $enhancementAmount, $editingServices) {
                 $booking = BookingModel::create($bookingData);
 
                 $normalizedCoverageScope = $this->normalizeCoverageScope($package->coverage_scope);
@@ -704,7 +703,7 @@ class BookingController extends Controller
                     'materials' => $package->materials,
                     'photo_edit_option' => $photoEditOption,
                     'enhancement_amount' => $enhancementAmount,
-                ]);
+                ] + ($editingServices ? ['editing_services' => $editingServices] : []));
 
                 // 6a. Long-term bookings get a contract both parties must sign
                 if ($booking->requiresContract()) {
@@ -1726,13 +1725,39 @@ class BookingController extends Controller
      *
      * @return array{0: string, 1: float}|null
      */
-    private function resolvePhotoEdit($package, ?string $option): ?array
+    /**
+     * Price the photo editing the client chose. No services means unedited
+     * (RAW) photos at the package price. The older single "enhanced" choice
+     * still works for packages that only have an enhanced-photos price.
+     *
+     * @return array{option: string, amount: float, services: array<string, float>}|array{error: string}
+     */
+    private function resolvePhotoEdit($package, Request $request): array
     {
-        if ($option !== 'enhanced') {
-            return ['raw', 0.0];
+        $chosen = array_values(array_unique((array) $request->input('editing_services', [])));
+        if ($chosen === [] && $request->input('photo_edit_option') === 'enhanced') {
+            $chosen = ['enhanced'];
+        }
+        if ($chosen === []) {
+            return ['option' => 'raw', 'amount' => 0.0, 'services' => []];
         }
 
-        return $package->enhanced_photos_price === null ? null : ['enhanced', (float) $package->enhanced_photos_price];
+        $offered = $package->editingOptions();
+        $missing = array_diff($chosen, array_keys($offered));
+        if ($missing !== []) {
+            $labels = StudioPackagesModel::EDITING_SERVICES + ['enhanced' => 'Enhanced photos'];
+
+            return ['error' => 'This package does not offer: '.implode(', ', array_map(fn ($key) => $labels[$key] ?? $key, $missing)).'.'];
+        }
+
+        $services = [];
+        foreach (array_keys($offered) as $key) {
+            if (in_array($key, $chosen, true)) {
+                $services[$key] = $offered[$key]['price'];
+            }
+        }
+
+        return ['option' => 'enhanced', 'amount' => round(array_sum($services), 2), 'services' => $services];
     }
 
     /**
@@ -1744,6 +1769,8 @@ class BookingController extends Controller
             'package_id' => 'required|integer',
             'type' => 'required|in:studio,freelancer',
             'photo_edit_option' => 'nullable|in:raw,enhanced',
+            'editing_services' => 'nullable|array|max:4',
+            'editing_services.*' => 'distinct|in:'.implode(',', array_keys(StudioPackagesModel::EDITING_SERVICES)).',enhanced',
             'payment_type' => 'nullable|in:downpayment,full_payment',
         ]);
 
@@ -1755,14 +1782,11 @@ class BookingController extends Controller
             $provider = ProfileModel::where('user_id', $package->user_id)->first();
         }
 
-        $photoEdit = $this->resolvePhotoEdit($package, $request->input('photo_edit_option'));
-        if ($photoEdit === null) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Enhanced photos are not offered for this package.',
-            ], 422);
+        $photoEdit = $this->resolvePhotoEdit($package, $request);
+        if (isset($photoEdit['error'])) {
+            return response()->json(['success' => false, 'message' => $photoEdit['error']], 422);
         }
-        [$photoEditOption, $enhancementAmount] = $photoEdit;
+        ['option' => $photoEditOption, 'amount' => $enhancementAmount, 'services' => $editingServices] = $photoEdit;
 
         $totalAmount = $package->package_price + $enhancementAmount;
         $terms = BookingModel::paymentTerms($request->type, $provider, (float) $totalAmount, $request->input('payment_type'));
@@ -1776,6 +1800,8 @@ class BookingController extends Controller
             'package_price' => number_format($package->package_price, 2),
             'photo_edit_option' => $photoEditOption,
             'enhancement_amount' => number_format($enhancementAmount, 2),
+            'editing_services' => array_map(fn ($key) => $package->editingOptions()[$key]['label'], array_keys($editingServices)),
+            'editing_options' => $package->editingOptions(),
             'materials' => $package->materials ?? [],
             'total_amount' => number_format($totalAmount, 2),
             'down_payment' => number_format($downPayment, 2),
@@ -2534,6 +2560,7 @@ class BookingController extends Controller
                             'cover_videos' => array_map(fn ($path) => asset('storage/' . $path), $package->cover_videos ?? []),
                             'materials' => $package->materials ?? [],
                             'enhanced_photos_price' => $package->enhanced_photos_price,
+                            'editing_options' => $package->editingOptions(),
                             // ========== START: DSS - Add budget info to response ==========
                             'budget_info' => $budgetMatch
                             // ========== END: DSS - Add budget info ==========
@@ -2594,6 +2621,7 @@ class BookingController extends Controller
                             'cover_videos' => array_map(fn ($path) => asset('storage/' . $path), $package->cover_videos ?? []),
                             'materials' => $package->materials ?? [],
                             'enhanced_photos_price' => $package->enhanced_photos_price,
+                            'editing_options' => $package->editingOptions(),
                             // ========== START: DSS - Add budget info to response ==========
                             'budget_info' => $budgetMatch
                             // ========== END: DSS - Add budget info ==========

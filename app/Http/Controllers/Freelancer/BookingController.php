@@ -47,7 +47,7 @@ class BookingController extends Controller
             $booking = BookingModel::with([
                 'client:id,first_name,last_name,email,mobile_number',
                 'category:id,category_name',
-                'packages:id,booking_id,package_name,package_price,package_inclusions,duration,maximum_edited_photos,coverage_scope,materials,photo_edit_option,enhancement_amount',
+                'packages:id,booking_id,package_name,package_price,package_inclusions,duration,maximum_edited_photos,coverage_scope,materials,photo_edit_option,enhancement_amount,editing_services',
                 'payments:id,booking_id,amount,status,payment_method,paid_at'
             ])->findOrFail($id);
             

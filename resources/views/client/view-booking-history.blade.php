@@ -929,7 +929,7 @@
                                         <span class="text-muted">Price:</span>
                                         <span class="fw-semibold">₱${parseFloat(pkg.package_price).toFixed(2)}</span>
                                     </div>
-                                    ${parseFloat(pkg.enhancement_amount) > 0 ? `<div class="d-flex justify-content-between mb-2"><span class="text-muted">Enhanced photos:</span><span class="fw-medium">+₱${parseFloat(pkg.enhancement_amount).toFixed(2)}</span></div>` : ''}
+                                    ${parseFloat(pkg.enhancement_amount) > 0 ? `<div class="d-flex justify-content-between mb-2"><span class="text-muted">Photo editing (${pkg.editing_summary}):</span><span class="fw-medium">+₱${parseFloat(pkg.enhancement_amount).toFixed(2)}</span></div>` : ''}
                                     ${(pkg.materials || []).map(m => `<div class="small text-muted">${parseInt(m.quantity) || 1} &times; ${$('<div>').text(m.name || '').html()}</div>`).join('')}
                                     <div class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Duration:</span>

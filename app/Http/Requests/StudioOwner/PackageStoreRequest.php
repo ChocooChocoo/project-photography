@@ -107,6 +107,9 @@ class PackageStoreRequest extends FormRequest
             'materials.*.name' => 'required|string|max:100',
             'materials.*.quantity' => 'required|integer|min:1|max:999',
             'enhanced_photos_price' => 'nullable|numeric|min:0|max:1000000',
+            // Price per editing service; an empty price means the service is not offered.
+            'editing_prices' => 'nullable|array:color_grading,brightness_contrast,retouching',
+            'editing_prices.*' => 'nullable|numeric|min:0|max:1000000',
         ];
     }
 

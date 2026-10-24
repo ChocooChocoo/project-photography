@@ -53,7 +53,7 @@ class AssignedBookingController extends Controller
                         $query->with([
                             'client:id,first_name,last_name,email,mobile_number',
                             'category:id,category_name',
-                            'packages:id,booking_id,package_id,package_type,package_name,package_price,package_inclusions,duration,maximum_edited_photos,coverage_scope',
+                            'packages:id,booking_id,package_id,package_type,package_name,package_price,package_inclusions,duration,maximum_edited_photos,coverage_scope,photo_edit_option,enhancement_amount,editing_services',
                             'packages.studioPackage:id,package_name,online_gallery',
                             'payments:id,booking_id,amount,status,payment_method,paid_at',
                         ]);

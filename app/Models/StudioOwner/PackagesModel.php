@@ -2,6 +2,7 @@
 
 namespace App\Models\StudioOwner;
 
+use App\Models\Concerns\HasEditingOptions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PackagesModel extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasEditingOptions, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -44,6 +45,7 @@ class PackagesModel extends Model
         'cover_videos',
         'materials',
         'enhanced_photos_price',
+        'editing_prices',
     ];
 
     /**
@@ -67,6 +69,7 @@ class PackagesModel extends Model
         'cover_videos' => 'array',
         'materials' => 'array',
         'enhanced_photos_price' => 'decimal:2',
+        'editing_prices' => 'array',
     ];
 
     /**

@@ -34,7 +34,13 @@ class BookingPackageModel extends Model
         'materials',
         'photo_edit_option',
         'enhancement_amount',
+        'editing_services',
     ];
+
+    /**
+     * @var array<int, string>
+     */
+    protected $appends = ['editing_summary'];
 
     /**
      * The attributes that should be cast.
@@ -46,9 +52,28 @@ class BookingPackageModel extends Model
         'package_inclusions' => 'array',
         'materials' => 'array',
         'enhancement_amount' => 'decimal:2',
+        'editing_services' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * What the client asked for: "Unedited (RAW) photos" or the booked
+     * editing services, e.g. "Color grading, Retouching".
+     */
+    public function getEditingSummaryAttribute(): string
+    {
+        $labels = \App\Models\StudioOwner\PackagesModel::EDITING_SERVICES + ['enhanced' => 'Enhanced photos'];
+        // MySQL JSON reorders keys, so list services in the fixed catalog order.
+        $services = array_keys(array_intersect_key($labels, $this->editing_services ?? []));
+        if ($services === [] && $this->photo_edit_option === 'enhanced') {
+            $services = ['enhanced'];
+        }
+
+        return $services === []
+            ? 'Unedited (RAW) photos'
+            : implode(', ', array_map(fn ($key) => $labels[$key] ?? $key, $services));
+    }
 
     /**
      * Get the booking associated with the package.

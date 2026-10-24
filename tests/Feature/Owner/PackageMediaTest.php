@@ -76,6 +76,22 @@ class PackageMediaTest extends TestCase
         $this->assertSame('750.00', $package->enhanced_photos_price);
     }
 
+    public function test_store_saves_per_service_editing_prices(): void
+    {
+        $this->post('/_test/packages', $this->payload([
+            'editing_prices' => ['color_grading' => 500, 'brightness_contrast' => null, 'retouching' => 1200],
+        ]), ['Accept' => 'application/json'])->assertOk();
+
+        $package = PackagesModel::firstOrFail();
+        $this->assertEquals(['color_grading' => 500, 'brightness_contrast' => null, 'retouching' => 1200], $package->editing_prices);
+        $this->assertSame(['color_grading', 'retouching'], array_keys($package->editingOptions()));
+
+        $this->post('/_test/packages', $this->payload(['editing_prices' => ['face_swap' => 300]]), ['Accept' => 'application/json'])
+            ->assertStatus(422)->assertJsonValidationErrors('editing_prices');
+        $this->post('/_test/packages', $this->payload(['editing_prices' => ['retouching' => -5]]), ['Accept' => 'application/json'])
+            ->assertStatus(422)->assertJsonValidationErrors('editing_prices.retouching');
+    }
+
     public function test_store_rejects_bad_video_type_oversize_and_too_many(): void
     {
         $headers = ['Accept' => 'application/json'];
@@ -169,6 +185,7 @@ class PackageMediaTest extends TestCase
             $table->json('cover_videos')->nullable();
             $table->json('materials')->nullable();
             $table->decimal('enhanced_photos_price', 10, 2)->nullable();
+            $table->json('editing_prices')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

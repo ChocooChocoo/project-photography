@@ -1,9 +1,10 @@
-{{-- Shared package fields: cover videos, materials, enhanced-photo price. Include inside the package form.
+{{-- Shared package fields: cover videos, materials, photo editing prices. Include inside the package form.
      Call window.appendPackageExtras(formData, formElement) before submitting. --}}
 @php
     $extrasVideos = $package->cover_videos ?? [];
     $extrasMaterials = $package->materials ?? [];
-    $extrasPrice = $package->enhanced_photos_price ?? '';
+    $extrasLegacyPrice = $package->enhanced_photos_price ?? null;
+    $extrasEditingPrices = $package->editing_prices ?? [];
 @endphp
 
 <div class="col-12 mb-3 package-extras">
@@ -36,14 +37,24 @@
     <button type="button" class="btn btn-sm btn-default" id="addMaterialBtn"><i class="ti ti-plus"></i> Add material</button>
 </div>
 
-<div class="col-12 mb-3 package-extras">
-    <label class="form-label">Enhanced Photos Price <small class="text-muted">(optional)</small></label>
-    <div class="input-group">
-        <span class="input-group-text">₱</span>
-        <input type="number" class="form-control" name="enhanced_photos_price" id="enhancedPhotosPrice" min="0" step="0.01" value="{{ $extrasPrice }}" placeholder="Leave empty to offer raw photos only">
+<fieldset class="col-12 mb-3 package-extras" aria-describedby="editingPricesHelp">
+    <legend class="form-label fs-6 mb-1">Photo Editing Prices <small class="text-muted">(optional)</small></legend>
+    <p id="editingPricesHelp" class="form-text mt-0 mb-2">Clients can pick one or more services on top of the package price. Leave a price empty to not offer that service. With no prices, clients get unedited (RAW) photos.</p>
+    @if ($extrasLegacyPrice !== null && empty(array_filter($extrasEditingPrices, fn ($price) => $price !== null && $price !== '')))
+        <p class="form-text text-warning-emphasis mb-2">This package still uses the older single enhanced-photos price of ₱{{ number_format($extrasLegacyPrice, 2) }}. Setting prices below replaces it.</p>
+    @endif
+    <div class="row g-2">
+        @foreach (\App\Models\StudioOwner\PackagesModel::EDITING_SERVICES as $serviceKey => $serviceLabel)
+            <div class="col-12 col-md-4">
+                <label class="form-label small" for="editingPrice-{{ $serviceKey }}">{{ $serviceLabel }}</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input type="number" class="form-control" id="editingPrice-{{ $serviceKey }}" name="editing_prices[{{ $serviceKey }}]" min="0" step="0.01" value="{{ $extrasEditingPrices[$serviceKey] ?? '' }}" placeholder="Not offered">
+                </div>
+            </div>
+        @endforeach
     </div>
-    <div class="form-text">Extra amount a client pays to receive enhanced photos instead of raw photos.</div>
-</div>
+</fieldset>
 
 <script>
     (function () {
@@ -74,7 +85,6 @@
 
             formData.delete('cover_videos[]');
             Array.from(form.querySelector('#coverVideos').files).forEach((f) => formData.append('cover_videos[]', f));
-            formData.set('enhanced_photos_price', form.querySelector('#enhancedPhotosPrice').value);
 
             formData.delete('keep_cover_videos[]');
             formData.set('keep_cover_videos_sent', '1');
