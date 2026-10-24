@@ -104,5 +104,7 @@ Source: [T-13](../09%20-%20TASK%20TRACKER.md) and the [T02 plan](../../implement
 | 2 | The assigned photographer's modal shows the booking's equipment and a "Confirm equipment" action. | `tests/Feature/Booking/EquipmentAssignmentTest.php`, `BookingPreparationTest.php` |
 | 3 | A freelancer can refund only a fully paid booking. A downpayment-only booking is refused with "A downpayment is non-refundable. Only fully paid bookings can be refunded." | `tests/Feature/Booking/ClientCancellationRefundFlowTest.php` |
 | 4 | The photographer's assignment view lists the photo editing the client chose. | `tests/Feature/Booking/PhotoEditingPricingTest.php`, `FreelancerAccessTest.php` |
+| 5 | An owner can invite freelancers to any studio they own, not only the first. The member pages have a studio picker, and an invite names only a studio the owner owns. | `tests/Feature/Owner/MemberInviteStudioTest.php` |
+| 6 | A fallback freelancer keeps booking-scoped access after the event, so they can deliver the gallery. Access ends when their work or the booking is completed or cancelled. Thirty days after the event end is only a safety cap. Re-run in the browser on 24 October 2026 ([Phase 10](../../implementation-plan/t02-client-defects/phase-10.md)). | `tests/Feature/Booking/FreelancerAccessTest.php`, `tests/Feature/Chat/ChatTest.php` |
 
 Open question from the 24 October re-run: a freelancer booking can be completed once fully paid, with no gallery delivered. Studio bookings must first have a published gallery and delivered printed photos.

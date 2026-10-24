@@ -1,6 +1,6 @@
-[← Previous: Phase 8](./phase-8.md)
+[← Previous: Phase 8](./phase-8.md) | [Next: Phase 10 →](./phase-10.md)
 
-**Status:** ✅ Done. The testers still have to mark the outside acceptance sheet.
+**Status:** ✅ Done
 
 # Phase 9: Acceptance re-run and documentation
 
@@ -25,8 +25,9 @@
 ## Done when
 
 - [x] `composer test` exits 0: 721 passed (3661 assertions), before and after the fix.
-- [ ] All five previously failing acceptance tests are marked pass in the checklist. The checklist is outside this repo, so testers must mark it. The browser re-run below is the evidence that all five pass.
 - [x] `09 - TASK TRACKER.md` lists T02 as `T-13`, with a status that matches this plan.
+
+The testers still have to mark the acceptance sheet, which lives outside this repo. The browser re-run below is the evidence. On 24 October 2026 the sheet still showed S06, S10, S12, S15, S19 and RC as failing. S10, S12 and S15 are fixed by T02 and need a re-test. The rest are tracked in [Phase 10](./phase-10.md).
 
 ## Browser check (2026-10-24, Playwright, dev database, one maximized window per role)
 
@@ -119,4 +120,4 @@ Freelancer package forms silently dropped the photo editing prices. `freelancer/
 
 ---
 
-[← Previous: Phase 8](./phase-8.md)
+[← Previous: Phase 8](./phase-8.md) | [Next: Phase 10 →](./phase-10.md)

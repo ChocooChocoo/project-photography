@@ -93,3 +93,12 @@ The current source exposes validation, authorization, state checks, provider fal
 | # | Unclear point | Why it matters |
 |---|---|---|
 | Q-02 | ~~What are renewal, failed-payment, cancellation, card-on-file, and reactivation rules?~~ **Resolved by the approved Phase 6 design and implementation on 12 August 2026.** | Card-free trials, signed Stripe subscription events, provider retries with fixed local grace, period-end cancel/resume, and previous-plan reactivation are covered; upgrades and freelancer subscriptions remain out of scope. |
+
+## T02 changes (24 October 2026)
+
+Source: [T-13](../09%20-%20TASK%20TRACKER.md) and [Phase 10](../../implementation-plan/t02-client-defects/phase-10.md). Verified locally with tests and a browser re-run; production is unverified.
+
+| # | Shipped behavior | Tests |
+|---|---|---|
+| 1 | A plan is still per studio. An owner with more than one studio picks the studio on the plans page ("Plan for studio"), and the confirm dialog names it. Without a choice, the plan goes to the first owned studio that has no active plan. Before, every plan went to the first studio, so a second studio could never get one. | `tests/Feature/Subscription/SubscriptionTrialHistoryTest.php` |
+| 2 | Subscription history, status, details, cancel and resume cover every studio the owner owns, not only the first. | `tests/Feature/Subscription/SubscriptionTrialHistoryTest.php`, `tests/Feature/SubscriptionLifecycleTest.php` |
