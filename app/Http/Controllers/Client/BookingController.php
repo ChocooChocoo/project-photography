@@ -401,30 +401,7 @@ class BookingController extends Controller
      */
     private function hasTimeslotConflict($type, $providerId, $date, $startTime, $endTime, $endDate = null): bool
     {
-        if (!$type || !$providerId || !$date || !$startTime || !$endTime) {
-            return false;
-        }
-
-        return BookingModel::where('booking_type', $type)
-            ->where('provider_id', $providerId)
-            ->overlappingDates($date, $endDate)
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->where(function ($query) use ($startTime, $endTime) {
-                $query->where(function ($q) use ($startTime) {
-                    // New booking starts during an existing booking
-                    $q->where('start_time', '<=', $startTime)
-                        ->where('end_time', '>', $startTime);
-                })->orWhere(function ($q) use ($endTime) {
-                    // New booking ends during an existing booking
-                    $q->where('start_time', '<', $endTime)
-                        ->where('end_time', '>=', $endTime);
-                })->orWhere(function ($q) use ($startTime, $endTime) {
-                    // New booking completely covers an existing booking
-                    $q->where('start_time', '>=', $startTime)
-                        ->where('end_time', '<=', $endTime);
-                });
-            })
-            ->exists();
+        return BookingModel::timeslotTaken($type, $providerId, $date, $startTime, $endTime, $endDate);
     }
 
     /**

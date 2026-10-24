@@ -62,7 +62,8 @@ class EnforceStudioSubscriptionAccess
         // Settling a cancellation refund is fulfilling a booking the client already paid.
         if ($capability === 'fulfill-paid-booking'
             || in_array($routeName, $fulfillmentRoutes, true)
-            || str_contains($routeName, 'owner.booking.recovery.')) {
+            || str_contains($routeName, 'owner.booking.recovery.')
+            || str_contains($routeName, 'owner.booking.reschedule.')) {
             $booking = $this->resolveBooking($request);
 
             if ($booking
@@ -113,6 +114,10 @@ class EnforceStudioSubscriptionAccess
 
         if (! is_numeric($bookingId) && $request->route('galleryId')) {
             $bookingId = StudioOnlineGalleryModel::find($request->route('galleryId'))?->booking_id;
+        }
+
+        if (! is_numeric($bookingId) && $request->route('rescheduleId')) {
+            $bookingId = \App\Models\BookingRescheduleRequestModel::find($request->route('rescheduleId'))?->booking_id;
         }
 
         if (! is_numeric($bookingId) && $request->route('recoveryId')) {

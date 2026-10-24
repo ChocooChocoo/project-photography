@@ -235,6 +235,11 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::post('/online-gallery/{bookingId}/upload', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'uploadImages'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.upload');
         Route::post('/online-gallery/{bookingId}/drive-link', [\App\Http\Controllers\GalleryDeliveryController::class, 'saveDrive'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.drive');
         Route::get('/bookings/{bookingId}/hardcopy', [\App\Http\Controllers\HardcopyOrderController::class, 'ownerShow'])->middleware('permission:owner.bookings.manage')->name('owner.hardcopy.index');
+        // Reschedule requests (T02)
+        Route::get('/bookings/{bookingId}/reschedule', [\App\Http\Controllers\BookingRescheduleController::class, 'providerShow'])->middleware('permission:owner.bookings.manage')->name('owner.booking.reschedule.show');
+        Route::post('/reschedule-requests/{rescheduleId}/approve', [\App\Http\Controllers\BookingRescheduleController::class, 'approve'])->middleware('permission:owner.bookings.manage')->name('owner.booking.reschedule.approve');
+        Route::post('/reschedule-requests/{rescheduleId}/reject', [\App\Http\Controllers\BookingRescheduleController::class, 'reject'])->middleware('permission:owner.bookings.manage')->name('owner.booking.reschedule.reject');
+        Route::post('/reschedule-requests/{rescheduleId}/offer', [\App\Http\Controllers\BookingRescheduleController::class, 'offer'])->middleware('permission:owner.bookings.manage')->name('owner.booking.reschedule.offer');
         Route::post('/bookings/{bookingId}/hardcopy', [\App\Http\Controllers\HardcopyOrderController::class, 'store'])->middleware('permission:owner.bookings.manage')->name('owner.hardcopy.store');
         Route::post('/bookings/{bookingId}/hardcopy/{order}/status', [\App\Http\Controllers\HardcopyOrderController::class, 'status'])->middleware('permission:owner.bookings.manage')->name('owner.hardcopy.status');
         Route::delete('/online-gallery/{galleryId}/image', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'deleteImage'])->middleware('permission:owner.online-gallery.manage')->name('owner.online-gallery.delete-image');
@@ -598,6 +603,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/booking/history', [\App\Http\Controllers\Freelancer\BookingController::class, 'history'])->name('freelancer.booking.history');
         Route::get('/bookings/{id}/details', [\App\Http\Controllers\Freelancer\BookingController::class, 'getBookingDetails'])->name('freelancer.booking.details');
         Route::put('/bookings/{id}/status', [\App\Http\Controllers\Freelancer\BookingController::class, 'updateStatus'])->name('freelancer.booking.update.status');
+        Route::get('/bookings/{bookingId}/reschedule', [\App\Http\Controllers\BookingRescheduleController::class, 'providerShow'])->name('freelancer.booking.reschedule.show');
+        Route::post('/reschedule-requests/{rescheduleId}/approve', [\App\Http\Controllers\BookingRescheduleController::class, 'approve'])->name('freelancer.booking.reschedule.approve');
+        Route::post('/reschedule-requests/{rescheduleId}/reject', [\App\Http\Controllers\BookingRescheduleController::class, 'reject'])->name('freelancer.booking.reschedule.reject');
+        Route::post('/reschedule-requests/{rescheduleId}/offer', [\App\Http\Controllers\BookingRescheduleController::class, 'offer'])->name('freelancer.booking.reschedule.offer');
         Route::put('/bookings/{id}/payment-status', [\App\Http\Controllers\Freelancer\BookingController::class, 'updatePaymentStatus'])->name('freelancer.booking.update.payment.status');
 
         // Manage Online Gallery
@@ -712,6 +721,9 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::post('/bookings/{booking}/feedback/{type}', [\App\Http\Controllers\Client\BookingFeedbackController::class, 'store'])->middleware('throttle:10,1')->name('client.feedback.store');
         Route::get('/view/my-bookings', [\App\Http\Controllers\Client\MyBookingsController::class, 'index'])->name('client.my-bookings.index');
         Route::get('/bookings/{bookingId}/hardcopy', [\App\Http\Controllers\HardcopyOrderController::class, 'clientShow'])->name('client.hardcopy.index');
+        Route::get('/bookings/{bookingId}/reschedule', [\App\Http\Controllers\BookingRescheduleController::class, 'clientShow'])->name('client.booking.reschedule.show');
+        Route::post('/bookings/{bookingId}/reschedule', [\App\Http\Controllers\BookingRescheduleController::class, 'clientStore'])->name('client.booking.reschedule.store');
+        Route::post('/reschedule-requests/{rescheduleId}/accept', [\App\Http\Controllers\BookingRescheduleController::class, 'clientAccept'])->name('client.booking.reschedule.accept');
         Route::post('/bookings/{bookingId}/hardcopy/{order}/accept', [\App\Http\Controllers\HardcopyOrderController::class, 'accept'])->name('client.hardcopy.accept');
         Route::get('/view/bookings-history', [\App\Http\Controllers\Client\MyBookingsController::class, 'history'])->name('client.my-bookings.history');
         Route::get('/view/refunds', [\App\Http\Controllers\Client\MyBookingsController::class, 'refunds'])->name('client.refunds.index');

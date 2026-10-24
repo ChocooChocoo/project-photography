@@ -252,6 +252,7 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
+    @include('partials.booking-reschedule-script')
     @include('partials.contract-block-js')
     <script>
         $(document).ready(function() {
@@ -649,6 +650,8 @@
                 $('#bookingReference').text(booking.booking_reference);
                 $('#bookingModalBody').html(modalContent);
                 $('#bookingModalBody').prepend(window.renderContractBlock(data.contract, 'freelancer'));
+                $('#bookingModalBody').append('<section id="freelancerReschedulePanel" class="mt-4 border-top pt-3"></section>');
+                window.mountReschedule(document.getElementById('freelancerReschedulePanel'), @json(route('freelancer.booking.reschedule.show', '__ID__', false)).replace('__ID__', booking.id));
                 $('#bookingModalFooter').show();
                 loadIcons();
             }

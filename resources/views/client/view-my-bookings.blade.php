@@ -274,6 +274,7 @@
     <script src="{{ asset('assets/js/booking-preparation.js') }}"></script>
     @include('partials.contract-block-js')
     @include('partials.hardcopy-script')
+    @include('partials.booking-reschedule-script')
     <script>
         $(document).ready(function() {
             let currentBookingId = null;
@@ -1263,6 +1264,8 @@
                     $('#bookingModalBody').append('<section id="clientHardcopyPanel" class="mt-4 border-top pt-3"></section>');
                     window.mountHardcopy(document.getElementById('clientHardcopyPanel'), booking.id, false);
                 }
+                $('#bookingModalBody').append('<section id="clientReschedulePanel" class="mt-4 border-top pt-3"></section>');
+                window.mountReschedule(document.getElementById('clientReschedulePanel'), @json(route('client.booking.reschedule.show', '__ID__', false)).replace('__ID__', booking.id));
                 if (data.preparation_url) {
                     const preparation = $('<div>');
                     $('#bookingModalBody').append(preparation);

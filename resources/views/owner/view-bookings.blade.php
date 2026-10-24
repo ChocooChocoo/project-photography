@@ -326,6 +326,7 @@
     </script>
     @include('partials.contract-block-js')
     @include('partials.hardcopy-script')
+    @include('partials.booking-reschedule-script')
     <script>
         $(document).ready(function() {
             let currentBookingId = null;
@@ -1046,6 +1047,8 @@
                 window.mountBookingEquipment(document.getElementById('ownerEquipmentPanel'), booking, assignedPhotographers || []);
                 $('#bookingModalBody').append('<section id="ownerHardcopyPanel" class="mt-4 border-top pt-3"></section>');
                 window.mountHardcopy(document.getElementById('ownerHardcopyPanel'), booking.id, true);
+                $('#bookingModalBody').append('<section id="ownerReschedulePanel" class="mt-4 border-top pt-3"></section>');
+                window.mountReschedule(document.getElementById('ownerReschedulePanel'), @json(route('owner.booking.reschedule.show', '__ID__', false)).replace('__ID__', booking.id));
                 const proofs = (assignedPhotographers || []).filter(a => a.on_site_proof_image);
                 if (proofs.length) {
                     const section = $('<section class="mt-4"><h5>Photographer arrival proof</h5></section>');

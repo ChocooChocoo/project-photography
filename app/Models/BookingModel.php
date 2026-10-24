@@ -622,6 +622,40 @@ class BookingModel extends Model
     }
 
     /**
+     * Whether a pending or confirmed booking of the provider overlaps this
+     * slot. Used when booking and when rescheduling, which skips the booking
+     * being moved.
+     */
+    public static function timeslotTaken($type, $providerId, $date, $startTime, $endTime, $endDate = null, ?int $exceptBookingId = null): bool
+    {
+        if (! $type || ! $providerId || ! $date || ! $startTime || ! $endTime) {
+            return false;
+        }
+
+        return self::where('booking_type', $type)
+            ->when($exceptBookingId, fn ($query) => $query->whereKeyNot($exceptBookingId))
+            ->where('provider_id', $providerId)
+            ->overlappingDates($date, $endDate)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->where(function ($query) use ($startTime, $endTime) {
+                $query->where(function ($q) use ($startTime) {
+                    // New booking starts during an existing booking
+                    $q->where('start_time', '<=', $startTime)
+                        ->where('end_time', '>', $startTime);
+                })->orWhere(function ($q) use ($endTime) {
+                    // New booking ends during an existing booking
+                    $q->where('start_time', '<', $endTime)
+                        ->where('end_time', '>=', $endTime);
+                })->orWhere(function ($q) use ($startTime, $endTime) {
+                    // New booking completely covers an existing booking
+                    $q->where('start_time', '>=', $startTime)
+                        ->where('end_time', '<=', $endTime);
+                });
+            })
+            ->exists();
+    }
+
+    /**
      * The provider's downpayment setting, or null when bookings are full payment only.
      *
      * Studios: owner switch requires_downpayment, with downpayment_type percentage
