@@ -36,9 +36,9 @@
                                             @if($studios->every(fn ($studio) => $studio->package_block_reason))
                                                 None of your studios can have packages yet.
                                             @endif
-                                            @if($studios->contains(fn ($studio) => $studio->package_block_reason === 'needs an active subscription'))
+                                            @if($unsubscribed = $studios->first(fn ($studio) => $studio->package_block_reason === 'needs an active subscription'))
                                                 A studio marked "needs an active subscription" can have packages after you
-                                                <a href="{{ route('owner.subscription.index') }}">subscribe it to a plan</a>.
+                                                <a href="{{ route('owner.subscription.index', ['studio_id' => $unsubscribed->id]) }}">subscribe it to a plan</a>.
                                             @endif
                                             @if($studios->contains(fn ($studio) => $studio->package_block_reason === 'awaiting verification'))
                                                 A studio marked "awaiting verification" can have packages once an admin approves it.

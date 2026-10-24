@@ -55,6 +55,19 @@ class PackageCreateAccessTest extends TestCase
         $this->assertMatchesRegularExpression('/<option value="'.$pending->id.'" disabled>\s*Pending Studio \(awaiting verification\)/', $html);
     }
 
+    public function test_create_page_links_the_unsubscribed_studio_to_its_own_plan_page(): void
+    {
+        // T02 Phase 10: the plan page used to put every plan on the first studio.
+        $old = $this->createStudio('Old Studio');
+        $this->subscribe($old);
+        $new = $this->createStudio('New Studio');
+        $this->grantPackages([$old, $new]);
+
+        $this->actingAs($this->owner)
+            ->get(route('owner.packages.create'))
+            ->assertSee(route('owner.subscription.index', ['studio_id' => $new->id]), false);
+    }
+
     public function test_saving_for_an_unsubscribed_studio_returns_the_subscription_message(): void
     {
         $old = $this->createStudio('Old Studio');

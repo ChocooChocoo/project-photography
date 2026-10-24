@@ -19,6 +19,8 @@
                 </div>
             </div>
 
+            @include('partials.studio-picker', ['route' => 'owner.subscription.index', 'label' => 'Plan for studio', 'help' => 'Each studio needs its own plan.'])
+
             <!-- Current Subscription Info -->
             @if($currentSubscription)
             <div class="row mb-4">
@@ -474,6 +476,7 @@
                     <p>You are about to subscribe to:</p>
                     <h5 class="fw-bold" id="confirmPlanName"></h5>
                     <p class="mb-0">Amount: <span class="fw-bold text-primary" id="confirmPlanPrice"></span></p>
+                    @if($studio)<p class="mb-0">Studio: <span class="fw-bold">{{ $studio->studio_name }}</span></p>@endif
                     <p><small class="text-muted">You will be redirected to Stripe to complete the payment.</small></p>
                 </div>
                 <div class="modal-footer">
@@ -628,6 +631,7 @@
                     type: 'POST',
                     data: {
                         plan_id: selectedPlanId,
+                        studio_id: @json($studio?->id),
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {

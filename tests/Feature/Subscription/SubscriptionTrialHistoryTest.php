@@ -159,6 +159,52 @@ class SubscriptionTrialHistoryTest extends TestCase
         $this->assertNull($pending->trial_ends_at);
     }
 
+    public function test_subscribing_without_a_studio_picks_the_owners_studio_that_has_no_plan(): void
+    {
+        // T02 Phase 10: the plan always landed on the first studio, so a
+        // second studio could never get one and could not create packages.
+        [$owner, $first] = $this->ownerStudio();
+        $owner->unsetRelation('studio');
+        Auth::setUser($owner);
+        $plan = $this->plan();
+        $this->subscription($first, $plan);
+        $second = StudiosModel::create(['user_id' => $owner->id, 'studio_name' => 'Second Studio', 'status' => 'verified']);
+
+        $response = (new SubscriptionController($this->paidCheckoutStripe()))->subscribe(
+            SubscribeRequest::create('/owner/subscription/subscribe', 'POST', ['plan_id' => $plan->id])
+        );
+
+        $this->assertSame(200, $response->status());
+        $this->assertSame(1, StudioPlanModel::where('studio_id', $second->id)->count());
+    }
+
+    public function test_subscribing_for_a_chosen_studio_uses_that_studio_and_rejects_other_owners(): void
+    {
+        [$owner, $first] = $this->ownerStudio();
+        $owner->unsetRelation('studio');
+        Auth::setUser($owner);
+        $plan = $this->plan();
+        $second = StudiosModel::create(['user_id' => $owner->id, 'studio_name' => 'Second Studio', 'status' => 'verified']);
+        [, $foreign] = $this->ownerStudio();
+
+        $controller = new SubscriptionController($this->paidCheckoutStripe());
+        $chosen = $controller->subscribe(SubscribeRequest::create('/owner/subscription/subscribe', 'POST', ['plan_id' => $plan->id, 'studio_id' => $second->id]));
+        $refused = $controller->subscribe(SubscribeRequest::create('/owner/subscription/subscribe', 'POST', ['plan_id' => $plan->id, 'studio_id' => $foreign->id]));
+
+        $this->assertSame(200, $chosen->status());
+        $this->assertSame([$second->id], StudioPlanModel::pluck('studio_id')->map(fn ($id) => (int) $id)->all());
+        $this->assertSame(404, $refused->status());
+    }
+
+    private function paidCheckoutStripe(): StripeService
+    {
+        $stripe = Mockery::mock(StripeService::class);
+        $stripe->shouldReceive('createSubscriptionCheckoutSession')
+            ->andReturn(['id' => 'cs_'.str()->random(6), 'url' => 'https://checkout.test/paid']);
+
+        return $stripe;
+    }
+
     private function ownerStudio(): array
     {
         $owner = UserModel::create([

@@ -32,16 +32,34 @@ class SubscriptionController extends Controller
             ->orderBy('price')
             ->get();
 
-        // Get current active subscription if any
-        $currentSubscription = null;
-        if (auth()->user()->studio) {
-            $currentSubscription = StudioPlanModel::where('studio_id', auth()->user()->studio->id)
-                ->currentlyActive()
-                ->latest()
-                ->first();
+        $studios = $this->ownedStudios();
+        $studio = $this->targetStudio(request()->integer('studio_id') ?: null);
+        $currentSubscription = $studio
+            ? StudioPlanModel::where('studio_id', $studio->id)->currentlyActive()->latest()->first()
+            : null;
+
+        return view('owner.view-subscription-plans', compact('plans', 'currentSubscription', 'studios', 'studio'));
+    }
+
+    /** @return \Illuminate\Support\Collection<int, StudiosModel> */
+    private function ownedStudios()
+    {
+        return StudiosModel::where('user_id', auth()->id())->orderBy('id')->get();
+    }
+
+    /**
+     * The studio a plan is for: the one the owner chose, or else the first
+     * owned studio without an active plan. A plan belongs to one studio.
+     */
+    private function targetStudio(?int $studioId): ?StudiosModel
+    {
+        $studios = $this->ownedStudios();
+        if ($studioId) {
+            return $studios->firstWhere('id', $studioId);
         }
 
-        return view('owner.view-subscription-plans', compact('plans', 'currentSubscription'));
+        return $studios->first(fn (StudiosModel $studio) => ! StudioPlanModel::where('studio_id', $studio->id)->currentlyActive()->exists())
+            ?? $studios->first();
     }
 
     /**
@@ -102,23 +120,20 @@ class SubscriptionController extends Controller
         try {
             DB::beginTransaction();
 
-            $user = auth()->user();
+            $studioId = $request->integer('studio_id') ?: null;
+            $studio = $this->targetStudio($studioId);
 
-            // Check if user has a studio
-            $studio = $user->studio;
+            if ($studioId && ! $studio) {
+                return response()->json(['success' => false, 'message' => 'Studio not found.'], 404);
+            }
 
             if (! $studio) {
-                // Check if there are any studios owned by this user
-                $studio = \App\Models\StudioOwner\StudiosModel::where('user_id', $user->id)->first();
-
-                if (! $studio) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'You need to create a studio first before subscribing to a plan.',
-                        'redirect_to_studio_creation' => true,
-                        'studio_creation_url' => route('owner.studio.create'),
-                    ], 400);
-                }
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You need to create a studio first before subscribing to a plan.',
+                    'redirect_to_studio_creation' => true,
+                    'studio_creation_url' => route('owner.studio.create'),
+                ], 400);
             }
 
             // Check if there's an active subscription
@@ -250,18 +265,10 @@ class SubscriptionController extends Controller
     public function history(): JsonResponse
     {
         try {
-            $user = auth()->user();
+            $studioIds = $this->ownedStudios()->pluck('id');
 
-            // Get the studio - check both relations
-            $studio = $user->studio;
-
-            if (! $studio) {
-                // Try to find studio directly
-                $studio = \App\Models\StudioOwner\StudiosModel::where('user_id', $user->id)->first();
-            }
-
-            // If still no studio, return empty history instead of error
-            if (! $studio) {
+            // No studio yet: return empty history instead of an error.
+            if ($studioIds->isEmpty()) {
                 return response()->json([
                     'success' => true,
                     'data' => [],
@@ -269,7 +276,7 @@ class SubscriptionController extends Controller
             }
 
             $subscriptions = StudioPlanModel::with('plan')
-                ->where('studio_id', $studio->id)
+                ->whereIn('studio_id', $studioIds)
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($subscription) {
@@ -407,15 +414,9 @@ class SubscriptionController extends Controller
     public function getStatusData(Request $request): JsonResponse
     {
         try {
-            $user = auth()->user();
+            $studioIds = $this->ownedStudios()->pluck('id');
 
-            // Get the studio
-            $studio = $user->studio;
-            if (! $studio) {
-                $studio = \App\Models\StudioOwner\StudiosModel::where('user_id', $user->id)->first();
-            }
-
-            if (! $studio) {
+            if ($studioIds->isEmpty()) {
                 return response()->json([
                     'draw' => intval($request->input('draw', 1)),
                     'recordsTotal' => 0,
@@ -425,7 +426,7 @@ class SubscriptionController extends Controller
             }
 
             $query = StudioPlanModel::with('plan')
-                ->where('studio_id', $studio->id);
+                ->whereIn('studio_id', $studioIds);
 
             // Search
             if ($request->has('search') && ! empty($request->search['value'])) {
@@ -520,15 +521,9 @@ class SubscriptionController extends Controller
     public function getSubscriptionDetails(string $id): JsonResponse
     {
         try {
-            $user = auth()->user();
+            $studioIds = $this->ownedStudios()->pluck('id');
 
-            // Get the studio
-            $studio = $user->studio;
-            if (! $studio) {
-                $studio = \App\Models\StudioOwner\StudiosModel::where('user_id', $user->id)->first();
-            }
-
-            if (! $studio) {
+            if ($studioIds->isEmpty()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Studio not found.',
@@ -537,7 +532,7 @@ class SubscriptionController extends Controller
 
             $subscription = StudioPlanModel::with('plan')
                 ->where('id', $id)
-                ->where('studio_id', $studio->id)
+                ->whereIn('studio_id', $studioIds)
                 ->first();
 
             if (! $subscription) {
@@ -616,16 +611,8 @@ class SubscriptionController extends Controller
     public function cancel(Request $request, string $id): JsonResponse
     {
         try {
-            $studio = $this->studioForUser();
-            if (! $studio) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Studio not found.',
-                ], 400);
-            }
-
             $subscription = StudioPlanModel::whereKey($id)
-                ->where('studio_id', $studio->id)
+                ->whereIn('studio_id', $this->ownedStudios()->pluck('id'))
                 ->first();
 
             if (! $subscription) {
@@ -684,10 +671,8 @@ class SubscriptionController extends Controller
 
     public function resume(Request $request, string $id): JsonResponse
     {
-        $studio = $this->studioForUser();
-        $subscription = $studio
-            ? StudioPlanModel::whereKey($id)->where('studio_id', $studio->id)->first()
-            : null;
+        $subscription = StudioPlanModel::whereKey($id)->whereIn('studio_id', $this->ownedStudios()->pluck('id'))->first();
+        $studio = $subscription?->studio;
 
         if (! $subscription) {
             return response()->json(['success' => false, 'message' => 'Subscription not found.'], 404);
@@ -746,13 +731,6 @@ class SubscriptionController extends Controller
         $renewal->update(['stripe_session_id' => $checkout['id']]);
 
         return response()->json(['success' => true, 'checkout_url' => $checkout['url'], 'subscription_id' => $renewal->id]);
-    }
-
-    private function studioForUser(): ?StudiosModel
-    {
-        $user = auth()->user();
-
-        return $user?->studio ?: StudiosModel::where('user_id', $user?->id)->first();
     }
 
     /**
