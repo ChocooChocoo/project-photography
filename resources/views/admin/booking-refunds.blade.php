@@ -49,8 +49,9 @@
 
             function eventDate(value) {
                 if (!value) return 'N/A';
-                const date = new Date(String(value).slice(0, 10) + 'T00:00:00');
-                return isNaN(date) ? String(value).slice(0, 10) : date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                // Dates arrive as UTC timestamps (e.g. 2026-11-27T16:00:00Z for Nov 28 in Manila).
+                const date = new Date(String(value).length > 10 ? value : String(value) + 'T00:00:00+08:00');
+                return isNaN(date) ? String(value).slice(0, 10) : date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Manila' });
             }
 
             function paymentStatusBadge(status) {

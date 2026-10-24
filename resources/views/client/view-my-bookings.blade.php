@@ -152,6 +152,7 @@
                                                     <button class="btn btn-sm cancel-booking-btn" 
                                                             data-booking-id="{{ $booking->id }}"
                                                             data-booking-reference="{{ $booking->booking_reference }}"
+                                                            data-refund-note="{{ $booking->cancellationRefundNote() }}"
                                                             title="Cancel Booking">
                                                         <i class="ti ti-x fs-lg"></i>
                                                     </button>
@@ -287,10 +288,14 @@
             $(document).on('click', '.cancel-booking-btn', function() {
                 const bookingId = $(this).data('booking-id');
                 const bookingRef = $(this).data('booking-reference');
+                // Plain text from the server, shown as text so it cannot inject markup.
+                const refundNote = $('<p class="small fw-medium mb-2">').text($(this).attr('data-refund-note') || '').prop('outerHTML');
+                const hasRefundNote = Boolean($(this).attr('data-refund-note'));
                 
                 Swal.fire({
                     title: 'Cancel Booking',
                     html: `<p>Are you sure you want to cancel booking <strong>${bookingRef}</strong>?</p>
+                          ${hasRefundNote ? refundNote : ''}
                           <textarea id="cancellationReason" class="swal2-textarea" placeholder="Reason (required)"></textarea>
                           <p class="text-danger small">Note: Bookings can only be cancelled at least 24 hours before the event date.</p>`,
                     icon: 'warning',

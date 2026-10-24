@@ -243,6 +243,8 @@ class MyBookingsController extends Controller
             }
 
             $reason = $request->cancellation_reason;
+            // Read before cancelling: it depends on what was paid.
+            $refundNote = $booking->cancellationRefundNote();
 
             DB::transaction(function () use ($booking, $reason) {
                 $update = [
@@ -280,7 +282,7 @@ class MyBookingsController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Booking cancelled successfully.',
+                'message' => $refundNote ? 'Booking cancelled. '.$refundNote : 'Booking cancelled successfully.',
             ]);
         } catch (\Exception $e) {
             return response()->json([

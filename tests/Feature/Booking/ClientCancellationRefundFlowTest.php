@@ -50,7 +50,8 @@ class ClientCancellationRefundFlowTest extends TestCase
         $this->actingAs($client)
             ->postJson("/_test/client/booking/{$booking->id}/cancel", ['cancellation_reason' => 'The freelancer service is no longer needed for this project.'])
             ->assertOk()
-            ->assertJsonPath('success', true);
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('message', 'Booking cancelled. Your downpayment of ₱300.00 is non-refundable and is kept by the photographer.');
 
         $booking->refresh();
         $this->assertSame(BookingModel::STATUS_CANCELLED, $booking->status);
@@ -80,7 +81,8 @@ class ClientCancellationRefundFlowTest extends TestCase
 
         $this->actingAs($client)
             ->postJson("/_test/client/booking/{$booking->id}/cancel", ['cancellation_reason' => 'The venue is no longer available for the chosen date.'])
-            ->assertOk();
+            ->assertOk()
+            ->assertJsonPath('message', 'Booking cancelled. Your downpayment of ₱300.00 is non-refundable and is kept by the studio.');
 
         $this->assertSame(BookingModel::PAYMENT_PARTIALLY_PAID, $booking->fresh()->payment_status);
         $this->assertSame(0, BookingCancellationRecoveryModel::where('booking_id', $booking->id)->count());
@@ -101,7 +103,8 @@ class ClientCancellationRefundFlowTest extends TestCase
 
         $this->actingAs($client)
             ->postJson("/_test/client/booking/{$booking->id}/cancel", ['cancellation_reason' => 'Our family has decided to relocate and cancel the event.'])
-            ->assertOk();
+            ->assertOk()
+            ->assertJsonPath('message', 'Booking cancelled. You paid in full, so the studio will decide your refund, up to ₱1,000.00.');
 
         $booking->refresh();
         $this->assertSame(BookingModel::PAYMENT_REFUND_PENDING, $booking->payment_status);
@@ -130,6 +133,83 @@ class ClientCancellationRefundFlowTest extends TestCase
         $this->assertSame('250.00', $payment->fresh()->refunded_amount);
         // Only part of the paid total went back, so the booking is not fully refunded.
         $this->assertSame(BookingModel::PAYMENT_REFUND_PENDING, $booking->fresh()->payment_status);
+    }
+
+    public function test_full_payment_cancel_with_a_4000_partial_refund_is_recorded_for_audit(): void
+    {
+        $client = $this->createUser('client', 'client-cancel-partial-4000@example.com');
+        $studio = $this->createStudio();
+        $booking = $this->createBooking($studio->id, 'studio', $client, [
+            'total_amount' => 10000,
+            'down_payment' => 10000,
+            'remaining_balance' => 0,
+            'payment_type' => 'full_payment',
+            'payment_status' => BookingModel::PAYMENT_PAID,
+        ]);
+        $payment = $this->createPayment($booking, 10000, 'PAY-CLIENT-PARTIAL-4000');
+
+        $this->assertSame('You paid in full, so the studio will decide your refund, up to ₱10,000.00.', $booking->cancellationRefundNote());
+
+        $this->actingAs($client)
+            ->postJson("/_test/client/booking/{$booking->id}/cancel", ['cancellation_reason' => 'We moved the wedding abroad and must cancel.'])
+            ->assertOk();
+
+        $recovery = BookingCancellationRecoveryModel::where('booking_id', $booking->id)->firstOrFail();
+
+        // The owner cannot refund more than was paid.
+        $this->actingAs($this->owner)
+            ->postJson("/_test/owner/recoveries/{$recovery->id}/escalate", ['refund_amount' => 10001])
+            ->assertStatus(409)
+            ->assertJsonPath('success', false);
+        $this->assertNull($recovery->fresh()->refund_amount);
+
+        $this->postJson("/_test/owner/recoveries/{$recovery->id}/escalate", ['refund_amount' => 4000])->assertOk();
+        $this->postJson("/_test/admin/refunds/{$recovery->id}/complete", ['provider_refund_reference' => 'stripe_refund_partial_4000'])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $recovery->refresh();
+        $this->assertSame('refunded', $recovery->status);
+        $this->assertSame('4000.00', $recovery->refund_amount);
+        $this->assertSame('40.00', $recovery->refund_percentage);
+        $payment->refresh();
+        $this->assertSame('partially_refunded', $payment->status);
+        $this->assertSame('4000.00', $payment->refunded_amount);
+        $this->assertSame('stripe_refund_partial_4000', $payment->refund_reference);
+        $this->assertNotNull($payment->refunded_at);
+    }
+
+    public function test_freelancer_cannot_mark_a_downpayment_only_booking_refunded(): void
+    {
+        \Illuminate\Support\Facades\Route::put('/_test/freelancer/booking/{id}/payment', [\App\Http\Controllers\Freelancer\BookingController::class, 'updatePaymentStatus']);
+        $client = $this->createUser('client', 'client-freelancer-refund-down@example.com');
+        $freelancer = $this->createUser('freelancer', 'freelancer-refund-down@example.com');
+        $booking = $this->createBooking($freelancer->id, 'freelancer', $client, [
+            'total_amount' => 1000, 'down_payment' => 300, 'remaining_balance' => 700,
+            'payment_type' => 'downpayment', 'payment_status' => BookingModel::PAYMENT_PARTIALLY_PAID,
+        ]);
+
+        $this->actingAs($freelancer)
+            ->putJson("/_test/freelancer/booking/{$booking->id}/payment", ['payment_status' => 'refunded'])
+            ->assertStatus(400)
+            ->assertJsonPath('message', 'A downpayment is non-refundable. Only fully paid bookings can be refunded.');
+        $this->assertSame(BookingModel::PAYMENT_PARTIALLY_PAID, $booking->fresh()->payment_status);
+    }
+
+    public function test_unpaid_cancel_has_no_refund_note(): void
+    {
+        $client = $this->createUser('client', 'client-cancel-unpaid-note@example.com');
+        $studio = $this->createStudio();
+        $booking = $this->createBooking($studio->id, 'studio', $client, [
+            'total_amount' => 1000, 'down_payment' => 300, 'remaining_balance' => 1000,
+            'payment_type' => 'downpayment', 'payment_status' => 'pending',
+        ]);
+
+        $this->assertNull($booking->cancellationRefundNote());
+        $this->actingAs($client)
+            ->postJson("/_test/client/booking/{$booking->id}/cancel", ['cancellation_reason' => 'We picked a different date and studio.'])
+            ->assertOk()
+            ->assertJsonPath('message', 'Booking cancelled successfully.');
     }
 
     public function test_freelancer_full_payment_client_cancel_also_defers_to_the_owner(): void

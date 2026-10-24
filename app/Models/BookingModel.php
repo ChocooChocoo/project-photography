@@ -729,6 +729,27 @@ class BookingModel extends Model
     }
 
     /**
+     * What happens to the client's money if they cancel now, or null when
+     * nothing has been paid. A downpayment is kept; a full payment can be
+     * refunded up to the amount paid, at the provider's discretion.
+     */
+    public function cancellationRefundNote(): ?string
+    {
+        $paid = (float) ($this->relationLoaded('payments')
+            ? $this->payments->where('status', 'succeeded')->sum('amount')
+            : $this->payments()->where('status', 'succeeded')->sum('amount'));
+        if ($paid <= 0) {
+            return null;
+        }
+
+        $provider = $this->booking_type === 'studio' ? 'the studio' : 'the photographer';
+
+        return $this->isFullyPaid()
+            ? 'You paid in full, so '.$provider.' will decide your refund, up to ₱'.number_format($paid, 2).'.'
+            : 'Your downpayment of ₱'.number_format($paid, 2).' is non-refundable and is kept by '.$provider.'.';
+    }
+
+    /**
      * When the event ends, in Asia/Manila. Uses the last event day and the end
      * time; a single-day booking whose end time is not after its start time
      * runs past midnight. With no end time, the event ends at the end of the day.

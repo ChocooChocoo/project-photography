@@ -43,7 +43,8 @@
                                             $providerName = $booking->booking_type === 'studio'
                                                 ? ($booking->studio->studio_name ?? 'Studio')
                                                 : ($booking->freelancer->brand_name ?? 'Freelancer');
-                                            $paidAmount = $booking->payments->where('status', 'succeeded')->sum('amount');
+                                            // A refund keeps the original payment row, now refunded or partially_refunded.
+                                            $paidAmount = $booking->payments->whereIn('status', ['succeeded', 'partially_refunded', 'refunded'])->sum('amount');
                                             $refundedAmount = $booking->payments
                                                 ->whereIn('status', ['refunded', 'partially_refunded'])
                                                 ->sum(fn ($payment) => $payment->refunded_amount ?? $payment->amount);

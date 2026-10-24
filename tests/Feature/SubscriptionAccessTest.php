@@ -195,6 +195,40 @@ class SubscriptionAccessTest extends TestCase
         $this->postJson("/_test/photographer/equipment/{$equipment->id}/confirm")->assertOk();
     }
 
+    public function test_refund_recovery_actions_resolve_the_recoverys_studio_and_allow_paid_bookings(): void
+    {
+        Schema::create('tbl_booking_cancellation_recoveries', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('booking_id');
+            $table->unsignedBigInteger('studio_id')->nullable();
+            $table->string('status');
+            $table->timestamps();
+        });
+        Route::post('/_test/owner/cancellation-recoveries/{recoveryId}/escalate', fn () => response()->json(['ok' => true]))
+            ->middleware('subscription.access:manage')
+            ->name('_test.owner.booking.recovery.escalate');
+        $recovery = fn (BookingModel $booking) => \App\Models\BookingCancellationRecoveryModel::create([
+            'booking_id' => $booking->id, 'studio_id' => $booking->provider_id, 'status' => 'refund_pending',
+        ]);
+
+        // An owner with two studios: the request must be checked against the recovery's studio.
+        $active = $this->createStudio('Active Studio');
+        $this->createSubscription($active);
+        $this->createStudio('Unsubscribed Studio');
+        $activeRecovery = $recovery($this->createBooking($active, 'paid'));
+        $this->postJson("/_test/owner/cancellation-recoveries/{$activeRecovery->id}/escalate")->assertOk();
+
+        // A studio whose plan ended must still be able to settle a refund for money it took.
+        $expired = $this->createStudio('Expired Studio');
+        $paidBooking = $this->createBooking($expired, 'paid');
+        PaymentModel::create(['booking_id' => $paidBooking->id, 'payment_reference' => 'PAY-RECOVERY-PAID', 'amount' => 1000, 'payment_method' => 'card', 'status' => 'succeeded']);
+        $this->postJson('/_test/owner/cancellation-recoveries/'.$recovery($paidBooking)->id.'/escalate')->assertOk();
+
+        // Without any payment there is nothing to settle, so the plan still applies.
+        $unpaidRecovery = $recovery($this->createBooking($expired, 'unpaid'));
+        $this->postJson("/_test/owner/cancellation-recoveries/{$unpaidRecovery->id}/escalate")->assertForbidden();
+    }
+
     private function createBooking(StudiosModel $studio, string $paymentStatus): BookingModel
     {
         return BookingModel::create([

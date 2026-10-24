@@ -71,6 +71,29 @@ class ClientRefundsPageTest extends TestCase
         $response->assertSee('Client cancelled and requested a full refund.');
     }
 
+    public function test_partial_refund_still_shows_what_the_client_paid(): void
+    {
+        $client = $this->createUser('client', 'refunds-client-partial@example.com');
+        $studio = $this->createStudio();
+        $booking = $this->createBooking($studio, $client, 'BK-REF-PARTIAL');
+        // The refund is recorded on the original payment, as BookingCancellationRecoveryService does.
+        PaymentModel::create([
+            'booking_id' => $booking->id, 'payment_reference' => 'PAY-REF-PARTIAL', 'amount' => 8400,
+            'payment_method' => 'card', 'status' => 'partially_refunded', 'refunded_amount' => 4000,
+            'refund_reference' => 'STR-REF-PARTIAL', 'refunded_at' => now(),
+        ]);
+        BookingCancellationRecoveryModel::create([
+            'booking_id' => $booking->id, 'studio_id' => $studio->id, 'status' => 'refunded',
+            'refund_amount' => 4000, 'outcome_reason' => 'Client cancelled a fully paid booking.', 'resolved_at' => now(),
+        ]);
+
+        $this->actingAs($client)->get('/_test/client/refunds')
+            ->assertOk()
+            ->assertSee('Target: ₱4,000.00')
+            ->assertSee('Paid: ₱8,400.00')
+            ->assertSee('Refunded: ₱4,000.00');
+    }
+
     public function test_client_with_no_refunds_sees_empty_state(): void
     {
         $client = $this->createUser('client', 'refunds-empty-client@example.com');
@@ -235,6 +258,7 @@ class ClientRefundsPageTest extends TestCase
             $table->string('payment_method');
             $table->string('status');
             $table->string('refund_reference')->nullable()->unique();
+            $table->decimal('refunded_amount', 10, 2)->nullable();
             $table->text('refund_notes')->nullable();
             $table->timestamp('refunded_at')->nullable();
             $table->timestamp('paid_at')->nullable();
@@ -253,6 +277,7 @@ class ClientRefundsPageTest extends TestCase
             $table->timestamp('client_responded_at')->nullable();
             $table->timestamp('resolved_at')->nullable();
             $table->string('outcome_reason')->nullable();
+            $table->decimal('refund_amount', 10, 2)->nullable();
             $table->text('photographer_reason')->nullable();
             $table->timestamps();
         });

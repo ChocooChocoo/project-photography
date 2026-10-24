@@ -59,7 +59,10 @@ class EnforceStudioSubscriptionAccess
             'studio-photographer.online-gallery.upload',
         ];
 
-        if ($capability === 'fulfill-paid-booking' || in_array($routeName, $fulfillmentRoutes, true)) {
+        // Settling a cancellation refund is fulfilling a booking the client already paid.
+        if ($capability === 'fulfill-paid-booking'
+            || in_array($routeName, $fulfillmentRoutes, true)
+            || str_contains($routeName, 'owner.booking.recovery.')) {
             $booking = $this->resolveBooking($request);
 
             if ($booking
@@ -110,6 +113,10 @@ class EnforceStudioSubscriptionAccess
 
         if (! is_numeric($bookingId) && $request->route('galleryId')) {
             $bookingId = StudioOnlineGalleryModel::find($request->route('galleryId'))?->booking_id;
+        }
+
+        if (! is_numeric($bookingId) && $request->route('recoveryId')) {
+            $bookingId = \App\Models\BookingCancellationRecoveryModel::find($request->route('recoveryId'))?->booking_id;
         }
 
         // On equipment routes the {id} is an equipment row, not an assignment.

@@ -204,7 +204,9 @@ class BookingController extends Controller
             if ($request->payment_status === 'refunded' && $booking->payment_status !== 'paid') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Only fully paid bookings can be refunded.'
+                    'message' => $booking->payment_status === 'partially_paid'
+                        ? 'A downpayment is non-refundable. Only fully paid bookings can be refunded.'
+                        : 'Only fully paid bookings can be refunded.'
                 ], 400);
             }
             
