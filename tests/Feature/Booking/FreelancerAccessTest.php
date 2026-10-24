@@ -126,6 +126,20 @@ class FreelancerAccessTest extends TestCase
             $t->timestamp('read_at')->nullable();
             $t->timestamps();
         });
+        Schema::table('tbl_bookings', fn (Blueprint $t) => $t->string('preferred_camera_brand')->nullable());
+        Schema::create('tbl_booking_equipment', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('booking_id');
+            $t->unsignedBigInteger('assignment_id')->nullable();
+            $t->unsignedBigInteger('equipment_id')->nullable();
+            $t->string('equipment_name');
+            $t->string('equipment_type');
+            $t->string('brand')->nullable();
+            $t->text('notes')->nullable();
+            $t->boolean('confirmed')->default(false);
+            $t->timestamp('confirmed_at')->nullable();
+            $t->timestamps();
+        });
         $owner = $this->user('owner');
         $this->freelancer = $this->user('freelancer');
         $studio = StudiosModel::create(['user_id' => $owner->id, 'studio_name' => 'Access studio', 'status' => 'verified']);
@@ -325,6 +339,34 @@ class FreelancerAccessTest extends TestCase
         $this->getJson('/freelancer/studio-assignments/'.$this->assignment->id)->assertForbidden();
         $this->postJson('/freelancer/studio-assignments/'.$this->assignment->id.'/status', ['status' => 'confirmed'])->assertForbidden();
         $this->postJson('/freelancer/studio-assignments/'.$this->assignment->id.'/images', ['images' => []])->assertForbidden();
+    }
+
+    public function test_fallback_freelancer_sees_and_confirms_only_this_bookings_equipment(): void
+    {
+        $this->migrateAccess();
+        app(FreelancerBookingAccess::class)->grant($this->assignment);
+        $this->booking->update(['preferred_camera_brand' => 'Canon']);
+        $item = \App\Models\StudioOwner\BookingEquipmentModel::create(['booking_id' => $this->booking->id, 'equipment_name' => 'Camera MARK VI', 'equipment_type' => 'DSLR', 'brand' => 'NIKON']);
+        $otherItem = \App\Models\StudioOwner\BookingEquipmentModel::create(['booking_id' => $this->booking->id + 100, 'equipment_name' => 'Flash', 'equipment_type' => 'lighting']);
+
+        $this->actingAs($this->freelancer)->getJson('/freelancer/studio-assignments/'.$this->assignment->id)
+            ->assertOk()
+            ->assertJsonPath('equipment.0.equipment_name', 'Camera MARK VI')
+            ->assertJsonPath('equipment.0.brand_mismatch', true);
+        $this->get('/freelancer/studio-assignments')->assertOk()
+            ->assertSee('Camera MARK VI')
+            ->assertSee("Brand differs from the client's preference (Canon)", false)
+            ->assertSee('Confirm equipment');
+
+        $confirm = fn ($equipmentId) => '/freelancer/studio-assignments/'.$this->assignment->id.'/equipment/'.$equipmentId.'/confirm';
+        $this->postJson($confirm($otherItem->id))->assertNotFound();
+        $this->assertFalse($otherItem->fresh()->confirmed);
+        $this->postJson($confirm($item->id))->assertOk()->assertJsonPath('success', true);
+        $this->assertTrue($item->fresh()->confirmed);
+
+        $this->travelTo(app(FreelancerBookingAccess::class)->eventEnd($this->booking));
+        $item->update(['confirmed' => false]);
+        $this->postJson($confirm($item->id))->assertForbidden();
     }
 
     public function test_freelancer_page_shows_active_work_and_expired_empty_state(): void

@@ -110,8 +110,25 @@ class BookingTermsAndTimeslotTest extends TestCase
         $this->assertSame(0, BookingModel::count());
     }
 
+    public function test_store_rejects_a_brand_that_is_not_in_the_studio_inventory(): void
+    {
+        $this->createEquipmentTable();
+        \App\Models\StudioOwner\StudioEquipmentModel::create(['studio_id' => $this->studio->id, 'name' => 'Camera MARK VI', 'type' => 'DSLR', 'brand' => 'NIKON', 'status' => 'available']);
+        \App\Models\StudioOwner\StudioEquipmentModel::create(['studio_id' => $this->studio->id, 'name' => 'Old body', 'type' => 'camera', 'brand' => 'Canon', 'status' => 'retired']);
+
+        $this->actingAs($this->client)
+            ->postJson('/test/bookings/store', $this->bookingPayload(['terms_agree' => 1, 'preferred_camera_brand' => 'Canon']))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('preferred_camera_brand');
+
+        $this->assertSame(0, BookingModel::count());
+    }
+
     public function test_store_accepts_booking_when_terms_agreed(): void
     {
+        $this->createEquipmentTable();
+        \App\Models\StudioOwner\StudioEquipmentModel::create(['studio_id' => $this->studio->id, 'name' => 'Camera body', 'type' => 'camera', 'brand' => 'Canon', 'status' => 'available']);
+
         $this->actingAs($this->client)
             ->postJson('/test/bookings/store', $this->bookingPayload(['terms_agree' => 1, 'preferred_camera_brand' => 'Canon']))
             ->assertOk()
@@ -119,6 +136,20 @@ class BookingTermsAndTimeslotTest extends TestCase
 
         $this->assertSame(1, BookingModel::count());
         $this->assertSame('Canon', BookingModel::first()->preferred_camera_brand);
+    }
+
+    private function createEquipmentTable(): void
+    {
+        Schema::create('tbl_studio_equipment', function (\Illuminate\Database\Schema\Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('studio_id');
+            $table->string('name');
+            $table->string('type', 80);
+            $table->string('brand')->nullable();
+            $table->string('model')->nullable();
+            $table->string('status')->default('available');
+            $table->timestamps();
+        });
     }
 
     public function test_store_rejects_overlapping_timeslot(): void

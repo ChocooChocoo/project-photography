@@ -7,6 +7,7 @@ use App\Http\Controllers\StudioPhotographer\AssignedBookingController;
 use App\Http\Controllers\StudioPhotographer\OnlineGalleryController;
 use App\Http\Requests\StudioPhotographer\UpdateAssignmentStatusRequest;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
+use App\Models\StudioOwner\BookingEquipmentModel;
 use App\Services\FreelancerBookingAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +21,7 @@ class StudioAssignmentController extends Controller
         if (Schema::hasColumn('tbl_user_roles', 'booking_id')) {
             $assignments = BookingAssignedPhotographerModel::where('photographer_id', $request->user()->id)
                 ->where('is_freelancer', true)->whereNotIn('status', ['cancelled', 'completed'])
-                ->with('booking', 'studio')->latest()->get()
+                ->with('booking.equipment', 'studio')->latest()->get()
                 ->filter(fn ($assignment) => $access->allows($request->user(), $assignment));
         }
 
@@ -32,7 +33,23 @@ class StudioAssignmentController extends Controller
         $assignment = BookingAssignedPhotographerModel::with('booking', 'studio')->findOrFail($id);
         abort_unless(app(FreelancerBookingAccess::class)->allows($request->user(), $assignment), 403);
 
-        return response()->json(['success' => true, 'assignment' => $assignment]);
+        return response()->json([
+            'success' => true,
+            'assignment' => $assignment,
+            'equipment' => BookingEquipmentModel::where('booking_id', $assignment->booking_id)->get(),
+        ]);
+    }
+
+    /**
+     * Confirm one equipment item of this assignment's booking.
+     */
+    public function confirmEquipment(Request $request, int $id, int $equipmentId)
+    {
+        return $this->withAccess($request, $id, 'update-status', function ($assignment) use ($request, $equipmentId) {
+            $equipment = BookingEquipmentModel::where('booking_id', $assignment->booking_id)->findOrFail($equipmentId);
+
+            return app(\App\Http\Controllers\StudioPhotographer\BookingEquipmentController::class)->confirm($request, $equipment->id);
+        });
     }
 
     public function status(UpdateAssignmentStatusRequest $request, int $id)

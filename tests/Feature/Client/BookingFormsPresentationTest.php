@@ -79,6 +79,34 @@ class BookingFormsPresentationTest extends TestCase
         $this->assertStringNotContainsString('5% off', $html);
     }
 
+    public function test_preferred_brand_is_a_dropdown_of_the_studios_equipment_brands(): void
+    {
+        foreach ([['NIKON', 'available'], ['Canon', 'maintenance'], ['canon', 'available'], ['Sony', 'retired'], [null, 'available']] as [$brand, $status]) {
+            \App\Models\StudioOwner\StudioEquipmentModel::create(['studio_id' => $this->studio->id, 'name' => 'Item', 'type' => 'camera', 'brand' => $brand, 'status' => $status]);
+        }
+
+        $html = $this->actingAs($this->client)
+            ->get(route('client.booking-forms', ['type' => 'studio', 'id' => $this->studio->id]))
+            ->assertOk()
+            ->getOriginalContent()->render();
+
+        $this->assertMatchesRegularExpression('/<select id="preferredCameraBrand" name="preferred_camera_brand"/', $html);
+        $this->assertStringContainsString('<option value="">No preference</option>', $html);
+        $this->assertSame(1, preg_match_all('/<option value="(?:Canon|canon)">/', $html));
+        $this->assertStringContainsString('<option value="NIKON">NIKON</option>', $html);
+        $this->assertStringNotContainsString('<option value="Sony">', $html);
+    }
+
+    public function test_preferred_brand_is_hidden_when_the_studio_has_no_branded_equipment(): void
+    {
+        $html = $this->actingAs($this->client)
+            ->get(route('client.booking-forms', ['type' => 'studio', 'id' => $this->studio->id]))
+            ->assertOk()
+            ->getOriginalContent()->render();
+
+        $this->assertStringNotContainsString('id="preferredCameraBrand"', $html);
+    }
+
     public function test_booking_forms_package_selection_renders_cover_images_when_present(): void
     {
         Storage::fake('public');
@@ -299,6 +327,16 @@ class BookingFormsPresentationTest extends TestCase
             $table->unsignedInteger('trial_days')->default(0);
             $table->unsignedInteger('priority_level')->default(0);
             $table->string('status');
+            $table->timestamps();
+        });
+        Schema::create('tbl_studio_equipment', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('studio_id');
+            $table->string('name');
+            $table->string('type', 80);
+            $table->string('brand')->nullable();
+            $table->string('model')->nullable();
+            $table->string('status')->default('available');
             $table->timestamps();
         });
         Schema::create('tbl_studio_plans', function (Blueprint $table) {

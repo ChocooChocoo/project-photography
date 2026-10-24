@@ -244,6 +244,25 @@
                 loadAssignmentDetails(currentAssignmentId);
             });
             
+            // Confirm one equipment item, then reload the details.
+            $(document).on('click', '.confirm-equipment-btn', function() {
+                const button = $(this);
+                button.prop('disabled', true).text('Confirming...');
+                $.ajax({
+                    url: "{{ route('assignment.equipment.confirm', '__ID__') }}".replace('__ID__', button.data('equipment-id')),
+                    type: 'POST',
+                    data: {_token: $('meta[name="csrf-token"]').attr('content')},
+                    success: function(response) {
+                        Swal.fire({icon: 'success', title: 'Equipment confirmed', text: response.message, timer: 1500, showConfirmButton: false});
+                        loadAssignmentDetails(currentAssignmentId);
+                    },
+                    error: function(xhr) {
+                        button.prop('disabled', false).text('Confirm equipment');
+                        Swal.fire({icon: 'error', title: 'Not confirmed', text: xhr.responseJSON?.message || 'Could not confirm the equipment. Try again.'});
+                    }
+                });
+            });
+
             // Load assignment details
             function loadAssignmentDetails(assignmentId) {
                 $.ajax({
@@ -333,6 +352,37 @@
                     });
                 }
                 
+                // Equipment the owner assigned; the photographer confirms each item.
+                const escapeText = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+                const equipment = data.equipment || [];
+                const canConfirmEquipment = assignment.status !== 'cancelled'
+                    && booking.status !== 'cancelled';
+                const preferredBrand = booking.preferred_camera_brand || 'No preference';
+                const equipmentHtml = `
+                    <section class="card border-0 shadow-none mb-4" aria-labelledby="equipmentHeading">
+                        <div class="card-body p-0">
+                            <h6 id="equipmentHeading" class="card-title mb-2 fw-semibold text-uppercase small text-primary">Equipment</h6>
+                            <p class="small text-muted mb-3">Client's preferred camera brand: <strong>${escapeText(preferredBrand)}</strong></p>
+                            ${equipment.length === 0 ? '<p class="mb-0">No equipment assigned yet.</p>' : `
+                            <ul class="list-unstyled mb-0">
+                                ${equipment.map(item => `
+                                    <li class="border rounded p-3 mb-2">
+                                        <p class="fw-medium mb-1 text-break">${escapeText(item.equipment_name)} (${escapeText(item.equipment_type)})</p>
+                                        <p class="small mb-1">Brand: ${escapeText(item.brand || 'Not specified')}</p>
+                                        ${item.brand_mismatch ? `<p class="small text-warning-emphasis mb-1"><i data-lucide="alert-triangle" class="me-1" aria-hidden="true"></i>Brand differs from the client's preference (${escapeText(preferredBrand)}).</p>` : ''}
+                                        ${item.notes ? `<p class="small text-muted mb-1 text-break">${escapeText(item.notes)}</p>` : ''}
+                                        ${item.confirmed
+                                            ? '<p class="small text-success mb-0"><i data-lucide="check-circle" class="me-1" aria-hidden="true"></i>You confirmed this equipment.</p>'
+                                            : (canConfirmEquipment
+                                                ? `<button type="button" class="btn btn-sm btn-outline-primary confirm-equipment-btn mt-1" data-equipment-id="${item.id}">Confirm equipment</button>`
+                                                : '<p class="small text-muted mb-0">Not confirmed.</p>')}
+                                    </li>
+                                `).join('')}
+                            </ul>`}
+                        </div>
+                    </section>
+                `;
+
                 // Helper function to check if cancel is allowed
                 function canCancel(status) {
                     // Cancellation only allowed in 'assigned' or 'confirmed' states
@@ -846,10 +896,11 @@
                                     </div>
                                 </div>
                             </div>
+                            ${equipmentHtml}
                         </div>
                     </div>
                 `;
-                
+
                 $('#assignmentReference').text(booking.booking_reference);
                 $('#assignmentModalBody').html(modalContent);
                 $('#assignmentActions').html(statusActions);

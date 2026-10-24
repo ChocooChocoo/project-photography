@@ -9,6 +9,7 @@ use App\Models\BookingModel;
 use App\Models\PaymentModel;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
 use App\Models\StudioOwner\BookingEquipmentModel;
+use App\Models\StudioOwner\StudioEquipmentModel;
 use App\Models\StudioOwner\StudiosModel;
 use App\Models\UserModel;
 use Illuminate\Database\Schema\Blueprint;
@@ -48,14 +49,12 @@ class EquipmentAssignmentTest extends TestCase
 
         $this->actingAs($this->owner)
             ->postJson("/_test/owner/bookings/{$booking->id}/equipment", [
-                'equipment_name' => 'Camera body',
-                'equipment_type' => 'camera',
+                'equipment_id' => $this->createCatalogItem($studio, 'Camera body', 'camera')->id,
             ])->assertCreated()->assertJsonPath('success', true);
 
         $this->actingAs($this->owner)
             ->postJson("/_test/owner/bookings/{$booking->id}/equipment", [
-                'equipment_name' => 'Flash',
-                'equipment_type' => 'lighting',
+                'equipment_id' => $this->createCatalogItem($studio, 'Flash', 'lighting')->id,
                 'notes' => 'Battery pack included.',
             ])->assertCreated()->assertJsonPath('success', true);
 
@@ -82,7 +81,7 @@ class EquipmentAssignmentTest extends TestCase
         $client = $this->createUser('client', 'equipment-gate-client@example.com');
         $studio = $this->createStudio();
         $booking = $this->createBooking($studio, $client);
-        $payload = ['equipment_name' => 'Camera body', 'equipment_type' => 'camera'];
+        $payload = ['equipment_id' => $this->createCatalogItem($studio)->id];
 
         $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", $payload)
             ->assertUnprocessable()->assertJsonPath('success', false);
@@ -107,7 +106,7 @@ class EquipmentAssignmentTest extends TestCase
 
         $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", [
             'assignment_id' => $otherAssignment->id,
-            'equipment_name' => 'Camera body', 'equipment_type' => 'camera',
+            'equipment_id' => $this->createCatalogItem($studio)->id,
         ])->assertUnprocessable();
         $this->assertDatabaseCount('tbl_booking_equipment', 0);
     }
@@ -120,7 +119,13 @@ class EquipmentAssignmentTest extends TestCase
         $photographer = $this->createUser('studio-photographer', 'equipment-invalid-photo@example.com');
         $this->createAssignment($booking, $studio, $photographer);
         $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", [])
-            ->assertUnprocessable()->assertJsonValidationErrors(['equipment_name', 'equipment_type']);
+            ->assertUnprocessable()->assertJsonValidationErrors(['equipment_id']);
+
+        // Free text is no longer accepted; equipment comes from the studio catalog.
+        $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", [
+            'equipment_name' => 'Camera body', 'equipment_type' => 'camera', 'brand' => 'Canon',
+        ])->assertUnprocessable()->assertJsonValidationErrors(['equipment_id']);
+        $this->assertDatabaseCount('tbl_booking_equipment', 0);
     }
 
     public function test_terminal_bookings_cannot_receive_equipment(): void
@@ -133,7 +138,7 @@ class EquipmentAssignmentTest extends TestCase
         foreach (['completed', 'cancelled'] as $status) {
             $booking->update(['status' => $status]);
             $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", [
-                'equipment_name' => 'Camera body', 'equipment_type' => 'camera',
+                'equipment_id' => $this->createCatalogItem($studio)->id,
             ])->assertUnprocessable();
         }
         $this->assertDatabaseCount('tbl_booking_equipment', 0);
@@ -147,7 +152,7 @@ class EquipmentAssignmentTest extends TestCase
         $studio->update(['user_id' => $otherOwner->id]);
         $booking = $this->createBooking($studio, $client);
         $this->postJson("/_test/owner/bookings/{$booking->id}/equipment", [
-            'equipment_name' => 'Camera body', 'equipment_type' => 'camera',
+            'equipment_id' => $this->createCatalogItem($studio)->id,
         ])->assertNotFound();
         $this->getJson("/_test/owner/bookings/{$booking->id}/equipment")->assertNotFound();
         $equipment = $this->createEquipment($booking);
@@ -180,6 +185,55 @@ class EquipmentAssignmentTest extends TestCase
             ->assertJsonPath('success', false);
 
         $this->assertTrue($equipment->fresh()->confirmed);
+    }
+
+    public function test_photographer_cannot_confirm_equipment_on_a_cancelled_booking(): void
+    {
+        $client = $this->createUser('client', 'equipment-cancelled-client@example.com');
+        $photographer = $this->createUser('studio-photographer', 'equipment-cancelled-photographer@example.com');
+        $studio = $this->createStudio();
+        $booking = $this->createBooking($studio, $client);
+        $assignment = $this->createAssignment($booking, $studio, $photographer);
+        $equipment = $this->createEquipment($booking, $assignment);
+        $booking->update(['status' => 'cancelled']);
+
+        $this->actingAs($photographer)
+            ->postJson("/_test/photographer/equipment/{$equipment->id}/confirm")
+            ->assertUnprocessable()
+            ->assertJsonPath('success', false);
+
+        $this->assertFalse($equipment->fresh()->confirmed);
+    }
+
+    public function test_brand_mismatch_is_flagged_without_blocking(): void
+    {
+        $client = $this->createUser('client', 'equipment-brand-client@example.com');
+        $studio = $this->createStudio();
+        $booking = $this->createBooking($studio, $client);
+        $booking->update(['preferred_camera_brand' => 'Canon']);
+        $this->createAssignment($booking, $studio, $this->createUser('studio-photographer', 'equipment-brand-photo@example.com'));
+
+        $this->actingAs($this->owner)
+            ->postJson("/_test/owner/bookings/{$booking->id}/equipment", [
+                'equipment_id' => $this->createCatalogItem($studio, 'Camera MARK VI', 'DSLR', 'NIKON')->id,
+            ])->assertCreated()->assertJsonPath('data.brand_mismatch', true);
+
+        $same = BookingEquipmentModel::create(['booking_id' => $booking->id, 'equipment_name' => 'Body', 'equipment_type' => 'camera', 'brand' => ' canon ']);
+        $unbranded = BookingEquipmentModel::create(['booking_id' => $booking->id, 'equipment_name' => 'Tripod', 'equipment_type' => 'support']);
+        $this->assertFalse($same->brand_mismatch);
+        $this->assertFalse($unbranded->brand_mismatch);
+
+        $booking->update(['preferred_camera_brand' => null]);
+        $this->assertFalse($same->fresh()->brand_mismatch);
+    }
+
+    public function test_photographer_modal_lists_equipment_and_calls_the_confirm_route(): void
+    {
+        $blade = file_get_contents(resource_path('views/studio-photographer/view-assigned-booking.blade.php'));
+
+        $this->assertStringContainsString("route('assignment.equipment.confirm', '__ID__')", $blade);
+        $this->assertStringContainsString('data.equipment', $blade);
+        $this->assertStringContainsString('Confirm equipment', $blade);
     }
 
     public function test_owner_can_remove_equipment(): void
@@ -276,6 +330,17 @@ class EquipmentAssignmentTest extends TestCase
             'status' => 'confirmed',
             'assigned_at' => now(),
             'response_deadline' => now()->addDay(),
+        ]);
+    }
+
+    private function createCatalogItem(StudiosModel $studio, string $name = 'Camera body', string $type = 'camera', ?string $brand = null): StudioEquipmentModel
+    {
+        return StudioEquipmentModel::create([
+            'studio_id' => $studio->id,
+            'name' => $name,
+            'type' => $type,
+            'brand' => $brand,
+            'status' => 'available',
         ]);
     }
 

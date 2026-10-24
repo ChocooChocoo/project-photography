@@ -18,7 +18,11 @@
             <ul class="ps-3">
                 @forelse($booking->equipment as $item)
                     <li class="text-break">{{ $item->equipment_name }} ({{ $item->equipment_type }})<br>
-                        Brand: {{ $item->brand ?: 'Not specified' }}. {{ $item->confirmed ? 'Photographer confirmed' : 'Awaiting equipment confirmation' }}</li>
+                        Brand: {{ $item->brand ?: 'Not specified' }}. {{ $item->confirmed ? 'Photographer confirmed' : 'Waiting for the photographer to confirm' }}
+                        @if($item->brand_mismatch)
+                            <br>Brand differs from your preference ({{ $booking->preferred_camera_brand }}).
+                        @endif
+                    </li>
                 @empty
                     <li>No equipment assigned yet.</li>
                 @endforelse

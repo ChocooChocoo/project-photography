@@ -24,6 +24,29 @@
             <p>{{ $assignment->studio->studio_name }}. Status: {{ str_replace('_', ' ', $assignment->status) }}.</p>
             <a class="btn btn-outline-secondary mb-3" href="{{ route('freelancer.messages.index', ['booking' => $booking->id]) }}">Message booking contact</a>
             <p><strong>Access ends {{ app(\App\Services\FreelancerBookingAccess::class)->eventEnd($booking)->format('M d, Y H:i') }} Asia/Manila.</strong></p>
+            <h3 class="h6">Equipment</h3>
+            <p>Client's preferred camera brand: <strong>{{ $booking->preferred_camera_brand ?: 'No preference' }}</strong></p>
+            <ul class="list-unstyled mb-4">
+                @forelse($booking->equipment as $item)
+                    <li class="border rounded p-3 mb-2">
+                        <p class="mb-1 text-break">{{ $item->equipment_name }} ({{ $item->equipment_type }}). Brand: {{ $item->brand ?: 'Not specified' }}.</p>
+                        @if($item->brand_mismatch)
+                            <p class="mb-1">Brand differs from the client's preference ({{ $booking->preferred_camera_brand }}).</p>
+                        @endif
+                        @if($item->confirmed)
+                            <p class="mb-0">You confirmed this equipment.</p>
+                        @else
+                            <form action="{{ route('freelancer.studio-assignments.equipment.confirm', [$assignment->id, $item->id]) }}" method="post" data-work-form>
+                                @csrf
+                                <div role="status" class="mb-2" tabindex="-1"></div>
+                                <button class="btn btn-outline-primary" type="submit">Confirm equipment</button>
+                            </form>
+                        @endif
+                    </li>
+                @empty
+                    <li>No equipment assigned yet.</li>
+                @endforelse
+            </ul>
             @if($nextStatuses)
             <form action="{{ route('freelancer.studio-assignments.status', $assignment->id) }}" method="post" enctype="multipart/form-data" data-work-form class="mb-4">
                 @csrf

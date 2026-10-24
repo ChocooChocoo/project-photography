@@ -29,6 +29,13 @@ class BookingEquipmentController extends Controller
                 ], 403);
             }
 
+            if ($equipment->booking?->status === 'cancelled') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This booking was cancelled, so its equipment cannot be confirmed.'
+                ], 422);
+            }
+
             $equipment->update([
                 'confirmed' => true,
                 'confirmed_at' => now(),

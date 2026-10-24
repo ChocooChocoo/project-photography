@@ -437,11 +437,24 @@
                                 </div>
 
                                 {{-- SPECIAL REQUESTS --}}
-                                <div class="mb-3">
-                                    <label for="preferredCameraBrand" class="form-label">Preferred camera brand (optional)</label>
-                                    <input id="preferredCameraBrand" name="preferred_camera_brand" class="form-control" maxlength="100">
-                                    <small>Preference only. Your provider will show the equipment assigned to your booking.</small>
-                                </div>
+                                @if(is_null($equipmentBrands ?? null))
+                                    <div class="mb-3">
+                                        <label for="preferredCameraBrand" class="form-label">Preferred camera brand (optional)</label>
+                                        <input id="preferredCameraBrand" name="preferred_camera_brand" class="form-control" maxlength="100" aria-describedby="preferredCameraBrandHelp">
+                                        <small id="preferredCameraBrandHelp">Preference only. Your provider will show the equipment assigned to your booking.</small>
+                                    </div>
+                                @elseif(count($equipmentBrands) > 0)
+                                    <div class="mb-3">
+                                        <label for="preferredCameraBrand" class="form-label">Preferred camera brand (optional)</label>
+                                        <select id="preferredCameraBrand" name="preferred_camera_brand" class="form-select" aria-describedby="preferredCameraBrandHelp">
+                                            <option value="">No preference</option>
+                                            @foreach($equipmentBrands as $brand)
+                                                <option value="{{ $brand }}">{{ $brand }}</option>
+                                            @endforeach
+                                        </select>
+                                        <small id="preferredCameraBrandHelp">Brands from this studio's equipment. Preference only; the studio shows the equipment assigned to your booking.</small>
+                                    </div>
+                                @endif
                                 <div class="mb-3">
                                     <label class="form-label fw-medium">Special Requests / Notes</label>
                                     <textarea class="form-control" rows="3" id="specialRequests" name="special_requests"

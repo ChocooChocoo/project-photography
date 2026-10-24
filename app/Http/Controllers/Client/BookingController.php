@@ -45,6 +45,26 @@ class BookingController extends Controller
     /*
     * Show booking form with dynamic data
     */
+    /**
+     * Distinct brands of the studio's usable equipment, for the client's
+     * preferred-brand choice.
+     *
+     * @return array<int, string>
+     */
+    private static function studioEquipmentBrands(int $studioId): array
+    {
+        return \App\Models\StudioOwner\StudioEquipmentModel::where('studio_id', $studioId)
+            ->where('status', '!=', 'retired')
+            ->whereNotNull('brand')
+            ->where('brand', '!=', '')
+            ->orderBy('brand')
+            ->pluck('brand')
+            ->map(fn ($brand) => trim($brand))
+            ->unique(fn ($brand) => mb_strtolower($brand))
+            ->values()
+            ->all();
+    }
+
     public function create($type, $id)
     {
         $user = Auth::user();
@@ -72,6 +92,9 @@ class BookingController extends Controller
             
             // Active discount rules offered by this studio
             $discounts = $provider->discountRules()->active()->get();
+
+            // Brands the client can prefer come from the studio's equipment.
+            $equipmentBrands = self::studioEquipmentBrands((int) $id);
         } else {
             $provider = ProfileModel::with(['user', 'categories', 'schedule'])
                 ->whereHas('user', function($query) {
@@ -97,6 +120,9 @@ class BookingController extends Controller
             
             // No discount rules apply to freelancer bookings
             $discounts = collect();
+
+            // Freelancers have no equipment catalog; the brand stays free text.
+            $equipmentBrands = null;
         }
 
         // Get all active municipalities for dropdown
@@ -130,7 +156,8 @@ class BookingController extends Controller
             'municipalities',
             'operatingDays',
             'clientBudgets', // ADD THIS
-            'discounts' // ADD THIS
+            'discounts', // ADD THIS
+            'equipmentBrands'
         ));
     }
 
@@ -423,7 +450,18 @@ class BookingController extends Controller
             'end_time' => 'required|date_format:H:i|after:start_time',
             'location_type' => 'required|in:in-studio,on-location',
             'special_requests' => 'nullable|string|max:1000',
-            'preferred_camera_brand' => 'nullable|string|max:100',
+            'preferred_camera_brand' => [
+                'nullable', 'string', 'max:100',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->type !== 'studio') {
+                        return;
+                    }
+                    $brands = array_map('mb_strtolower', self::studioEquipmentBrands((int) $request->provider_id));
+                    if (! in_array(mb_strtolower(trim($value)), $brands, true)) {
+                        $fail('Choose a camera brand from the studio\'s equipment list.');
+                    }
+                },
+            ],
             'full_name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
             'email' => 'required|email|max:255',

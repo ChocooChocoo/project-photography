@@ -46,13 +46,9 @@
                 <fieldset ${assignable ? '' : 'disabled'}>
                     <legend class="h6">Assign equipment</legend>
                     ${assignable ? '' : '<p>Assign a photographer first. Closed bookings cannot receive equipment.</p>'}
-                    <label for="catalogChoice" class="form-label">Catalog item</label>
-                    <select id="catalogChoice" name="equipment_id" class="form-select mb-2"><option value="">Use free-text equipment</option></select>
-                    <div class="free-text-fields row g-2">
-                        <div class="col-md-4"><label for="equipmentName" class="form-label">Equipment name</label><input id="equipmentName" name="equipment_name" class="form-control" maxlength="255"></div>
-                        <div class="col-md-4"><label for="equipmentType" class="form-label">Type</label><input id="equipmentType" name="equipment_type" class="form-control" maxlength="255"></div>
-                        <div class="col-md-4"><label for="equipmentBrand" class="form-label">Brand (optional)</label><input id="equipmentBrand" name="brand" class="form-control" maxlength="255"></div>
-                    </div>
+                    <label for="catalogChoice" class="form-label">Studio equipment</label>
+                    <select id="catalogChoice" name="equipment_id" class="form-select mb-2" required aria-describedby="catalogChoiceHelp"><option value="">Choose equipment</option></select>
+                    <p id="catalogChoiceHelp" class="form-text mb-2"></p>
                     <label for="equipmentPhotographer" class="form-label mt-2">Photographer (optional)</label>
                     <select id="equipmentPhotographer" name="assignment_id" class="form-select"><option value="">Whole booking</option>${photographers.map(a => `<option value="${a.id}">${escape((a.photographer?.first_name || '')+' '+(a.photographer?.last_name || ''))}</option>`).join('')}</select>
                     <label for="equipmentNotes" class="form-label mt-2">Notes (optional)</label><textarea id="equipmentNotes" name="notes" class="form-control" maxlength="2000"></textarea>
@@ -84,16 +80,22 @@
                 const [items, assigned] = await Promise.all([request(url('catalog', booking.provider_id)), request(url('assigned', booking.id))]);
                 if (!root.isConnected) return;
                 catalog = items.data;
-                root.querySelector('#catalogChoice').innerHTML = '<option value="">Use free-text equipment</option>' + catalog.filter(i => i.status === 'available').map(i => `<option value="${i.id}">${escape([i.name,i.brand,i.model].filter(Boolean).join(' / '))}</option>`).join('');
-                root.querySelector('.equipment-list').innerHTML = '<h6>Assigned equipment</h6>' + (assigned.data.length ? `<ul class="ps-3">${assigned.data.map(i => `<li class="mb-2 text-break">${escape(i.equipment_name)} (${escape(i.equipment_type)})<br>Brand: ${escape(i.brand || 'Not specified')}. ${i.confirmed ? 'Confirmed by photographer' : 'Awaiting confirmation'} ${['completed','cancelled'].includes(booking.status) ? '' : `<button type="button" class="btn btn-outline-danger ms-2" data-remove="${i.id}">Remove equipment</button>`}</li>`).join('')}</ul>` : '<p>No equipment assigned yet.</p>');
-                root.querySelector('.catalog-list').innerHTML = catalog.length ? `<ul class="ps-3">${catalog.map(i => `<li class="mb-2 text-break">${escape([i.name,i.brand,i.model,i.status].filter(Boolean).join(' / '))}<div class="d-flex gap-2 mt-1"><button type="button" class="btn btn-outline-primary" data-edit="${i.id}">Edit ${escape(i.name)}</button><button type="button" class="btn btn-outline-danger" data-delete="${i.id}">Delete ${escape(i.name)}</button></div></li>`).join('')}</ul>` : '<p>No catalog items. Add equipment below, or assign free-text equipment.</p>';
+                const available = catalog.filter(i => i.status === 'available');
+                const preferred = (booking.preferred_camera_brand || '').trim().toLowerCase();
+                root.querySelector('#catalogChoice').innerHTML = '<option value="">Choose equipment</option>' + available.map(i => {
+                    const differs = preferred && i.brand && i.brand.trim().toLowerCase() !== preferred;
+                    return `<option value="${i.id}">${escape([i.name,i.brand,i.model].filter(Boolean).join(' / '))}${differs ? ' (not the preferred brand)' : ''}</option>`;
+                }).join('');
+                root.querySelector('#catalogChoiceHelp').textContent = available.length
+                    ? 'Only available items from the studio catalog are listed.'
+                    : 'No available equipment. Add equipment to the studio catalog below first.';
+                if (!available.length) root.querySelector('details').open = true;
+                root.querySelector('.equipment-list').innerHTML = '<h6>Assigned equipment</h6>' + (assigned.data.length ? `<ul class="ps-3">${assigned.data.map(i => `<li class="mb-2 text-break">${escape(i.equipment_name)} (${escape(i.equipment_type)})<br>Brand: ${escape(i.brand || 'Not specified')}.${i.brand_mismatch ? ` <strong>Brand differs from the client's preference (${escape(booking.preferred_camera_brand)}).</strong>` : ''} ${i.confirmed ? 'Confirmed by photographer' : 'Waiting for the photographer to confirm'} ${['completed','cancelled'].includes(booking.status) ? '' : `<button type="button" class="btn btn-outline-danger ms-2" data-remove="${i.id}">Remove equipment</button>`}</li>`).join('')}</ul>` : '<p>No equipment assigned yet.</p>');
+                root.querySelector('.catalog-list').innerHTML = catalog.length ? `<ul class="ps-3">${catalog.map(i => `<li class="mb-2 text-break">${escape([i.name,i.brand,i.model,i.status].filter(Boolean).join(' / '))}<div class="d-flex gap-2 mt-1"><button type="button" class="btn btn-outline-primary" data-edit="${i.id}">Edit ${escape(i.name)}</button><button type="button" class="btn btn-outline-danger" data-delete="${i.id}">Delete ${escape(i.name)}</button></div></li>`).join('')}</ul>` : '<p>No catalog items yet. Add equipment below.</p>';
             } catch (error) {
                 report(error.message, true);
                 root.querySelector('.equipment-list').innerHTML = '<button type="button" class="btn btn-outline-primary equipment-retry">Retry equipment</button>';
             }
-        };
-        root.querySelector('#catalogChoice').onchange = event => {
-            root.querySelector('.free-text-fields').hidden = !!event.target.value;
         };
         const assignForm = root.querySelector('.equipment-assign');
         assignForm.onsubmit = async event => {
@@ -102,11 +104,9 @@
             button.disabled = true;
             try {
                 const data = Object.fromEntries(new FormData(assignForm));
-                if (!data.equipment_id) delete data.equipment_id;
                 await request(url('assigned', booking.id), 'POST', data);
                 report('Equipment assigned.');
                 assignForm.reset();
-                root.querySelector('.free-text-fields').hidden = false;
                 await refresh();
             } catch (error) { report(error.message, true); }
             finally { button.disabled = false; }

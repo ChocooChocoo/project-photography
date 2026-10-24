@@ -370,6 +370,16 @@ class DiscountRuleTest extends TestCase
             $table->integer('advance_booking')->nullable();
             $table->timestamps();
         });
+        Schema::create('tbl_studio_equipment', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('studio_id');
+            $table->string('name');
+            $table->string('type', 80);
+            $table->string('brand')->nullable();
+            $table->string('model')->nullable();
+            $table->string('status')->default('available');
+            $table->timestamps();
+        });
         Schema::create('tbl_studio_plans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('studio_id');

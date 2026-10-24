@@ -132,6 +132,34 @@ class BookingPreparationTest extends TestCase
         $this->actingAs($this->photographer)->get("/_prep/client/{$this->booking->id}")->assertNotFound();
     }
 
+    public function test_client_sees_who_confirms_and_a_brand_mismatch_warning(): void
+    {
+        $this->booking->update(['payment_status' => 'paid', 'preferred_camera_brand' => 'Canon']);
+        $item = StudioEquipmentModel::create(['studio_id' => $this->studio->id, 'name' => 'Camera MARK VI', 'type' => 'DSLR', 'brand' => 'NIKON', 'status' => 'available']);
+        $this->assign($this->booking);
+        $this->postJson("/_prep/bookings/{$this->booking->id}/equipment", ['equipment_id' => $item->id])->assertCreated();
+
+        $this->actingAs($this->client)->get("/_prep/client/{$this->booking->id}")
+            ->assertOk()
+            ->assertSee('Waiting for the photographer to confirm')
+            ->assertSee("Brand differs from your preference (Canon).", false)
+            ->assertDontSee('Awaiting equipment confirmation');
+
+        \App\Models\StudioOwner\BookingEquipmentModel::query()->update(['confirmed' => true, 'confirmed_at' => now()]);
+        $this->actingAs($this->client)->get("/_prep/client/{$this->booking->id}")
+            ->assertOk()->assertSee('Photographer confirmed');
+    }
+
+    public function test_owner_panel_uses_catalog_items_only_and_shows_brand_warnings(): void
+    {
+        $script = file_get_contents(public_path('assets/js/booking-preparation.js'));
+
+        $this->assertStringNotContainsString('free-text', $script);
+        $this->assertStringNotContainsString('name="equipment_name"', $script);
+        $this->assertStringContainsString('brand_mismatch', $script);
+        $this->assertStringContainsString('Waiting for the photographer to confirm', $script);
+    }
+
     public function test_quiet_payment_settlement_records_one_milestone(): void
     {
         \App\Models\PaymentModel::create([

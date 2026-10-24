@@ -547,6 +547,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/studio-assignments/{id}', [\App\Http\Controllers\Freelancer\StudioAssignmentController::class, 'show'])->middleware('permission:freelancer.studio-assignments.view')->name('freelancer.studio-assignments.show');
         Route::post('/studio-assignments/{id}/status', [\App\Http\Controllers\Freelancer\StudioAssignmentController::class, 'status'])->middleware('permission:freelancer.studio-assignments.update-status')->name('freelancer.studio-assignments.status');
         Route::post('/studio-assignments/{id}/images', [\App\Http\Controllers\Freelancer\StudioAssignmentController::class, 'images'])->middleware('permission:freelancer.studio-assignments.upload')->name('freelancer.studio-assignments.images');
+        Route::post('/studio-assignments/{id}/equipment/{equipmentId}/confirm', [\App\Http\Controllers\Freelancer\StudioAssignmentController::class, 'confirmEquipment'])->middleware('permission:freelancer.studio-assignments.update-status')->name('freelancer.studio-assignments.equipment.confirm');
 
         // Booking contracts
         Route::get('/contracts/{booking}', [\App\Http\Controllers\BookingContractController::class, 'show'])->name('freelancer.contracts.show');

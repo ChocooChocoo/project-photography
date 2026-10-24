@@ -39,10 +39,8 @@ class BookingEquipmentController extends Controller
                     ->where('studio_id', $booking->provider_id)
                     ->whereNot('status', 'cancelled'),
             ],
-            'equipment_id' => ['nullable', 'integer', Rule::exists('tbl_studio_equipment', 'id')->where('studio_id', $booking->provider_id)],
-            'brand' => 'nullable|string|max:255',
-            'equipment_name' => 'required_without:equipment_id|nullable|string|max:255',
-            'equipment_type' => 'required_without:equipment_id|nullable|string|max:255',
+            // Equipment comes from the studio catalog only (T02).
+            'equipment_id' => ['required', 'integer', Rule::exists('tbl_studio_equipment', 'id')->where('studio_id', $booking->provider_id)],
             'notes' => 'nullable|string|max:2000',
         ]);
 
@@ -72,37 +70,34 @@ class BookingEquipmentController extends Controller
                 ], 422);
             }
 
-            $catalog = null;
-            if (! empty($validated['equipment_id'])) {
-                $catalog = \App\Models\StudioOwner\StudioEquipmentModel::where('studio_id', $booking->provider_id)
-                    ->lockForUpdate()->findOrFail($validated['equipment_id']);
-                if ($catalog->status !== 'available') {
-                    return response()->json(['success' => false, 'message' => 'This equipment is not available.'], 422);
-                }
-                $conflict = BookingEquipmentModel::where('equipment_id', $catalog->id)
-                    ->whereHas('booking', function ($query) use ($booking) {
-                        $query->whereNotIn('status', ['cancelled', 'completed'])
-                            ->overlappingDates($booking->event_date, $booking->event_end_date)
-                            ->where(function ($query) use ($booking) {
-                                if (! $booking->start_time || ! $booking->end_time) {
-                                    return;
-                                }
-                                $query->whereNull('start_time')->orWhereNull('end_time')
-                                    ->orWhere(fn ($q) => $q->where('start_time', '<', $booking->end_time)->where('end_time', '>', $booking->start_time));
-                            });
-                    })->exists();
-                if ($conflict) {
-                    return response()->json(['success' => false, 'message' => 'This equipment is already reserved for an overlapping booking.'], 409);
-                }
+            $catalog = \App\Models\StudioOwner\StudioEquipmentModel::where('studio_id', $booking->provider_id)
+                ->lockForUpdate()->findOrFail($validated['equipment_id']);
+            if ($catalog->status !== 'available') {
+                return response()->json(['success' => false, 'message' => 'This equipment is not available.'], 422);
+            }
+            $conflict = BookingEquipmentModel::where('equipment_id', $catalog->id)
+                ->whereHas('booking', function ($query) use ($booking) {
+                    $query->whereNotIn('status', ['cancelled', 'completed'])
+                        ->overlappingDates($booking->event_date, $booking->event_end_date)
+                        ->where(function ($query) use ($booking) {
+                            if (! $booking->start_time || ! $booking->end_time) {
+                                return;
+                            }
+                            $query->whereNull('start_time')->orWhereNull('end_time')
+                                ->orWhere(fn ($q) => $q->where('start_time', '<', $booking->end_time)->where('end_time', '>', $booking->start_time));
+                        });
+                })->exists();
+            if ($conflict) {
+                return response()->json(['success' => false, 'message' => 'This equipment is already reserved for an overlapping booking.'], 409);
             }
 
             $equipment = BookingEquipmentModel::create([
                 'booking_id' => $booking->id,
-                'equipment_id' => $catalog?->id,
-                'brand' => $catalog ? $catalog->brand : ($validated['brand'] ?? null),
+                'equipment_id' => $catalog->id,
+                'brand' => $catalog->brand,
                 'assignment_id' => $validated['assignment_id'] ?? null,
-                'equipment_name' => $catalog ? trim($catalog->name.' '.($catalog->model ?? '')) : $validated['equipment_name'],
-                'equipment_type' => $catalog ? $catalog->type : $validated['equipment_type'],
+                'equipment_name' => trim($catalog->name.' '.($catalog->model ?? '')),
+                'equipment_type' => $catalog->type,
                 'notes' => $validated['notes'] ?? null,
                 'confirmed' => false,
             ]);

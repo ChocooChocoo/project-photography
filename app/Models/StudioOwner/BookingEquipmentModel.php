@@ -53,6 +53,23 @@ class BookingEquipmentModel extends Model
     ];
 
     /**
+     * @var array<int, string>
+     */
+    protected $appends = ['brand_mismatch'];
+
+    /**
+     * True when the item has a brand and the client asked for a different one.
+     * This only warns; it never blocks an assignment.
+     */
+    public function getBrandMismatchAttribute(): bool
+    {
+        $brand = mb_strtolower(trim((string) $this->brand));
+        $preferred = mb_strtolower(trim((string) $this->booking?->preferred_camera_brand));
+
+        return $brand !== '' && $preferred !== '' && $brand !== $preferred;
+    }
+
+    /**
      * Get the booking this equipment belongs to.
      */
     public function booking()
