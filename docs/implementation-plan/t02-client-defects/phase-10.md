@@ -141,6 +141,10 @@ Test data left in the dev database:
 - Cause: `EnforceStudioSubscriptionAccess::resolveBooking()` read the `{id}` of `owner.booking.equipment.destroy` (an equipment row, here 10) as a booking id, because the route name contains "booking". Booking 10 belongs to another studio. This is the same family as the Phase 3 equipment-confirm fix, which only covered `assignment.equipment.confirm`.
 - Fix: both equipment routes now read the booking from the equipment row before the generic "booking" rule runs.
 - Test: `SubscriptionAccessTest::test_equipment_confirm_is_checked_against_the_equipments_own_booking` now also deletes through a `booking.equipment.destroy` route where equipment #1 and booking #1 belong to different studios. It failed with 403 before the fix. Full suite: 725 passed (3678 assertions).
+- Deployed in `765fcbd4`. Checked on production with `curl` as the owner:
+  - The camera was assigned to booking 76 again (row 11) and then removed: "Equipment removed successfully." The booking's equipment list is now empty.
+  - A PUT sent as POST with `_method=PUT` and `status=zzz` got "Invalid booking status selected.", so the server now reads the body.
+  - A click-through of the status modal after the deploy is still to do (the browser tool disconnected).
 
 Other notes from production:
 
