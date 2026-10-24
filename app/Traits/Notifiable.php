@@ -390,6 +390,35 @@ trait Notifiable
     }
 
     /**
+     * Tell the studio owner a gallery is waiting for their approval.
+     *
+     * @param object $gallery a studio gallery with studio_id
+     * @return NotificationModel|null
+     */
+    public function notifyGalleryAwaitingApproval($gallery)
+    {
+        $ownerId = \App\Models\StudioOwner\StudiosModel::whereKey($gallery->studio_id)->value('user_id');
+
+        if (! $ownerId) {
+            return null;
+        }
+
+        return $this->createNotification(
+            $ownerId,
+            'gallery_awaiting_approval',
+            'Gallery Awaiting Approval',
+            "The gallery \"{$gallery->gallery_name}\" is waiting for your approval.",
+            [
+                'gallery_id' => $gallery->id,
+                'booking_id' => $gallery->booking_id,
+                'route' => route('owner.online-gallery.index', [], false),
+            ],
+            'photo',
+            'warning'
+        );
+    }
+
+    /**
      * Create a revision-requested notification for the owner/photographer.
      *
      * @param object $booking

@@ -4,7 +4,9 @@ use App\Http\Middleware\NoStoreSessionResponses;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -48,5 +50,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // A stale CSRF token reaches here as a 419 HttpException. Screens show
+        // the JSON message as is, so give it in plain language.
+        $exceptions->render(function (HttpException $e, Request $request) {
+            if ($e->getStatusCode() === 419 && $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your session expired. Reload the page and try again.',
+                ], 419);
+            }
+        });
     })->create();

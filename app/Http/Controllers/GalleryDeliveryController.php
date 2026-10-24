@@ -6,11 +6,14 @@ use App\Models\BookingModel;
 use App\Models\Freelancer\FreelanceOnlineGalleryModel;
 use App\Models\StudioOwner\StudioOnlineGalleryModel;
 use App\Rules\DriveLink;
+use App\Traits\Notifiable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class GalleryDeliveryController extends Controller
 {
+    use Notifiable;
+
     public function saveDrive(Request $request, $booking)
     {
         $booking = BookingModel::findOrFail($booking);
@@ -46,6 +49,10 @@ class GalleryDeliveryController extends Controller
                     'gallery_reference' => $model::generateGalleryReference(), 'gallery_name' => $booking->event_name.' Gallery',
                     'images' => [], 'total_photos' => 0, 'status' => 'active',
                 ]);
+            }
+
+            if ($values['approval_status'] === 'pending') {
+                $this->notifyGalleryAwaitingApproval($gallery);
             }
 
             return response()->json(['success' => true, 'gallery' => $gallery]);

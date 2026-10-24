@@ -5,6 +5,7 @@ namespace Tests\Feature\Gallery;
 use App\Http\Controllers\StudioPhotographer\OnlineGalleryController as PhotographerOnlineGalleryController;
 use App\Models\BookingModel;
 use App\Models\BookingPackageModel;
+use App\Models\NotificationModel;
 use App\Models\StudioOwner\BookingAssignedPhotographerModel;
 use App\Models\StudioOwner\PackagesModel;
 use App\Models\StudioOwner\StudioOnlineGalleryModel;
@@ -84,6 +85,62 @@ class PhotographerGalleryPublishTest extends TestCase
         $this->assertNull($gallery->published_at);
     }
 
+    public function test_photographer_submission_notifies_the_studio_owner(): void
+    {
+        $gallery = $this->createDraftGallery();
+
+        $this->actingAs($this->photographer)
+            ->post("/_test/photographer/gallery/{$gallery->id}/submit")
+            ->assertOk();
+
+        $this->assertOwnerNotifiedOnce($gallery);
+    }
+
+    public function test_hr_submission_notifies_the_studio_owner(): void
+    {
+        $gallery = $this->createDraftGallery();
+
+        // Stand-in HR account assigned to this studio; role tables are out of scope here.
+        $hr = new class extends UserModel
+        {
+            public array $studioIds = [];
+
+            public function getAssignedStudioIds(?string $portal = null): \Illuminate\Support\Collection
+            {
+                return collect($this->studioIds);
+            }
+        };
+        $hr->forceFill($this->createUser('studio-hr', 'gallery-hr@example.com')->getAttributes());
+        $hr->exists = true;
+        $hr->studioIds = [$this->studio->id];
+
+        Route::post('/_test/hr/gallery/{gallery}/submit', [\App\Http\Controllers\StudioHR\OnlineGalleryController::class, 'submitForApproval']);
+
+        $this->actingAs($hr)
+            ->post("/_test/hr/gallery/{$gallery->id}/submit")
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertOwnerNotifiedOnce($gallery);
+    }
+
+    public function test_photographer_drive_link_notifies_the_owner_but_owner_drive_link_does_not(): void
+    {
+        Schema::table('tbl_studio_online_gallery', fn ($table) => $table->text('drive_link')->nullable());
+        Route::post('/_test/drive/{booking}', [\App\Http\Controllers\GalleryDeliveryController::class, 'saveDrive']);
+        $link = ['drive_link' => 'https://drive.google.com/file/d/test/view'];
+
+        $this->actingAs($this->owner)->postJson("/_test/drive/{$this->booking->id}", $link)->assertOk();
+        $this->assertSame(0, NotificationModel::count(), 'An owner-saved link is already approved.');
+
+        StudioOnlineGalleryModel::query()->delete();
+        $this->actingAs($this->photographer)->postJson("/_test/drive/{$this->booking->id}", $link)
+            ->assertOk()
+            ->assertJsonPath('gallery.approval_status', 'pending');
+
+        $this->assertOwnerNotifiedOnce(StudioOnlineGalleryModel::where('booking_id', $this->booking->id)->firstOrFail());
+    }
+
     public function test_assigned_photographer_can_publish_after_owner_approval(): void
     {
         Storage::fake('public');
@@ -154,6 +211,36 @@ class PhotographerGalleryPublishTest extends TestCase
         file_put_contents($path, $png);
 
         return new UploadedFile($path, $name, 'image/png', null, true);
+    }
+
+    private function createDraftGallery(): StudioOnlineGalleryModel
+    {
+        return StudioOnlineGalleryModel::create([
+            'booking_id' => $this->booking->id,
+            'studio_id' => $this->studio->id,
+            'client_id' => $this->client->id,
+            'gallery_reference' => 'GAL-'.str()->upper(str()->random(8)),
+            'gallery_name' => 'Wedding Gallery',
+            'images' => [],
+            'status' => 'active',
+            'gallery_status' => 'draft',
+        ]);
+    }
+
+    private function assertOwnerNotifiedOnce(StudioOnlineGalleryModel $gallery): void
+    {
+        $notifications = NotificationModel::where('user_id', $this->owner->id)->get();
+
+        $this->assertCount(1, $notifications);
+        $this->assertSame('gallery_awaiting_approval', $notifications[0]->type);
+        $this->assertNull($notifications[0]->read_at);
+        $this->assertSame($gallery->id, $notifications[0]->data['gallery_id'] ?? null);
+
+        // The topbar badge reads this endpoint.
+        $this->actingAs($this->owner)
+            ->getJson(route('notifications.unread-count'))
+            ->assertOk()
+            ->assertJsonPath('count', 1);
     }
 
     private function createUser(string $role, string $email): UserModel
@@ -318,6 +405,7 @@ class PhotographerGalleryPublishTest extends TestCase
             $table->timestamp('rejected_at')->nullable();
             $table->timestamps();
         });
+        (require database_path('migrations/2026_02_22_145351_create_tbl_notifications_table.php'))->up();
         Schema::create('tbl_booking_assigned_photographers', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('booking_id');

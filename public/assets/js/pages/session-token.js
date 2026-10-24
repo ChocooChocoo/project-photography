@@ -112,6 +112,63 @@
         return $.ajax(settings);
     }
 
+    function call(callback, context, args) {
+        if (typeof callback === 'function') {
+            callback.apply(context, args);
+        }
+    }
+
+    // A stale token returns 419. Keep the caller's error and complete handlers
+    // quiet, fetch a fresh token and send the request one more time with the
+    // caller's own handlers. The caller sees only the result of that retry, so
+    // a stale token no longer shows a "CSRF token mismatch" error.
+    function holdCallbacksOn419(settings) {
+        var success = settings.success;
+        var error = settings.error;
+        var complete = settings.complete;
+        var held = false;
+
+        if (!success && !error && !complete) {
+            return;
+        }
+
+        // The ajaxError retry below must skip this request.
+        settings[OWN_RETRY_FLAG] = true;
+
+        settings.error = function (xhr) {
+            var context = this;
+            var args = arguments;
+
+            if (!xhr || xhr.status !== 419) {
+                call(error, context, args);
+
+                return;
+            }
+
+            held = true;
+
+            refresh().done(function () {
+                var retry = jquery().extend({}, settings, {
+                    success: success,
+                    error: error,
+                    complete: complete
+                });
+
+                retry[OWN_RETRY_FLAG] = false;
+                resend(retry);
+            }).fail(function () {
+                call(error, context, args);
+                call(complete, context, [xhr, 'error']);
+            });
+        };
+
+        settings.complete = function () {
+            if (!held) {
+                call(complete, this, arguments);
+            }
+        };
+    }
+
     function installRecovery() {
         var $ = jquery();
 
@@ -121,24 +178,28 @@
 
         recoveryInstalled = true;
 
-        // Every non-GET request carries the live token.
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                var method = String(settings.type || settings.method || 'GET').toUpperCase();
+        // Every non-GET request carries the live token. A prefilter runs even
+        // when the caller passes its own beforeSend, which replaces ajaxSetup's.
+        $.ajaxPrefilter(function (settings, originalSettings, xhr) {
+            var method = String(settings.type || settings.method || 'GET').toUpperCase();
 
-                if (method === 'GET' || method === 'HEAD') {
-                    return;
-                }
+            if (method === 'GET' || method === 'HEAD' || settings.crossDomain) {
+                return;
+            }
 
-                var value = token();
+            var value = token();
 
-                if (value) {
-                    xhr.setRequestHeader('X-CSRF-TOKEN', value);
-                }
+            if (value) {
+                xhr.setRequestHeader('X-CSRF-TOKEN', value);
+            }
+
+            if (!settings[RETRY_FLAG] && !settings[OWN_RETRY_FLAG]) {
+                holdCallbacksOn419(settings);
             }
         });
 
         // A 419 response gets one retry with a fresh token. The flag stops a loop.
+        // This covers callers that attach handlers through the promise API.
         $(document).ajaxError(function (event, xhr, settings) {
             if (!xhr || xhr.status !== 419 || !settings) {
                 return;

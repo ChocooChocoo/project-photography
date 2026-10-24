@@ -431,6 +431,8 @@ class OnlineGalleryController extends Controller
                 'rejection_reason' => null,
             ]);
 
+            $this->notifyGalleryAwaitingApproval($gallery);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Gallery submitted for owner approval.',

@@ -99,7 +99,6 @@ class GalleryDownloadTest extends TestCase
 
     public function test_owner_can_publish_drive_only_delivery_for_the_booking_client(): void
     {
-        (require database_path('migrations/2026_02_22_145351_create_tbl_notifications_table.php'))->up();
         Route::post('/_publish/{id}', [\App\Http\Controllers\StudioOwner\OnlineGalleryController::class, 'publish']);
         Route::get('/_details/{id}/{type}', [OnlineGalleryController::class, 'getGalleryDetails']);
         $owner = UserModel::create(['first_name' => 'Owner', 'last_name' => 'Test', 'email' => 'drive-publish-owner@example.com', 'mobile_number' => '09123456789', 'password' => bcrypt('password'), 'role' => 'owner', 'status' => 'active']);

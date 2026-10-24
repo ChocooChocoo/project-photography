@@ -35,6 +35,34 @@ class CsrfTokenMismatchTest extends TestCase
         $this->assertSame(419, $response->getStatusCode());
     }
 
+    public function test_a_json_request_with_a_stale_token_gets_a_plain_language_message(): void
+    {
+        $session = $this->newSession('session-token-value');
+
+        $request = $this->postRequest(['_token' => 'a-different-token']);
+        $request->headers->set('Accept', 'application/json');
+        $request->headers->set('X-Requested-With', 'XMLHttpRequest');
+        $request->setLaravelSession($session);
+
+        $response = $this->runCsrfMiddleware($request);
+
+        $this->assertSame(419, $response->getStatusCode());
+        $this->assertSame(
+            'Your session expired. Reload the page and try again.',
+            json_decode($response->getContent(), true)['message'] ?? null
+        );
+    }
+
+    public function test_session_helper_holds_caller_handlers_during_the_419_retry(): void
+    {
+        $script = file_get_contents(base_path('public/assets/js/pages/session-token.js'));
+
+        // A caller's own beforeSend replaces ajaxSetup's, so the token header
+        // and the 419 hold must come from a prefilter.
+        $this->assertStringContainsString('$.ajaxPrefilter(', $script);
+        $this->assertStringContainsString('holdCallbacksOn419(settings);', $script);
+    }
+
     public function test_a_request_with_a_matching_body_token_passes(): void
     {
         $session = $this->newSession('session-token-value');
