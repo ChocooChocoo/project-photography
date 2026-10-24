@@ -89,6 +89,9 @@
             formData.delete('keep_cover_videos[]');
             formData.set('keep_cover_videos_sent', '1');
             document.querySelectorAll('.existing-cover-video').forEach((el) => formData.append('keep_cover_videos[]', el.dataset.path));
+
+            // Freelancer forms build FormData by hand, so add the editing prices here.
+            form.querySelectorAll('[name^="editing_prices["]').forEach((input) => formData.set(input.name, input.value));
         };
     })();
 </script>
