@@ -93,3 +93,14 @@ The current source exposes validation, authorization, state checks, provider fal
 | # | Unclear point | Why it matters |
 |---|---|---|
 | Q-10 | Which procurement escalation and automation thresholds are final? | The part cannot safely promise this behavior until the decision is answered. |
+
+## T02 changes (24 October 2026)
+
+Source: [T-13](../09%20-%20TASK%20TRACKER.md) and the [T02 plan](../../implementation-plan/t02-client-defects/phase-3.md). Verified locally; production is unverified.
+
+| # | Shipped behavior | Tests |
+|---|---|---|
+| 1 | Each studio keeps an equipment catalog with name, type, brand, model and status (`tbl_studio_equipment`). Owners assign booking equipment from a dropdown of available catalog items instead of free text. | `tests/Feature/Booking/EquipmentAssignmentTest.php` |
+| 2 | Clients can name a preferred camera brand when booking. The choices come from the studio's catalog. | `tests/Feature/Booking/BookingTermsAndTimeslotTest.php`, `tests/Feature/Client/BookingFormsPresentationTest.php` |
+| 3 | The assigned photographer confirms the equipment. The status then changes from "Waiting for the photographer to confirm" to "Photographer confirmed" for the owner and the client. | `tests/Feature/Booking/EquipmentAssignmentTest.php`, `BookingPreparationTest.php`, `FreelancerAccessTest.php` |
+| 4 | A brand that differs from the client's preference shows a warning but does not block the assignment. | `tests/Feature/Booking/EquipmentAssignmentTest.php` |

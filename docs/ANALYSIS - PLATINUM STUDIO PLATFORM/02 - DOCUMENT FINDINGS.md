@@ -41,6 +41,7 @@ Sources: `MATERIAL/LEGACY DOCUMENTATION/ANALYSIS - TECHNICAL/03-planning/plan.md
 | The assistant is photography-focused and must validate input, output, credentials, ownership, rate, and failure behavior. | `MATERIAL/LEGACY DOCUMENTATION/ANALYSIS - OLD/04-REFERENCE/AI ASSISTANT INTEGRATION.md`, sections 4–9 |
 | Photographer cancellation requires a policy decision before a complete remedy is built. | `MATERIAL/LEGACY DOCUMENTATION/ANALYSIS - TECHNICAL/00-overview/open-items.md`, QST-001 |
 | The documentation phase does not itself change application behavior. | `MATERIAL/LEGACY DOCUMENTATION/tasks/07.md`, `08.md`, `09.md`, and `10.md` |
+| Downpayments are restored as a provider setting (24 October 2026). This reverses T01's "Disable the downpayment option", which commit `8cf4e6e2` applied by hard-coding full payment. Owners and freelancers turn downpayments on or off and choose a percentage or a fixed amount; existing studios default to on. A downpayment-only cancellation is non-refundable and kept by the provider. A fully paid cancellation gets a full or partial refund amount entered by the owner, and every refund is recorded. | `docs/tasks/T01.md` (Downpayment), `MATERIAL/LEGACY DOCUMENTATION/tasks/13.md` (enhancements 4 and 5), and the [T02 plan](../implementation-plan/t02-client-defects/phase-5.md), Phases 5–6 |
 
 ## Where the documents disagree
 

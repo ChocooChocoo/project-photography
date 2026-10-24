@@ -93,3 +93,16 @@ The current source exposes validation, authorization, state checks, provider fal
 | # | Unclear point | Why it matters |
 |---|---|---|
 | Q-07 and Q-11 | Which provider events and paid-cancellation financial outcome are authoritative? | Q-11 is resolved for both cancellation paths: photographer cancellation (Phase 6) and ordinary client cancellation (R-08, 14 August 2026) each queue one full manual refund requiring unique provider evidence per succeeded payment before local reversal; ordinary cancellation records `cancelled_by='client'` with no recovery flow. Q-07 remains open for broader provider policy. |
+
+## T02 changes (24 October 2026)
+
+Source: [T-13](../09%20-%20TASK%20TRACKER.md) and the [T02 plan](../../implementation-plan/t02-client-defects/phase-9.md). Verified locally with tests and a browser re-run; production is unverified.
+
+| # | Shipped behavior | Tests |
+|---|---|---|
+| 1 | Owners and freelancers turn downpayments on or off and choose a percentage or a fixed amount (`downpayment_type`, `downpayment_amount`). With downpayments on, the client chooses a downpayment or full payment. With them off, checkout charges the full total. The summary and billing show the downpayment and remaining balance that the booking was made with. | `tests/Feature/StudioManagement/DepositPolicyTest.php`, `StudioCommercialSettingsTest.php`, `tests/Feature/Owner/StudioUpdateTest.php`, `tests/Feature/Client/BookingFormsPresentationTest.php` |
+| 2 | If a client cancels after paying only the downpayment, the downpayment is non-refundable and no refund is queued. If the client paid in full, the owner enters a full or partial refund, capped at the amount paid. The cancel dialog and the success alert state which rule applies. | `tests/Feature/Booking/ClientCancellationRefundFlowTest.php`, `ClientRefundsPageTest.php`, `tests/Integration/AdminRefundDate.test.cjs` |
+| 3 | Packages price each photo editing service separately: color grading, brightness and contrast, and retouching. With no service chosen, the client gets unedited (RAW) photos. The services chosen are added to the total and the downpayment, and are kept on the booking. | `tests/Feature/Booking/PhotoEditingPricingTest.php`, `tests/Feature/Owner/PackageMediaTest.php`, `tests/Integration/PackageExtras.test.cjs` |
+| 4 | A client can ask for a new date and time. The owner or freelancer can approve it, decline it, or offer up to three other dates, after a check that the studio, photographer and slot are free. | `tests/Feature/Booking/RescheduleRequestTest.php` |
+| 5 | The booking status modal holds a request that fails with HTTP 419 (session token mismatch), refreshes the token, and retries it once. | `tests/Feature/Security/CsrfTokenMismatchTest.php`, `tests/Integration/SessionTokenRetry.test.cjs` |
+| 6 | An owner can create a package for a new studio. If the studio cannot take packages yet, the page explains why. | `tests/Feature/Owner/PackageCreateAccessTest.php` |

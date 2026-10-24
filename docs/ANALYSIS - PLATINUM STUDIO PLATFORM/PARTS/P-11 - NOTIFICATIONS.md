@@ -93,3 +93,16 @@ The current source exposes validation, authorization, state checks, provider fal
 | # | Unclear point | Why it matters |
 |---|---|---|
 | Q-10 | Which lifecycle events require mandatory notification and what guarantee is expected? | The part cannot safely promise this behavior until the decision is answered. |
+
+## T02 changes (24 October 2026)
+
+Source: [T-13](../09%20-%20TASK%20TRACKER.md) and the [T02 plan](../../implementation-plan/t02-client-defects/phase-9.md). Verified locally; production is unverified.
+
+| # | Notification | Who receives it | Tests |
+|---|---|---|---|
+| 1 | `gallery_awaiting_approval` | The studio owner, when a gallery is submitted for approval | `tests/Feature/Gallery/PhotographerGalleryPublishTest.php` |
+| 2 | `reschedule_requested`, `reschedule_accepted` | The owner or freelancer | `tests/Feature/Booking/RescheduleRequestTest.php` |
+| 3 | `reschedule_approved`, `reschedule_rejected`, `reschedule_alternatives` (the offered dates are in the message and in `data.alternatives`) | The client | `tests/Feature/Booking/RescheduleRequestTest.php` |
+| 4 | `booking_rescheduled` | Assigned photographers | `tests/Feature/Booking/RescheduleRequestTest.php` |
+
+Notifications appear in the web bell. T02 asked for notifications on "web and mobile"; no separate mobile app exists in this repository, so "mobile" means the web app on a phone.

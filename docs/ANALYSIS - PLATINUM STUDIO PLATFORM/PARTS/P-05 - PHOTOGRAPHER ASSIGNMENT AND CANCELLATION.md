@@ -93,3 +93,16 @@ The current source exposes validation, authorization, state checks, provider fal
 | # | Unclear point | Why it matters |
 |---|---|---|
 | Q-01 and Q-11 | ~~What remedy, financial state, deadline, and record are required?~~ **Resolved by the approved Phase 6 design and implementation on 12 August 2026.** | Same-studio replacement, client response, `min(now + 24 hours, event start − 2 hours)` Manila deadline, and admin manual full-refund evidence per succeeded payment are implemented. |
+
+## T02 changes (24 October 2026)
+
+Source: [T-13](../09%20-%20TASK%20TRACKER.md) and the [T02 plan](../../implementation-plan/t02-client-defects/phase-9.md). Verified locally; production is unverified.
+
+| # | Shipped behavior | Tests |
+|---|---|---|
+| 1 | Approving a reschedule or offering other dates is refused when the assigned photographer is busy, the slot is taken, or the studio is closed that day. Assigned photographers are notified when a booking moves. | `tests/Feature/Booking/RescheduleRequestTest.php` |
+| 2 | The assigned photographer's modal shows the booking's equipment and a "Confirm equipment" action. | `tests/Feature/Booking/EquipmentAssignmentTest.php`, `BookingPreparationTest.php` |
+| 3 | A freelancer can refund only a fully paid booking. A downpayment-only booking is refused with "A downpayment is non-refundable. Only fully paid bookings can be refunded." | `tests/Feature/Booking/ClientCancellationRefundFlowTest.php` |
+| 4 | The photographer's assignment view lists the photo editing the client chose. | `tests/Feature/Booking/PhotoEditingPricingTest.php`, `FreelancerAccessTest.php` |
+
+Open question from the 24 October re-run: a freelancer booking can be completed once fully paid, with no gallery delivered. Studio bookings must first have a published gallery and delivered printed photos.

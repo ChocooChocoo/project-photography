@@ -102,3 +102,13 @@ The current source exposes validation, authorization, state checks, provider fal
 | # | Unclear point | Why it matters |
 |---|---|---|
 | Q-08 | Which final review, moderation, and portfolio visibility rules are approved? | The part cannot safely promise this behavior until the decision is answered. |
+
+## T02 changes (24 October 2026)
+
+Source: [T-13](../09%20-%20TASK%20TRACKER.md) and the [T02 plan](../../implementation-plan/t02-client-defects/phase-9.md). Verified locally; production is unverified.
+
+| # | Shipped behavior | Tests |
+|---|---|---|
+| 1 | When a photographer or studio HR submits a gallery for approval, the studio owner gets one unread "Gallery Awaiting Approval" notification. | `tests/Feature/Gallery/PhotographerGalleryPublishTest.php`, `GalleryDownloadTest.php` |
+| 2 | Printed-photo delivery cannot start until the event has ended. The panel says when delivery can start, and the server refuses earlier status changes with HTTP 422. | `tests/Feature/Booking/HardcopyOrderTest.php` |
+| 3 | The client's accepted choice of pickup or courier is final. The studio's suggestion is kept alongside it, and an owner cannot re-quote an active order. | `tests/Feature/Booking/HardcopyOrderTest.php`, `OwnerCompletionGateTest.php` |

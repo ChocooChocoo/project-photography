@@ -2,7 +2,7 @@
 
 [Back to start](00%20-%20START%20HERE.md) · Previous: [08 - ROADMAP TRACKER](08%20-%20ROADMAP%20TRACKER.md) · Next: [10 - WORD LIST](10%20-%20WORD%20LIST.md)
 
-**Last checked:** 14 October 2026 (Phase 13 entry; historical task statuses retained)
+**Last checked:** 24 October 2026 (T-13 client-defects entry; historical task statuses retained)
 
 Every task below is a piece of work from a frozen user-authored prompt. The prompt remains exact under `MATERIAL/LEGACY DOCUMENTATION/tasks/`.
 
@@ -20,6 +20,7 @@ Every task below is a piece of work from a frozen user-authored prompt. The prom
 | T-10 | Refine core studio-management requirements. | `MATERIAL/LEGACY DOCUMENTATION/tasks/10.md` | Onboarding, roles, records, attendance, booking, pricing, and approval requirements. | [R-09](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-3--make-each-roles-daily-work-complete) | ✅ |
 | T-11 | Implement Phase 4 workflow improvements through subscription-rank transparency. | `MATERIAL/LEGACY DOCUMENTATION/tasks/11.md` | Historical discovery and workflow proposal. | [R-14](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-4--expand-discovery-and-advanced-operations) | ✅ |
 | T-12 | Resolve municipality permission behavior and standardize task documentation. | `MATERIAL/LEGACY DOCUMENTATION/tasks/12.md` | Owner studio creation lookup and documentation consistency. | [R-04](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-1--make-the-foundations-dependable) | 🔵 |
+| T-13 | Fix the client-reported T02 defects and build the requested enhancements. | `MATERIAL/LEGACY DOCUMENTATION/tasks/13.md` (frozen copy of `docs/tasks/T02.md`) | Employees page error, CSRF retry, gallery-approval notification, equipment inventory and confirmation, printed-photo delivery gate and fulfillment rule, downpayment settings, cancellation and refund rules, photo editing pricing, and rescheduling requests. | [R-05](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-2--complete-booking-and-media-journeys), [R-15](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-4--expand-discovery-and-advanced-operations) | ✅ |
 
 ## Tasks that serve no roadmap item
 
@@ -32,6 +33,14 @@ Every task in this source set serves one of the roadmap items above. There is no
 | 13 | First-login client/owner/freelancer tutorial with replay, password-change priority, client-only studio portfolio page, and confirmed long-name topbar overflow fix. | [Phase 13](../plans/thesis-panel-revisions/phase-13.md): 671 PHP tests / 3342 assertions, 9 JavaScript regressions, build and authenticated browser checks passed. Seven dashboards checked at desktop/phone widths in both themes. | ✅ Locally verified, 14 October 2026; production unverified. |
 
 This entry does not close Phase 1's unreproduced production login issue. Portfolio pages exclude private booking galleries and unavailable studios; existing public image storage remains unchanged. Optional TourGuide and unconfirmed KPI/date-filter/chatbot changes were not added.
+
+## T02 client defects
+
+| Phases | Scope | Source and verification | Status |
+|---|---|---|---|
+| 1–9 | All seven reported defects and five requested enhancements from T-13. | [T02 plan](../implementation-plan/t02-client-defects/phase-9.md): 721 PHP tests / 3661 assertions and 21 JavaScript tests passed, and the build succeeded. A browser re-run on 24 October 2026 passed the five previously failing acceptance tests (Full payment, Preparation and equipment, Printed photos: pickup and delivery, Finishing a booking, Full walkthrough: freelancer booking) and the untested "Photos, videos and extras on packages". | ✅ Locally verified, 24 October 2026; production unverified. |
+
+The acceptance-test sheet is outside this repo, and its testers must still mark the five tests as passing. They also need edit access and a notes column for "Doesn't work" results; this involves no app code. Open questions from the re-run: a freelancer booking can be completed without a delivered gallery, unlike a studio booking; and a booking cannot be rescheduled once the photographer has accepted it. T-13 reverses the T01 instruction to disable downpayments; see [decisions](02%20-%20DOCUMENT%20FINDINGS.md#decisions-already-made).
 
 ## Status legend
 
