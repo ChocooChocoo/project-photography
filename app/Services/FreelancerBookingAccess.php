@@ -15,9 +15,21 @@ class FreelancerBookingAccess
 {
     use Notifiable;
 
+    /** Days after the event a fallback freelancer keeps access to deliver photos, if the booking is not completed first. */
+    public const DELIVERY_DAYS = 30;
+
     public function eventEnd(BookingModel $booking): Carbon
     {
         return $booking->eventEndsAt();
+    }
+
+    /**
+     * Access ends when the booking is completed or cancelled (see revoke()).
+     * This is only the safety cap, so photos can still be delivered after the event.
+     */
+    public function accessEnd(BookingModel $booking): Carbon
+    {
+        return $this->eventEnd($booking)->addDays(self::DELIVERY_DAYS);
     }
 
     public function grant(BookingAssignedPhotographerModel $assignment): void
@@ -32,12 +44,12 @@ class FreelancerBookingAccess
             'user_id' => $assignment->photographer_id, 'role_id' => $role->id,
             'studio_id' => $assignment->studio_id, 'booking_id' => $booking->id,
             'grant_scope' => 'booking:'.$booking->id,
-            'expires_at' => $this->eventEnd($booking)->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s'),
+            'expires_at' => $this->accessEnd($booking)->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s'),
             'created_at' => now(), 'updated_at' => now(),
         ]);
         if ($created) {
             $this->createNotification($assignment->photographer_id, 'freelancer_access_granted', 'Studio booking access granted',
-                'Access to '.$booking->booking_reference.' ends at '.$this->eventEnd($booking)->format('M d, Y H:i').' Asia/Manila.',
+                'Access to '.$booking->booking_reference.' ends when the booking is completed, at the latest '.$this->accessEnd($booking)->format('M d, Y H:i').' Asia/Manila.',
                 ['booking_id' => $booking->id, 'route' => '/freelancer/studio-assignments'], 'user-check', 'info');
         }
     }
@@ -52,7 +64,7 @@ class FreelancerBookingAccess
         $booking = $assignment->booking;
 
         return $booking && $booking->booking_type === 'studio' && ! in_array($booking->status, ['cancelled', 'completed'])
-            && $this->eventEnd($booking)->isFuture()
+            && $this->accessEnd($booking)->isFuture()
             && StudioMemberModel::approved()->where('studio_id', $assignment->studio_id)->where('freelancer_id', $user->id)->exists()
             && DB::table('tbl_user_roles')->where('user_id', $user->id)->where('studio_id', $assignment->studio_id)
                 ->where('booking_id', $booking->id)->where('expires_at', '>', now())->exists()

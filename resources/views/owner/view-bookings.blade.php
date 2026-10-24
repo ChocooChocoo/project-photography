@@ -1294,7 +1294,7 @@
                 let fallbackHeadingShown = false;
                 photographers.forEach(photographer => {
                     if (photographer.is_freelancer && !fallbackHeadingShown) {
-                        photographersHtml += '<h3 class="h5 mt-4">Freelancer fallback</h3><p>No studio photographer is available. Approved members get access only to this booking until event end.</p>';
+                        photographersHtml += '<h3 class="h5 mt-4">Freelancer fallback</h3><p>No studio photographer is available. Approved members get access only to this booking, until it is completed.</p>';
                         fallbackHeadingShown = true;
                     }
                     const initials = photographer.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase();

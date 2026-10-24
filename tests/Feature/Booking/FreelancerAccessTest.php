@@ -176,7 +176,10 @@ class FreelancerAccessTest extends TestCase
         $this->assertTrue($this->freelancer->hasPermission($permission, $this->assignment->studio_id, $this->booking->id));
         $this->assertFalse($this->freelancer->hasPermission($permission, $this->assignment->studio_id));
         $this->assertFalse($this->freelancer->hasPermission($permission, $this->assignment->studio_id, $this->booking->id + 1));
-        $this->travelTo($service->eventEnd($this->booking));
+        // T02 Phase 10: access outlives the event so photos can still be delivered.
+        $this->travelTo($service->eventEnd($this->booking)->addHour());
+        $this->assertTrue($this->freelancer->hasPermission($permission, $this->assignment->studio_id, $this->booking->id));
+        $this->travelTo($service->accessEnd($this->booking));
         $this->assertFalse($this->freelancer->hasPermission($permission, $this->assignment->studio_id, $this->booking->id));
         $this->assertDatabaseCount('tbl_user_roles', 1);
         $this->artisan('bookings:revoke-freelancer-access')->assertSuccessful();
@@ -335,7 +338,7 @@ class FreelancerAccessTest extends TestCase
         $other->photographer_id = UserModel::where('role', 'owner')->value('id');
         $other->save();
         $this->getJson('/freelancer/studio-assignments/'.$other->id)->assertForbidden();
-        $this->travelTo(app(FreelancerBookingAccess::class)->eventEnd($this->booking));
+        $this->travelTo(app(FreelancerBookingAccess::class)->accessEnd($this->booking));
         $this->getJson('/freelancer/studio-assignments/'.$this->assignment->id)->assertForbidden();
         $this->postJson('/freelancer/studio-assignments/'.$this->assignment->id.'/status', ['status' => 'confirmed'])->assertForbidden();
         $this->postJson('/freelancer/studio-assignments/'.$this->assignment->id.'/images', ['images' => []])->assertForbidden();
@@ -364,7 +367,7 @@ class FreelancerAccessTest extends TestCase
         $this->postJson($confirm($item->id))->assertOk()->assertJsonPath('success', true);
         $this->assertTrue($item->fresh()->confirmed);
 
-        $this->travelTo(app(FreelancerBookingAccess::class)->eventEnd($this->booking));
+        $this->travelTo(app(FreelancerBookingAccess::class)->accessEnd($this->booking));
         $item->update(['confirmed' => false]);
         $this->postJson($confirm($item->id))->assertForbidden();
     }
@@ -374,7 +377,7 @@ class FreelancerAccessTest extends TestCase
         $this->migrateAccess();
         app(FreelancerBookingAccess::class)->grant($this->assignment);
         $this->actingAs($this->freelancer)->get('/freelancer/studio-assignments')->assertOk()->assertSee('ACCESS-1')->assertSee('Access ends');
-        $this->travelTo(app(FreelancerBookingAccess::class)->eventEnd($this->booking));
+        $this->travelTo(app(FreelancerBookingAccess::class)->accessEnd($this->booking));
         $this->get('/freelancer/studio-assignments')->assertOk()->assertDontSee('ACCESS-1')->assertSee('No active studio assignments');
     }
 

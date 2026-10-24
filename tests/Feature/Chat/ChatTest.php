@@ -219,7 +219,7 @@ class ChatTest extends TestCase
         DB::table('tbl_user_roles')->insert(['user_id' => $freelancer->id, 'role_id' => $role, 'studio_id' => $this->booking->provider_id, 'booking_id' => $this->booking->id, 'expires_at' => now()->addDays(3)]);
         $id = $this->actingAs($this->client)->postJson('/client/messages', ['recipient_id' => $freelancer->id, 'booking_id' => $this->booking->id])->assertCreated()->json('conversation.id');
         $this->actingAs($freelancer)->postJson('/freelancer/messages/'.$id.'/send', ['body' => 'Arrival confirmed.'])->assertCreated();
-        $this->travelTo(app(\App\Services\FreelancerBookingAccess::class)->eventEnd($this->booking));
+        $this->travelTo(app(\App\Services\FreelancerBookingAccess::class)->accessEnd($this->booking));
         $this->getJson('/freelancer/messages/'.$id.'/messages')->assertForbidden();
         $this->postJson('/freelancer/messages/'.$id.'/send', ['body' => 'Expired'])->assertForbidden();
         $this->actingAs($this->client)->getJson('/client/messages/'.$id.'/messages')->assertOk()->assertJsonPath('can_send', false);

@@ -7,7 +7,7 @@
 @section('content')
 <div class="content-page"><main class="container-fluid feedback-surface studio-assignments py-4">
     <h1 class="h3">Studio assignments</h1>
-    <p>Temporary access covers only your assigned studio booking. Upload photos before event end; the owner reviews and publishes the gallery.</p>
+    <p>Temporary access covers only your assigned studio booking. Upload photos before your access ends; the owner reviews and publishes the gallery. Access ends when the work is completed.</p>
     @forelse($assignments as $assignment)
         @php
             $booking = $assignment->booking;
@@ -23,7 +23,7 @@
             <h2 class="h5">{{ $booking->booking_reference }}: {{ $booking->event_name }}</h2>
             <p>{{ $assignment->studio->studio_name }}. Status: {{ str_replace('_', ' ', $assignment->status) }}.</p>
             <a class="btn btn-outline-secondary mb-3" href="{{ route('freelancer.messages.index', ['booking' => $booking->id]) }}">Message booking contact</a>
-            <p><strong>Access ends {{ app(\App\Services\FreelancerBookingAccess::class)->eventEnd($booking)->format('M d, Y H:i') }} Asia/Manila.</strong></p>
+            <p><strong>Access ends when the booking is completed, at the latest {{ app(\App\Services\FreelancerBookingAccess::class)->accessEnd($booking)->format('M d, Y H:i') }} Asia/Manila.</strong></p>
             @foreach($booking->packages as $bookedPackage)
                 <p class="mb-2">{{ $bookedPackage->package_name }}. Photo editing: <strong>{{ $bookedPackage->editing_summary }}</strong>.</p>
             @endforeach
