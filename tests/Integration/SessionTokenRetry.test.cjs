@@ -39,7 +39,7 @@ function load(fetchResult) {
         fetch: () => fetchResult,
     };
     vm.runInNewContext(source, context);
-    return {meta, sent, prefilter: () => prefilter};
+    return {meta, sent, prefilter: () => prefilter, FormData: context.window.FormData};
 }
 
 const flush = () => new Promise(resolve => setImmediate(resolve));
@@ -66,7 +66,8 @@ test('a 419 stays hidden from the caller and the retry uses the caller handlers'
     assert.deepEqual(calls, [], 'the caller must not see the 419');
     assert.equal(env.sent.length, 1, 'the request is sent one more time');
     const retry = env.sent[0];
-    assert.equal(retry.data, 'status=cancelled&_token=fresh');
+    assert.equal(retry.type, 'POST');
+    assert.equal(retry.data, 'status=cancelled&_token=fresh&_method=PUT');
     assert.equal(retry.headers['X-CSRF-TOKEN'], 'fresh');
     assert.equal(retry.platinumRetried, true);
 
@@ -109,4 +110,32 @@ test('GET requests are left alone', () => {
 
     env.prefilter()(settings, {}, {setRequestHeader: () => assert.fail('no header on GET')});
     assert.equal(settings.error, error);
+});
+
+// Some hosts (production on Hostinger) drop the body of PUT, PATCH and DELETE
+// requests, so the token and fields never reach Laravel. Those requests leave
+// as POST with _method, which Laravel reads as the real method.
+test('form-encoded PUT, PATCH and DELETE are sent as POST with _method', () => {
+    const env = load(Promise.resolve({ok: true, json: () => ({token: 'fresh'})}));
+    const run = settings => { env.prefilter()(settings, {}, {setRequestHeader() {}}); return settings; };
+
+    const put = run({type: 'PUT', data: 'status=in_progress&_token=t'});
+    assert.equal(put.type, 'POST');
+    assert.equal(put.data, 'status=in_progress&_token=t&_method=PUT');
+
+    const del = run({type: 'DELETE'});
+    assert.equal(del.type, 'POST');
+    assert.equal(del.data, '_method=DELETE');
+
+    const formData = new Map();
+    const patch = run({type: 'PATCH', processData: false, contentType: false, data: Object.assign(new env.FormData(), {set: (k, v) => formData.set(k, v)})});
+    assert.equal(patch.type, 'POST');
+    assert.equal(formData.get('_method'), 'PATCH');
+
+    const json = run({type: 'PUT', contentType: 'application/json', data: '{"status":"x"}'});
+    assert.equal(json.type, 'PUT', 'JSON bodies reach Laravel, so they stay as they are');
+    assert.equal(json.data, '{"status":"x"}');
+
+    const get = run({type: 'GET', data: 'q=1'});
+    assert.equal(get.type, 'GET');
 });

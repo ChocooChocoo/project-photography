@@ -169,6 +169,31 @@
         };
     }
 
+    // Some hosts drop the body of PUT, PATCH and DELETE requests, so the token
+    // and the form fields never reach Laravel (419, then 422). Send those
+    // requests as POST with _method, which Laravel reads as the real method.
+    // JSON bodies arrive on every host, so they are left as they are.
+    function spoofMethod(settings, method) {
+        if (method !== 'PUT' && method !== 'PATCH' && method !== 'DELETE') {
+            return;
+        }
+
+        var data = settings.data;
+
+        if (window.FormData && data instanceof window.FormData) {
+            data.set('_method', method);
+        } else if (data == null || data === '') {
+            settings.data = '_method=' + method;
+        } else if (typeof data === 'string' && String(settings.contentType || '').indexOf('json') === -1) {
+            settings.data = data + '&_method=' + method;
+        } else {
+            return;
+        }
+
+        settings.type = 'POST';
+        settings.method = 'POST';
+    }
+
     function installRecovery() {
         var $ = jquery();
 
@@ -186,6 +211,8 @@
             if (method === 'GET' || method === 'HEAD' || settings.crossDomain) {
                 return;
             }
+
+            spoofMethod(settings, method);
 
             var value = token();
 
