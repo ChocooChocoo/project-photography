@@ -6,37 +6,44 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Accounts:** the seeded accounts in `docs/01 - SEEDED ACCOUNT CREDENTIALS.md` (Quarry Road Studio team, client Beatriz, freelancer Lorena, admin Adrian).
 - **Status values:** Open, Fixed (code changed and tested locally), Fixed and retested (checked again as the client, locally and on live).
 
+## For the owner (not bugs)
+
+- **Delete one test account on live.** While waiting for the deploy, a sign-up probe ran against the old code and created `probe.deploy.<timestamp>@example.com`. In phpMyAdmin: `DELETE FROM tbl_users WHERE email LIKE 'probe.deploy.%@example.com';`
+- **Feature gaps found (no screen exists, so nothing is broken):** admins cannot edit a location (only add and delete, C-06), and cannot delete a studio (they approve or reject, C-23).
+- **Live data notes:** Quarry Road's plan has reached its 5-staff limit, so HR cannot add staff until a place is freed or the plan is upgraded (this is the intended rule). Seeded mobile numbers are one digit short (`+63` and 9 digits); they keep working, and new or changed numbers must be complete (C-10, C-18).
+- **Test data left:** locally, leave and overtime requests 16–19 and 21, procurement request 16 (completed) and booking `BK-6ADD9A0FD3B8D` (paid in Stripe test mode). On live, booking `BK-6ADDCDBB01021` (cancelled, unpaid), leave request 16 (cancelled) and one empty owner–client conversation for booking 76.
+
 ## Issues
 
 | # | Where | What the client sees | Status |
 |---|---|---|---|
-| C-01 | Every portal, theme settings panel | The theme pictures in the settings panel are broken on every page except the top-level ones. | Fixed |
-| C-02 | Login and sign-up | When login or sign-up fails on the server, the client only sees "Login failed. Please try again." and nothing is written to the server log, so support cannot find out why. | Fixed |
-| C-03 | Owner, HR, finance and photographer dashboards | Pressing **Export CSV** shows a server error page instead of downloading the report. | Fixed |
-| C-04 | All dashboards | A dashboard or export link with a date that isn't a date (for example an edited or pasted link) shows a server error page. | Fixed |
-| C-05 | Detail pop-ups in every portal | Opening a booking, leave request, payroll, gallery or chatbot record that was removed (or a stale link) shows "Failed to load …" as a server error instead of "not found". | Fixed |
-| C-06 | Admin, locations | The location edit link crashes with a server error (the page it points at does not exist). | Fixed |
-| C-07 | Freelancer, services | Opening one of my own services shows a server error. | Fixed |
-| C-08 | Login | After a few wrong passwords the login says only "Too Many Attempts.", so I don't know I just have to wait. | Fixed |
-| C-09 | Login, studio staff | When six of us log in from the studio's Wi-Fi within a minute, the sixth person is locked out even with the right password. | Fixed |
-| C-10 | Sign-up, employees, photographers, profiles | I can create an account with a half-typed mobile number (`+(63)917 ___ ____`), and the studio can't reach me. | Fixed |
-| C-11 | Client booking form | Every time I change the start time, an error pops up: "Failed to check availability. Please try again." | Fixed |
-| C-12 | Client booking form, rescheduling | I can book an in-studio session at 7:00 AM, or one ending at 7:00 PM, although the studio is open 9 to 6. | Fixed |
-| C-13 | Client booking form | When I change the time quickly (or my connection is slow), the availability status can show the answer for the time I picked before. | Fixed |
-| C-14 | Client, My Bookings | If I leave checkout (press Cancel at "Confirm Payment", close the Stripe tab, or my card fails), I can't pay for the booking afterwards; it just sits "pending" for 48 hours. | Fixed |
-| C-15 | Client, budget planner | Typing a very large budget (for example 99,999,999,999) gives a server error instead of telling me the limit. | Fixed |
-| C-16 | Every portal: saves, deletes, approvals | A second click on Delete (or acting on something already removed in another tab) answers "Failed to …" as a server error instead of "not found". | Fixed |
-| C-17 | Owners with more than one studio | Deleting something that is already gone says "An active subscription or grace period is required for this studio" although my plans are active. | Fixed |
-| C-18 | Profile (all roles), freelancer profile | After the C-10 fix, saving my profile without touching the mobile number fails with "Enter a complete mobile number". | Fixed |
-| C-19 | Messages (all roles) | Sending a message of only spaces shows "The body field is required." under the box. | Fixed |
-| C-20 | Client dashboard, favourites | Double-clicking the heart on a studio sends two toggles, so it ends up not favourited (or shows "Failed to update favorite."). | Fixed |
-| C-21 | Reviews, gallery uploads, booking status and assignment, payments | When I make a mistake (a short review, a non-image photo, no rating), the live site says only "Something went wrong" instead of what to fix. | Fixed |
-| C-22 | HR and owner: add employee / add studio photographer | Adding a photographer whose specialisation has no service yet says only "Something went wrong". | Fixed |
-| C-23 | Admin, studios | The "delete studio" action crashes with a server error. | Fixed |
-| C-24 | Leave and overtime (HR, finance, photographer, owner), chatbot intents | Approving, cancelling or deleting a leave or overtime request (or a chatbot answer) that was already removed shows a server error. | Fixed |
-| C-25 | Client booking | When a studio's plan has lapsed, I'm told "An active subscription or grace period is required for this studio." | Fixed |
-| C-26 | Leave and overtime (HR, finance, photographer) | I can file the same leave dates twice (or overlapping dates, or the same overtime hours), so HR and payroll see duplicates. | Fixed |
-| C-27 | Procurement (photographer, HR, finance) | A very large quantity or cost on a purchase request, purchase order, payment or receipt says only "Something went wrong". | Fixed |
+| C-01 | Every portal, theme settings panel | The theme pictures in the settings panel are broken on every page except the top-level ones. | Fixed and retested |
+| C-02 | Login and sign-up | When login or sign-up fails on the server, the client only sees "Login failed. Please try again." and nothing is written to the server log, so support cannot find out why. | Fixed and retested |
+| C-03 | Owner, HR, finance and photographer dashboards | Pressing **Export CSV** shows a server error page instead of downloading the report. | Fixed and retested |
+| C-04 | All dashboards | A dashboard or export link with a date that isn't a date (for example an edited or pasted link) shows a server error page. | Fixed and retested |
+| C-05 | Detail pop-ups in every portal | Opening a booking, leave request, payroll, gallery or chatbot record that was removed (or a stale link) shows "Failed to load …" as a server error instead of "not found". | Fixed and retested |
+| C-06 | Admin, locations | The location edit link crashes with a server error (the page it points at does not exist). | Fixed and retested |
+| C-07 | Freelancer, services | Opening one of my own services shows a server error. | Fixed and retested |
+| C-08 | Login | After a few wrong passwords the login says only "Too Many Attempts.", so I don't know I just have to wait. | Fixed and retested |
+| C-09 | Login, studio staff | When six of us log in from the studio's Wi-Fi within a minute, the sixth person is locked out even with the right password. | Fixed and retested |
+| C-10 | Sign-up, employees, photographers, profiles | I can create an account with a half-typed mobile number (`+(63)917 ___ ____`), and the studio can't reach me. | Fixed and retested |
+| C-11 | Client booking form | Every time I change the start time, an error pops up: "Failed to check availability. Please try again." | Fixed and retested |
+| C-12 | Client booking form, rescheduling | I can book an in-studio session at 7:00 AM, or one ending at 7:00 PM, although the studio is open 9 to 6. | Fixed and retested |
+| C-13 | Client booking form | When I change the time quickly (or my connection is slow), the availability status can show the answer for the time I picked before. | Fixed and retested |
+| C-14 | Client, My Bookings | If I leave checkout (press Cancel at "Confirm Payment", close the Stripe tab, or my card fails), I can't pay for the booking afterwards; it just sits "pending" for 48 hours. | Fixed and retested |
+| C-15 | Client, budget planner | Typing a very large budget (for example 99,999,999,999) gives a server error instead of telling me the limit. | Fixed and retested |
+| C-16 | Every portal: saves, deletes, approvals | A second click on Delete (or acting on something already removed in another tab) answers "Failed to …" as a server error instead of "not found". | Fixed and retested |
+| C-17 | Owners with more than one studio | Deleting something that is already gone says "An active subscription or grace period is required for this studio" although my plans are active. | Fixed and retested |
+| C-18 | Profile (all roles), freelancer profile | After the C-10 fix, saving my profile without touching the mobile number fails with "Enter a complete mobile number". | Fixed and retested |
+| C-19 | Messages (all roles) | Sending a message of only spaces shows "The body field is required." under the box. | Fixed and retested |
+| C-20 | Client dashboard, favourites | Double-clicking the heart on a studio sends two toggles, so it ends up not favourited (or shows "Failed to update favorite."). | Fixed and retested |
+| C-21 | Reviews, gallery uploads, booking status and assignment, payments | When I make a mistake (a short review, a non-image photo, no rating), the live site says only "Something went wrong" instead of what to fix. | Fixed and retested |
+| C-22 | HR and owner: add employee / add studio photographer | Adding a photographer whose specialisation has no service yet says only "Something went wrong". | Fixed and retested |
+| C-23 | Admin, studios | The "delete studio" action crashes with a server error. | Fixed and retested |
+| C-24 | Leave and overtime (HR, finance, photographer, owner), chatbot intents | Approving, cancelling or deleting a leave or overtime request (or a chatbot answer) that was already removed shows a server error. | Fixed and retested |
+| C-25 | Client booking | When a studio's plan has lapsed, I'm told "An active subscription or grace period is required for this studio." | Fixed and retested |
+| C-26 | Leave and overtime (HR, finance, photographer) | I can file the same leave dates twice (or overlapping dates, or the same overtime hours), so HR and payroll see duplicates. | Fixed and retested |
+| C-27 | Procurement (photographer, HR, finance) | A very large quantity or cost on a purchase request, purchase order, payment or receipt says only "Something went wrong". | Fixed and retested |
 
 ### C-01 Theme settings pictures are broken
 
@@ -44,7 +51,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Steps to reproduce:** log in as any role, open `/owner/view/bookings`, open the settings panel. The browser requests `/owner/view/assets/images/layouts/light.svg`, which redirects (302) instead of returning the image. The same happens on live.
 - **Cause:** the seven `layouts/*/theme.blade.php` files wrote image paths relative to the current page (`src="assets/images/..."`, `url(assets/images/...)`).
 - **Fix:** the paths now use `asset('assets/...')`, as the rest of each layout already does.
-- **Retest:** pending.
+- **Retest (local):** the owner bookings page loads the theme pictures from `/assets/images/layouts/…` (200).
+- **Retest (live):** Live (25 Oct, deploy of `48ce62fb`): the login page now loads `https://lumoraphotography.online/assets/images/layouts/light.svg`, which returns 200.
 
 ### C-02 Failed logins and sign-ups leave no trace
 
@@ -53,7 +61,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** both catch blocks in `app/Http/Controllers/Auth/AuthController.php` returned a response without `report($e)`.
 - **Fix:** both now call `report($e)`, so the real error (here `SQLSTATE[HY000] [1045] Access denied …`) is in `storage/logs/laravel.log`.
 - **Note:** the local failure itself was a setup issue, not an app bug. `php artisan serve` passes `APP_ENV=local`, so Laravel loaded the git-ignored `.env.local` (a copy of the live settings). The test server now runs with `php -S`, which reads `.env`.
-- **Retest:** pending.
+- **Retest (local):** with the database refusing the connection, `storage/logs/laravel.log` now has the real error.
+- **Retest (live):** Live: logins and sign-ups work for every role tested below; the server log cannot be read from outside, so the logging itself was confirmed locally (the reported `SQLSTATE[HY000] [1045]` line).
 
 ### C-03 Dashboard "Export CSV" crashes
 
@@ -62,7 +71,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** the portal middleware (`Owner`, `StudioHR`, `StudioFinance`, `StudioPhotographer`, `Freelancer`) added no-cache headers with `$response->header()`, which only Laravel responses have. A CSV export (`StreamedResponse`) or a file download (`BinaryFileResponse`) has no such method. Admin's export worked because its middleware does not add headers.
 - **Fix:** all five now use `$response->headers->add([...])`, which works for every response type.
 - **Test:** `tests/Feature/Security/PortalMiddlewareDownloadTest.php` (5 portals, streamed and file downloads; all failed before the fix).
-- **Retest (local):** the owner pressed Export CSV and downloaded `owner-dashboard-20261025-125942.csv` (200, `text/csv`). Live: pending.
+- **Retest (local):** the owner pressed Export CSV and downloaded `owner-dashboard-20261025-125942.csv` (200, `text/csv`).
+- **Retest (live):** Live: owner, finance and photographer `dashboard/export` each return 200 `text/csv` ("Dashboard Export").
 
 ### C-04 Dashboard links with an unreadable date crash
 
@@ -71,7 +81,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** `BaseDashboardService::resolveFilters()`, shared by all six dashboards, passed the text straight to `Carbon::parse()`.
 - **Fix:** a small `parseDate()` helper returns null for unreadable text, and the filter uses the default last-30-days range. Reversed dates are still swapped.
 - **Test:** `tests/Feature/Dashboard/DashboardFilterDatesTest.php`.
-- **Retest (local):** export, filter and page with `abc`/`xyz` all return 200 with the default range. Live: pending.
+- **Retest (local):** export, filter and page with `abc`/`xyz` all return 200 with the default range.
+- **Retest (live):** Live: `/owner/dashboard/export?start_date=abc&end_date=xyz` returns 200 CSV with the default range "Sep 26, 2026 - Oct 25, 2026".
 
 ### C-05 Removed or stale records show as server errors
 
@@ -79,7 +90,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Steps to reproduce:** as owner Yolanda, open `/owner/bookings/999999/details`; as HR, `/studio-hr/leave-requests/999999`; as the client, `/client/bookings/2/details` (another client's booking). Each returned 500.
 - **Cause:** 25 detail methods wrap `findOrFail()` in a `catch (\Exception)` that answers 500, so "not found" was reported as a crash. Another user's record was already refused (not shown), only with the wrong status.
 - **Fix:** a shared `Controller::recordNotFound()` returns 404 "This record was not found. It may have been removed." Each of the 25 methods catches `ModelNotFoundException` before its catch-all. Two tests in `CrossStudioIsolationTest` that expected the old 500 now expect 404.
-- **Retest (local):** the detail crawl for all seven roles shows 404 for removed and foreign records and 200 for the user's own (for example `/owner/bookings/63/details`, `/client/bookings/63/details`). Live: pending.
+- **Retest (local):** the detail crawl for all seven roles shows 404 for removed and foreign records and 200 for the user's own (for example `/owner/bookings/63/details`, `/client/bookings/63/details`).
+- **Retest (live):** Live: `/client/bookings/999999/details` and `/owner/bookings/999999/details` return 404 "This record was not found. It may have been removed."
 
 ### C-06 Admin location edit link crashes
 
@@ -87,7 +99,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** the route rendered `admin.edit-locations`, a view that does not exist. No admin page links to it: the Locations list only offers View and Delete.
 - **Fix:** removed the unused route and controller method (`LocationController::edit`). The URL now goes to the admin dashboard like any unknown admin page.
 - **Feature gap (not a bug):** admins cannot edit a location's barangays or ZIP code from the screens; they can only add and delete. Recorded for the client to decide.
-- **Retest (local):** `/admin/location/1/edit` no longer errors. Live: pending.
+- **Retest (local):** `/admin/location/1/edit` no longer errors.
+- **Retest (live):** Live: `/admin/location/1/edit` no longer errors (the admin lands on a normal page).
 
 ### C-07 Freelancer service details crash
 
@@ -96,7 +109,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** `Freelancer\ServiceModel::user()` and `Freelancer\PackagesModel::user()` pointed at `App\Models\User`; the app's user model is `App\Models\UserModel`.
 - **Fix:** both relations now use `UserModel`.
 - **Test:** `tests/Feature/Freelancer/FreelancerModelOwnerRelationTest.php` (failed before).
-- **Retest (local):** `/freelancer/services/1` returns 200. Live: pending.
+- **Retest (local):** `/freelancer/services/1` returns 200.
+- **Retest (live):** Live: Lorena's service 1 (`/freelancer/services/1`) returns 200 with the service.
 
 ### C-08 "Too Many Attempts." gives no next step
 
@@ -105,7 +119,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** Laravel's default 429 message for throttled requests.
 - **Fix:** `bootstrap/app.php` renders a throttled JSON request as "Too many attempts. Please wait N seconds and try again.", using the `Retry-After` time. This covers every throttled form.
 - **Test:** `ThrottleMessageTest::test_a_throttled_login_says_how_long_to_wait`.
-- **Retest (local):** the sixth try shows "Too many attempts. Please wait 44 seconds and try again." Live: pending.
+- **Retest (local):** the sixth try shows "Too many attempts. Please wait 44 seconds and try again."
+- **Retest (live):** Live: the sixth wrong password returns 429 "Too many attempts. Please wait 57 seconds and try again."
 
 ### C-09 One studio network locks out the sixth person to log in
 
@@ -114,7 +129,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** the login route used `throttle:5,1`, which counts every login request per IP address, successful ones included.
 - **Fix:** `AuthController::login` limits wrong passwords to five per minute per email and IP (`RateLimiter`), clears the count after a successful login, and the route keeps a looser per-IP cap of 30 a minute against password spraying. `SecurityRegressionTest` now checks the 30-per-IP cap.
 - **Test:** `ThrottleMessageTest::test_staff_on_one_network_can_all_log_in_and_one_persons_typos_do_not_block_others` (seven users log in; one user's five typos block only that user). It failed before the fix with 429 on the sixth user.
-- **Retest (local):** seven seeded clients (Daniela, Emilio, Fatima, Gabriel, Helena, Ignacio, Jasmine) logged in one after another from the same machine; all seven reached their account. Live: pending.
+- **Retest (local):** seven seeded clients (Daniela, Emilio, Fatima, Gabriel, Helena, Ignacio, Jasmine) logged in one after another from the same machine; all seven reached their account.
+- **Retest (live):** Live: right after that address was locked out, eight different seeded accounts (client, owner, HR, finance, photographer, freelancer, admin) logged in from the same machine without a lockout.
 
 ### C-10 A half-typed mobile number is accepted
 
@@ -123,7 +139,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** the input mask only shapes what is typed; every server rule was `required|string|max:20`. The same rule was on the owner and HR employee forms, the studio photographer form, the profile form and freelancer profile setup.
 - **Fix:** new rule `App\Rules\PhilippineMobileNumber` accepts a complete number in the usual shapes (`0917 123 4567`, `917 123 4567`, `+63 917 123 4567`, the mask `+(63)917 123 4567`) and otherwise says "Enter a complete mobile number, for example 0917 123 4567." It is used by all six forms. Stored numbers (`+63` and 10 digits) all pass, so existing profiles still save.
 - **Test:** `RegistrationTest::test_registration_rejects_a_half_typed_mobile_number_and_accepts_the_usual_formats` (failed before).
-- **Retest (local):** typing only `917` now shows "Enter a complete mobile number, for example 0917 123 4567." under the field and creates no account. A full number registers and is stored as `+639171234567`. The test account with `+63917` from the reproduction was deleted. Live: pending.
+- **Retest (local):** typing only `917` now shows "Enter a complete mobile number, for example 0917 123 4567." under the field and creates no account. A full number registers and is stored as `+639171234567`. The test account with `+63917` from the reproduction was deleted.
+- **Retest (live):** Live: sign-up with `+63917` returns 422 "Enter a complete mobile number, for example 0917 123 4567." and creates no account.
 
 ### C-11 Changing the start time pops an availability error
 
@@ -131,7 +148,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Steps to reproduce:** as Beatriz, open `/client/booking-form/studio/4`, pick Wedding Photography, the first package and Wed 4 Nov 2026, then change Start Time. The page sends `start_time=13:00&end_time=10:00` and gets 422 "The end time field must be a date after start time.", then sends the corrected `13:00–16:00`.
 - **Cause:** the availability check on `change` ran before the package's fixed duration moved the end time, so it asked about an end before the start. Its error handler showed the generic message for any failure.
 - **Fix (`client/booking-forms.blade.php`):** the auto-check does not call the server while the end is not after the start; it shows "End time must be after the start time" under the date instead. The check's error pop-up now shows the server's message for a 422.
-- **Retest (local):** start times 13:00, 15:00 and 09:30 each move the end time and show "Available (0/3 bookings)" with no pop-up. Typing an end time of 10:00 with a start of 11:00 shows "End time must be after the start time". Live: pending.
+- **Retest (local):** start times 13:00, 15:00 and 09:30 each move the end time and show "Available (0/3 bookings)" with no pop-up. Typing an end time of 10:00 with a start of 11:00 shows "End time must be after the start time".
+- **Retest (live):** Live: on the Quarry Road form, start times 13:00 and 10:00 move the end time (16:00, 13:00) and show "Available (0/3 bookings)" with no pop-up.
 
 ### C-12 In-studio bookings outside opening hours are accepted
 
@@ -140,7 +158,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** neither the live check (`checkAvailability`) nor the save (`store` / `checkDateAvailability`) compared the time with the studio's `opening_time` and `closing_time`; rescheduling (`BookingRescheduleService::assertAvailable`) did not either. The form never showed the hours.
 - **Fix:** `StudioScheduleModel::outsideHoursMessage()` holds the rule. The live check (when an in-studio location is chosen), the booking save and owner/client rescheduling of an in-studio booking all refuse with "The studio is open 9:00 AM to 6:00 PM. Choose a time within those hours, or choose On-Location." On-location bookings are not limited by studio hours (decision: an evening wedding is normal). The form now sends the location type with the check and re-checks when the location changes.
 - **Test:** `tests/Feature/Booking/StudioOpeningHoursTest.php`, `RescheduleRequestTest::test_an_in_studio_booking_cannot_move_outside_opening_hours` (both failed before).
-- **Retest (local):** in-studio 16:00–19:00 and 07:00–10:00 show the message in a pop-up and under the date, and Proceed is disabled; 10:00–13:00 and 11:00–14:00 are available. Live: pending.
+- **Retest (local):** in-studio 16:00–19:00 and 07:00–10:00 show the message in a pop-up and under the date, and Proceed is disabled; 10:00–13:00 and 11:00–14:00 are available.
+- **Retest (live):** Live: in-studio 07:00–09:00 at Quarry Road answers "The studio is open 9:00 AM to 6:00 PM. Choose a time within those hours, or choose On-Location."; 10:00–13:00 is available.
 
 ### C-13 Out-of-date availability answers overwrite the current one
 
@@ -148,7 +167,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Steps to reproduce:** delay the reply for one check (seen naturally on the slow local server; reproduced with a 3-second delay on the 07:00 reply), then change the time again.
 - **Cause:** every reply updated the status, whatever order replies came back in.
 - **Fix:** each check gets a number, and only the reply to the latest check may change the page. Choosing a closed day, clearing the date, or an end before the start also discards checks still in flight.
-- **Retest (local):** with the 07:00 reply held back 3 seconds, the page ends on "Available (0/3 bookings)" for 10:00–13:00 with no pop-up. Live: pending.
+- **Retest (local):** with the 07:00 reply held back 3 seconds, the page ends on "Available (0/3 bookings)" for 10:00–13:00 with no pop-up.
+- **Retest (live):** Live: with the 07:00 reply held back 3 seconds, the form ends on "Available (0/3 bookings)" for 10:00–13:00 with no pop-up.
 
 ### C-14 No way to finish paying after leaving checkout
 
@@ -158,7 +178,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** My Bookings shows a **Complete payment** button for a pending booking with nothing paid and a pending payment. It asks "Pay ₱2,370.00 now to confirm booking …? Unpaid bookings are cancelled after 48 hours." and starts the existing Stripe checkout.
 - **Also fixed:** `BookingController::initializePayment` accepted any booking id. It now only starts a payment for the logged-in client's own booking (404 otherwise) and refuses a cancelled booking ("This booking was cancelled, so it can no longer be paid.").
 - **Test:** `tests/Feature/Booking/ResumeBookingPaymentTest.php` (another client gets 404; the owner of the booking gets the checkout link; a cancelled booking is refused). It failed before the fix.
-- **Retest (local):** My Bookings showed Complete payment for `BK-6ADD9A0FD3B8D`. Pay now → Stripe test checkout with card 4242 4242 4242 4242 → "Payment Successful! Your booking has been confirmed", amount paid ₱2,370.00. The booking is `confirmed`, `partially_paid`, one succeeded payment, ₱5,530 remaining. Reloading the success page did not add a payment. Live: pending.
+- **Retest (local):** My Bookings showed Complete payment for `BK-6ADD9A0FD3B8D`. Pay now → Stripe test checkout with card 4242 4242 4242 4242 → "Payment Successful! Your booking has been confirmed", amount paid ₱2,370.00. The booking is `confirmed`, `partially_paid`, one succeeded payment, ₱5,530 remaining. Reloading the success page did not add a payment.
+- **Retest (live):** Live: a booking left at "Confirm Payment" (`BK-6ADDCDBB01021`) showed **Complete payment** for ₱2,370.00 in My Bookings, with the 48-hour note; the test booking was then cancelled. Starting a payment for another client's booking (FS-BKS-00019) returns 404.
 
 ### C-15 A very large budget gives a server error
 
@@ -167,7 +188,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** `tbl_client_budget.preferred_budget` is `decimal(10,2)`, but `StoreBudgetRequest` and `UpdateBudgetRequest` only required a number of at least 0.
 - **Fix:** both requests allow at most 99,999,999.99 and say "The budget can be at most ₱99,999,999.99."
 - **Test:** `BudgetMatchTest::test_budget_amount_must_fit_the_column` (failed before).
-- **Retest (local):** the same request now returns 422 with that message; negative and text amounts still get their own messages; a 0 budget saves. Live: pending.
+- **Retest (local):** the same request now returns 422 with that message; negative and text amounts still get their own messages; a 0 budget saves.
+- **Retest (live):** Live: a budget of 99,999,999,999 returns 422 "The budget can be at most ₱99,999,999.99."
 
 ### C-16 Acting on a removed record answers with a server error (rest of the app)
 
@@ -175,7 +197,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Steps to reproduce:** as Beatriz, `DELETE /client/budget/3` (another client's budget) returned 500 "Failed to delete budget: No query results for model …"; as the owner, `DELETE /owner/roles/999999` and `/owner/employee/999999` returned 500. Another user's record was already refused; only the answer was wrong.
 - **Cause:** the same pattern as C-05, in 95 more methods: `findOrFail()` / `firstOrFail()` inside a `try` whose `catch (\Exception)` answers 500.
 - **Fix:** every such method in `app/Http/Controllers` that answers JSON now catches `ModelNotFoundException` first and returns `recordNotFound()` (404 "This record was not found. It may have been removed."). Where the method had opened a database transaction, the new catch rolls it back first (20 methods). Two tests that expected the old 500 (`GalleryLifecycleTest`, `PermitGateTest`) now expect 404.
-- **Retest (local):** another client's budget update, delete and status toggle; the owner's role, service, payroll and employee deletes with a missing id; admin category and location deletes: all 404 with that message. The client and owner detail crawl still opens every own record (200). Full suite 755 passed. Live: pending.
+- **Retest (local):** another client's budget update, delete and status toggle; the owner's role, service, payroll and employee deletes with a missing id; admin category and location deletes: all 404 with that message. The client and owner detail crawl still opens every own record (200). Full suite 755 passed.
+- **Retest (live):** Live: deleting a missing budget (`/client/budget/999999`) returns 404 "This record was not found …"
 
 ### C-17 "Subscription required" for a record that is already gone
 
@@ -184,7 +207,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** `EnforceStudioSubscriptionAccess` looks up the studio from the record. When the record no longer exists and the owner has more than one studio, it could not pick a studio and refused every save.
 - **Fix:** when no studio can be found for a save, it is allowed only if **every** studio the owner has is on an active plan or grace period, so no unsubscribed studio can be changed this way. The controller then answers its own 404. Pages (GET) keep the existing rule (any studio with access).
 - **Test:** `SubscriptionAccessTest::test_an_unresolvable_write_is_allowed_only_when_every_owned_studio_has_access` (one studio on a plan and one without: refused; both on plans: allowed). `test_manage_access_fails_closed_when_studio_cannot_be_resolved` still passes.
-- **Retest (local):** the same deletes now answer 404 "This record was not found. It may have been removed." Live: pending.
+- **Retest (local):** the same deletes now answer 404 "This record was not found. It may have been removed."
+- **Retest (live):** Live: deleting a missing service (`/owner/services/999999`) returns 404. Yolanda has one studio on live (the plan allows one), so the two-studio case itself was confirmed locally.
 
 ### C-18 Profile save fails over a number I did not change (regression from C-10)
 
@@ -193,7 +217,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** the C-10 rule was applied to every form, including edits. All seeded numbers are a digit short (`+63` and 9 digits), so the rule refused numbers already on file. Found by this test pass before it was pushed.
 - **Fix:** `PhilippineMobileNumber` takes the number on file; an unchanged number passes, and a new or changed number must still be complete. The profile form and freelancer profile setup pass the logged-in user's number. Sign-up and the new-employee and new-photographer forms stay strict, because they create new people.
 - **Test:** `tests/Feature/Auth/ProfileMobileNumberTest.php`.
-- **Retest (local):** an unchanged save returns "Profile updated successfully!"; changing the number to `+63917` is refused. The other profile mistakes give clear messages: a taken email ("This email is already taken."), a wrong current password ("Current password is incorrect."), a mismatched confirmation ("Password confirmation does not match.") and a text file named `.jpg` ("Profile photo must be an image file."). Live: pending.
+- **Retest (local):** an unchanged save returns "Profile updated successfully!"; changing the number to `+63917` is refused. The other profile mistakes give clear messages: a taken email ("This email is already taken."), a wrong current password ("Current password is incorrect."), a mismatched confirmation ("Password confirmation does not match.") and a text file named `.jpg` ("Profile photo must be an image file.").
+- **Retest (live):** Live: Beatriz's profile saved unchanged with her stored number `+63918404400` ("Profile updated successfully!").
 
 ### C-19 Chat error says "The body field is required."
 
@@ -203,7 +228,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** the chat says "Type a message first." and, over the limit, "A message can be at most 4,000 characters." The page already stops a truly empty box ("Please fill out this field.") and caps typing at 4,000 characters.
 - **Also checked (no issue):** a message with `<script>` and `<b>` tags is stored and shown as plain text (`textContent`); messaging a client you have no booking with is refused (403).
 - **Test:** `ChatTest` now asserts both messages (failed before).
-- **Retest (local):** spaces + Send shows "Type a message first." Live: pending.
+- **Retest (local):** spaces + Send shows "Type a message first."
+- **Retest (live):** Live: in the owner-to-client conversation for booking 76, a message of spaces returns 422 "Type a message first." (no message was sent).
 
 ### C-20 Double-clicking the favourite heart undoes itself
 
@@ -211,7 +237,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Steps to reproduce:** on `/client/dashboard`, double-click a studio's heart while the first request is still on its way (held back 1.5 seconds in the test). Two toggle requests were sent.
 - **Cause:** the click handler had no in-flight guard, and the server created the row with `create()`, so a racing second request could hit the `(client_id, studio_id)` unique key.
 - **Fix:** the heart ignores clicks while its request is in flight; the server uses `firstOrCreate()`.
-- **Retest (local):** a double-click with the first request held 1.5 seconds sent one request and the heart stayed filled; one more click removed the favourite again (test data restored). Live: pending.
+- **Retest (local):** a double-click with the first request held 1.5 seconds sent one request and the heart stayed filled; one more click removed the favourite again (test data restored).
+- **Retest (live):** Live: a double-click on the first studio heart (first request held 1.5 seconds) sent one request and left it favourited; one more click put it back.
 
 ### C-21 Mistakes are reported as "Something went wrong"
 
@@ -220,7 +247,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** 24 methods call `$request->validate()` inside a `try` whose `catch (\Exception)` also caught the `ValidationException` and answered 500. Among them: studio and freelancer reviews, gallery upload/delete/update for owner, HR, photographer and freelancer, the owner's photographer assignment and booking status change, balance payment and on-site confirmation.
 - **Fix:** each of those catch-alls now lets a `ValidationException` through first, so Laravel answers 422 with the field errors. Reviewing your own booking before it is completed now says "You can leave a review once the booking is completed." instead of "not found". `SecurityRegressionTest` now expects 422 for non-image and oversized gallery uploads.
 - **Test:** `ReviewLifecycleTest::test_review_mistakes_get_their_reason_not_a_server_error` (debug off; failed before).
-- **Retest (local):** rating 0 → 422 "The rating field must be at least 1."; a two-letter review → 422 "The review text field must be at least 10 characters."; booking 63 (not completed) → 422 "You can leave a review once the booking is completed."; another client's booking → 404. Full suite 757 passed. Live: pending.
+- **Retest (local):** rating 0 → 422 "The rating field must be at least 1."; a two-letter review → 422 "The review text field must be at least 10 characters."; booking 63 (not completed) → 422 "You can leave a review once the booking is completed."; another client's booking → 404. Full suite 757 passed.
+- **Retest (live):** Live: a review with rating 0 returns 422 "The rating field must be at least 1."
 
 ### C-22 Adding a photographer for a category with no service says "Something went wrong"
 
@@ -230,7 +258,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** all three throw a `DomainException`, and their `store()` rolls back and answers 422: "There is no service in this category yet. Add one under Services first, then add the photographer."
 - **Also checked (no issue):** error pop-ups on this form show the server's message (for example "Your Studio Growth Annual plan allows up to 5 staff and this studio has reached it. …"). "Failed to load permissions." found by the crawl is text inside a script, not on the page.
 - **Test:** `EmployeeProvisioningTest::test_hr_adding_a_photographer_for_a_category_without_a_service_says_what_to_do` (debug off; failed before). In the local browser the same form stops earlier at Quarry Road's plan staff limit, which is the intended rule.
-- **Retest (local):** test passes; full suite passes. Live: pending.
+- **Retest (local):** test passes; full suite passes.
+- **Retest (live):** Live: the same HR request stops first at Quarry Road's plan staff limit ("Your Studio Growth Annual plan allows up to 5 staff …"), so this message cannot be reached there without freeing a staff place; it is covered by the automated test with debug off. No employee was created.
 
 ### C-23 Admin "delete studio" crashes
 
@@ -238,7 +267,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Steps to reproduce:** as admin, `DELETE /admin/studio/999999` returned 500: `Call to undefined method App\Http\Controllers\Admin\StudioController::destroy()`.
 - **Cause:** the route `admin.studio.destroy` pointed at a method that does not exist. Its only use was a commented-out Delete button script in `admin/pending-studios.blade.php`, and Blade still evaluated the `route()` call inside that comment.
 - **Fix:** removed the route and the 49 lines of commented-out script. Admins have no studio delete in the screens (they approve or reject); recorded as a gap like C-06.
-- **Retest (local):** the action now answers 405 (no such action); `PendingStudiosReviewTest` passes. Live: pending.
+- **Retest (local):** the action now answers 405 (no such action); `PendingStudiosReviewTest` passes.
+- **Retest (live):** Live: `DELETE /admin/studio/999999` returns 405 (no such action) instead of a server error.
 
 ### C-24 Removed leave, overtime and chatbot records answer with a server error
 
@@ -246,7 +276,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Steps to reproduce:** the empty-form crawl: `POST /owner/hr-leave-requests/999999/approve`, `DELETE /studio-hr/leave-requests/999999`, `POST /studio-finance/overtime-requests/999999/cancel`, `DELETE /owner/chatbot/intents/999999` and 12 more all returned 500.
 - **Cause:** the C-16 pattern, but the `findOrFail()` sits in a private helper (`getOwnedLeaveRequest()`, `ownedIntent()` and others), which the C-16 sweep did not follow.
 - **Fix:** the same `ModelNotFoundException` → `recordNotFound()` catch, applied to the 37 methods that call such a helper inside a JSON try/catch, with a rollback where a transaction is open.
-- **Retest (local):** the empty-form and missing-id crawl over every write action of all seven roles (233 requests) has no 500 left; each answers 422 (what to fill in), 404 (not found) or 403 (not allowed). Full suite 760 passed. Live: pending.
+- **Retest (local):** the empty-form and missing-id crawl over every write action of all seven roles (233 requests) has no 500 left; each answers 422 (what to fill in), 404 (not found) or 403 (not allowed). Full suite 760 passed.
+- **Retest (live):** Live: `DELETE /studio-hr/leave-requests/999999`, `POST /studio-finance/overtime-requests/999999/cancel` and the owner's approve of a missing HR leave all return 404 "This record was not found …"
 
 ### C-25 Clients see the owner's subscription message
 
@@ -255,7 +286,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** `EnforceStudioSubscriptionAccess` gave every refusal the owner's message and a link to the owner's subscription page.
 - **Fix:** client routes get "This studio isn't taking bookings right now. Please choose another studio." and no owner link.
 - **Test:** `SubscriptionAccessTest::test_a_client_booking_a_studio_without_a_plan_gets_a_client_message` (failed before).
-- **Retest (local):** the client's booking calls without a studio now answer with that message. Live: pending.
+- **Retest (local):** the client's booking calls without a studio now answer with that message.
+- **Retest (live):** Live: booking checks for studios 2, 3, 5 and 6 (plans lapsed) answer "This studio isn't taking bookings right now. Please choose another studio."
 
 ### C-26 Duplicate and overlapping leave or overtime requests are accepted
 
@@ -265,7 +297,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** new rule `App\Rules\NoOverlappingTimeOff` refuses a leave request that overlaps one of your own pending or approved requests ("You already have a pending or approved leave request for these dates."), and the same for overtime hours on one day. It is on all 12 store/update forms for HR, finance and photographers; an edit does not clash with itself, and rejected or cancelled requests do not count.
 - **Also checked (no issue):** approving twice, rejecting after approval, and deleting or cancelling an approved request are all refused with clear messages ("Only pending leave requests can be processed.", "Approved leave requests cannot be deleted.").
 - **Test:** `tests/Feature/StudioEmployee/TimeOffOverlapTest.php` (overlap, edit, rejected, overtime hours, and that all 12 forms use the rule).
-- **Retest (local):** the same dates as approved request 16 and an overlapping range are refused with that message; a non-overlapping day is accepted; the same overtime hours twice are refused. Test requests 17, 18, 19 and overtime 21 were cancelled afterwards. Live: pending.
+- **Retest (local):** the same dates as approved request 16 and an overlapping range are refused with that message; a non-overlapping day is accepted; the same overtime hours twice are refused. Test requests 17, 18, 19 and overtime 21 were cancelled afterwards.
+- **Retest (live):** Live: Eduardo filed leave for 21–22 Dec (request 16), the same dates again were refused with "You already have a pending or approved leave request for these dates.", and request 16 was cancelled.
 
 ### C-27 Very large procurement amounts give a server error
 
@@ -275,4 +308,5 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** every procurement number has a maximum that fits its column: quantities 99,999,999.99; amounts 9,999,999,999.99. This covers request items, the purchase order's approved cost, the invoice amount, received quantity, acquisition cost and reorder threshold. The request forms also refuse a line or request total over ₱9,999,999,999.99, and name the fields in plain words ("quantity", not `items.0.quantity`).
 - **Test:** `tests/Feature/Procurement/ProcurementAmountLimitsTest.php`.
 - **Also checked end to end (no issue):** request 16 went photographer → finance review → owner approval → purchase order `PO-20261025-2127` → delivery → receipt → payment → Completed. Each wrong step is refused with a plain reason: approving twice, reject or return without a note, a purchase order before approval, an item from another request ("One or more procurement items are invalid."), delivery or payment without the required files, receiving a different quantity ("Partial deliveries are not supported …"), a consumable without a reorder threshold, and completing early or twice. Generating the purchase order twice reuses the same order (one order, one item).
-- **Retest (local):** the three oversized requests are refused with 422 and the limit; the invoice amount `99999999999999` is refused. Full suite 764 passed. Live: pending.
+- **Retest (local):** the three oversized requests are refused with 422 and the limit; the invoice amount `99999999999999` is refused. Full suite 764 passed.
+- **Retest (live):** Live: HR quantity 999,999,999,999 and photographer unit cost 999,999,999,999,999 are refused with 422 and the limit; no request was saved.
