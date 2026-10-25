@@ -310,3 +310,18 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Also checked end to end (no issue):** request 16 went photographer → finance review → owner approval → purchase order `PO-20261025-2127` → delivery → receipt → payment → Completed. Each wrong step is refused with a plain reason: approving twice, reject or return without a note, a purchase order before approval, an item from another request ("One or more procurement items are invalid."), delivery or payment without the required files, receiving a different quantity ("Partial deliveries are not supported …"), a consumable without a reorder threshold, and completing early or twice. Generating the purchase order twice reuses the same order (one order, one item).
 - **Retest (local):** the three oversized requests are refused with 422 and the limit; the invoice amount `99999999999999` is refused. Full suite 764 passed.
 - **Retest (live):** Live: HR quantity 999,999,999,999 and photographer unit cost 999,999,999,999,999 are refused with 422 and the limit; no request was saved.
+
+## Final full pass (25 Oct 2026)
+
+Result: **no new issues.** Every issue C-01 to C-27 is Fixed and retested.
+
+- **Automated tests:** 764 passed (3,894 assertions).
+- **Local, all 7 roles** (admin, owner, HR, finance, photographer, client, freelancer):
+  - Every page without an ID loads with no server error.
+  - Every detail page answers 200, or 403/404 for a missing or other user's record. No other user's data is shown: budget 1, conversation 1 and the plan behind `/owner/subscription/1` belong to the signed-in user or are public.
+  - Every form action, sent empty or with a missing ID, answers with a plain validation or "not found" message. None gives a server error.
+- **Live, all 7 roles:** every page loads with no server error.
+  - Client `/client/messages` failed once because of the network, then loaded four times in a row.
+- **Live end-to-end checks:** booking times and studio hours, Complete payment, chat, favourites, freelancer service, leave overlap and procurement limits (see each issue above).
+- **Not an error:** the profile page of every portal contains the words "Server Error", but only as the title of an error pop-up in the page script.
+
