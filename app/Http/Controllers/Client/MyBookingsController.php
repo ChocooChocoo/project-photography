@@ -624,7 +624,7 @@ class MyBookingsController extends Controller
                 ->whereNotNull('on_site_at')
                 ->whereNull('client_confirmed_at')
                 ->with([
-                    'booking:id,booking_reference,event_name,event_date,start_time,end_time,location_type',
+                    'booking:id,booking_reference,category_id,event_name,event_date,start_time,end_time,location_type',
                     'photographer:id,first_name,last_name,profile_photo',
                     'studio:id,studio_name',
                 ])

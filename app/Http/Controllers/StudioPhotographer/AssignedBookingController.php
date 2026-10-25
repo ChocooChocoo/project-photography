@@ -26,7 +26,7 @@ class AssignedBookingController extends Controller
         // Get all assignments for this photographer
         $assignments = BookingAssignedPhotographerModel::where('photographer_id', $userId)
             ->with([
-                'booking:id,booking_reference,client_id,event_name,event_date,start_time,end_time,total_amount,status,payment_status',
+                'booking:id,booking_reference,client_id,category_id,event_name,event_date,start_time,end_time,total_amount,status,payment_status',
                 'booking.client:id,first_name,last_name,email,mobile_number',
                 'studio:id,studio_name',
                 'assigner:id,first_name,last_name',

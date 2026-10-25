@@ -276,6 +276,32 @@ class BookingModel extends Model
     }
 
     /**
+     * Client bookings have no event name, which showed as "Event null" and
+     * named galleries " Gallery". Fall back to the category, then the reference.
+     */
+    public function getEventNameAttribute($value): ?string
+    {
+        if (is_string($value) && trim($value) !== '') {
+            return $value;
+        }
+
+        if ($this->relationLoaded('category')) {
+            $category = $this->getRelation('category')?->category_name;
+        } elseif ($categoryId = $this->getAttributeFromArray('category_id')) {
+            // ponytail: one primary-key lookup per unnamed booking; eager-load `category` on big lists if it shows.
+            $category = \App\Models\Admin\CategoriesModel::whereKey($categoryId)->value('category_name');
+        }
+
+        if (! empty($category)) {
+            return $category;
+        }
+
+        $reference = $this->getAttributeFromArray('booking_reference');
+
+        return $reference ? 'Booking '.$reference : $value;
+    }
+
+    /**
      * Get the category for the booking.
      */
     public function category()
