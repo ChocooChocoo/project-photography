@@ -88,7 +88,15 @@ class PackagesModel extends Model
      */
     public function coverageScopeText(): string
     {
-        return implode(', ', self::coverageAreas($this->getRawOriginal('coverage_scope')));
+        return (string) self::coverageScopeLabel($this->getRawOriginal('coverage_scope'));
+    }
+
+    /**
+     * The coverage areas as one line ("Cavite, Laguna"), or null when there are none.
+     */
+    public static function coverageScopeLabel($value): ?string
+    {
+        return implode(', ', self::coverageAreas($value)) ?: null;
     }
 
     private static function coverageAreas($value): array

@@ -1064,30 +1064,8 @@ class BookingController extends Controller
      */
     private function normalizeCoverageScope($coverageScope): ?string
     {
-        if (is_array($coverageScope)) {
-            $coverageScope = array_values(array_filter(array_map(function ($value) {
-                if (is_scalar($value) || $value === null) {
-                    $text = trim((string) $value);
-                    return $text !== '' ? $text : null;
-                }
-
-                return null;
-            }, $coverageScope)));
-
-            return !empty($coverageScope) ? implode(', ', $coverageScope) : null;
-        }
-
-        if (is_string($coverageScope)) {
-            $trimmedCoverageScope = trim($coverageScope);
-            return $trimmedCoverageScope !== '' ? $trimmedCoverageScope : null;
-        }
-
-        if (is_scalar($coverageScope)) {
-            $stringValue = trim((string) $coverageScope);
-            return $stringValue !== '' ? $stringValue : null;
-        }
-
-        return null;
+        // Studio packages store a JSON list; freelancer packages store text.
+        return StudioPackagesModel::coverageScopeLabel($coverageScope);
     }
 
     /**
@@ -2517,7 +2495,7 @@ class BookingController extends Controller
                             'duration' => $package->duration,
                             'maximum_edited_photos' => $package->maximum_edited_photos,
                             'package_inclusions' => $package->package_inclusions,
-                            'coverage_scope' => $package->coverage_scope,
+                            'coverage_scope' => $this->normalizeCoverageScope($package->coverage_scope),
                             'online_gallery' => $package->online_gallery,
                             'photographer_count' => $package->photographer_count ?? 1,
                             // ==== START: Enhanced location data in response ====
@@ -2583,7 +2561,7 @@ class BookingController extends Controller
                             'duration' => $package->duration,
                             'maximum_edited_photos' => $package->maximum_edited_photos,
                             'package_inclusions' => $package->package_inclusions,
-                            'coverage_scope' => $package->coverage_scope,
+                            'coverage_scope' => $this->normalizeCoverageScope($package->coverage_scope),
                             'online_gallery' => $package->online_gallery ?? false,
                             'package_location' => $packageLocation,
                             'location_flexibility' => $locationFlexibility,

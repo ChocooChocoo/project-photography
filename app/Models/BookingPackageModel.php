@@ -76,6 +76,14 @@ class BookingPackageModel extends Model
     }
 
     /**
+     * Older snapshots copied the package's raw JSON list (["Cavite","Laguna"]); show it as text.
+     */
+    public function getCoverageScopeAttribute($value): ?string
+    {
+        return \App\Models\StudioOwner\PackagesModel::coverageScopeLabel($value);
+    }
+
+    /**
      * Get the booking associated with the package.
      */
     public function booking()

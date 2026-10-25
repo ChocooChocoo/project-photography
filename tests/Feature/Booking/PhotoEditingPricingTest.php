@@ -59,6 +59,31 @@ class PhotoEditingPricingTest extends TestCase
         ]);
     }
 
+    public function test_coverage_scope_reaches_the_client_as_plain_text(): void
+    {
+        // Packages store coverage as a JSON list. The client card and the booking
+        // snapshot showed it raw: ["Cavite","Laguna"].
+        StudioPackagesModel::whereKey($this->payload['package_id'])->update(['coverage_scope' => json_encode(['Cavite', 'Laguna'])]);
+        $package = StudioPackagesModel::find($this->payload['package_id']);
+        foreach (['2026_03_11_051427_create_tbl_client_budget_table', '2026_04_24_090000_add_spent_amount_to_client_budget', '2026_10_07_100000_drop_min_max_budget_from_tbl_client_budget'] as $migration) {
+            (require database_path("migrations/{$migration}.php"))->up();
+        }
+        Route::post('/_test/client/booking-packages', [BookingController::class, 'getPackages']);
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking-packages', ['type' => 'studio', 'provider_id' => $this->studio->id, 'category_id' => $package->category_id])
+            ->assertOk()
+            ->assertJsonPath('packages.0.coverage_scope', 'Cavite, Laguna');
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', ['payment_type' => 'full_payment'] + $this->payload)
+            ->assertOk();
+
+        $this->assertSame('Cavite, Laguna', BookingPackageModel::latest('id')->first()->coverage_scope);
+        // Older snapshots hold the raw list.
+        $this->assertSame('Cavite, Laguna', (new BookingPackageModel(['coverage_scope' => '["Cavite","Laguna"]']))->coverage_scope);
+    }
+
     public function test_package_lists_only_the_services_it_prices(): void
     {
         $this->assertSame([
