@@ -27,6 +27,7 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-15 | Client, budget planner | Typing a very large budget (for example 99,999,999,999) gives a server error instead of telling me the limit. | Fixed |
 | C-16 | Every portal: saves, deletes, approvals | A second click on Delete (or acting on something already removed in another tab) answers "Failed to …" as a server error instead of "not found". | Fixed |
 | C-17 | Owners with more than one studio | Deleting something that is already gone says "An active subscription or grace period is required for this studio" although my plans are active. | Fixed |
+| C-18 | Profile (all roles), freelancer profile | After the C-10 fix, saving my profile without touching the mobile number fails with "Enter a complete mobile number". | Fixed |
 
 ### C-01 Theme settings pictures are broken
 
@@ -175,3 +176,12 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** when no studio can be found for a save, it is allowed only if **every** studio the owner has is on an active plan or grace period, so no unsubscribed studio can be changed this way. The controller then answers its own 404. Pages (GET) keep the existing rule (any studio with access).
 - **Test:** `SubscriptionAccessTest::test_an_unresolvable_write_is_allowed_only_when_every_owned_studio_has_access` (one studio on a plan and one without: refused; both on plans: allowed). `test_manage_access_fails_closed_when_studio_cannot_be_resolved` still passes.
 - **Retest (local):** the same deletes now answer 404 "This record was not found. It may have been removed." Live: pending.
+
+### C-18 Profile save fails over a number I did not change (regression from C-10)
+
+- **As the client:** I change only my name on My Profile and press Save. It says "Enter a complete mobile number, for example 0917 123 4567," but I never touched the number.
+- **Steps to reproduce:** as Beatriz (stored number `+63918404400`), post the profile form unchanged to `/profile/update`. It returned 422.
+- **Cause:** the C-10 rule was applied to every form, including edits. All seeded numbers are a digit short (`+63` and 9 digits), so the rule refused numbers already on file. Found by this test pass before it was pushed.
+- **Fix:** `PhilippineMobileNumber` takes the number on file; an unchanged number passes, and a new or changed number must still be complete. The profile form and freelancer profile setup pass the logged-in user's number. Sign-up and the new-employee and new-photographer forms stay strict, because they create new people.
+- **Test:** `tests/Feature/Auth/ProfileMobileNumberTest.php`.
+- **Retest (local):** an unchanged save returns "Profile updated successfully!"; changing the number to `+63917` is refused. The other profile mistakes give clear messages: a taken email ("This email is already taken."), a wrong current password ("Current password is incorrect."), a mismatched confirmation ("Password confirmation does not match.") and a text file named `.jpg` ("Profile photo must be an image file."). Live: pending.

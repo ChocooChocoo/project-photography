@@ -25,7 +25,7 @@ class ProfileSetupRequest extends FormRequest
         $rules = [
             // Personal Information
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'freelancer_mobile_number' => ['required', 'string', 'max:20', 'unique:tbl_users,mobile_number,' . auth()->id(), new \App\Rules\PhilippineMobileNumber],
+            'freelancer_mobile_number' => ['required', 'string', 'max:20', 'unique:tbl_users,mobile_number,' . auth()->id(), new \App\Rules\PhilippineMobileNumber(auth()->user()?->mobile_number)],
             
             // Brand Identity
             'brand_name' => 'required|string|max:255',
