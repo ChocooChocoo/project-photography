@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // responses keep their own cache behavior.
         $middleware->web(append: [
             NoStoreSessionResponses::class,
+            \App\Http\Middleware\HideInternalErrorDetails::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
