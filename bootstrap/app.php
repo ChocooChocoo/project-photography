@@ -51,6 +51,18 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // "Too Many Attempts." did not tell a client with the right password to wait.
+        $exceptions->render(function (\Illuminate\Http\Exceptions\ThrottleRequestsException $e, Request $request) {
+            if ($request->expectsJson()) {
+                $seconds = (int) ($e->getHeaders()['Retry-After'] ?? 60);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => "Too many attempts. Please wait {$seconds} ".($seconds === 1 ? 'second' : 'seconds').' and try again.',
+                ], 429, $e->getHeaders());
+            }
+        });
+
         // A stale CSRF token reaches here as a 419 HttpException. Screens show
         // the JSON message as is, so give it in plain language.
         $exceptions->render(function (HttpException $e, Request $request) {

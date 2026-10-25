@@ -21,7 +21,9 @@ class SecurityRegressionTest extends TestCase
 
     public function test_login_endpoint_is_rate_limited_after_rapid_attempts(): void
     {
-        foreach (range(1, 5) as $i) {
+        // Per-IP cap against password spraying. Wrong passwords for one email are
+        // limited to five per minute separately (ThrottleMessageTest).
+        foreach (range(1, 30) as $i) {
             $this->postJson('/auth/login', [
                 'email' => 'not-an-email',
                 'password' => 'wrong-password',

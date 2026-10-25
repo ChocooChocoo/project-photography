@@ -17,6 +17,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-05 | Detail pop-ups in every portal | Opening a booking, leave request, payroll, gallery or chatbot record that was removed (or a stale link) shows "Failed to load …" as a server error instead of "not found". | Fixed |
 | C-06 | Admin, locations | The location edit link crashes with a server error (the page it points at does not exist). | Fixed |
 | C-07 | Freelancer, services | Opening one of my own services shows a server error. | Fixed |
+| C-08 | Login | After a few wrong passwords the login says only "Too Many Attempts.", so I don't know I just have to wait. | Fixed |
+| C-09 | Login, studio staff | When six of us log in from the studio's Wi-Fi within a minute, the sixth person is locked out even with the right password. | Fixed |
 
 ### C-01 Theme settings pictures are broken
 
@@ -77,3 +79,21 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** both relations now use `UserModel`.
 - **Test:** `tests/Feature/Freelancer/FreelancerModelOwnerRelationTest.php` (failed before).
 - **Retest (local):** `/freelancer/services/1` returns 200. Live: pending.
+
+### C-08 "Too Many Attempts." gives no next step
+
+- **As the client:** I mistype my password a few times, then type it correctly and get "Login Failed: Too Many Attempts." I think my account is blocked.
+- **Steps to reproduce:** on `/auth/login`, enter a wrong password five times, then the right one.
+- **Cause:** Laravel's default 429 message for throttled requests.
+- **Fix:** `bootstrap/app.php` renders a throttled JSON request as "Too many attempts. Please wait N seconds and try again.", using the `Retry-After` time. This covers every throttled form.
+- **Test:** `ThrottleMessageTest::test_a_throttled_login_says_how_long_to_wait`.
+- **Retest (local):** the sixth try shows "Too many attempts. Please wait 44 seconds and try again." Live: pending.
+
+### C-09 One studio network locks out the sixth person to log in
+
+- **As the client:** at 9 AM our team logs in from the studio Wi-Fi. The sixth person is told "Too many attempts" with the right password.
+- **Steps to reproduce:** log in correctly as six different accounts from one IP within a minute. The sixth gets 429.
+- **Cause:** the login route used `throttle:5,1`, which counts every login request per IP address, successful ones included.
+- **Fix:** `AuthController::login` limits wrong passwords to five per minute per email and IP (`RateLimiter`), clears the count after a successful login, and the route keeps a looser per-IP cap of 30 a minute against password spraying. `SecurityRegressionTest` now checks the 30-per-IP cap.
+- **Test:** `ThrottleMessageTest::test_staff_on_one_network_can_all_log_in_and_one_persons_typos_do_not_block_others` (seven users log in; one user's five typos block only that user). It failed before the fix with 429 on the sixth user.
+- **Retest (local):** seven seeded clients (Daniela, Emilio, Fatima, Gabriel, Helena, Ignacio, Jasmine) logged in one after another from the same machine; all seven reached their account. Live: pending.

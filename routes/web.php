@@ -21,7 +21,7 @@ Route::prefix('auth')->group(function () {
     Route::get('/register', [\App\Http\Controllers\Auth\AuthController::class, 'register'])->name('register');
     Route::get('/verify', [\App\Http\Controllers\Auth\AuthController::class, 'verify'])->name('verify');
     Route::post('/register', [\App\Http\Controllers\Auth\AuthController::class, 'store'])->name('auth.register.store')->middleware('throttle:5,1');
-    Route::post('/login', [\App\Http\Controllers\Auth\AuthController::class, 'login'])->name('auth.login.store')->middleware('throttle:5,1');
+    Route::post('/login', [\App\Http\Controllers\Auth\AuthController::class, 'login'])->name('auth.login.store')->middleware('throttle:30,1'); // per-IP cap; wrong passwords are limited per email in AuthController::login
     Route::post('/logout', [\App\Http\Controllers\Auth\AuthController::class, 'logout'])->name('auth.logout');
     Route::get('/verify-email/{token}', [\App\Http\Controllers\Auth\AuthController::class, 'verifyEmail'])->name('auth.verify.email');
 

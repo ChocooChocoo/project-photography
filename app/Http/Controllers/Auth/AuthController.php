@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Mail\VerificationEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
@@ -137,6 +138,18 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request)
     {
+        // Five wrong passwords per email and IP, so one person's typos do not
+        // lock out everyone else on the same studio network.
+        $throttleKey = 'login:'.Str::lower((string) $request->email).'|'.$request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            return response()->json([
+                'success' => false,
+                'message' => "Too many attempts. Please wait {$seconds} ".($seconds === 1 ? 'second' : 'seconds').' and try again.',
+            ], 429, ['Retry-After' => $seconds]);
+        }
+
         try {
             $credentials = $request->only('email', 'password');
             
@@ -145,6 +158,8 @@ class AuthController extends Controller
             
             // Check if user exists
             if (!$user) {
+                RateLimiter::hit($throttleKey, 60);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid email or password.'
@@ -176,6 +191,7 @@ class AuthController extends Controller
             $sessionToken = $request->session()->token();
 
             if (Auth::attempt($credentials, $request->filled('remember'))) {
+                RateLimiter::clear($throttleKey);
                 $request->session()->put('_token', $sessionToken);
 
                 // Store user role in session for easy access
@@ -188,6 +204,8 @@ class AuthController extends Controller
                 ]);
             }
             
+            RateLimiter::hit($throttleKey, 60);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid email or password.'
