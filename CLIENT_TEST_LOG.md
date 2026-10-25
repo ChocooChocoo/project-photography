@@ -55,7 +55,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-36 | HR payroll generation and finance review | A payroll with no attendance showed ₱32,375.00 of deductions against ₱0.00 gross. | Fixed and retested (local) |
 | C-37 | Admin, Users | Clicking a person's name in the user list does nothing, although the name looks clickable. | Fixed and retested (local) |
 | C-38 | Owner booking details, hardcopy quote | After saving a hardcopy quote, Escape no longer closes Booking Details because keyboard focus leaves the window. | Fixed and retested (local) |
-| C-39 | Owner Subscription | My annual plan is valid until July 2027, but the page says "Expiring Soon" today. | Fixed and retested (local) |
+| C-39 | Owner Subscription | My annual plan is valid until July 2027, but the page says "Expiring Soon" today. | Fixed and retested |
+| C-40 | Live site, every page using app.js | After deployment, a normal browser still kept the old app.js from cache, so the fixed login behavior did not reach returning visitors. | Fixed and retested |
 
 ### C-01 Theme settings pictures are broken
 
@@ -386,6 +387,15 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** focus the saved-status message inside the updated panel, with `tabIndex = -1` and `preventScroll`. Initial panel loading does not steal focus.
 - **Retest (local Chrome):** repeated the owner-offer/customer-accept flow; focus remains inside the booking window, Escape closes it, and balance payment succeeds afterwards.
 - **Live:** not deployed or retested.
+
+### C-40 Deployed JavaScript stays stale in returning browsers
+
+- **As the client (live):** after the login-overlay fix was deployed, a normal browser still opened the Admin Customizer because it served the old `app.js` from its cache.
+- **Steps to reproduce:** after deployment, clear cookies and local storage but use the normal browser cache. Load `/auth/login` and wait two seconds. The panel still appeared. With Chrome cache disabled, the same page loaded the new script and the panel did not appear.
+- **Cause:** every layout linked `assets/js/app.js` without a version. The filename did not change between releases, so browser and CDN caches could keep the old script.
+- **Fix:** append the file modification time to the `app.js` URL in the auth layout, the shared portal scripts partial, and the landing page. The test asserts the version expression exists in all three.
+- **Test:** `PortalLayoutRegressionTest::test_the_shared_app_script_is_versioned_for_browser_cache_updates` failed before the change, then passed. Full suite: 768 tests, 3,910 assertions. Build passed.
+- **Retest (live):** pending the second deployment. The final result will be recorded after a normal-cache browser load confirms the new script version.
 
 ### C-39 "Expiring Soon" appears on a plan with months left
 

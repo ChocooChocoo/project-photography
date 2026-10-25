@@ -39,7 +39,7 @@
     <script src="{{ asset('assets/js/vendors.min.js') }}"></script>
 
     {{-- APP JS --}}
-    <script src="{{ asset('assets/js/app.js') }}"></script>
+    <script src="{{ asset('assets/js/app.js').'?v='.filemtime(public_path('assets/js/app.js')) }}"></script>
 
     {{-- SESSION TOKEN --}}
     <script src="{{ asset('assets/js/pages/session-token.js') }}"></script>

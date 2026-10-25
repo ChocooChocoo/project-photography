@@ -63,7 +63,7 @@
     <script src="{{ asset('assets/js/vendors.min.js') }}"></script>
 
     {{-- APP JS --}}
-    <script src="{{ asset('assets/js/app.js') }}"></script>
+    <script src="{{ asset('assets/js/app.js').'?v='.filemtime(public_path('assets/js/app.js')) }}"></script>
 
     {{-- JQUERY --}}
     <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}"></script>

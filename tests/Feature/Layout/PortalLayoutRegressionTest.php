@@ -61,6 +61,21 @@ class PortalLayoutRegressionTest extends TestCase
         }
     }
 
+    public function test_the_shared_app_script_is_versioned_for_browser_cache_updates(): void
+    {
+        foreach ([
+            'resources/views/layouts/auth/app.blade.php',
+            'resources/views/layouts/partials/portal-base-scripts.blade.php',
+            'resources/views/landing.blade.php',
+        ] as $path) {
+            $this->assertStringContainsString(
+                "asset('assets/js/app.js').'?v='.filemtime(public_path('assets/js/app.js'))",
+                $this->readView($path),
+                "{$path} does not version app.js, so browsers can keep stale JavaScript."
+            );
+        }
+    }
+
     public function test_owned_sidebars_link_the_logo_to_the_site_root(): void
     {
         foreach (self::OWNED_SIDEBARS as $path) {

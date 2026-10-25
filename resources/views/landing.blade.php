@@ -339,7 +339,7 @@
 
     <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/vendors.min.js') }}"></script>
-    <script src="{{ asset('assets/js/app.js') }}"></script>
+    <script src="{{ asset('assets/js/app.js').'?v='.filemtime(public_path('assets/js/app.js')) }}"></script>
 
     <script>
         (function () {
