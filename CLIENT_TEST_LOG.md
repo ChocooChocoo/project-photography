@@ -44,19 +44,19 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-25 | Client booking | When a studio's plan has lapsed, I'm told "An active subscription or grace period is required for this studio." | Fixed and retested |
 | C-26 | Leave and overtime (HR, finance, photographer) | I can file the same leave dates twice (or overlapping dates, or the same overtime hours), so HR and payroll see duplicates. | Fixed and retested |
 | C-27 | Procurement (photographer, HR, finance) | A very large quantity or cost on a purchase request, purchase order, payment or receipt says only "Something went wrong". | Fixed and retested |
-| C-28 | First visit, login and every portal | While I type my login, an "Admin Customizer" panel with a "Buy Now" button opens by itself and covers the form. | Fixed and retested (local) |
+| C-28 | First visit, login and every portal | While I type my login, an "Admin Customizer" panel with a "Buy Now" button opens by itself and covers the form. | Fixed and retested (local and live) |
 | C-29 | Client budget list, view and edit | My budget's angle brackets become formatting, and quotes can truncate the name when I edit it. | Fixed and retested (local) |
 | C-30 | Client discovery filters and favourites | I save a studio, then clear filters. The heart becomes empty again even though the studio is still saved. | Fixed and retested (local) |
-| C-31 | Filtered client discovery cards | After filtering, a studio's favourite heart extends over the next card and cannot be clicked because the next studio's picture covers it. | Fixed and retested (local) |
-| C-32 | Client discovery filters | I clear a price filter, but a slow response brings back the old empty result even though no filter is selected. | Fixed and retested (local) |
-| C-33 | Client booking package selection | I choose a package, but a delayed package reload clears it; Proceed later says "Package Required". | Fixed and retested (local) |
+| C-31 | Filtered client discovery cards | After filtering, a studio's favourite heart extends over the next card and cannot be clicked because the next studio's picture covers it. | Fixed and retested (local and live) |
+| C-32 | Client discovery filters | I clear a price filter, but a slow response brings back the old empty result even though no filter is selected. | Fixed and retested (local and live) |
+| C-33 | Client booking package selection | I choose a package, but a delayed package reload clears it; Proceed later says "Package Required". | Fixed and retested (local and live) |
 | C-34 | Booking reschedule window, customer and provider | After a reschedule action succeeds, Escape stops closing the booking window because keyboard focus leaves it. | Fixed and retested (local) |
 | C-35 | Owner refund target and customer photographer replacement pages | The sidebar covers page controls, so I cannot click Save refund target normally. | Fixed and retested (local) |
 | C-36 | HR payroll generation and finance review | A payroll with no attendance showed ₱32,375.00 of deductions against ₱0.00 gross. | Fixed and retested (local) |
-| C-37 | Admin, Users | Clicking a person's name in the user list does nothing, although the name looks clickable. | Fixed and retested (local) |
+| C-37 | Admin, Users | Clicking a person's name in the user list does nothing, although the name looks clickable. | Fixed and retested (local and live) |
 | C-38 | Owner booking details, hardcopy quote | After saving a hardcopy quote, Escape no longer closes Booking Details because keyboard focus leaves the window. | Fixed and retested (local) |
-| C-39 | Owner Subscription | My annual plan is valid until July 2027, but the page says "Expiring Soon" today. | Fixed and retested |
-| C-40 | Live site, every page using app.js | After deployment, a normal browser still kept the old app.js from cache, so the fixed login behavior did not reach returning visitors. | Fixed and retested |
+| C-39 | Owner Subscription | My annual plan is valid until July 2027, but the page says "Expiring Soon" today. | Fixed and retested (local and live) |
+| C-40 | Live site, every page using app.js | After deployment, a normal browser still kept the old app.js from cache, so the fixed login behavior did not reach returning visitors. | Fixed and retested (local and live) |
 
 ### C-01 Theme settings pictures are broken
 
@@ -395,7 +395,7 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** every layout linked `assets/js/app.js` without a version. The filename did not change between releases, so browser and CDN caches could keep the old script.
 - **Fix:** append the file modification time to the `app.js` URL in the auth layout, the shared portal scripts partial, and the landing page. The test asserts the version expression exists in all three.
 - **Test:** `PortalLayoutRegressionTest::test_the_shared_app_script_is_versioned_for_browser_cache_updates` failed before the change, then passed. Full suite: 768 tests, 3,910 assertions. Build passed.
-- **Retest (live):** pending the second deployment. The final result will be recorded after a normal-cache browser load confirms the new script version.
+- **Retest (live):** Hostinger deployed commit **b3a3f561**. The live login page now references `assets/js/app.js?v=1792932923`. With ordinary browser caching, cleared cookies and cleared local storage, the fixed page showed no customizer and no Buy Now link.
 
 ### C-39 "Expiring Soon" appears on a plan with months left
 
@@ -491,8 +491,8 @@ Browser scripts live in `tests/Browser/`. They expect the running local server a
 
 ### Current checkpoint after the direct browser round
 
-- **New issues:** C-34 through C-39. All are recorded above as Fixed and retested (local).
-- **Fresh automated verification after the last fix:** 767 PHPUnit tests passed, 3,904 assertions; production build passed; `git diff --check` passed. One pre-existing PHPUnit metadata deprecation remains.
+- **New issues:** C-34 through C-40. C-28 to C-33 were the earlier resumed fixes. All are recorded above as fixed; live status is listed in the deployment section.
+- **Fresh automated verification after C-40:** 768 PHPUnit tests passed, 3,910 assertions; production build passed; `git diff --check` passed apart from an expected CRLF notice. One pre-existing PHPUnit metadata deprecation remains.
 - **Fresh Playwright checks after the last fix:** admin user name and eye links open the correct modal and Escape closes it; the subscription badge is absent with 271 days remaining; the gallery ZIP returns 200 with a 231,930-byte attachment. The hardcopy focus fix was retested interactively with a temporary quote, then that quote was cancelled.
 - **Direct seven-role browser sweep:** logged in as admin, owner, HR, finance, photographer, client and freelancer, then opened 74 primary pages through Playwright. Result: 74 checked, 0 failures. No server error page or leaked exception text appeared.
 - **Scope honesty:** the sweep proves the main pages load for each role. It does not replace the remaining interactive workflows listed above.
@@ -555,7 +555,21 @@ The following checks used actual browser controls, not direct writes to booking 
 - **C-31 live observation:** after Clear All on client discovery, the first favourite heart measured about 12 pixels beyond its card boundary. It was still clickable at this viewport, unlike the local overlap that blocked clicks. No client write was used to test the full favourites interaction.
 - **Not tested live due to safety:** C-29 budget creation cleanup, C-30/C-31 favourite toggling, C-32/C-33 delayed requests, C-34 reschedule actions, C-35 refund targets, C-36 payroll generation, C-38 hardcopy creation. These all require writes to the live database. The local fixes therefore remain unverified on live.
 - **Cleanup note confirmed live:** the **Probe Deploy** account is still present in Registered Users. It is the account previously recorded for owner cleanup. It was not deleted during this read-only pass.
-- **Deployment status:** the local fixes are uncommitted and undeployed. Live currently behaves like the pre-fix code for C-28, C-37 and C-39.
+- **Deployment status at first pass:** the local fixes were uncommitted and undeployed. Live still behaved like the pre-fix code for C-28, C-37 and C-39.
+
+### Live retest after deployment
+
+Deployment source: commit **2ec9e140** was pushed to `main` and Hostinger deployed it. The read-only login check still showed the customizer because the browser cache kept the old unversioned `app.js`. That exposed **C-40**. Commit **b3a3f561** added a file-version query to the script URL and was pushed. Hostinger deployed it.
+
+- **C-40:** live login HTML now references `assets/js/app.js?v=1792932923`. A normal-cache browser with cookies and local storage cleared loaded the new file.
+- **C-28:** after deployment, the fresh live login page showed no Admin Customizer and no Buy Now link after 2.4 seconds. Sign In was usable.
+- **C-37:** on live, clicking the first user's name opened the User Profile modal, loaded the correct name, and Escape closed it after the opening transition.
+- **C-39:** the live annual plan showed "Valid until Jul 23, 2027" without "Expiring Soon".
+- **C-31:** live filtered discovery cards kept the first heart inside its card, with zero horizontal overflow and a working click target.
+- **C-32:** live old price-filter response could not replace the cleared results. 3 cards remained after the delayed response, with no empty state.
+- **C-33:** live package selection **31** remained selected after the delayed first package response arrived.
+- **Seven-role live sweep:** 74 primary pages loaded after deployment with 0 failures.
+- **Still not live-retested because each needs a write:** C-29 budget creation cleanup, C-30 favourite toggle, C-34 reschedule action, C-35 live recovery target (no safe pending test record was used), C-36 payroll generation, C-38 hardcopy creation. Their local fixes are deployed, but only the local interaction test proves them.
 
 ## Direct Playwright browser walkthrough (user-requested, no shell-run tests)
 
