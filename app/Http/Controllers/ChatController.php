@@ -70,7 +70,10 @@ class ChatController extends Controller
     public function send(Request $request, ConversationModel $conversation, ChatAccess $access)
     {
         abort_unless($access->canSend($request->user(), $conversation), 403);
-        $data = $request->validate(['body' => 'required|string|max:4000']);
+        $data = $request->validate(['body' => 'required|string|max:4000'], [
+            'body.required' => 'Type a message first.',
+            'body.max' => 'A message can be at most 4,000 characters.',
+        ]);
         abort_if(trim($data['body']) === '', 422, 'Enter a message.');
         $message = DB::transaction(function () use ($request, $conversation, $access, $data) {
             $conversation = ConversationModel::lockForUpdate()->findOrFail($conversation->id);

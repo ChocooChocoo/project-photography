@@ -174,8 +174,9 @@ class ChatTest extends TestCase
         $id = $this->open();
         $this->actingAs($this->owner)->postJson('/owner/messages', ['recipient_id' => $this->client->id, 'booking_id' => $this->booking->id])->assertSuccessful()->assertJsonPath('conversation.id', $id);
         $this->assertDatabaseCount('tbl_conversations', 1);
-        $this->postJson('/owner/messages/'.$id.'/send', ['body' => '   '])->assertUnprocessable();
-        $this->postJson('/owner/messages/'.$id.'/send', ['body' => str_repeat('a', 4001)])->assertUnprocessable();
+        // Client test C-19: the page shows these words under the message box.
+        $this->postJson('/owner/messages/'.$id.'/send', ['body' => '   '])->assertUnprocessable()->assertJsonPath('errors.body.0', 'Type a message first.');
+        $this->postJson('/owner/messages/'.$id.'/send', ['body' => str_repeat('a', 4001)])->assertUnprocessable()->assertJsonPath('errors.body.0', 'A message can be at most 4,000 characters.');
         $this->getJson('/owner/messages/'.$id.'/messages?after=-1')->assertUnprocessable();
     }
 

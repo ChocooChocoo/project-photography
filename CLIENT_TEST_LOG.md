@@ -28,6 +28,7 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-16 | Every portal: saves, deletes, approvals | A second click on Delete (or acting on something already removed in another tab) answers "Failed to …" as a server error instead of "not found". | Fixed |
 | C-17 | Owners with more than one studio | Deleting something that is already gone says "An active subscription or grace period is required for this studio" although my plans are active. | Fixed |
 | C-18 | Profile (all roles), freelancer profile | After the C-10 fix, saving my profile without touching the mobile number fails with "Enter a complete mobile number". | Fixed |
+| C-19 | Messages (all roles) | Sending a message of only spaces shows "The body field is required." under the box. | Fixed |
 
 ### C-01 Theme settings pictures are broken
 
@@ -185,3 +186,13 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** `PhilippineMobileNumber` takes the number on file; an unchanged number passes, and a new or changed number must still be complete. The profile form and freelancer profile setup pass the logged-in user's number. Sign-up and the new-employee and new-photographer forms stay strict, because they create new people.
 - **Test:** `tests/Feature/Auth/ProfileMobileNumberTest.php`.
 - **Retest (local):** an unchanged save returns "Profile updated successfully!"; changing the number to `+63917` is refused. The other profile mistakes give clear messages: a taken email ("This email is already taken."), a wrong current password ("Current password is incorrect."), a mismatched confirmation ("Password confirmation does not match.") and a text file named `.jpg` ("Profile photo must be an image file."). Live: pending.
+
+### C-19 Chat error says "The body field is required."
+
+- **As the client:** I press Send with only spaces in the box and read "The body field is required." I don't know what a "body field" is.
+- **Steps to reproduce:** as Beatriz, open the conversation with Quarry Road (`/client/messages/1`), type spaces, press Send. The status line under the box shows the server's message.
+- **Cause:** `ChatController::send` used Laravel's default messages, which name the input `body`.
+- **Fix:** the chat says "Type a message first." and, over the limit, "A message can be at most 4,000 characters." The page already stops a truly empty box ("Please fill out this field.") and caps typing at 4,000 characters.
+- **Also checked (no issue):** a message with `<script>` and `<b>` tags is stored and shown as plain text (`textContent`); messaging a client you have no booking with is refused (403).
+- **Test:** `ChatTest` now asserts both messages (failed before).
+- **Retest (local):** spaces + Send shows "Type a message first." Live: pending.
