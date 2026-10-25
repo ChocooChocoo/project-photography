@@ -453,8 +453,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** both recovery views were the only portal pages that extend a layout and define `@section('content')` without defining `@section('title')`.
 - **Fix:** add `Photographer Cancellation Recovery` and `Photographer Replacement` title sections. No other page changed.
 - **Regression proof:** new `PortalLayoutRegressionTest::test_every_portal_page_sets_its_browser_title` scans every Blade view that extends a layout, and fails with the list of pages that have no title section. It passes after the fix.
-- **Retest (local):** PHPUnit passes. Full suite result recorded with the deployment entry.
-- **Retest (live):** pending deployment of this fix.
+- **Test:** full suite 769 tests, 3,911 assertions; one pre-existing PHPUnit metadata deprecation remains.
+- **Retest (live, 25 Oct 2026):** deployed in **865d2429**. The owner page `/owner/cancellation-recoveries/6` now titles its tab "Photographer Cancellation Recovery", and the client page titles "Photographer Replacement". Both return 200.
 
 ## Previous agent's final full pass (25 Oct 2026)
 
