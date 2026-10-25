@@ -1,6 +1,6 @@
 [← Previous: Phase 10](./phase-10.md)
 
-**Status:** 🔄 Fixed locally, waiting for deploy
+**Status:** ✅ Done (deployed 2026-10-25; S06 waits for the testers)
 
 # Phase 11: Panel re-test failures on the live site
 
@@ -36,7 +36,7 @@
 ## Done when
 
 - [x] `php artisan test --compact` passes: 727 passed (3688 assertions).
-- [ ] Deployed to live, and an on-location package saves there.
+- [x] Deployed to live, and an on-location package saves there (see "Live check").
 - [ ] Testers re-test S06.
 
 ## Verification (2026-10-25)
@@ -45,6 +45,16 @@
 - Pint: the middleware and the test pass. `PackagesModel.php` has style issues that were already there (the same list before and after this change).
 - No JavaScript changed, so the Node tests and the build were not re-run.
 - Not clicked in a browser locally. The fix is in the model, and the test and the MySQL check cover it.
+
+## Live check (2026-10-25, https://lumoraphotography.online)
+
+`main` was fast-forwarded to `3c1f2c62` and pushed; Hostinger auto-deployed it. No migration was needed.
+
+- Owner Yolanda created "T02 test on-location (delete me)" (package 50, inactive) through Create Package with On-Location and coverage scope "Cavite, Laguna". The response was 200 "Package created successfully!". Before the deploy, the same form returned 500.
+- The package is stored with `coverage_scope` `["Cavite","Laguna"]`, and the edit form shows "Cavite, Laguna".
+- Saving the edit form with "Cavite, Laguna, Batangas" returned "Package updated successfully!" and stored `["Cavite","Laguna","Batangas"]`.
+- Not checked on live: the `type=freelancer` fix. Live has no studio without a plan to test it against. The feature test covers it.
+- Test data left on live: package 50 on Quarry Road Studio, inactive, so clients do not see it. Owners have no delete action for packages, so remove it in phpMyAdmin if needed.
 
 ## Open (not changed)
 
