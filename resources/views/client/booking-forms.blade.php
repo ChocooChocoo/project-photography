@@ -1544,6 +1544,7 @@
             });
             
             // ========== CHECK DATE AVAILABILITY ==========
+            let availabilityCheckId = 0;
             $('#checkDateBtn').on('click', function() {
                 const selectedDate = $('#eventDate').val();
                 const startTime    = $('#startTime').val();
@@ -1575,6 +1576,10 @@
                 $('#dateStatusIcon').html('<i class="ti ti-clock text-info"></i>');
                 $('#dateStatusText').text('Checking availability...');
 
+                // Replies can arrive out of order when the client changes the time
+                // quickly; only the reply to the latest check may change the page.
+                const checkId = ++availabilityCheckId;
+
                 $.ajax({
                     url: '{{ route("client.bookings.check-availability") }}',
                     type: 'POST',
@@ -1585,9 +1590,11 @@
                         end_date:    $('#eventEndDate').val() || undefined,
                         start_time:  startTime,
                         end_time:    endTime,
+                        location_type: $('#locationType').val() || undefined,
                         _token:      '{{ csrf_token() }}'
                     },
                     success: function(response) {
+                        if (checkId !== availabilityCheckId) return;
                         if (response.success && response.available) {
                             $('#dateStatusIcon').html('<i class="ti ti-circle-check text-success"></i>');
                             $('#dateStatusText').html(`
@@ -1611,6 +1618,7 @@
                         }
                     },
                     error: function(xhr) {
+                        if (checkId !== availabilityCheckId) return;
                         $('#dateStatusIcon').html('<i class="ti ti-alert-circle text-danger"></i>');
                         $('#dateStatusText').html('<span class="text-danger fw-medium">Error checking availability</span>');
                         $('#submitBookingBtn').prop('disabled', true);
@@ -1618,7 +1626,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Failed to check availability. Please try again.',
+                            text: (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.message) || 'Failed to check availability. Please try again.',
                             confirmButtonColor: '#0d6efd'
                         });
                     }
@@ -1729,12 +1737,14 @@
             $('#eventDate, #eventEndDate, #startTime, #endTime, #recurringToggle').on('change', updateDurationType);
             updateDurationType();
 
-            $('#eventDate, #eventEndDate, #startTime, #endTime').on('change', function() {
+            // Location matters too: in-studio sessions must fit the studio's opening hours.
+            $('#eventDate, #eventEndDate, #startTime, #endTime, #locationType').on('change', function() {
                 const selectedDate = $('#eventDate').val();
                 const startTime    = $('#startTime').val();
                 const endTime      = $('#endTime').val();
 
                 if (!selectedDate) {
+                    availabilityCheckId++;
                     $('#dateStatusIcon').empty();
                     $('#dateStatusText').text('Select a date to check availability');
                     $('#closedDayNote').hide();
@@ -1745,6 +1755,7 @@
                 // Block non-operating days immediately without server call
                 const closedDay = firstClosedDay(selectedDate, $('#eventEndDate').val());
                 if (closedDay) {
+                    availabilityCheckId++;
                     const parts   = closedDay.split('-');
                     const dayName = new Date(parts[0], parts[1] - 1, parts[2])
                         .toLocaleDateString('en-US', { weekday: 'long' });
@@ -1761,6 +1772,15 @@
                 // Only auto-check if all three fields are filled
                 if (selectedDate && startTime && endTime) {
                     $('#closedDayNote').hide();
+                    // A new start time fires this before the package duration moves the
+                    // end time; don't ask the server (and pop an error) for that moment.
+                    if (endTime <= startTime) {
+                        availabilityCheckId++;
+                        $('#dateStatusIcon').html('<i class="ti ti-info-circle text-warning"></i>');
+                        $('#dateStatusText').html('<span class="text-warning fw-medium">End time must be after the start time</span>');
+                        $('#submitBookingBtn').prop('disabled', true);
+                        return;
+                    }
                     $('#checkDateBtn').trigger('click');
                 } else {
                     $('#dateStatusIcon').html('<i class="ti ti-info-circle text-info"></i>');

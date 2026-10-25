@@ -127,6 +127,11 @@ class BookingRescheduleService
             throw new \DomainException(($booking->booking_type === 'studio' ? 'The studio' : 'The photographer').' does not work on '.$date->format('l').'s.');
         }
 
+        if ($booking->booking_type === 'studio' && $booking->location_type === 'in-studio'
+            && $message = StudioScheduleModel::where('studio_id', $booking->provider_id)->first()?->outsideHoursMessage($slot['start_time'], $slot['end_time'])) {
+            throw new \DomainException($message);
+        }
+
         if (BookingModel::timeslotTaken($booking->booking_type, $booking->provider_id, $slot['date'], $slot['start_time'], $slot['end_time'], null, $booking->id)) {
             throw new \DomainException('Another booking already uses '.$this->label($slot).'.');
         }

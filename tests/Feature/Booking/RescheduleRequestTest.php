@@ -207,6 +207,22 @@ class RescheduleRequestTest extends TestCase
             ->assertJsonPath('message', 'The studio does not work on Mondays.');
     }
 
+    public function test_an_in_studio_booking_cannot_move_outside_opening_hours(): void
+    {
+        // Client test C-12.
+        $locationId = \Illuminate\Support\Facades\DB::table('tbl_locations')->insertGetId(['municipality' => 'Dasmarinas', 'barangay' => '[]', 'zip_code' => '4114', 'created_at' => now(), 'updated_at' => now()]);
+        \App\Models\StudioOwner\StudioScheduleModel::create([
+            'studio_id' => $this->studio->id, 'location_id' => $locationId, 'operating_days' => ['tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
+            'opening_time' => '09:00', 'closing_time' => '18:00', 'booking_limit' => 5, 'advance_booking' => 1,
+        ]);
+        $request = $this->pendingRequest('2026-11-25', '17:00', '20:00'); // a Wednesday, ends after closing
+
+        $this->actingAs($this->owner)
+            ->postJson(route('owner.booking.reschedule.approve', $request->id))
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'The studio is open 9:00 AM to 6:00 PM. Choose a time within those hours, or choose On-Location.');
+    }
+
     public function test_freelancer_answers_requests_for_their_own_bookings(): void
     {
         $freelancer = $this->user('freelancer', 'reschedule-freelancer@example.com');

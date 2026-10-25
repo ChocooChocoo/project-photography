@@ -27,7 +27,7 @@ class UpdateProfileRequest extends FormRequest
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:tbl_users,email,' . $userId,
-            'mobile_number' => 'required|string|max:20',
+            'mobile_number' => ['required', 'string', 'max:20', new \App\Rules\PhilippineMobileNumber],
             'current_password' => 'nullable|required_with:password|current_password',
             'password' => 'nullable|confirmed|min:8',
             'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:3072', // 3MB max

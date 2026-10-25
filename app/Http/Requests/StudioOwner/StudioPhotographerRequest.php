@@ -33,7 +33,7 @@ class StudioPhotographerRequest extends FormRequest
                 'max:255',
                 Rule::unique('tbl_users', 'email')
             ],
-            'mobile_number' => 'required|string|max:20',
+            'mobile_number' => ['required', 'string', 'max:20', new \App\Rules\PhilippineMobileNumber],
             'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'position' => 'required|string|max:100',
             'specialization' => 'required|exists:tbl_categories,id', // Changed back to categories

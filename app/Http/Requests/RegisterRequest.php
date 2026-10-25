@@ -29,7 +29,7 @@ class RegisterRequest extends FormRequest
             'lastName' => 'required|string|max:255',
             'suffix' => 'nullable|string|max:20',
             'userEmail' => 'required|email|max:255|unique:tbl_users,email',
-            'userMobile' => 'required|string|max:20',
+            'userMobile' => ['required', 'string', 'max:20', new \App\Rules\PhilippineMobileNumber],
             'userPassword' => 'required|string|min:8',
             'userConfirmPassword' => 'required|same:userPassword',
             'orgRole' => 'nullable|in:Business Owner,HR Manager,Marketing Manager',

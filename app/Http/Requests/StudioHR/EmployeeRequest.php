@@ -49,7 +49,7 @@ class EmployeeRequest extends FormRequest
                 'max:255',
                 Rule::unique('tbl_users', 'email')
             ],
-            'mobile_number' => 'required|string|max:20',
+            'mobile_number' => ['required', 'string', 'max:20', new \App\Rules\PhilippineMobileNumber],
             'role_id' => [
                 'required',
                 Rule::exists('tbl_roles', 'id')->where(function ($query) {

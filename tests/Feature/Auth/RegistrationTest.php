@@ -76,6 +76,25 @@ class RegistrationTest extends TestCase
         $this->assertDatabaseMissing('tbl_users', ['email' => 'juan.delacruz@example.com']);
     }
 
+    public function test_registration_rejects_a_half_typed_mobile_number_and_accepts_the_usual_formats(): void
+    {
+        // Client test C-10: "+(63)917 ___ ____" (only 917 typed) created an account.
+        Mail::fake();
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+
+        foreach (['+63917', '917', '+(63)917 ___ ____', '0917123456', '12345678901'] as $bad) {
+            $this->postJson(route('auth.register.store'), $this->validPayload(['userMobile' => $bad]))
+                ->assertStatus(422)
+                ->assertJsonPath('errors.userMobile.0', 'Enter a complete mobile number, for example 0917 123 4567.');
+        }
+        $this->assertDatabaseMissing('tbl_users', ['email' => 'juan.delacruz@example.com']);
+
+        foreach (['+639171234567', '+(63)917 123 4567', '09171234567', '9171234567'] as $i => $good) {
+            $this->postJson(route('auth.register.store'), $this->validPayload(['userMobile' => $good, 'userEmail' => "ok{$i}@example.com"]))
+                ->assertOk();
+        }
+    }
+
     private function validPayload(array $overrides = []): array
     {
         return array_merge([

@@ -42,6 +42,23 @@ class StudioScheduleModel extends Model
     ];
 
     /**
+     * Null when an in-studio session from $startTime to $endTime (H:i) fits the
+     * opening hours; otherwise the message to show the client.
+     */
+    public function outsideHoursMessage(string $startTime, string $endTime): ?string
+    {
+        $open = substr((string) $this->getRawOriginal('opening_time'), 0, 5);
+        $close = substr((string) $this->getRawOriginal('closing_time'), 0, 5);
+
+        if ($open === '' || $close === '' || ($startTime >= $open && $endTime <= $close)) {
+            return null;
+        }
+
+        return 'The studio is open '.\Carbon\Carbon::parse($open)->format('g:i A').' to '.\Carbon\Carbon::parse($close)->format('g:i A')
+            .'. Choose a time within those hours, or choose On-Location.';
+    }
+
+    /**
      * Get the studio associated with the schedule.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

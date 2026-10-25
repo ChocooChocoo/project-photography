@@ -19,6 +19,10 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-07 | Freelancer, services | Opening one of my own services shows a server error. | Fixed |
 | C-08 | Login | After a few wrong passwords the login says only "Too Many Attempts.", so I don't know I just have to wait. | Fixed |
 | C-09 | Login, studio staff | When six of us log in from the studio's Wi-Fi within a minute, the sixth person is locked out even with the right password. | Fixed |
+| C-10 | Sign-up, employees, photographers, profiles | I can create an account with a half-typed mobile number (`+(63)917 ___ ____`), and the studio can't reach me. | Fixed |
+| C-11 | Client booking form | Every time I change the start time, an error pops up: "Failed to check availability. Please try again." | Fixed |
+| C-12 | Client booking form, rescheduling | I can book an in-studio session at 7:00 AM, or one ending at 7:00 PM, although the studio is open 9 to 6. | Fixed |
+| C-13 | Client booking form | When I change the time quickly (or my connection is slow), the availability status can show the answer for the time I picked before. | Fixed |
 
 ### C-01 Theme settings pictures are broken
 
@@ -97,3 +101,37 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** `AuthController::login` limits wrong passwords to five per minute per email and IP (`RateLimiter`), clears the count after a successful login, and the route keeps a looser per-IP cap of 30 a minute against password spraying. `SecurityRegressionTest` now checks the 30-per-IP cap.
 - **Test:** `ThrottleMessageTest::test_staff_on_one_network_can_all_log_in_and_one_persons_typos_do_not_block_others` (seven users log in; one user's five typos block only that user). It failed before the fix with 429 on the sixth user.
 - **Retest (local):** seven seeded clients (Daniela, Emilio, Fatima, Gabriel, Helena, Ignacio, Jasmine) logged in one after another from the same machine; all seven reached their account. Live: pending.
+
+### C-10 A half-typed mobile number is accepted
+
+- **As the client:** I start typing my number on the sign-up form, get distracted, and press Create Account. The account is made with the number `+63917`.
+- **Steps to reproduce:** on `/auth/register`, type only `917` in Mobile Number and fill in the rest correctly. The field shows `+(63)917 ___ ____`, the server answers "Registration successful!", and the user is stored with `mobile_number = +63917`.
+- **Cause:** the input mask only shapes what is typed; every server rule was `required|string|max:20`. The same rule was on the owner and HR employee forms, the studio photographer form, the profile form and freelancer profile setup.
+- **Fix:** new rule `App\Rules\PhilippineMobileNumber` accepts a complete number in the usual shapes (`0917 123 4567`, `917 123 4567`, `+63 917 123 4567`, the mask `+(63)917 123 4567`) and otherwise says "Enter a complete mobile number, for example 0917 123 4567." It is used by all six forms. Stored numbers (`+63` and 10 digits) all pass, so existing profiles still save.
+- **Test:** `RegistrationTest::test_registration_rejects_a_half_typed_mobile_number_and_accepts_the_usual_formats` (failed before).
+- **Retest (local):** typing only `917` now shows "Enter a complete mobile number, for example 0917 123 4567." under the field and creates no account. A full number registers and is stored as `+639171234567`. The test account with `+63917` from the reproduction was deleted. Live: pending.
+
+### C-11 Changing the start time pops an availability error
+
+- **As the client:** I pick a package and a date, then change the start time from 10:00 to 13:00. An error pops up, "Failed to check availability. Please try again.", although the slot is free.
+- **Steps to reproduce:** as Beatriz, open `/client/booking-form/studio/4`, pick Wedding Photography, the first package and Wed 4 Nov 2026, then change Start Time. The page sends `start_time=13:00&end_time=10:00` and gets 422 "The end time field must be a date after start time.", then sends the corrected `13:00–16:00`.
+- **Cause:** the availability check on `change` ran before the package's fixed duration moved the end time, so it asked about an end before the start. Its error handler showed the generic message for any failure.
+- **Fix (`client/booking-forms.blade.php`):** the auto-check does not call the server while the end is not after the start; it shows "End time must be after the start time" under the date instead. The check's error pop-up now shows the server's message for a 422.
+- **Retest (local):** start times 13:00, 15:00 and 09:30 each move the end time and show "Available (0/3 bookings)" with no pop-up. Typing an end time of 10:00 with a start of 11:00 shows "End time must be after the start time". Live: pending.
+
+### C-12 In-studio bookings outside opening hours are accepted
+
+- **As the client:** I book an in-studio session at 7:00 AM at a studio that opens at 9. The booking goes through and the owner gets a booking for a time the studio is closed.
+- **Steps to reproduce:** on the Quarry Road booking form (open 09:00–18:00), choose an in-studio package, Wed 4 Nov 2026 and start 07:00 (or 16:00 for a three-hour package ending 19:00). The status says "Available" and the booking can be submitted.
+- **Cause:** neither the live check (`checkAvailability`) nor the save (`store` / `checkDateAvailability`) compared the time with the studio's `opening_time` and `closing_time`; rescheduling (`BookingRescheduleService::assertAvailable`) did not either. The form never showed the hours.
+- **Fix:** `StudioScheduleModel::outsideHoursMessage()` holds the rule. The live check (when an in-studio location is chosen), the booking save and owner/client rescheduling of an in-studio booking all refuse with "The studio is open 9:00 AM to 6:00 PM. Choose a time within those hours, or choose On-Location." On-location bookings are not limited by studio hours (decision: an evening wedding is normal). The form now sends the location type with the check and re-checks when the location changes.
+- **Test:** `tests/Feature/Booking/StudioOpeningHoursTest.php`, `RescheduleRequestTest::test_an_in_studio_booking_cannot_move_outside_opening_hours` (both failed before).
+- **Retest (local):** in-studio 16:00–19:00 and 07:00–10:00 show the message in a pop-up and under the date, and Proceed is disabled; 10:00–13:00 and 11:00–14:00 are available. Live: pending.
+
+### C-13 Out-of-date availability answers overwrite the current one
+
+- **As the client:** I change 7:00 to 10:00 quickly; the page then says 10:00 is not available, because the answer about 7:00 arrived last.
+- **Steps to reproduce:** delay the reply for one check (seen naturally on the slow local server; reproduced with a 3-second delay on the 07:00 reply), then change the time again.
+- **Cause:** every reply updated the status, whatever order replies came back in.
+- **Fix:** each check gets a number, and only the reply to the latest check may change the page. Choosing a closed day, clearing the date, or an end before the start also discards checks still in flight.
+- **Retest (local):** with the 07:00 reply held back 3 seconds, the page ends on "Available (0/3 bookings)" for 10:00–13:00 with no pop-up. Live: pending.

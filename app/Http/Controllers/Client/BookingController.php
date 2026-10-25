@@ -203,6 +203,7 @@ class BookingController extends Controller
             'end_date'     => 'nullable|date|after:date',
             'start_time'   => 'required|date_format:H:i',
             'end_time'     => 'required|date_format:H:i|after:start_time',
+            'location_type' => 'nullable|in:in-studio,on-location',
         ]);
 
         $selectedDate = Carbon::parse($request->date);
@@ -248,6 +249,15 @@ class BookingController extends Controller
             }
 
             $maxBookings = $provider->max_clients_per_day ?? 3;
+
+            if ($hoursMessage = $this->studioHoursMessage($request, $request->start_time, $request->end_time)) {
+                return response()->json([
+                    'success'      => false,
+                    'available'    => false,
+                    'message'      => $hoursMessage,
+                    'outside_hours' => true,
+                ]);
+            }
 
         } else {
             $provider = ProfileModel::with('schedule')->where('user_id', $request->provider_id)->first();
@@ -320,6 +330,20 @@ class BookingController extends Controller
             'operating_day'     => true,
             'message'           => 'Available (' . $existingBookingsCount . '/' . $maxBookings . ' bookings)',
         ]);
+    }
+
+    /**
+     * In-studio sessions must fit the studio's opening hours. On-location work
+     * (an evening wedding, say) is not limited by when the studio is open.
+     */
+    private function studioHoursMessage(Request $request, ?string $startTime, ?string $endTime): ?string
+    {
+        if ($request->type !== 'studio' || $request->input('location_type') !== 'in-studio' || ! $startTime || ! $endTime) {
+            return null;
+        }
+
+        return \App\Models\StudioOwner\StudioScheduleModel::where('studio_id', $request->provider_id)->first()
+            ?->outsideHoursMessage($startTime, $endTime);
     }
 
     /**
@@ -516,6 +540,14 @@ class BookingController extends Controller
             'terms_agree.required' => 'You must agree to the booking terms and conditions.',
             'terms_agree.accepted' => 'You must agree to the booking terms and conditions.',
         ]);
+
+        if ($hoursMessage = $this->studioHoursMessage($request, $request->start_time, $request->end_time)) {
+            return response()->json([
+                'success' => false,
+                'message' => $hoursMessage,
+                'errors' => ['start_time' => [$hoursMessage]],
+            ], 422);
+        }
 
         try {
             // Reject overlapping timeslots before anything is persisted.
