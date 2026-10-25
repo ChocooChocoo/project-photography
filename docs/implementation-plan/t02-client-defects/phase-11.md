@@ -58,7 +58,7 @@
 
 ## Open (not changed)
 
-- `APP_DEBUG` is still on in the live `.env`. The S06 error showed the SQL, the database name and the host. Set `APP_DEBUG=false` and clear the config cache.
+- Error details reach the browser even with `APP_DEBUG=false`. Live debug is off (checked 2026-10-25: a missing package returns 404 with no `exception`, `file` or `trace` fields; the owner confirmed `APP_DEBUG=false`). The S06 error showed the SQL, the database name and the host because `StudioOwner\PackagesController` returns `'error' => $e->getMessage()` in its 500 response. 29 such lines exist in 13 controllers. The Phase 10 note that `APP_DEBUG` was on is out of date.
 - The client package card prints `coverage_scope` as raw JSON (`booking-forms.blade.php` around line 1219). This affects every seeded package and predates T02.
 - S12 requests: a quantity per catalog item, the preferred brand listed first, and hiding reserved equipment from the dropdown. These need approval.
 
