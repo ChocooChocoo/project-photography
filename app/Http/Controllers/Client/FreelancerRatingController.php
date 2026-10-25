@@ -106,6 +106,14 @@ class FreelancerRatingController extends Controller
 
             $clientId = Auth::id();
 
+            // Your own booking that is not finished yet: say when a review opens.
+            if (BookingModel::where('id', $request->booking_id)->where('client_id', $clientId)->where('status', '!=', 'completed')->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can leave a review once the booking is completed.',
+                ], 422);
+            }
+
             // Verify booking belongs to client and is completed freelancer booking
             $booking = BookingModel::where('id', $request->booking_id)
                 ->where('client_id', $clientId)
@@ -153,6 +161,8 @@ class FreelancerRatingController extends Controller
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->recordNotFound();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error('Error submitting freelancer review: ' . $e->getMessage());
             return response()->json([

@@ -222,6 +222,8 @@ class OnlineGalleryController extends Controller
                 \Illuminate\Support\Facades\DB::rollBack();
             }
             return $this->recordNotFound();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -291,6 +293,8 @@ class OnlineGalleryController extends Controller
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->recordNotFound();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -393,6 +397,8 @@ class OnlineGalleryController extends Controller
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->recordNotFound();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

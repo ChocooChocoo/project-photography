@@ -200,6 +200,8 @@ class OnlineGalleryController extends Controller
                 'message' => $message,
                 'gallery' => $gallery,
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -243,6 +245,8 @@ class OnlineGalleryController extends Controller
             }
 
             return $this->errorResponse('Image not found.', 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse('Error deleting image: '.$e->getMessage(), 500);
         }
@@ -304,6 +308,8 @@ class OnlineGalleryController extends Controller
                 'message' => 'Gallery updated successfully.',
                 'gallery' => $gallery,
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse('Error updating gallery: '.$e->getMessage(), 500);
         }

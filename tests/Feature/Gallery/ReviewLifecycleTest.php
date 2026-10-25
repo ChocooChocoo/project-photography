@@ -56,6 +56,23 @@ class ReviewLifecycleTest extends TestCase
         $this->assertSame(1, $this->studio->total_reviews);
     }
 
+    public function test_review_mistakes_get_their_reason_not_a_server_error(): void
+    {
+        // Client test C-21: validation inside the catch-all became a 500, which the
+        // live site shows as "Something went wrong".
+        config(['app.debug' => false]);
+        $ok = ['booking_id' => $this->booking->id, 'rating' => 5, 'review_text' => 'Lovely shoot, very professional.', 'is_recommend' => 1];
+
+        $this->actingAs($this->client)->postJson('/_test/client/review/store', ['rating' => 0] + $ok)
+            ->assertStatus(422)->assertJsonValidationErrors('rating');
+        $this->actingAs($this->client)->postJson('/_test/client/review/store', ['review_text' => 'ok'] + $ok)
+            ->assertStatus(422)->assertJsonValidationErrors('review_text');
+
+        $this->booking->update(['status' => 'confirmed']);
+        $this->actingAs($this->client)->postJson('/_test/client/review/store', $ok)
+            ->assertStatus(422)->assertJsonPath('message', 'You can leave a review once the booking is completed.');
+    }
+
     public function test_can_review_is_false_after_review_and_duplicate_is_rejected(): void
     {
         $this->assertTrue(StudioRatingModel::canReview($this->booking->id, $this->client->id));

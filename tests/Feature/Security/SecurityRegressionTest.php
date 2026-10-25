@@ -88,8 +88,9 @@ class SecurityRegressionTest extends TestCase
             ->postJson('/freelancer/online-gallery/999/upload', [
                 'images' => [UploadedFile::fake()->create('notes.txt', 100, 'text/plain')],
             ])
-            ->assertStatus(500)
-            ->assertJson(['success' => false]);
+            // Client test C-21: the reason reaches the user as a 422, not a 500.
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('images.0');
     }
 
     public function test_gallery_upload_rejects_oversized_files(): void
@@ -100,8 +101,9 @@ class SecurityRegressionTest extends TestCase
             ->postJson('/freelancer/online-gallery/999/upload', [
                 'images' => [UploadedFile::fake()->create('huge.png', 6000, 'image/png')],
             ])
-            ->assertStatus(500)
-            ->assertJson(['success' => false]);
+            // Client test C-21: the reason reaches the user as a 422, not a 500.
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('images.0');
     }
 
     public function test_client_cannot_access_owner_only_routes(): void

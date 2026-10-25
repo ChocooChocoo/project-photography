@@ -29,6 +29,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-17 | Owners with more than one studio | Deleting something that is already gone says "An active subscription or grace period is required for this studio" although my plans are active. | Fixed |
 | C-18 | Profile (all roles), freelancer profile | After the C-10 fix, saving my profile without touching the mobile number fails with "Enter a complete mobile number". | Fixed |
 | C-19 | Messages (all roles) | Sending a message of only spaces shows "The body field is required." under the box. | Fixed |
+| C-20 | Client dashboard, favourites | Double-clicking the heart on a studio sends two toggles, so it ends up not favourited (or shows "Failed to update favorite."). | Fixed |
+| C-21 | Reviews, gallery uploads, booking status and assignment, payments | When I make a mistake (a short review, a non-image photo, no rating), the live site says only "Something went wrong" instead of what to fix. | Fixed |
 
 ### C-01 Theme settings pictures are broken
 
@@ -196,3 +198,20 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Also checked (no issue):** a message with `<script>` and `<b>` tags is stored and shown as plain text (`textContent`); messaging a client you have no booking with is refused (403).
 - **Test:** `ChatTest` now asserts both messages (failed before).
 - **Retest (local):** spaces + Send shows "Type a message first." Live: pending.
+
+### C-20 Double-clicking the favourite heart undoes itself
+
+- **As the client:** I double-click the heart on a studio card. It fills, then empties again, or I get "Failed to update favorite."
+- **Steps to reproduce:** on `/client/dashboard`, double-click a studio's heart while the first request is still on its way (held back 1.5 seconds in the test). Two toggle requests were sent.
+- **Cause:** the click handler had no in-flight guard, and the server created the row with `create()`, so a racing second request could hit the `(client_id, studio_id)` unique key.
+- **Fix:** the heart ignores clicks while its request is in flight; the server uses `firstOrCreate()`.
+- **Retest (local):** a double-click with the first request held 1.5 seconds sent one request and the heart stayed filled; one more click removed the favourite again (test data restored). Live: pending.
+
+### C-21 Mistakes are reported as "Something went wrong"
+
+- **As the client:** I submit a review with a rating of 0, or a review of two words. On the live site I see "Something went wrong. Please try again." and don't know what to change. The same for staff uploading a text file as a gallery photo.
+- **Steps to reproduce:** as Beatriz, post a review for completed booking 64 with `rating = 0`. It returned 500 "Error submitting review: The rating field must be at least 1." With debug off, C-03's protection rewrites any 500 that has a colon to the generic message, so the reason was lost.
+- **Cause:** 24 methods call `$request->validate()` inside a `try` whose `catch (\Exception)` also caught the `ValidationException` and answered 500. Among them: studio and freelancer reviews, gallery upload/delete/update for owner, HR, photographer and freelancer, the owner's photographer assignment and booking status change, balance payment and on-site confirmation.
+- **Fix:** each of those catch-alls now lets a `ValidationException` through first, so Laravel answers 422 with the field errors. Reviewing your own booking before it is completed now says "You can leave a review once the booking is completed." instead of "not found". `SecurityRegressionTest` now expects 422 for non-image and oversized gallery uploads.
+- **Test:** `ReviewLifecycleTest::test_review_mistakes_get_their_reason_not_a_server_error` (debug off; failed before).
+- **Retest (local):** rating 0 → 422 "The rating field must be at least 1."; a two-letter review → 422 "The review text field must be at least 10 characters."; booking 63 (not completed) → 422 "You can leave a review once the booking is completed."; another client's booking → 404. Full suite 757 passed. Live: pending.

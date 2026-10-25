@@ -41,7 +41,9 @@ class FavoritesController extends Controller
             $favorite->delete();
             $favorited = false;
         } else {
-            ClientFavoriteModel::create([
+            // firstOrCreate: a second request racing this one finds the row instead
+            // of hitting the (client_id, studio_id) unique key.
+            ClientFavoriteModel::firstOrCreate([
                 'client_id' => $user->id,
                 'studio_id' => $request->studio_id,
             ]);

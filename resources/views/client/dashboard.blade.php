@@ -735,6 +735,10 @@
                 const btn = $(this);
                 const studioId = btn.data('studio-id');
 
+                // A double click must not send two toggles (which would undo the first).
+                if (btn.data('busy')) return;
+                btn.data('busy', true);
+
                 $.ajax({
                     url: '{{ route("client.favorites.toggle") }}',
                     type: 'POST',
@@ -776,6 +780,9 @@
                             text: 'Failed to update favorite.',
                             confirmButtonColor: '#3475db'
                         });
+                    },
+                    complete: function() {
+                        btn.data('busy', false);
                     }
                 });
             });
