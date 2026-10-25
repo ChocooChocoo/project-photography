@@ -1,5 +1,7 @@
 @extends('layouts.owner.app')
 
+@section('title', 'Photographer Cancellation Recovery')
+
 @section('content')
 <div class="content-page">
 <div class="container py-4">

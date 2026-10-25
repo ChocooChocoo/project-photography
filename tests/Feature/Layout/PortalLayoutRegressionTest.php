@@ -169,6 +169,32 @@ class PortalLayoutRegressionTest extends TestCase
         $this->assertStringContainsString('padding: clamp(1rem, 3vw, 2rem);', $contents);
     }
 
+    public function test_every_portal_page_sets_its_browser_title(): void
+    {
+        $missing = [];
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(resource_path('views'), \FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($files as $file) {
+            if (!str_ends_with($file->getFilename(), '.blade.php')) {
+                continue;
+            }
+
+            $contents = (string) file_get_contents($file->getPathname());
+
+            if (!str_contains($contents, "@extends('layouts.") || !str_contains($contents, "@section('content'")) {
+                continue;
+            }
+
+            if (!str_contains($contents, "@section('title'")) {
+                $missing[] = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $file->getPathname());
+            }
+        }
+
+        $this->assertSame([], $missing, 'Portal pages without a title section fall back to "Default Title": ' . implode(', ', $missing));
+    }
+
     private function readView(string $relativePath): string
     {
         $path = base_path($relativePath);

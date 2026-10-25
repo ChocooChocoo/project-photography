@@ -45,8 +45,8 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-26 | Leave and overtime (HR, finance, photographer) | I can file the same leave dates twice (or overlapping dates, or the same overtime hours), so HR and payroll see duplicates. | Fixed and retested |
 | C-27 | Procurement (photographer, HR, finance) | A very large quantity or cost on a purchase request, purchase order, payment or receipt says only "Something went wrong". | Fixed and retested |
 | C-28 | First visit, login and every portal | While I type my login, an "Admin Customizer" panel with a "Buy Now" button opens by itself and covers the form. | Fixed and retested (local and live) |
-| C-29 | Client budget list, view and edit | My budget's angle brackets become formatting, and quotes can truncate the name when I edit it. | Fixed and retested (local) |
-| C-30 | Client discovery filters and favourites | I save a studio, then clear filters. The heart becomes empty again even though the studio is still saved. | Fixed and retested (local) |
+| C-29 | Client budget list, view and edit | My budget's angle brackets become formatting, and quotes can truncate the name when I edit it. | Fixed and retested (local and live) |
+| C-30 | Client discovery filters and favourites | I save a studio, then clear filters. The heart becomes empty again even though the studio is still saved. | Fixed and retested (local and live) |
 | C-31 | Filtered client discovery cards | After filtering, a studio's favourite heart extends over the next card and cannot be clicked because the next studio's picture covers it. | Fixed and retested (local and live) |
 | C-32 | Client discovery filters | I clear a price filter, but a slow response brings back the old empty result even though no filter is selected. | Fixed and retested (local and live) |
 | C-33 | Client booking package selection | I choose a package, but a delayed package reload clears it; Proceed later says "Package Required". | Fixed and retested (local and live) |
@@ -57,6 +57,7 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-38 | Owner booking details, hardcopy quote | After saving a hardcopy quote, Escape no longer closes Booking Details because keyboard focus leaves the window. | Fixed and retested (local) |
 | C-39 | Owner Subscription | My annual plan is valid until July 2027, but the page says "Expiring Soon" today. | Fixed and retested (local and live) |
 | C-40 | Live site, every page using app.js | After deployment, a normal browser still kept the old app.js from cache, so the fixed login behavior did not reach returning visitors. | Fixed and retested (local and live) |
+| C-41 | Owner refund target and customer photographer replacement pages | The browser tab says "Default Title" instead of the page name. | Fixed and retested (local and live) |
 
 ### C-01 Theme settings pictures are broken
 
@@ -341,7 +342,7 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** encode text at the HTML-rendering boundary for budget names, descriptions, categories, types and range text. Encode edit input/textarea values. Reuse already-rendered category options and select the saved category with `.val()` rather than placing category names inside executable template literals.
 - **Regression proof:** `tests/Browser/client-budget.mjs` failed before the fix on the literal-name assertion. After the fix, a complete client interaction passed: create with decimal amount, view exact name/notes, Escape, edit exact quoted name, change amount to ₱13,000, filter inactive/active, cancel delete, confirm delete and verify row disappears.
 - **Test data:** only budgets created by this test were deleted; existing budgets were untouched. Failed test attempts also cleaned up their created records.
-- **Retest environment:** local Chrome only. No deployment or live retest claimed.
+- **Retest (live, 25 Oct 2026):** created a budget named `QA Live <b>check</b> "October"` with notes `Keep <i>text</i> & prints, not HTML.` on https://lumoraphotography.online. The list row showed that text literally, no bold or italic was created, the Budget Details window showed the same text, and the Edit field contained the exact name including quotes and angle brackets. Both test budgets were then deleted through the view-window Delete action; the list returned to its original two budgets. A delete request returned 200, a follow-up refresh showed the row gone.
 
 ### C-30 Filtering forgets the favourite change shown on this page
 
@@ -350,7 +351,7 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** `favoritedStudioIds` was initialized from the page but never updated by the successful toggle. Re-rendered cards read that stale array. The old per-button busy flag also disappeared when filtering replaced the button.
 - **Fix:** successful toggles update the shared favourite IDs and the current matching card's icon. Pending toggles are tracked by studio ID rather than by a replaceable DOM node.
 - **Retest (local Chrome):** double-click sends one request (C-20 regression), Clear All preserves the new heart, reload preserves the saved state, and filtering during a delayed toggle still updates the replacement card and ignores the duplicate click. The test restores the original favourite state.
-- **Live:** not deployed or retested.
+- **Retest (live, 25 Oct 2026):** the client account had no favourites. Clicking the heart on Little Panda Portraits filled it, pressing Clear All kept it filled in the rebuilt card list, and a full page reload still showed it saved with the studio in My Favorites. Clicking the heart again removed it, and after reload no card was filled and My Favorites was gone. Test state fully restored.
 
 ### C-31 Filtered cards put a favourite heart under the next card
 
@@ -443,7 +444,17 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** wrap both recovery pages in the existing `.content-page` layout offset. No sidebar positioning or global styling was changed.
 - **Regression proof:** `PortalLayoutRegressionTest::test_cancellation_recovery_pages_keep_actions_clear_of_the_sidebar` failed before the fix, then passed for both templates.
 - **Retest (local Chrome):** the owner clicked Save refund target normally. The full refund journey then completed through admin recording and customer confirmation. The client replacement layout is covered by the regression test; active replacement acceptance/decline remains on the broader walkthrough checklist.
-- **Live:** not deployed or retested.
+- **Retest (live, 25 Oct 2026):** opened owner recovery record 6. The content area starts exactly where the sidebar ends (240px and 240px), no visible control sat under the Members navigation, and nothing intercepted a click at any button centre. The same record loads for the client at `/client/cancellation-recoveries/6`.
+
+### C-41 Recovery pages show "Default Title" in the browser tab
+
+- **As the studio owner or client:** I have several tabs open. The recovery tab says "Default Title", so I cannot tell which page it is.
+- **Steps to reproduce:** on live, open `/owner/cancellation-recoveries/6` as the owner or `/client/cancellation-recoveries/6` as that booking's client. The heading is correct ("Photographer cancellation recovery" or "Photographer replacement"), but `document.title` is "Default Title", the layout's fallback.
+- **Cause:** both recovery views were the only portal pages that extend a layout and define `@section('content')` without defining `@section('title')`.
+- **Fix:** add `Photographer Cancellation Recovery` and `Photographer Replacement` title sections. No other page changed.
+- **Regression proof:** new `PortalLayoutRegressionTest::test_every_portal_page_sets_its_browser_title` scans every Blade view that extends a layout, and fails with the list of pages that have no title section. It passes after the fix.
+- **Retest (local):** PHPUnit passes. Full suite result recorded with the deployment entry.
+- **Retest (live):** pending deployment of this fix.
 
 ## Previous agent's final full pass (25 Oct 2026)
 
@@ -569,7 +580,21 @@ Deployment source: commit **2ec9e140** was pushed to `main` and Hostinger deploy
 - **C-32:** live old price-filter response could not replace the cleared results. 3 cards remained after the delayed response, with no empty state.
 - **C-33:** live package selection **31** remained selected after the delayed first package response arrived.
 - **Seven-role live sweep:** 74 primary pages loaded after deployment with 0 failures.
-- **Still not live-retested because each needs a write:** C-29 budget creation cleanup, C-30 favourite toggle, C-34 reschedule action, C-35 live recovery target (no safe pending test record was used), C-36 payroll generation, C-38 hardcopy creation. Their local fixes are deployed, but only the local interaction test proves them.
+
+### Live write tests after approval (25 Oct 2026)
+
+The user approved live write tests on seeded accounts with cleanup, no real money and no email.
+
+- **C-29 (live):** created `QA Live <b>check</b> "October"` with `Keep <i>text</i> & prints, not HTML.`. The list, the details window and the edit field all showed the literal text with quotes intact; no formatting was created. The budget and a second delete probe were both deleted; the original two budgets remain.
+- **C-30 (live):** saved Little Panda Portraits, pressed Clear All, the heart stayed filled in the rebuilt list, and a reload kept it in My Favorites. Removing the favourite and reloading returned the account to no favourites.
+- **C-31 (live):** with the rebuilt filtered/cleared card list, the first heart stayed inside its card (0px overflow) and its centre hit the heart itself, not the next card.
+- **C-35 (live):** owner record 6 and the client view of the same record both use the content-page offset. Content begins at 240px, exactly where the sidebar ends; no control was covered and every tested button centre hit its own button.
+- **C-41 (live):** found here. Both recovery pages showed the browser title "Default Title". Fixed and covered by a new scan test; live retest follows deployment.
+- **C-34 (live, blocked):** the only reschedulable-looking live booking, BK-6ADCE2471C46E, reports "This booking can no longer be rescheduled", so the accepted-offer focus path cannot be reached on live data.
+- **C-36 (live, not run):** generating payroll writes permanent payroll records and there is no delete route. Creating them on the live studio would leave real payroll history and could be approved by finance, so it was not done without explicit consent.
+- **C-38 (live, blocked):** the only in-progress live booking already has a client-chosen pending hardcopy order (**Order #9**), which hides the owner quote form. Clearing it would mean cancelling a real client's order, so it was not done.
+
+These three remaining unproven cases are blocked by live data or by an irreversible financial side effect, not by a known defect.
 
 ## Direct Playwright browser walkthrough (user-requested, no shell-run tests)
 
