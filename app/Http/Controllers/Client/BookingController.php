@@ -1109,7 +1109,17 @@ class BookingController extends Controller
             'booking_id' => 'required|exists:tbl_bookings,id',
         ]);
 
-        $booking = BookingModel::with('client')->findOrFail($request->booking_id);
+        // Only the booking's own client may start its payment.
+        $booking = BookingModel::with('client')->where('client_id', Auth::id())->find($request->booking_id);
+        if (! $booking) {
+            return $this->recordNotFound();
+        }
+        if ($booking->status === BookingModel::STATUS_CANCELLED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This booking was cancelled, so it can no longer be paid.',
+            ], 422);
+        }
         
         // Get the pending payment (either for initial or balance payment)
         $payment = $booking->payments()->where('status', 'pending')->latest()->first();

@@ -23,6 +23,7 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-11 | Client booking form | Every time I change the start time, an error pops up: "Failed to check availability. Please try again." | Fixed |
 | C-12 | Client booking form, rescheduling | I can book an in-studio session at 7:00 AM, or one ending at 7:00 PM, although the studio is open 9 to 6. | Fixed |
 | C-13 | Client booking form | When I change the time quickly (or my connection is slow), the availability status can show the answer for the time I picked before. | Fixed |
+| C-14 | Client, My Bookings | If I leave checkout (press Cancel at "Confirm Payment", close the Stripe tab, or my card fails), I can't pay for the booking afterwards; it just sits "pending" for 48 hours. | Fixed |
 
 ### C-01 Theme settings pictures are broken
 
@@ -135,3 +136,13 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Cause:** every reply updated the status, whatever order replies came back in.
 - **Fix:** each check gets a number, and only the reply to the latest check may change the page. Choosing a closed day, clearing the date, or an end before the start also discards checks still in flight.
 - **Retest (local):** with the 07:00 reply held back 3 seconds, the page ends on "Available (0/3 bookings)" for 10:00–13:00 with no pop-up. Live: pending.
+
+### C-14 No way to finish paying after leaving checkout
+
+- **As the client:** on the booking summary I press Proceed to Payment, then Cancel at "Confirm Payment: Are you sure you want to proceed to payment?" (or I close the Stripe page). The booking is already saved as pending. My Bookings shows only View Details and Cancel Booking, so I can't pay; the booking blocks the slot until it expires after 48 hours.
+- **Steps to reproduce:** as Beatriz, book Quarry Road (Wedding, first package, 11 Nov 2026 10:00), press Proceed to Payment, then Cancel. Booking `BK-6ADD9A0FD3B8D` stays `pending` with a pending ₱2,370 payment and no pay button.
+- **Cause:** the booking is saved before payment starts, and only partially paid confirmed bookings had a pay button (Pay Balance).
+- **Fix:** My Bookings shows a **Complete payment** button for a pending booking with nothing paid and a pending payment. It asks "Pay ₱2,370.00 now to confirm booking …? Unpaid bookings are cancelled after 48 hours." and starts the existing Stripe checkout.
+- **Also fixed:** `BookingController::initializePayment` accepted any booking id. It now only starts a payment for the logged-in client's own booking (404 otherwise) and refuses a cancelled booking ("This booking was cancelled, so it can no longer be paid.").
+- **Test:** `tests/Feature/Booking/ResumeBookingPaymentTest.php` (another client gets 404; the owner of the booking gets the checkout link; a cancelled booking is refused). It failed before the fix.
+- **Retest (local):** My Bookings showed Complete payment for `BK-6ADD9A0FD3B8D`. Pay now → Stripe test checkout with card 4242 4242 4242 4242 → "Payment Successful! Your booking has been confirmed", amount paid ₱2,370.00. The booking is `confirmed`, `partially_paid`, one succeeded payment, ₱5,530 remaining. Reloading the success page did not add a payment. Live: pending.

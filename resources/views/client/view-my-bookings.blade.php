@@ -148,6 +148,18 @@
                                                         @endif
                                                     @endif
                                                     
+                                                    {{-- Unpaid booking: the client left checkout (Cancel, closed tab, failed card). Let them finish paying. --}}
+                                                    @if($booking->status === 'pending' && $booking->payments->where('status', 'succeeded')->isEmpty() && $booking->payments->where('status', 'pending')->isNotEmpty())
+                                                        <button class="btn btn-sm pay-now-btn"
+                                                                data-booking-id="{{ $booking->id }}"
+                                                                data-booking-reference="{{ $booking->booking_reference }}"
+                                                                data-amount="{{ number_format((float) $booking->payments->where('status', 'pending')->sortByDesc('id')->first()->amount, 2) }}"
+                                                                title="Complete payment"
+                                                                aria-label="Complete payment for {{ $booking->booking_reference }}">
+                                                            <i class="ti ti-credit-card fs-lg"></i>
+                                                        </button>
+                                                    @endif
+
                                                     @if(in_array($booking->status, ['pending', 'confirmed', 'in_progress']))
                                                     <button class="btn btn-sm cancel-booking-btn" 
                                                             data-booking-id="{{ $booking->id }}"
@@ -308,6 +320,26 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         cancelBooking(bookingId, $('#cancellationReason').val());
+                    }
+                });
+            });
+
+            // Complete payment for a booking whose checkout was left unfinished
+            $(document).on('click', '.pay-now-btn', function() {
+                const bookingId = $(this).data('booking-id');
+                const reference = $(this).data('booking-reference');
+                const amount = $(this).data('amount');
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Complete payment',
+                    text: `Pay ₱${amount} now to confirm booking ${reference}? Unpaid bookings are cancelled after 48 hours.`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Pay now',
+                    cancelButtonText: 'Not now',
+                    confirmButtonColor: '#3475db'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        proceedWithBalancePayment(bookingId);
                     }
                 });
             });
