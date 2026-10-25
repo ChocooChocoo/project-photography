@@ -194,7 +194,12 @@
                                     <div class="col-12 col-md-6 mb-3">
                                         <label class="form-label">Barangay</label>
                                         <select class="form-control" id="barangaySelect" name="barangay" required>
-                                            <option value="">Select municipality first</option>
+                                            {{-- Start with the saved value so an early Update still sends it. --}}
+                                            @if ($studio->barangay)
+                                                <option value="{{ $studio->barangay }}" selected>{{ $studio->barangay }}</option>
+                                            @else
+                                                <option value="">Select municipality first</option>
+                                            @endif
                                         </select>
                                         <div class="invalid-feedback">
                                             Please select your barangay.
@@ -203,7 +208,10 @@
 
                                     <div class="col-12 col-md-6 mb-3">
                                         <label class="form-label">ZIP Code</label>
-                                        <input type="text" class="form-control" id="zipCodeInput" placeholder="ZIP code will auto-fill" name="zip_code_display" readonly required>
+                                        <input type="text" class="form-control" id="zipCodeInput" placeholder="ZIP code will auto-fill" name="zip_code_display" value="{{ $studio->location?->zip_code }}" readonly required>
+                                        @if ($studio->location?->zip_code)
+                                            <input type="hidden" id="hiddenZipCode" name="zip_code" value="{{ $studio->location?->zip_code }}">
+                                        @endif
                                         <div class="invalid-feedback">
                                             Please wait for the ZIP code to load.
                                         </div>
@@ -616,7 +624,7 @@
 
             // Store current values for dynamic loading
             const currentMunicipality = $('#municipalitySelect').val();
-            const currentBarangay = '{{ $studio->barangay }}';
+            const currentBarangay = @json($studio->barangay);
             
             // If there's a current municipality, load barangays
             if (currentMunicipality) {
@@ -639,9 +647,12 @@
                     return;
                 }
                 
-                // Show loading
-                barangaySelect.prop('disabled', true).html('<option value="">Loading barangays...</option>');
-                zipCodeInput.val('Loading...');
+                // Show loading. On page load keep the saved barangay and ZIP code
+                // selected, so an early Update still sends them.
+                if (!selectedBarangay) {
+                    barangaySelect.prop('disabled', true).html('<option value="">Loading barangays...</option>');
+                    zipCodeInput.val('Loading...');
+                }
                 
                 // Fetch barangays and zip code
                 $.ajax({
