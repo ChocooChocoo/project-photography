@@ -84,6 +84,22 @@ class PackageCreateAccessTest extends TestCase
         $this->assertSame(0, PackagesModel::count());
     }
 
+    public function test_owner_cannot_skip_the_subscription_check_by_sending_type_freelancer(): void
+    {
+        // Only client bookings of a freelancer skip the studio plan check.
+        $old = $this->createStudio('Old Studio');
+        $this->subscribe($old);
+        $new = $this->createStudio('New Studio');
+        $this->grantPackages([$old, $new]);
+
+        $this->actingAs($this->owner)
+            ->postJson(route('owner.packages.store'), $this->payload($new, ['type' => 'freelancer']))
+            ->assertForbidden()
+            ->assertJsonPath('message', 'An active subscription or grace period is required for this studio.');
+
+        $this->assertSame(0, PackagesModel::count());
+    }
+
     public function test_subscribed_new_studio_with_no_photographers_can_save_a_package(): void
     {
         $old = $this->createStudio('Old Studio');
@@ -98,6 +114,37 @@ class PackageCreateAccessTest extends TestCase
             ->assertJsonPath('success', true);
 
         $this->assertSame($new->id, (int) PackagesModel::firstOrFail()->studio_id);
+    }
+
+    public function test_on_location_coverage_scope_is_stored_as_a_json_list(): void
+    {
+        // Panel re-test S06: tbl_packages.coverage_scope is a JSON column, and MariaDB
+        // refused the plain text "Cavite" with a 500. SQLite does not check JSON, so
+        // the test reads the raw stored value.
+        $studio = $this->createStudio('Coverage Studio');
+        $this->subscribe($studio);
+        $this->grantPackages([$studio]);
+        $onLocation = ['package_location' => ['On-Location'], 'coverage_scope' => ' Cavite, Laguna ,, '];
+
+        $this->actingAs($this->owner)
+            ->postJson(route('owner.packages.store'), $this->payload($studio, $onLocation))
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $package = PackagesModel::firstOrFail();
+        $this->assertSame('["Cavite","Laguna"]', $package->getRawOriginal('coverage_scope'));
+
+        // The edit form shows the list as typed text, and saving it again keeps it.
+        $this->get(route('owner.packages.edit', $package->id))
+            ->assertOk()
+            ->assertSee('value="Cavite, Laguna"', false);
+
+        $this->putJson(route('owner.packages.update', $package->id), $this->payload($studio, [
+            'package_location' => ['On-Location'],
+            'coverage_scope' => 'Cavite, Laguna, Batangas',
+        ]))->assertOk();
+
+        $this->assertSame('["Cavite","Laguna","Batangas"]', $package->fresh()->getRawOriginal('coverage_scope'));
     }
 
     public function test_create_page_stays_closed_when_no_owned_studio_has_a_subscription(): void

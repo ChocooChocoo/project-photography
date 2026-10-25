@@ -186,7 +186,7 @@
 
                                     <div class="col-12 mb-3" id="coverageScopeField" style="display: none;">
                                         <label class="form-label">Coverage Scope <span class="text-danger" id="coverageRequired">*</span></label>
-                                        <input type="text" class="form-control" name="coverage_scope" value="{{ $package->coverage_scope }}"
+                                        <input type="text" class="form-control" name="coverage_scope" value="{{ $package->coverageScopeText() }}"
                                             placeholder="Enter coverage scope (e.g., Metro Manila, Luzon)">
                                         <div class="invalid-feedback">Please enter coverage scope for on-location sessions.</div>
                                     </div>

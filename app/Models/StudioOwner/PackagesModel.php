@@ -3,6 +3,7 @@
 namespace App\Models\StudioOwner;
 
 use App\Models\Concerns\HasEditingOptions;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -71,6 +72,37 @@ class PackagesModel extends Model
         'enhanced_photos_price' => 'decimal:2',
         'editing_prices' => 'array',
     ];
+
+    /**
+     * coverage_scope is a JSON column (MariaDB rejects plain text there), and the
+     * stored rows hold a list such as ["Cavite","Laguna"]. The form sends typed
+     * text such as "Cavite, Laguna", so save it as that list.
+     */
+    protected function coverageScope(): Attribute
+    {
+        return Attribute::make(set: fn ($value) => ($areas = self::coverageAreas($value)) ? json_encode($areas) : null);
+    }
+
+    /**
+     * The coverage areas as typed text, for the edit form.
+     */
+    public function coverageScopeText(): string
+    {
+        return implode(', ', self::coverageAreas($this->getRawOriginal('coverage_scope')));
+    }
+
+    private static function coverageAreas($value): array
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = is_array($decoded) ? $decoded : explode(',', $value);
+        }
+
+        return array_values(array_filter(array_map(
+            fn ($area) => is_scalar($area) ? trim((string) $area) : '',
+            (array) $value
+        ), 'strlen'));
+    }
 
     /**
      * Get the studio that owns the package.

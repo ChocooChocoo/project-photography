@@ -30,7 +30,9 @@ class EnforceStudioSubscriptionAccess
         // A role row has no studio column, so a role write cannot name one
         // studio. Keep role, permission, and user role writes exempt or the
         // gate sends a multi studio owner to a 403 on save.
-        if ($request->input('type') === 'freelancer'
+        // A client booking a freelancer has no studio plan to check. Staff
+        // routes must not skip the check by adding type=freelancer.
+        if (($request->input('type') === 'freelancer' && str_starts_with($routeName, 'client.bookings.'))
             || str_starts_with($routeName, 'owner.subscription.')
             || str_starts_with($routeName, 'owner.role.')
             || str_starts_with($routeName, 'owner.permission.')
