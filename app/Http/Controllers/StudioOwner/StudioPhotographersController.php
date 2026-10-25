@@ -135,7 +135,7 @@ class StudioPhotographersController extends Controller
                 ->first();
             
             if (!$primaryService) {
-                throw new \Exception('No services found for the selected category.');
+                throw new \DomainException('There is no service in this category yet. Add one under Services first, then add the photographer.');
             }
             
             // Get studio info for email
@@ -180,6 +180,9 @@ class StudioPhotographersController extends Controller
                 ]
             ]);
             
+        } catch (\DomainException $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         } catch (\Exception $e) {
             DB::rollBack();
             

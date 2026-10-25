@@ -111,6 +111,50 @@ class EmployeeProvisioningTest extends TestCase
         $this->assertTrue($employee->must_change_password);
     }
 
+    public function test_hr_adding_a_photographer_for_a_category_without_a_service_says_what_to_do(): void
+    {
+        // Client test C-22: this answered 500 "Failed to create employee: No services
+        // found for the selected category.", which the live site shows as "Something went wrong".
+        Mail::fake();
+        config(['app.debug' => false]);
+        if (! Schema::hasTable('tbl_categories')) {
+            Schema::create('tbl_categories', function (Blueprint $table) {
+                $table->id();
+                $table->string('category_name');
+                $table->string('status')->default('active');
+                $table->timestamps();
+            });
+        }
+        if (! Schema::hasTable('tbl_services')) {
+            Schema::create('tbl_services', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('studio_id');
+                $table->unsignedBigInteger('category_id');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        $categoryId = \Illuminate\Support\Facades\DB::table('tbl_categories')->insertGetId(['category_name' => 'Food Photography', 'status' => 'active']);
+
+        $owner = $this->createUser('owner', 'owner@example.com');
+        $studio = StudiosModel::create(['user_id' => $owner->id, 'studio_name' => 'Test Studio', 'status' => 'verified']);
+        $this->createSubscription($studio);
+        $hr = $this->createUser('studio-hr', 'hr@example.com');
+        $this->grantPermission($hr, 'studio-hr', 'create_employee', $studio->id);
+        $role = RoleModel::create(['name' => 'studio-photographer', 'portal' => 'studio-photographer', 'status' => 'active']);
+
+        $this->actingAs($hr)->postJson(route('studio-hr.employee.store'), [
+            'studio_id' => $studio->id, 'first_name' => 'Pedro', 'last_name' => 'Cruz', 'email' => 'pedro.cruz@example.com',
+            'mobile_number' => '09170000001', 'role_id' => $role->id, 'status' => 'active',
+            'position' => 'Photographer', 'specialization' => $categoryId, 'years_experience' => 3,
+            'operating_days' => ['monday', 'tuesday'], 'start_time' => '09:00', 'end_time' => '18:00',
+        ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'There is no service in this category yet. Add one under Services first, then add the photographer.');
+
+        $this->assertDatabaseMissing('tbl_users', ['email' => 'pedro.cruz@example.com']);
+    }
+
     public function test_owner_destroy_soft_deletes_employee(): void
     {
         $owner = $this->createUser('owner', 'owner@example.com');

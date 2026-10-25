@@ -31,6 +31,7 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-19 | Messages (all roles) | Sending a message of only spaces shows "The body field is required." under the box. | Fixed |
 | C-20 | Client dashboard, favourites | Double-clicking the heart on a studio sends two toggles, so it ends up not favourited (or shows "Failed to update favorite."). | Fixed |
 | C-21 | Reviews, gallery uploads, booking status and assignment, payments | When I make a mistake (a short review, a non-image photo, no rating), the live site says only "Something went wrong" instead of what to fix. | Fixed |
+| C-22 | HR and owner: add employee / add studio photographer | Adding a photographer whose specialisation has no service yet says only "Something went wrong". | Fixed |
 
 ### C-01 Theme settings pictures are broken
 
@@ -215,3 +216,13 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** each of those catch-alls now lets a `ValidationException` through first, so Laravel answers 422 with the field errors. Reviewing your own booking before it is completed now says "You can leave a review once the booking is completed." instead of "not found". `SecurityRegressionTest` now expects 422 for non-image and oversized gallery uploads.
 - **Test:** `ReviewLifecycleTest::test_review_mistakes_get_their_reason_not_a_server_error` (debug off; failed before).
 - **Retest (local):** rating 0 → 422 "The rating field must be at least 1."; a two-letter review → 422 "The review text field must be at least 10 characters."; booking 63 (not completed) → 422 "You can leave a review once the booking is completed."; another client's booking → 404. Full suite 757 passed. Live: pending.
+
+### C-22 Adding a photographer for a category with no service says "Something went wrong"
+
+- **As the client (HR or owner):** I add a new photographer and pick "Food Photography" as the specialisation. The list offers every category, but the studio only has services in three of them, and I get a generic error.
+- **Steps to reproduce:** as HR, on `/studio-hr/create/employee` choose Quarry Road, role Photographer and a specialisation with no service in that studio. The server threw `\Exception('No services found for the selected category.')`, which the catch-all returned as 500 "Failed to create employee: …"; on live that becomes "Something went wrong."
+- **Cause:** the rule was thrown as a plain `Exception` and answered as a server error, in `StudioHR\EmployeeController`, `StudioOwner\EmployeeController` and `StudioOwner\StudioPhotographersController`.
+- **Fix:** all three throw a `DomainException`, and their `store()` rolls back and answers 422: "There is no service in this category yet. Add one under Services first, then add the photographer."
+- **Also checked (no issue):** error pop-ups on this form show the server's message (for example "Your Studio Growth Annual plan allows up to 5 staff and this studio has reached it. …"). "Failed to load permissions." found by the crawl is text inside a script, not on the page.
+- **Test:** `EmployeeProvisioningTest::test_hr_adding_a_photographer_for_a_category_without_a_service_says_what_to_do` (debug off; failed before). In the local browser the same form stops earlier at Quarry Road's plan staff limit, which is the intended rule.
+- **Retest (local):** test passes; full suite passes. Live: pending.

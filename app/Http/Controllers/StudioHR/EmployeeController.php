@@ -283,6 +283,9 @@ class EmployeeController extends Controller
                 \Illuminate\Support\Facades\DB::rollBack();
             }
             return $this->recordNotFound();
+        } catch (\DomainException $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         } catch (\Exception $e) {
             DB::rollBack();
             
@@ -849,7 +852,7 @@ class EmployeeController extends Controller
             ->first();
         
         if (!$primaryService) {
-            throw new \Exception('No services found for the selected category.');
+            throw new \DomainException('There is no service in this category yet. Add one under Services first, then add the photographer.');
         }
         
         return StudioPhotographersModel::create([
