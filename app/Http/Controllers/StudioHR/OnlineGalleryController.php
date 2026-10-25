@@ -111,6 +111,8 @@ class OnlineGalleryController extends Controller
                 'gallery' => $gallery,
                 'has_gallery' => $gallery ? true : false,
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return $this->errorResponse('Error fetching gallery details: '.$e->getMessage(), 500);
         }

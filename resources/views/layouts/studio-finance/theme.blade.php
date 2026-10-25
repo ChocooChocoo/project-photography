@@ -1,6 +1,6 @@
 <!-- Theme Settings -->
 <div class="offcanvas offcanvas-end overflow-hidden" tabindex="-1" id="theme-settings-offcanvas">
-    <div class="d-flex justify-content-between text-bg-primary gap-2 p-3" style="background-image: url(assets/images/user-bg-pattern.png);">
+    <div class="d-flex justify-content-between text-bg-primary gap-2 p-3" style="background-image: url({{ asset('assets/images/user-bg-pattern.png') }});">
         <div>
             <h5 class="mb-1 fw-bold text-white text-uppercase">Finance Customizer</h5>
             <p class="text-white text-opacity-75 fst-italic fw-medium mb-0">Easily configure layout, styles, and preferences for your finance interface.</p>
@@ -19,7 +19,7 @@
                     <div class="form-check card-radio shadow">
                         <input class="form-check-input" type="radio" name="data-skin" id="demo-skin-default" value="default">
                         <label class="form-check-label p-0 w-100" for="demo-skin-default">
-                            <img src="assets/images/layouts/themes/theme-default.png" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/themes/theme-default.png') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="text-center text-muted mt-2 mb-0">Default</h5>
@@ -29,7 +29,7 @@
                     <div class="form-check card-radio shadow">
                         <input class="form-check-input" type="radio" name="data-skin" id="demo-skin-material" value="material">
                         <label class="form-check-label p-0 w-100" for="demo-skin-material">
-                            <img src="assets/images/layouts/themes/theme-material.png" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/themes/theme-material.png') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="text-center text-muted mt-2 mb-0">Material</h5>
@@ -39,7 +39,7 @@
                     <div class="form-check card-radio shadow">
                         <input class="form-check-input" type="radio" name="data-skin" id="demo-skin-modern" value="modern">
                         <label class="form-check-label p-0 w-100" for="demo-skin-modern">
-                            <img src="assets/images/layouts/themes/theme-modern.png" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/themes/theme-modern.png') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="text-center text-muted mt-2 mb-0">Modern</h5>
@@ -49,7 +49,7 @@
                     <div class="form-check card-radio shadow">
                         <input class="form-check-input" type="radio" name="data-skin" id="demo-skin-saas" value="saas">
                         <label class="form-check-label p-0 w-100" for="demo-skin-saas">
-                            <img src="assets/images/layouts/themes/theme-saas.png" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/themes/theme-saas.png') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="text-center text-muted mt-2 mb-0">SaaS</h5>
@@ -59,7 +59,7 @@
                     <div class="form-check card-radio shadow">
                         <input class="form-check-input" type="radio" name="data-skin" id="demo-skin-flat" value="flat">
                         <label class="form-check-label p-0 w-100" for="demo-skin-flat">
-                            <img src="assets/images/layouts/themes/theme-flat.png" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/themes/theme-flat.png') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="text-center text-muted mt-2 mb-0">Flat</h5>
@@ -69,7 +69,7 @@
                     <div class="form-check card-radio shadow">
                         <input class="form-check-input" type="radio" name="data-skin" id="demo-skin-minimal" value="minimal">
                         <label class="form-check-label p-0 w-100" for="demo-skin-minimal">
-                            <img src="assets/images/layouts/themes/theme-minimal.png" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/themes/theme-minimal.png') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="text-center text-muted mt-2 mb-0">Minimal</h5>
@@ -84,7 +84,7 @@
                     <div class="form-check card-radio">
                         <input class="form-check-input" type="radio" name="data-bs-theme" id="layout-color-light" value="light">
                         <label class="form-check-label p-0 w-100" for="layout-color-light">
-                            <img src="assets/images/layouts/light.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/light.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="text-center text-muted mt-2 mb-0">Light</h5>
@@ -94,7 +94,7 @@
                     <div class="form-check card-radio">
                         <input class="form-check-input" type="radio" name="data-bs-theme" id="layout-color-dark" value="dark">
                         <label class="form-check-label p-0 w-100" for="layout-color-dark">
-                            <img src="assets/images/layouts/dark.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/dark.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="text-center text-muted mt-2 mb-0">Dark</h5>
@@ -104,7 +104,7 @@
                     <div class="form-check card-radio">
                         <input class="form-check-input" type="radio" name="data-bs-theme" id="layout-color-system" value="system">
                         <label class="form-check-label p-0 w-100" for="layout-color-system">
-                            <img src="assets/images/layouts/system.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/system.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="text-center text-muted mt-2 mb-0">System</h5>
@@ -120,7 +120,7 @@
                     <div class="form-check card-radio">
                         <input class="form-check-input" type="radio" name="data-topbar-color" id="topbar-color-light" value="light">
                         <label class="form-check-label p-0 w-100" for="topbar-color-light">
-                            <img src="assets/images/layouts/topbar-light.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/topbar-light.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="text-center text-muted mt-2 mb-0">Light</h5>
@@ -130,7 +130,7 @@
                     <div class="form-check card-radio">
                         <input class="form-check-input" type="radio" name="data-topbar-color" id="topbar-color-dark" value="dark">
                         <label class="form-check-label p-0 w-100" for="topbar-color-dark">
-                            <img src="assets/images/layouts/topbar-dark.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/topbar-dark.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="fs-sm text-center text-muted mt-2 mb-0">Dark</h5>
@@ -140,7 +140,7 @@
                     <div class="form-check card-radio">
                         <input class="form-check-input" type="radio" name="data-topbar-color" id="topbar-color-gray" value="gray">
                         <label class="form-check-label p-0 w-100" for="topbar-color-gray">
-                            <img src="assets/images/layouts/topbar-gray.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/topbar-gray.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="fs-sm text-center text-muted mt-2 mb-0">Gray</h5>
@@ -150,7 +150,7 @@
                     <div class="form-check card-radio">
                         <input class="form-check-input" type="radio" name="data-topbar-color" id="topbar-color-gradient" value="gradient">
                         <label class="form-check-label p-0 w-100" for="topbar-color-gradient">
-                            <img src="assets/images/layouts/topbar-gradient.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/topbar-gradient.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="fs-sm text-center text-muted mt-2 mb-0">Gradient</h5>
@@ -166,7 +166,7 @@
                     <div class="form-check sidebar-setting card-radio">
                         <input class="form-check-input" type="radio" name="data-menu-color" id="sidenav-color-light" value="light">
                         <label class="form-check-label p-0 w-100" for="sidenav-color-light">
-                            <img src="assets/images/layouts/light.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/light.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="fs-sm text-center text-muted mt-2 mb-0">Light</h5>
@@ -176,7 +176,7 @@
                     <div class="form-check sidebar-setting card-radio">
                         <input class="form-check-input" type="radio" name="data-menu-color" id="sidenav-color-dark" value="dark">
                         <label class="form-check-label p-0 w-100" for="sidenav-color-dark">
-                            <img src="assets/images/layouts/side-dark.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/side-dark.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="fs-sm text-center text-muted mt-2 mb-0">Dark</h5>
@@ -186,7 +186,7 @@
                     <div class="form-check sidebar-setting card-radio">
                         <input class="form-check-input" type="radio" name="data-menu-color" id="sidenav-color-gray" value="gray">
                         <label class="form-check-label p-0 w-100" for="sidenav-color-gray">
-                            <img src="assets/images/layouts/side-gray.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/side-gray.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="fs-sm text-center text-muted mt-2 mb-0">Gray</h5>
@@ -196,7 +196,7 @@
                     <div class="form-check sidebar-setting card-radio">
                         <input class="form-check-input" type="radio" name="data-menu-color" id="sidenav-color-gradient" value="gradient">
                         <label class="form-check-label p-0 w-100" for="sidenav-color-gradient">
-                            <img src="assets/images/layouts/side-gradient.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/side-gradient.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="fs-sm text-center text-muted mt-2 mb-0">Gradient</h5>
@@ -205,7 +205,7 @@
                     <div class="form-check sidebar-setting card-radio">
                         <input class="form-check-input" type="radio" name="data-menu-color" id="sidenav-color-image" value="image">
                         <label class="form-check-label p-0 w-100" for="sidenav-color-image">
-                            <img src="assets/images/layouts/side-image.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/side-image.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="fs-sm text-center text-muted mt-2 mb-0">Image</h5>
@@ -221,7 +221,7 @@
                     <div class="form-check sidebar-setting card-radio">
                         <input class="form-check-input" type="radio" name="data-sidenav-size" id="sidenav-size-default" value="default">
                         <label class="form-check-label p-0 w-100" for="sidenav-size-default">
-                            <img src="assets/images/layouts/light.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/light.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="mb-0 text-center text-muted mt-2">Default</h5>
@@ -231,7 +231,7 @@
                     <div class="form-check sidebar-setting card-radio">
                         <input class="form-check-input" type="radio" name="data-sidenav-size" id="sidenav-size-compact" value="compact">
                         <label class="form-check-label p-0 w-100" for="sidenav-size-compact">
-                            <img src="assets/images/layouts/sidebar-compact.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/sidebar-compact.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="mb-0 text-center text-muted mt-2">Compact</h5>
@@ -241,7 +241,7 @@
                     <div class="form-check sidebar-setting card-radio">
                         <input class="form-check-input" type="radio" name="data-sidenav-size" id="sidenav-size-small" value="condensed">
                         <label class="form-check-label p-0 w-100" for="sidenav-size-small">
-                            <img src="assets/images/layouts/sidebar-sm.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/sidebar-sm.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="mb-0 text-center text-muted mt-2">Condensed</h5>
@@ -251,7 +251,7 @@
                     <div class="form-check sidebar-setting card-radio">
                         <input class="form-check-input" type="radio" name="data-sidenav-size" id="sidenav-size-small-hover" value="on-hover">
                         <label class="form-check-label p-0 w-100" for="sidenav-size-small-hover">
-                            <img src="assets/images/layouts/sidebar-sm.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/sidebar-sm.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="mb-0 text-center text-muted mt-2">On Hover</h5>
@@ -261,7 +261,7 @@
                     <div class="form-check sidebar-setting card-radio">
                         <input class="form-check-input" type="radio" name="data-sidenav-size" id="sidenav-size-small-hover-active" value="on-hover-active">
                         <label class="form-check-label p-0 w-100" for="sidenav-size-small-hover-active">
-                            <img src="assets/images/layouts/light.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/light.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="mb-0 fs-base text-center text-muted mt-2">On Hover - Show</h5>
@@ -271,7 +271,7 @@
                     <div class="form-check sidebar-setting card-radio">
                         <input class="form-check-input" type="radio" name="data-sidenav-size" id="sidenav-size-offcanvas" value="offcanvas">
                         <label class="form-check-label p-0 w-100" for="sidenav-size-offcanvas">
-                            <img src="assets/images/layouts/sidebar-full.svg" alt="layout-img" class="img-fluid">
+                            <img src="{{ asset('assets/images/layouts/sidebar-full.svg') }}" alt="layout-img" class="img-fluid">
                         </label>
                     </div>
                     <h5 class="mb-0 text-center text-muted mt-2">Offcanvas</h5>

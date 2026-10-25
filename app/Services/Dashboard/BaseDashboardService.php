@@ -18,13 +18,11 @@ abstract class BaseDashboardService
      */
     protected function resolveFilters(array $input): array
     {
-        $startDate = isset($input['start_date']) && !empty($input['start_date'])
-            ? Carbon::parse($input['start_date'])->startOfDay()
-            : now()->subDays(29)->startOfDay();
+        $startDate = $this->parseDate($input['start_date'] ?? null)?->startOfDay()
+            ?? now()->subDays(29)->startOfDay();
 
-        $endDate = isset($input['end_date']) && !empty($input['end_date'])
-            ? Carbon::parse($input['end_date'])->endOfDay()
-            : now()->endOfDay();
+        $endDate = $this->parseDate($input['end_date'] ?? null)?->endOfDay()
+            ?? now()->endOfDay();
 
         if ($startDate->greaterThan($endDate)) {
             [$startDate, $endDate] = [$endDate->copy()->startOfDay(), $startDate->copy()->endOfDay()];
@@ -35,6 +33,22 @@ abstract class BaseDashboardService
             'end_date' => $endDate->toDateString(),
             'label' => $startDate->format('M d, Y') . ' - ' . $endDate->format('M d, Y'),
         ];
+    }
+
+    /**
+     * A filter or export link can carry any text; an unreadable date uses the default.
+     */
+    private function parseDate(mixed $value): ?Carbon
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (\Carbon\Exceptions\InvalidFormatException) {
+            return null;
+        }
     }
 
     /**

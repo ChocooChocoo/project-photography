@@ -162,6 +162,8 @@ class LeaveRequestController extends Controller
                 'message' => 'Leave request details loaded successfully.',
                 'data' => $this->buildOwnLeaveRequestPayload($leaveRequest),
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to load HR leave request details.', [
                 'exception' => $exception,
@@ -381,6 +383,8 @@ class LeaveRequestController extends Controller
                 'message' => 'Employee leave request details loaded successfully.',
                 'data' => $this->buildEmployeeLeaveRequestPayload($leaveRequest),
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to load employee leave request details.', [
                 'exception' => $exception,

@@ -71,6 +71,8 @@ class LeaveRequestController extends Controller
                 'message' => 'HR leave request details loaded successfully.',
                 'data' => $this->buildHrLeaveRequestPayload($leaveRequest),
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to load HR leave request details for Studio Owner.', [
                 'exception' => $exception,

@@ -204,6 +204,8 @@ class MyBookingsController extends Controller
                     'remaining_balance' => $remainingBalance,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -474,6 +476,8 @@ class MyBookingsController extends Controller
                 'has_pending_payment' => $pendingPayment ? true : false,
                 'pending_payment_id' => $pendingPayment ? $pendingPayment->id : null,
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

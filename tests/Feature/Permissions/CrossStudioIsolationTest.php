@@ -98,8 +98,8 @@ class CrossStudioIsolationTest extends TestCase
 
         $this->actingAs($finA)
             ->getJson("/_test/finance/payrolls/{$payrollB->id}")
-            ->assertStatus(500)
-            ->assertJsonPath('status', 'error');
+            ->assertNotFound()
+            ->assertJsonPath('message', 'This record was not found. It may have been removed.');
     }
 
     public function test_photographer_cannot_access_other_photographers_assignment(): void
@@ -139,7 +139,7 @@ class CrossStudioIsolationTest extends TestCase
 
         $this->actingAs($photographerA)
             ->getJson("/_test/photographer/assignments/{$assignmentB->id}")
-            ->assertStatus(500)
+            ->assertNotFound()
             ->assertJsonPath('success', false);
     }
 

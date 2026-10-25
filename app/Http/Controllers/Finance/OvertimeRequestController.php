@@ -154,6 +154,8 @@ class OvertimeRequestController extends Controller
                 'message' => 'Overtime request details loaded successfully.',
                 'data' => $this->buildOwnOvertimeRequestPayload($overtimeRequest),
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to load finance overtime request details.', [
                 'exception' => $exception,

@@ -89,15 +89,6 @@ class LocationController extends Controller
     }
 
     /**
-     * Show the form for editing the specified location.
-     */
-    public function edit($id)
-    {
-        $location = LocationModel::findOrFail($id);
-        return view('admin.edit-locations', compact('location'));
-    }
-
-    /**
      * Update the specified location in storage.
      */
     public function update(Request $request, $id): JsonResponse

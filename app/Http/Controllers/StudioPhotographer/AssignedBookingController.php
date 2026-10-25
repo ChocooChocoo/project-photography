@@ -105,6 +105,8 @@ class AssignedBookingController extends Controller
                 // ========== End of payment info ==========
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

@@ -134,6 +134,8 @@ class PayrollApprovalController extends Controller
                     'can_reject' => $this->hasPayrollPermission($financeUser, 'reject') && $generatedPayroll->status !== 'approved',
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to load finance payroll approval details.', [
                 'exception' => $exception,

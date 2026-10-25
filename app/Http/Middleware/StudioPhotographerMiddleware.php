@@ -22,9 +22,15 @@ class StudioPhotographerMiddleware
 
         $response = $next($request);
 
-        return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-                        ->header('Pragma', 'no-cache')
-                        ->header('Expires', '0');
+        // headers->add() works for every response type; ->header() is missing on
+        // streamed and file downloads, which crashed Dashboard Export.
+        $response->headers->add([
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+
+        return $response;
     }
 
     private function handleUnauthorized(Request $request)

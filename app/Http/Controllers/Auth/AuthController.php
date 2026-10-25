@@ -122,6 +122,8 @@ class AuthController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            report($e);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Registration failed. Please try again.',
@@ -192,6 +194,8 @@ class AuthController extends Controller
             ], 401);
             
         } catch (\Exception $e) {
+            report($e);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Login failed. Please try again.',

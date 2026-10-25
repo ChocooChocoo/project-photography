@@ -367,6 +367,8 @@ class PayrollSettingsController extends Controller
                 'data' => $data
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             Log::error('Failed to load payroll settings: ' . $e->getMessage());
 

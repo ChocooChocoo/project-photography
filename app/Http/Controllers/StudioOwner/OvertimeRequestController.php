@@ -71,6 +71,8 @@ class OvertimeRequestController extends Controller
                 'message' => 'HR overtime request details loaded successfully.',
                 'data' => $this->buildHrOvertimeRequestPayload($overtimeRequest),
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to load HR overtime request details for Studio Owner.', [
                 'exception' => $exception,

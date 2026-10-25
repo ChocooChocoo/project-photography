@@ -392,6 +392,8 @@ class GeneratePayrollController extends Controller
                     'rejection_reason' => $generatedPayroll->rejection_reason ?: 'No rejection reason provided.',
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to load generated payroll details.', [
                 'exception' => $exception,

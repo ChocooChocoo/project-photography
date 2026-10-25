@@ -395,6 +395,8 @@ class ChatbotConfigController extends Controller
                 'conversation' => $conversation,
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             \Log::error('Error fetching conversation details: '.$e->getMessage());
 
@@ -442,6 +444,8 @@ class ChatbotConfigController extends Controller
                 'intent' => $intent,
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             \Log::error('Error fetching intent: '.$e->getMessage());
 

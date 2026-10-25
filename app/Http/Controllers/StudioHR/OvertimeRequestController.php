@@ -156,6 +156,8 @@ class OvertimeRequestController extends Controller
                 'message' => 'Overtime request details loaded successfully.',
                 'data' => $this->buildOwnOvertimeRequestPayload($overtimeRequest),
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to load HR overtime request details.', [
                 'exception' => $exception,
@@ -375,6 +377,8 @@ class OvertimeRequestController extends Controller
                 'message' => 'Employee overtime request details loaded successfully.',
                 'data' => $this->buildEmployeeOvertimeRequestPayload($overtimeRequest),
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to load employee overtime request details.', [
                 'exception' => $exception,

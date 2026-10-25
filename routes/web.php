@@ -144,7 +144,6 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/create/location', [\App\Http\Controllers\Admin\LocationController::class, 'create'])->name('admin.location.create');
         Route::post('/location', [\App\Http\Controllers\Admin\LocationController::class, 'store'])->name('admin.location.store');
         Route::get('/location/{id}', [\App\Http\Controllers\Admin\LocationController::class, 'show'])->name('admin.location.show');
-        Route::get('/location/{id}/edit', [\App\Http\Controllers\Admin\LocationController::class, 'edit'])->name('admin.location.edit');
         Route::put('/location/{id}', [\App\Http\Controllers\Admin\LocationController::class, 'update'])->name('admin.location.update');
         Route::delete('/location/{id}', [\App\Http\Controllers\Admin\LocationController::class, 'destroy'])->name('admin.location.destroy');
         Route::get('/location/data/all', [\App\Http\Controllers\Admin\LocationController::class, 'getLocations'])->name('admin.location.data');

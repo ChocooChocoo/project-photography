@@ -183,6 +183,8 @@ class LeaveRequestController extends Controller
                     'can_delete' => in_array($leaveRequest->status, ['pending', 'cancelled', 'rejected'], true),
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to load studio photographer leave request details.', [
                 'exception' => $exception,
