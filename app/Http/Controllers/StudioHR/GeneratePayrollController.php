@@ -183,6 +183,8 @@ class GeneratePayrollController extends Controller
                 'message' => 'Validation failed.',
                 'errors' => $exception->errors(),
             ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to load payroll generation employees.', [
                 'exception' => $exception,
@@ -302,6 +304,8 @@ class GeneratePayrollController extends Controller
                     'skipped' => $skippedEmployees,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             DB::rollBack();
 

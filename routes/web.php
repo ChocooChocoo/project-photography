@@ -125,7 +125,6 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('/pending/studio', [\App\Http\Controllers\Admin\StudioController::class, 'pending'])->name('admin.studio.pending');
         Route::post('/studio/{id}/approve', [\App\Http\Controllers\Admin\StudioController::class, 'approve'])->name('admin.studio.approve');
         Route::post('/studio/{id}/reject', [\App\Http\Controllers\Admin\StudioController::class, 'reject'])->name('admin.studio.reject');
-        Route::delete('/studio/{id}', [\App\Http\Controllers\Admin\StudioController::class, 'destroy'])->name('admin.studio.destroy');
 
         // Manage Freelancer
         Route::get('/view/freelancers', [\App\Http\Controllers\Admin\FreelancerController::class, 'index'])->name('admin.freelancer.index');

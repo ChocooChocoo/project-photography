@@ -170,6 +170,11 @@ class PayrollSettingsController extends Controller
                 ]
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -269,6 +274,8 @@ class PayrollSettingsController extends Controller
                 ]
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             Log::error('Failed to load employees: ' . $e->getMessage(), [
                 'exception' => $e,
@@ -636,6 +643,8 @@ class PayrollSettingsController extends Controller
                 'data' => $payrollSettings
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             Log::error('Failed to load payroll settings data: ' . $e->getMessage());
 
@@ -854,6 +863,8 @@ class PayrollSettingsController extends Controller
                 'errors' => $e->errors()
             ], 422);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             DB::rollBack();
 

@@ -32,6 +32,9 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-20 | Client dashboard, favourites | Double-clicking the heart on a studio sends two toggles, so it ends up not favourited (or shows "Failed to update favorite."). | Fixed |
 | C-21 | Reviews, gallery uploads, booking status and assignment, payments | When I make a mistake (a short review, a non-image photo, no rating), the live site says only "Something went wrong" instead of what to fix. | Fixed |
 | C-22 | HR and owner: add employee / add studio photographer | Adding a photographer whose specialisation has no service yet says only "Something went wrong". | Fixed |
+| C-23 | Admin, studios | The "delete studio" action crashes with a server error. | Fixed |
+| C-24 | Leave and overtime (HR, finance, photographer, owner), chatbot intents | Approving, cancelling or deleting a leave or overtime request (or a chatbot answer) that was already removed shows a server error. | Fixed |
+| C-25 | Client booking | When a studio's plan has lapsed, I'm told "An active subscription or grace period is required for this studio." | Fixed |
 
 ### C-01 Theme settings pictures are broken
 
@@ -226,3 +229,28 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Also checked (no issue):** error pop-ups on this form show the server's message (for example "Your Studio Growth Annual plan allows up to 5 staff and this studio has reached it. …"). "Failed to load permissions." found by the crawl is text inside a script, not on the page.
 - **Test:** `EmployeeProvisioningTest::test_hr_adding_a_photographer_for_a_category_without_a_service_says_what_to_do` (debug off; failed before). In the local browser the same form stops earlier at Quarry Road's plan staff limit, which is the intended rule.
 - **Retest (local):** test passes; full suite passes. Live: pending.
+
+### C-23 Admin "delete studio" crashes
+
+- **As the client (admin):** calling the studio delete action shows a server error.
+- **Steps to reproduce:** as admin, `DELETE /admin/studio/999999` returned 500: `Call to undefined method App\Http\Controllers\Admin\StudioController::destroy()`.
+- **Cause:** the route `admin.studio.destroy` pointed at a method that does not exist. Its only use was a commented-out Delete button script in `admin/pending-studios.blade.php`, and Blade still evaluated the `route()` call inside that comment.
+- **Fix:** removed the route and the 49 lines of commented-out script. Admins have no studio delete in the screens (they approve or reject); recorded as a gap like C-06.
+- **Retest (local):** the action now answers 405 (no such action); `PendingStudiosReviewTest` passes. Live: pending.
+
+### C-24 Removed leave, overtime and chatbot records answer with a server error
+
+- **As the client (HR, finance, photographer, owner):** I approve, cancel or delete a leave or overtime request that someone already removed; the page shows "Failed to process the leave request." as a server error. The same for deleting or switching off a chatbot answer.
+- **Steps to reproduce:** the empty-form crawl: `POST /owner/hr-leave-requests/999999/approve`, `DELETE /studio-hr/leave-requests/999999`, `POST /studio-finance/overtime-requests/999999/cancel`, `DELETE /owner/chatbot/intents/999999` and 12 more all returned 500.
+- **Cause:** the C-16 pattern, but the `findOrFail()` sits in a private helper (`getOwnedLeaveRequest()`, `ownedIntent()` and others), which the C-16 sweep did not follow.
+- **Fix:** the same `ModelNotFoundException` → `recordNotFound()` catch, applied to the 37 methods that call such a helper inside a JSON try/catch, with a rollback where a transaction is open.
+- **Retest (local):** the empty-form and missing-id crawl over every write action of all seven roles (233 requests) has no 500 left; each answers 422 (what to fill in), 404 (not found) or 403 (not allowed). Full suite 760 passed. Live: pending.
+
+### C-25 Clients see the owner's subscription message
+
+- **As the client:** I try to book a studio whose plan has run out and read "An active subscription or grace period is required for this studio." That is the owner's problem; I don't know what to do.
+- **Steps to reproduce:** any client booking call (`/client/bookings`, `/check-availability`, `/packages`, `/summary`) for a studio without an active plan or grace period.
+- **Cause:** `EnforceStudioSubscriptionAccess` gave every refusal the owner's message and a link to the owner's subscription page.
+- **Fix:** client routes get "This studio isn't taking bookings right now. Please choose another studio." and no owner link.
+- **Test:** `SubscriptionAccessTest::test_a_client_booking_a_studio_without_a_plan_gets_a_client_message` (failed before).
+- **Retest (local):** the client's booking calls without a studio now answer with that message. Live: pending.

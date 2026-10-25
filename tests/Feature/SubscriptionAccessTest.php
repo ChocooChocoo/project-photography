@@ -92,6 +92,20 @@ class SubscriptionAccessTest extends TestCase
             ->assertJsonPath('success', false);
     }
 
+    public function test_a_client_booking_a_studio_without_a_plan_gets_a_client_message(): void
+    {
+        // Client test C-25: clients read "An active subscription or grace period is
+        // required for this studio.", which is the owner's problem, not theirs.
+        $studio = $this->createStudio('Lapsed Studio');
+        Route::post('/_test/client/check', fn () => response()->json(['ok' => true]))
+            ->middleware('subscription.access:manage')->name('client.bookings.test-check');
+
+        $this->postJson('/_test/client/check', ['type' => 'studio', 'provider_id' => $studio->id])
+            ->assertForbidden()
+            ->assertJsonPath('message', "This studio isn't taking bookings right now. Please choose another studio.")
+            ->assertJsonMissingPath('redirect');
+    }
+
     public function test_an_unresolvable_write_is_allowed_only_when_every_owned_studio_has_access(): void
     {
         // Client test C-17: a second Delete on a removed record (double click, old tab)

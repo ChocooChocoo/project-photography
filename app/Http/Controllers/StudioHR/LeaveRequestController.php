@@ -131,6 +131,8 @@ class LeaveRequestController extends Controller
                     'status_display' => $leaveRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to store HR leave request.', [
                 'exception' => $exception,
@@ -221,6 +223,8 @@ class LeaveRequestController extends Controller
                     'status_display' => $leaveRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to update HR leave request.', [
                 'exception' => $exception,
@@ -270,6 +274,8 @@ class LeaveRequestController extends Controller
                     'status_display' => $leaveRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to cancel HR leave request.', [
                 'exception' => $exception,
@@ -314,6 +320,8 @@ class LeaveRequestController extends Controller
                     'id' => (int) $id,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to delete HR leave request.', [
                 'exception' => $exception,
@@ -478,6 +486,8 @@ class LeaveRequestController extends Controller
                     'rejection_reason' => $leaveRequest->rejection_reason,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to process employee leave request.', [
                 'exception' => $exception,

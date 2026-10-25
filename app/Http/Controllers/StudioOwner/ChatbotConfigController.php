@@ -261,6 +261,11 @@ class ChatbotConfigController extends Controller
                 'intent' => $intent,
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error updating intent: '.$e->getMessage());
@@ -294,6 +299,11 @@ class ChatbotConfigController extends Controller
                 'message' => 'Intent deleted successfully.',
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error deleting intent: '.$e->getMessage());
@@ -328,6 +338,8 @@ class ChatbotConfigController extends Controller
                 'is_active' => $intent->is_active,
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             \Log::error('Error toggling intent status: '.$e->getMessage());
 

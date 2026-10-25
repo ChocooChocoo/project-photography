@@ -962,55 +962,6 @@
                 });
             });
 
-            // Delete studio
-            // $(document).on('click', '.delete-studio', function(e) {
-            //     e.preventDefault();
-            //     const studioId = $(this).data('id');
-                
-            //     Swal.fire({
-            //         title: 'Delete Studio?',
-            //         text: "Are you sure you want to delete this studio? This action cannot be undone.",
-            //         icon: 'warning',
-            //         showCancelButton: true,
-            //         confirmButtonColor: '#DC3545',
-            //         cancelButtonColor: '#6C757D',
-            //         confirmButtonText: 'Yes, delete it!',
-            //         cancelButtonText: 'Cancel'
-            //     }).then((result) => {
-            //         if (result.isConfirmed) {
-            //             $.ajax({
-            //                 url: "{{ route('admin.studio.destroy', ':id') }}".replace(':id', studioId),
-            //                 type: 'DELETE',
-            //                 headers: {
-            //                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            //                 },
-            //                 success: function(response) {
-            //                     if (response.success) {
-            //                         Swal.fire({
-            //                             title: 'Deleted!',
-            //                             text: response.message,
-            //                             icon: 'success',
-            //                             confirmButtonColor: response.alert_color,
-            //                             confirmButtonText: 'OK',
-            //                             allowOutsideClick: false
-            //                         }).then(() => {
-            //                             location.reload();
-            //                         });
-            //                     }
-            //                 },
-            //                 error: function(xhr) {
-            //                     Swal.fire({
-            //                         title: 'Error!',
-            //                         text: xhr.responseJSON?.message || 'Failed to delete studio.',
-            //                         icon: 'error',
-            //                         confirmButtonColor: '#DC3545',
-            //                         confirmButtonText: 'OK'
-            //                     });
-            //                 }
-            //             });
-            //         }
-            //     });
-            // });
         });
     </script>
 @endsection

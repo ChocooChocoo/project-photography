@@ -103,6 +103,14 @@ class EnforceStudioSubscriptionAccess
             return $next($request);
         }
 
+        // A client cannot act on a studio's plan; tell them what they can do.
+        if (str_starts_with($routeName, 'client.')) {
+            return response()->json([
+                'success' => false,
+                'message' => "This studio isn't taking bookings right now. Please choose another studio.",
+            ], 403);
+        }
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => false,

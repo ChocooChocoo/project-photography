@@ -124,6 +124,8 @@ class OvertimeRequestController extends Controller
                     'status_display' => $overtimeRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to store studio photographer overtime request.', [
                 'exception' => $exception,
@@ -214,6 +216,8 @@ class OvertimeRequestController extends Controller
                     'status_display' => $overtimeRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to update studio photographer overtime request.', [
                 'exception' => $exception,
@@ -263,6 +267,8 @@ class OvertimeRequestController extends Controller
                     'status_display' => $overtimeRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to cancel studio photographer overtime request.', [
                 'exception' => $exception,
@@ -307,6 +313,8 @@ class OvertimeRequestController extends Controller
                     'id' => (int) $id,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to delete studio photographer overtime request.', [
                 'exception' => $exception,

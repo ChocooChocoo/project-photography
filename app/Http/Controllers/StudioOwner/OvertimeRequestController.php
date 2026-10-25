@@ -166,6 +166,8 @@ class OvertimeRequestController extends Controller
                     'rejection_reason' => $overtimeRequest->rejection_reason,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to process HR overtime request for Studio Owner.', [
                 'exception' => $exception,

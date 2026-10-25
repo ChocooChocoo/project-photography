@@ -130,6 +130,8 @@ class LeaveRequestController extends Controller
                     'status_display' => $leaveRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to store studio photographer leave request.', [
                 'exception' => $exception,
@@ -242,6 +244,8 @@ class LeaveRequestController extends Controller
                     'status_display' => $leaveRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to update studio photographer leave request.', [
                 'exception' => $exception,
@@ -291,6 +295,8 @@ class LeaveRequestController extends Controller
                     'status_display' => $leaveRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to cancel studio photographer leave request.', [
                 'exception' => $exception,
@@ -335,6 +341,8 @@ class LeaveRequestController extends Controller
                     'id' => (int) $id,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to delete studio photographer leave request.', [
                 'exception' => $exception,

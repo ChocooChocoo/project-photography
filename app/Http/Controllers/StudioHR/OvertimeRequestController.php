@@ -125,6 +125,8 @@ class OvertimeRequestController extends Controller
                     'status_display' => $overtimeRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to store HR overtime request.', [
                 'exception' => $exception,
@@ -215,6 +217,8 @@ class OvertimeRequestController extends Controller
                     'status_display' => $overtimeRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to update HR overtime request.', [
                 'exception' => $exception,
@@ -264,6 +268,8 @@ class OvertimeRequestController extends Controller
                     'status_display' => $overtimeRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to cancel HR overtime request.', [
                 'exception' => $exception,
@@ -308,6 +314,8 @@ class OvertimeRequestController extends Controller
                     'id' => (int) $id,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to delete HR overtime request.', [
                 'exception' => $exception,
@@ -472,6 +480,8 @@ class OvertimeRequestController extends Controller
                     'rejection_reason' => $overtimeRequest->rejection_reason,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to process employee overtime request.', [
                 'exception' => $exception,

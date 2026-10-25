@@ -123,6 +123,8 @@ class OvertimeRequestController extends Controller
                     'status_display' => $overtimeRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to store finance overtime request.', [
                 'exception' => $exception,
@@ -213,6 +215,8 @@ class OvertimeRequestController extends Controller
                     'status_display' => $overtimeRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to update finance overtime request.', [
                 'exception' => $exception,
@@ -262,6 +266,8 @@ class OvertimeRequestController extends Controller
                     'status_display' => $overtimeRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to cancel finance overtime request.', [
                 'exception' => $exception,
@@ -306,6 +312,8 @@ class OvertimeRequestController extends Controller
                     'id' => (int) $id,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to delete finance overtime request.', [
                 'exception' => $exception,

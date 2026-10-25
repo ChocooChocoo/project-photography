@@ -129,6 +129,8 @@ class LeaveRequestController extends Controller
                     'status_display' => $leaveRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to store finance leave request.', [
                 'exception' => $exception,
@@ -241,6 +243,8 @@ class LeaveRequestController extends Controller
                     'status_display' => $leaveRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to update finance leave request.', [
                 'exception' => $exception,
@@ -290,6 +294,8 @@ class LeaveRequestController extends Controller
                     'status_display' => $leaveRequest->status_label,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to cancel finance leave request.', [
                 'exception' => $exception,
@@ -334,6 +340,8 @@ class LeaveRequestController extends Controller
                     'id' => (int) $id,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to delete finance leave request.', [
                 'exception' => $exception,
