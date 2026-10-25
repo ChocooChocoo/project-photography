@@ -391,6 +391,8 @@ class AssignedBookingController extends Controller
                 'recovery' => $recovery,
             ]);
             });
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Throwable $e) {
             if ($proofPath) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($proofPath);

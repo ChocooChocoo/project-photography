@@ -151,6 +151,8 @@ class FreelancerRatingController extends Controller
                 'rating' => $rating
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             Log::error('Error submitting freelancer review: ' . $e->getMessage());
             return response()->json([

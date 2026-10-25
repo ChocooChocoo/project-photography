@@ -286,6 +286,8 @@ class MyBookingsController extends Controller
                 'success' => true,
                 'message' => $refundNote ? 'Booking cancelled. '.$refundNote : 'Booking cancelled successfully.',
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -432,6 +434,8 @@ class MyBookingsController extends Controller
                 'success' => true,
                 'message' => 'Your revision request has been sent.',
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -545,6 +549,8 @@ class MyBookingsController extends Controller
                 'amount' => $payment->amount,
                 'booking_id' => $booking->id,
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -604,6 +610,8 @@ class MyBookingsController extends Controller
                 'message' => 'Photographer on-site presence confirmed successfully. The photographer can now begin working.',
                 'assignment' => $assignment,
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

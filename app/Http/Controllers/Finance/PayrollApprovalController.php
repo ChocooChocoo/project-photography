@@ -216,6 +216,8 @@ class PayrollApprovalController extends Controller
                     'rejection_reason' => $generatedPayroll->rejection_reason,
                 ],
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $exception) {
             Log::error('Failed to update payroll approval status.', [
                 'exception' => $exception,

@@ -92,6 +92,20 @@ class SubscriptionAccessTest extends TestCase
             ->assertJsonPath('success', false);
     }
 
+    public function test_an_unresolvable_write_is_allowed_only_when_every_owned_studio_has_access(): void
+    {
+        // Client test C-17: a second Delete on a removed record (double click, old tab)
+        // said "An active subscription ... is required" to an owner whose plans were active.
+        $first = $this->createStudio('First Studio');
+        $second = $this->createStudio('Second Studio');
+        $this->createSubscription($first);
+
+        $this->postJson('/_test/subscription/manage')->assertForbidden();
+
+        $this->createSubscription($second);
+        $this->postJson('/_test/subscription/manage')->assertOk();
+    }
+
     public function test_expired_studio_can_fulfill_a_paid_booking_but_not_an_unpaid_booking(): void
     {
         $studio = $this->createStudio('Expired Studio');

@@ -132,6 +132,8 @@ class UserController extends Controller
                 ]
             ]);
             
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -158,6 +160,8 @@ class UserController extends Controller
                 'message' => 'User deleted successfully'
             ]);
             
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

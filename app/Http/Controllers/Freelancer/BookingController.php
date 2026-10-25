@@ -163,6 +163,8 @@ class BookingController extends Controller
                 'booking' => $booking->fresh(['client', 'category', 'packages', 'payments'])
             ]);
             
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -250,6 +252,8 @@ class BookingController extends Controller
                 'booking' => $booking->fresh(['payments'])
             ]);
             
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

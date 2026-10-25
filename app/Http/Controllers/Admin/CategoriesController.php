@@ -79,6 +79,8 @@ class CategoriesController extends Controller
                 'message' => 'Category updated successfully!',
                 'data' => $category
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -127,6 +129,8 @@ class CategoriesController extends Controller
                 'success' => true,
                 'message' => 'Category deleted successfully!'
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

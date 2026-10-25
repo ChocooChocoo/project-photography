@@ -60,6 +60,17 @@ class BudgetMatchTest extends TestCase
         $this->assertTrue(Validator::make(['status' => 'active'], $rules)->fails());
     }
 
+    public function test_budget_amount_must_fit_the_column(): void
+    {
+        // Client test C-15: 99,999,999,999 reached MySQL and failed with "Numeric value out of range".
+        foreach ([new StoreBudgetRequest(), new \App\Http\Requests\UpdateBudgetRequest()] as $request) {
+            $validator = Validator::make(['preferred_budget' => 99999999999, 'status' => 'active'], $request->rules(), $request->messages());
+            $this->assertTrue($validator->fails());
+            $this->assertSame('The budget can be at most ₱99,999,999.99.', $validator->errors()->first('preferred_budget'));
+            $this->assertTrue(Validator::make(['preferred_budget' => 99999999.99, 'status' => 'active'], $request->rules())->passes());
+        }
+    }
+
     public function test_overspend_alert_fires_once_spent_reaches_preferred_budget(): void
     {
         Schema::dropAllTables();

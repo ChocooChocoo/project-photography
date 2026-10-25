@@ -24,6 +24,9 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-12 | Client booking form, rescheduling | I can book an in-studio session at 7:00 AM, or one ending at 7:00 PM, although the studio is open 9 to 6. | Fixed |
 | C-13 | Client booking form | When I change the time quickly (or my connection is slow), the availability status can show the answer for the time I picked before. | Fixed |
 | C-14 | Client, My Bookings | If I leave checkout (press Cancel at "Confirm Payment", close the Stripe tab, or my card fails), I can't pay for the booking afterwards; it just sits "pending" for 48 hours. | Fixed |
+| C-15 | Client, budget planner | Typing a very large budget (for example 99,999,999,999) gives a server error instead of telling me the limit. | Fixed |
+| C-16 | Every portal: saves, deletes, approvals | A second click on Delete (or acting on something already removed in another tab) answers "Failed to …" as a server error instead of "not found". | Fixed |
+| C-17 | Owners with more than one studio | Deleting something that is already gone says "An active subscription or grace period is required for this studio" although my plans are active. | Fixed |
 
 ### C-01 Theme settings pictures are broken
 
@@ -146,3 +149,29 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Also fixed:** `BookingController::initializePayment` accepted any booking id. It now only starts a payment for the logged-in client's own booking (404 otherwise) and refuses a cancelled booking ("This booking was cancelled, so it can no longer be paid.").
 - **Test:** `tests/Feature/Booking/ResumeBookingPaymentTest.php` (another client gets 404; the owner of the booking gets the checkout link; a cancelled booking is refused). It failed before the fix.
 - **Retest (local):** My Bookings showed Complete payment for `BK-6ADD9A0FD3B8D`. Pay now → Stripe test checkout with card 4242 4242 4242 4242 → "Payment Successful! Your booking has been confirmed", amount paid ₱2,370.00. The booking is `confirmed`, `partially_paid`, one succeeded payment, ₱5,530 remaining. Reloading the success page did not add a payment. Live: pending.
+
+### C-15 A very large budget gives a server error
+
+- **As the client:** I type 99,999,999,999 as my preferred budget and get "Something went wrong" instead of being told the limit.
+- **Steps to reproduce:** as Beatriz, create a budget with `preferred_budget = 99999999999`. It returned 500 (`SQLSTATE[22003] … Out of range value for column 'preferred_budget'`).
+- **Cause:** `tbl_client_budget.preferred_budget` is `decimal(10,2)`, but `StoreBudgetRequest` and `UpdateBudgetRequest` only required a number of at least 0.
+- **Fix:** both requests allow at most 99,999,999.99 and say "The budget can be at most ₱99,999,999.99."
+- **Test:** `BudgetMatchTest::test_budget_amount_must_fit_the_column` (failed before).
+- **Retest (local):** the same request now returns 422 with that message; negative and text amounts still get their own messages; a 0 budget saves. Live: pending.
+
+### C-16 Acting on a removed record answers with a server error (rest of the app)
+
+- **As the client:** I double-click Delete on a budget, a service or a role, or approve something another tab already removed. The second request answers "Failed to delete …" as a server error.
+- **Steps to reproduce:** as Beatriz, `DELETE /client/budget/3` (another client's budget) returned 500 "Failed to delete budget: No query results for model …"; as the owner, `DELETE /owner/roles/999999` and `/owner/employee/999999` returned 500. Another user's record was already refused; only the answer was wrong.
+- **Cause:** the same pattern as C-05, in 95 more methods: `findOrFail()` / `firstOrFail()` inside a `try` whose `catch (\Exception)` answers 500.
+- **Fix:** every such method in `app/Http/Controllers` that answers JSON now catches `ModelNotFoundException` first and returns `recordNotFound()` (404 "This record was not found. It may have been removed."). Where the method had opened a database transaction, the new catch rolls it back first (20 methods). Two tests that expected the old 500 (`GalleryLifecycleTest`, `PermitGateTest`) now expect 404.
+- **Retest (local):** another client's budget update, delete and status toggle; the owner's role, service, payroll and employee deletes with a missing id; admin category and location deletes: all 404 with that message. The client and owner detail crawl still opens every own record (200). Full suite 755 passed. Live: pending.
+
+### C-17 "Subscription required" for a record that is already gone
+
+- **As the client (studio owner with two studios):** I click Delete twice on a service. The second click says "An active subscription or grace period is required for this studio," although both my studios are on active plans.
+- **Steps to reproduce:** as Yolanda (Quarry Road and T02 Annex, both on plans), `DELETE /owner/services/999999` returned 403 with that message.
+- **Cause:** `EnforceStudioSubscriptionAccess` looks up the studio from the record. When the record no longer exists and the owner has more than one studio, it could not pick a studio and refused every save.
+- **Fix:** when no studio can be found for a save, it is allowed only if **every** studio the owner has is on an active plan or grace period, so no unsubscribed studio can be changed this way. The controller then answers its own 404. Pages (GET) keep the existing rule (any studio with access).
+- **Test:** `SubscriptionAccessTest::test_an_unresolvable_write_is_allowed_only_when_every_owned_studio_has_access` (one studio on a plan and one without: refused; both on plans: allowed). `test_manage_access_fails_closed_when_studio_cannot_be_resolved` still passes.
+- **Retest (local):** the same deletes now answer 404 "This record was not found. It may have been removed." Live: pending.

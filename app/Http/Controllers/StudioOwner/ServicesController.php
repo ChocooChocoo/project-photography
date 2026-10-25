@@ -90,6 +90,8 @@ class ServicesController extends Controller
                 'success' => true,
                 'data' => $service
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -130,6 +132,8 @@ class ServicesController extends Controller
                     'categories' => $categories
                 ]
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -165,6 +169,8 @@ class ServicesController extends Controller
                 'message' => 'Service updated successfully!',
                 'data' => $service
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -191,6 +197,8 @@ class ServicesController extends Controller
                 'success' => true,
                 'message' => 'Service deleted successfully!'
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

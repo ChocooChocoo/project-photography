@@ -895,6 +895,8 @@ class BookingController extends Controller
                 'success' => false,
                 'message' => 'Error assigning photographers: '.$e->getMessage(),
             ], 500);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -941,6 +943,8 @@ class BookingController extends Controller
                 'message' => 'Photographer assignment removed successfully.',
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -1074,6 +1078,8 @@ class BookingController extends Controller
                 'message' => 'Booking status updated successfully.',
                 'booking' => $booking,
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -1168,6 +1174,8 @@ class BookingController extends Controller
                 'assignment' => $assignment,
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -1393,6 +1401,8 @@ class BookingController extends Controller
                 'booking' => $booking,
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

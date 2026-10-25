@@ -112,6 +112,8 @@ class StudioMemberController extends Controller
                 'data' => $freelancer
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -198,6 +200,8 @@ class StudioMemberController extends Controller
                 'message' => 'Invitation cancelled successfully.'
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

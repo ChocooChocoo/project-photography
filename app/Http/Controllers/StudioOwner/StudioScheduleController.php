@@ -101,6 +101,8 @@ class StudioScheduleController extends Controller
                 'data' => $schedule
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -150,6 +152,8 @@ class StudioScheduleController extends Controller
                 'message' => 'Studio schedule deleted successfully!'
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

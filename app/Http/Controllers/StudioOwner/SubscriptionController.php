@@ -99,6 +99,8 @@ class SubscriptionController extends Controller
                 ],
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             Log::error('Failed to fetch subscription plan', [
                 'error' => $e->getMessage(),
@@ -243,6 +245,11 @@ class SubscriptionController extends Controller
                 'checkout_url' => $checkoutSession['url'],
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             DB::rollBack();
 

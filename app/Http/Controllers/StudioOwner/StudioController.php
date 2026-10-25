@@ -389,6 +389,8 @@ class StudioController extends Controller
                 'alert_color' => '#007BFF' // Blue for success
             ]);
             
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -447,6 +449,8 @@ class StudioController extends Controller
                 'errors' => $e->errors()
             ], 422);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -672,6 +676,11 @@ class StudioController extends Controller
                 'alert_color' => '#DC3545'
             ], 422);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Studio Update Error:', [

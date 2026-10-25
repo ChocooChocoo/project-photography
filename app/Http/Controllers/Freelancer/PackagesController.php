@@ -260,6 +260,8 @@ class PackagesController extends Controller
                 'message' => 'Validation failed.',
                 'errors' => $e->errors()
             ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -409,6 +411,8 @@ class PackagesController extends Controller
                 'message' => 'Package deleted successfully!'
             ]);
             
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

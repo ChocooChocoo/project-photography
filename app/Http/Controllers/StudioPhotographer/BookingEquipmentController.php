@@ -46,6 +46,8 @@ class BookingEquipmentController extends Controller
                 'message' => 'Equipment confirmed successfully.',
                 'data' => $equipment
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

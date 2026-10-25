@@ -23,7 +23,7 @@ class UpdateBudgetRequest extends FormRequest
         return [
             'budget_name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'preferred_budget' => 'required|numeric|min:0',
+            'preferred_budget' => 'required|numeric|min:0|max:99999999.99', // tbl_client_budget.preferred_budget is decimal(10,2)
             'category_id' => 'nullable|exists:tbl_categories,id',
             'budget_type' => 'nullable|string|max:100',
             'status' => 'required|in:active,inactive',
@@ -37,6 +37,7 @@ class UpdateBudgetRequest extends FormRequest
     {
         return [
             'preferred_budget.required' => 'Please enter your preferred budget.',
+            'preferred_budget.max' => 'The budget can be at most ₱99,999,999.99.',
             'category_id.exists' => 'The selected category does not exist.',
             'status.required' => 'Please select a status.',
             'status.in' => 'Invalid status selected.',

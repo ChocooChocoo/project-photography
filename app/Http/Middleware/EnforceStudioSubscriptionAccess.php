@@ -85,10 +85,19 @@ class EnforceStudioSubscriptionAccess
         // A create or setup page with no studio in the request is a studio
         // picker. Open it when any of the user's studios has access; the save
         // request names one studio and is checked against that studio.
+        // With no studio in the request (a picker page, or a record that was already
+        // removed by a double click or another tab): a page opens when any owned
+        // studio has access; a save only when every owned studio has access, so no
+        // unsubscribed studio can be changed this way.
+        $ownedIds = $studioId === null ? $this->userStudioIds($user) : collect();
+        $accessibleCount = $studioId === null
+            ? StudiosModel::whereIn('id', $ownedIds)->subscriptionAccessible()->count()
+            : 0;
         $hasAccess = $studioId !== null
             ? StudiosModel::whereKey($studioId)->subscriptionAccessible()->exists()
-            : in_array($request->method(), ['GET', 'HEAD'], true)
-                && StudiosModel::whereIn('id', $this->userStudioIds($user))->subscriptionAccessible()->exists();
+            : (in_array($request->method(), ['GET', 'HEAD'], true)
+                ? $accessibleCount > 0
+                : $ownedIds->isNotEmpty() && $accessibleCount === $ownedIds->count());
 
         if ($hasAccess) {
             return $next($request);

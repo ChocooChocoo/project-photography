@@ -66,6 +66,8 @@ class ChatbotConversationController extends Controller
                 'conversation' => $conversation
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             \Log::error('Error fetching conversation details: ' . $e->getMessage());
             
@@ -101,6 +103,8 @@ class ChatbotConversationController extends Controller
                 'transcript' => $transcript
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             \Log::error('Error exporting conversation: ' . $e->getMessage());
             
@@ -167,6 +171,8 @@ class ChatbotConversationController extends Controller
                 'message' => 'Conversation deleted successfully.'
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             \Log::error('Error deleting conversation: ' . $e->getMessage());
             

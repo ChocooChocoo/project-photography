@@ -87,6 +87,8 @@ class SubscriptionController extends Controller
                 'data' => $plan
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -140,6 +142,8 @@ class SubscriptionController extends Controller
                 'redirect' => route('admin.subscription.index')
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -173,6 +177,8 @@ class SubscriptionController extends Controller
                 'message' => 'Subscription plan deleted successfully!'
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

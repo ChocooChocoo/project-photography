@@ -851,6 +851,8 @@ class BookingController extends Controller
                 'message' => 'Booking created successfully',
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -2240,6 +2242,8 @@ class BookingController extends Controller
                 'message' => 'Payment processing failed. Status: ' . $confirmedIntent->status,
             ]);
             
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             Log::error('Stripe payment processing error: ' . $e->getMessage());
             return response()->json([
@@ -2317,6 +2321,8 @@ class BookingController extends Controller
                 'response' => $response->json(),
             ]);
             
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             Log::error('Attach payment method error: ' . $e->getMessage());
             return response()->json([

@@ -58,6 +58,8 @@ class MemberInvitationController extends Controller
                 'data' => $invitation
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -91,6 +93,8 @@ class MemberInvitationController extends Controller
                 'message' => 'Invitation accepted successfully!'
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -125,6 +129,8 @@ class MemberInvitationController extends Controller
                 'message' => 'Invitation declined.'
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

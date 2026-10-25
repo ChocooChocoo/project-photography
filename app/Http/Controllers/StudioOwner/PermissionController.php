@@ -241,6 +241,11 @@ class PermissionController extends Controller
                 'data' => $permission
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -283,6 +288,11 @@ class PermissionController extends Controller
                 'message' => 'Permission deleted successfully.'
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -317,6 +327,11 @@ class PermissionController extends Controller
                 'data' => ['status' => $newStatus]
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             DB::rollBack();
 

@@ -184,7 +184,7 @@ class PermitGateTest extends TestCase
             ->post('/_test/studio/'.$studio->id.'/permit/resubmit', [
                 'business_permit' => UploadedFile::fake()->create('permit.pdf', 100, 'application/pdf'),
             ])
-            ->assertStatus(500);
+            ->assertNotFound();
     }
 
     public function test_permit_notice_page_shows_status_expiry_rejection_note_and_resubmit_form(): void

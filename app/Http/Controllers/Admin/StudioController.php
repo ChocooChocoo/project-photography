@@ -66,6 +66,8 @@ class StudioController extends Controller
                 'alert_color' => '#007BFF',
             ]);
             
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             \Log::error('Approve studio error: ' . $e->getMessage());
             return response()->json([
@@ -116,6 +118,8 @@ class StudioController extends Controller
                 'errors' => $e->errors(),
                 'alert_color' => '#DC3545'
             ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             \Log::error('Reject studio error: ' . $e->getMessage());
             return response()->json([

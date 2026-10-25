@@ -229,7 +229,7 @@ class GalleryLifecycleTest extends TestCase
 
         $this->post("/_test/owner/gallery/{$booking->id}/upload", [
             'images' => [$this->fakePng('photo1.png')],
-        ])->assertStatus(500)->assertJsonPath('success', false);
+        ])->assertNotFound()->assertJsonPath('success', false);
 
         $this->assertSame(0, StudioOnlineGalleryModel::count());
     }

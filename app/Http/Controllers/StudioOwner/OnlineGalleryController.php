@@ -259,6 +259,11 @@ class OnlineGalleryController extends Controller
                 'gallery' => $gallery
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -323,6 +328,8 @@ class OnlineGalleryController extends Controller
                 'message' => 'Image not found.'
             ], 404);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -367,6 +374,8 @@ class OnlineGalleryController extends Controller
                 'message' => 'Gallery deleted successfully.'
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -415,6 +424,8 @@ class OnlineGalleryController extends Controller
                 'gallery' => $gallery
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -472,6 +483,8 @@ class OnlineGalleryController extends Controller
                 'gallery' => $gallery
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -672,6 +685,11 @@ class OnlineGalleryController extends Controller
                 'message' => 'Portfolio gallery created with ' . count($uploadedImages) . ' image(s).',
                 'gallery' => $gallery,
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+            return $this->recordNotFound();
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
