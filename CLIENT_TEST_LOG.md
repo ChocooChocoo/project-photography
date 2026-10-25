@@ -596,6 +596,16 @@ The user approved live write tests on seeded accounts with cleanup, no real mone
 
 These three remaining unproven cases are blocked by live data or by an irreversible financial side effect, not by a known defect.
 
+### Feature checklist status (live, 25 Oct 2026)
+
+- **Chatbot (owner):** launcher visible on `/owner/dashboard`, opens "Quarry Road Studio Assistant" with history and one input plus Send, Escape closes it, and an empty Send sends no request.
+- **Attendance clock-in:** `/studio-photographer/view/attendance` shows the selected studio, schedule and geofence notice, but Check-In and Check-Out are disabled because location is not verified. Completing it would create a real attendance record, so it was not forced.
+- **Roles and permissions:** `/owner/view/roles` and `/owner/view/permissions` load with data and no JavaScript errors. Invitation sending was not performed because it emails the invitee.
+- **Galleries:** owner and client online-gallery pages list records and load cleanly.
+- **Admin moderation and reports:** registered studios, pending studios, freelancers, reviews and booking reports all load with data and no JavaScript errors.
+- **Messaging:** the client Messages page and the freelancer bookings/assignments pages load cleanly. No message was sent, so no notification or email reached a real user.
+- **Clean list:** 15 further feature pages returned 200 with correct browser titles and zero uncaught JavaScript errors.
+
 ## Direct Playwright browser walkthrough (user-requested, no shell-run tests)
 
 **Status: In progress.** This round uses Playwright browser tools directly to click, type and inspect rendered screens. Previous shell-run browser scripts are not being counted as this requested walkthrough.
