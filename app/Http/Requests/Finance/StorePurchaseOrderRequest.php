@@ -31,7 +31,7 @@ class StorePurchaseOrderRequest extends FormRequest
             'purchase_order_attachments.*' => ['file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:5120'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.procurement_request_item_id' => ['required', 'integer'],
-            'items.*.approved_unit_cost' => ['required', 'numeric', 'min:0'],
+            'items.*.approved_unit_cost' => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
         ];
     }
 }

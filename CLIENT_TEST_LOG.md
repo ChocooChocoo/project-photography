@@ -36,6 +36,7 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-24 | Leave and overtime (HR, finance, photographer, owner), chatbot intents | Approving, cancelling or deleting a leave or overtime request (or a chatbot answer) that was already removed shows a server error. | Fixed |
 | C-25 | Client booking | When a studio's plan has lapsed, I'm told "An active subscription or grace period is required for this studio." | Fixed |
 | C-26 | Leave and overtime (HR, finance, photographer) | I can file the same leave dates twice (or overlapping dates, or the same overtime hours), so HR and payroll see duplicates. | Fixed |
+| C-27 | Procurement (photographer, HR, finance) | A very large quantity or cost on a purchase request, purchase order, payment or receipt says only "Something went wrong". | Fixed |
 
 ### C-01 Theme settings pictures are broken
 
@@ -265,3 +266,13 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Also checked (no issue):** approving twice, rejecting after approval, and deleting or cancelling an approved request are all refused with clear messages ("Only pending leave requests can be processed.", "Approved leave requests cannot be deleted.").
 - **Test:** `tests/Feature/StudioEmployee/TimeOffOverlapTest.php` (overlap, edit, rejected, overtime hours, and that all 12 forms use the rule).
 - **Retest (local):** the same dates as approved request 16 and an overlapping range are refused with that message; a non-overlapping day is accepted; the same overtime hours twice are refused. Test requests 17, 18, 19 and overtime 21 were cancelled afterwards. Live: pending.
+
+### C-27 Very large procurement amounts give a server error
+
+- **As the client (photographer or finance):** I type an extra zero or two in a quantity or a price and submit. On live I get "Something went wrong" instead of being told the amount is too large.
+- **Steps to reproduce:** as Eduardo, submit a purchase request with quantity `999999999999` or unit cost `999999999999999`. Both returned 500 `SQLSTATE[22003] … Out of range value for column 'estimated_total'`.
+- **Cause:** quantities are `decimal(10,2)` and amounts and totals `decimal(12,2)`, but the forms only required "a number above 0", and nothing checked quantity × cost.
+- **Fix:** every procurement number has a maximum that fits its column: quantities 99,999,999.99; amounts 9,999,999,999.99. This covers request items, the purchase order's approved cost, the invoice amount, received quantity, acquisition cost and reorder threshold. The request forms also refuse a line or request total over ₱9,999,999,999.99, and name the fields in plain words ("quantity", not `items.0.quantity`).
+- **Test:** `tests/Feature/Procurement/ProcurementAmountLimitsTest.php`.
+- **Also checked end to end (no issue):** request 16 went photographer → finance review → owner approval → purchase order `PO-20261025-2127` → delivery → receipt → payment → Completed. Each wrong step is refused with a plain reason: approving twice, reject or return without a note, a purchase order before approval, an item from another request ("One or more procurement items are invalid."), delivery or payment without the required files, receiving a different quantity ("Partial deliveries are not supported …"), a consumable without a reorder threshold, and completing early or twice. Generating the purchase order twice reuses the same order (one order, one item).
+- **Retest (local):** the three oversized requests are refused with 422 and the limit; the invoice amount `99999999999999` is refused. Full suite 764 passed. Live: pending.

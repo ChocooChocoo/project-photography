@@ -20,7 +20,7 @@ class StoreProcurementPaymentRequest extends FormRequest
     {
         return [
             'invoice_reference' => ['required', 'string', 'max:100'],
-            'invoice_amount' => ['required', 'numeric', 'min:0'],
+            'invoice_amount' => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
             'invoice_date' => ['required', 'date'],
             'payment_reference' => ['nullable', 'string', 'max:100'],
             'payment_note' => ['nullable', 'string', 'max:1000'],
