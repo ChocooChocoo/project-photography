@@ -436,11 +436,14 @@ class GeneratePayrollController extends Controller
 
         $grossAmount = round((float) $attendanceMetrics['attendance_amount'] + (float) $bookingMetrics['booking_amount'], 2);
 
-        $deductionBreakdown = $this->getDeductionBreakdown(
-            $payrollSetting,
-            $attendanceMetrics['attendance_days_absent'],
-            $attendanceMetrics['attendance_minutes_late'],
-            $attendanceMetrics['attendance_minutes_undertime']
+        $deductionBreakdown = \App\Services\PayrollDeductionService::capToGross(
+            $this->getDeductionBreakdown(
+                $payrollSetting,
+                $attendanceMetrics['attendance_days_absent'],
+                $attendanceMetrics['attendance_minutes_late'],
+                $attendanceMetrics['attendance_minutes_undertime']
+            ),
+            $grossAmount
         );
 
         $totalDeductions = round(array_sum($deductionBreakdown), 2);

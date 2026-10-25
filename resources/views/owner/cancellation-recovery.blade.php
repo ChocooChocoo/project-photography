@@ -1,6 +1,7 @@
 @extends('layouts.owner.app')
 
 @section('content')
+<div class="content-page">
 <div class="container py-4">
     <h1 class="h4">Photographer cancellation recovery</h1>
     <p class="text-muted">Booking {{ $recovery->booking->booking_reference }} · deadline {{ $recovery->deadline ? $recovery->deadline->format('M d, Y h:i A') : 'Not set' }}</p>
@@ -61,5 +62,6 @@
             <button class="btn btn-outline-danger">Escalate to refund queue</button>
         </form>
     @endif
+</div>
 </div>
 @endsection

@@ -43,7 +43,8 @@
                                             <div class="d-flex">
                                                 <div>
                                                     <h5 class="mb-1">
-                                                        <a href="javascript:void(0)" class="link-reset view-user" data-id="{{ $user->id }}">
+                                                        <a href="javascript:void(0)" class="link-reset view-user" data-id="{{ $user->id }}"
+                                                           data-bs-toggle="modal" data-bs-target="#userModal">
                                                             {{ $user->full_name }}
                                                         </a>
                                                     </h5>

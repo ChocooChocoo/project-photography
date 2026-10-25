@@ -4,7 +4,7 @@ Testing the platform the way a studio client uses it every day: every portal, th
 
 - **Where:** local copy first (`http://127.0.0.1:8000`, dev database, mail sent to the log). Each fix is then pushed to `main` and checked on live (https://lumoraphotography.online).
 - **Accounts:** the seeded accounts in `docs/01 - SEEDED ACCOUNT CREDENTIALS.md` (Quarry Road Studio team, client Beatriz, freelancer Lorena, admin Adrian).
-- **Status values:** Open, Fixed (code changed and tested locally), Fixed and retested (checked again as the client, locally and on live).
+- **Status values:** Open, Fixed (code changed and tested locally), Fixed and retested (checked again as the client, locally and on live). Resumed issues explicitly marked **Fixed and retested (local)** have client-browser proof locally only; live verification remains pending deployment approval.
 
 ## For the owner (not bugs)
 
@@ -44,6 +44,18 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-25 | Client booking | When a studio's plan has lapsed, I'm told "An active subscription or grace period is required for this studio." | Fixed and retested |
 | C-26 | Leave and overtime (HR, finance, photographer) | I can file the same leave dates twice (or overlapping dates, or the same overtime hours), so HR and payroll see duplicates. | Fixed and retested |
 | C-27 | Procurement (photographer, HR, finance) | A very large quantity or cost on a purchase request, purchase order, payment or receipt says only "Something went wrong". | Fixed and retested |
+| C-28 | First visit, login and every portal | While I type my login, an "Admin Customizer" panel with a "Buy Now" button opens by itself and covers the form. | Fixed and retested (local) |
+| C-29 | Client budget list, view and edit | My budget's angle brackets become formatting, and quotes can truncate the name when I edit it. | Fixed and retested (local) |
+| C-30 | Client discovery filters and favourites | I save a studio, then clear filters. The heart becomes empty again even though the studio is still saved. | Fixed and retested (local) |
+| C-31 | Filtered client discovery cards | After filtering, a studio's favourite heart extends over the next card and cannot be clicked because the next studio's picture covers it. | Fixed and retested (local) |
+| C-32 | Client discovery filters | I clear a price filter, but a slow response brings back the old empty result even though no filter is selected. | Fixed and retested (local) |
+| C-33 | Client booking package selection | I choose a package, but a delayed package reload clears it; Proceed later says "Package Required". | Fixed and retested (local) |
+| C-34 | Booking reschedule window, customer and provider | After a reschedule action succeeds, Escape stops closing the booking window because keyboard focus leaves it. | Fixed and retested (local) |
+| C-35 | Owner refund target and customer photographer replacement pages | The sidebar covers page controls, so I cannot click Save refund target normally. | Fixed and retested (local) |
+| C-36 | HR payroll generation and finance review | A payroll with no attendance showed ₱32,375.00 of deductions against ₱0.00 gross. | Fixed and retested (local) |
+| C-37 | Admin, Users | Clicking a person's name in the user list does nothing, although the name looks clickable. | Fixed and retested (local) |
+| C-38 | Owner booking details, hardcopy quote | After saving a hardcopy quote, Escape no longer closes Booking Details because keyboard focus leaves the window. | Fixed and retested (local) |
+| C-39 | Owner Subscription | My annual plan is valid until July 2027, but the page says "Expiring Soon" today. | Fixed and retested (local) |
 
 ### C-01 Theme settings pictures are broken
 
@@ -311,7 +323,119 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Retest (local):** the three oversized requests are refused with 422 and the limit; the invoice amount `99999999999999` is refused. Full suite 764 passed.
 - **Retest (live):** Live: HR quantity 999,999,999,999 and photographer unit cost 999,999,999,999,999 are refused with 422 and the limit; no request was saved.
 
-## Final full pass (25 Oct 2026)
+### C-28 First visit opens the template customizer over the login form
+
+- **As the client:** I open the site in a fresh browser and start entering my email and password. An unrelated "Admin Customizer" panel with "Buy Now" opens over the form, so Sign In cannot be clicked until I close it.
+- **Steps to reproduce:** use a fresh browser context, visit `/auth/login`, enter credentials and wait at least 1.5 seconds. `#theme-settings-offcanvas` gains `show` without any settings click. Reproduced repeatedly; screenshot: `output/client-resume/login-probe.png`.
+- **Cause:** `LayoutCustomizer.init()` in `public/assets/js/app.js` called `openCustomizer()`, which scheduled an automatic opening after one second when local storage lacked the template's first-visit flag. Auth pages include the same customizer as portals.
+- **Fix:** removed the automatic-opening call and its unused first-visit methods. Manual Bootstrap offcanvas controls and theme handling remain. The previously single-line script was formatted so this source change is readable.
+- **Regression proof:** `tests/Browser/first-visit-login.mjs` failed before the fix (`1 !== 0`, unsolicited panel visible), then passed: fresh visitor signs in successfully, manual settings open, Escape closes them.
+- **Retest environment:** local Chrome only. No deployment or live retest claimed.
+
+### C-29 Budget text becomes HTML and quotes break edit fields
+
+- **As the client:** my budget name or notes contain angle brackets or quoted words. The list changes them into formatting; opening Edit can cut my name at the first quote. Saving can then lose part of what I typed.
+- **Steps to reproduce:** on `/client/budget`, create a package budget for ₱12,500.50 named `Family <b>portraits</b> "October"` with notes `Keep <i>originals</i> & prints, not HTML.`. The freshly loaded row displayed `Family portraits "October"`, not the saved text. The edit form inserted the same unescaped name into its quoted `value` attribute.
+- **Cause:** the AJAX table, details modal and edit modal interpolate user text directly into HTML. Server-rendered Blade rows escape it, but the AJAX rendering did not. Besides corrupting text, this permits stored markup injection.
+- **Fix:** encode text at the HTML-rendering boundary for budget names, descriptions, categories, types and range text. Encode edit input/textarea values. Reuse already-rendered category options and select the saved category with `.val()` rather than placing category names inside executable template literals.
+- **Regression proof:** `tests/Browser/client-budget.mjs` failed before the fix on the literal-name assertion. After the fix, a complete client interaction passed: create with decimal amount, view exact name/notes, Escape, edit exact quoted name, change amount to ₱13,000, filter inactive/active, cancel delete, confirm delete and verify row disappears.
+- **Test data:** only budgets created by this test were deleted; existing budgets were untouched. Failed test attempts also cleaned up their created records.
+- **Retest environment:** local Chrome only. No deployment or live retest claimed.
+
+### C-30 Filtering forgets the favourite change shown on this page
+
+- **As the client:** I save a studio with the heart, then press Clear All or apply filters. The heart becomes empty again. Reloading restores it, so I cannot trust what the filtered list says.
+- **Steps to reproduce:** on `/client/dashboard`, favourite a studio, then press `#clear-filters`. The AJAX result uses the original unfavourited state. `tests/Browser/client-favorites.mjs` failed before the fix (`false !== true`). Original test favourite state was restored after reproduction.
+- **Cause:** `favoritedStudioIds` was initialized from the page but never updated by the successful toggle. Re-rendered cards read that stale array. The old per-button busy flag also disappeared when filtering replaced the button.
+- **Fix:** successful toggles update the shared favourite IDs and the current matching card's icon. Pending toggles are tracked by studio ID rather than by a replaceable DOM node.
+- **Retest (local Chrome):** double-click sends one request (C-20 regression), Clear All preserves the new heart, reload preserves the saved state, and filtering during a delayed toggle still updates the replacement card and ignores the duplicate click. The test restores the original favourite state.
+- **Live:** not deployed or retested.
+
+### C-31 Filtered cards put a favourite heart under the next card
+
+- **As the client:** after filtering, I try clicking a heart and nothing happens. It has spilled outside its card and the next studio's photograph covers it.
+- **Steps to reproduce:** at a 1280px browser viewport, clear discovery filters, then click the studio 6 heart in the rebuilt cards. Browser click repeatedly reports the next card's `Quarry Road Studio` image intercepting pointer events. Found by the delayed-save step in `tests/Browser/client-favorites.mjs`.
+- **Cause:** server-rendered card text containers have `min-width: 0`, but the AJAX template omitted it. The flex item's intrinsic width pushed the heart outside its card.
+- **Fix:** apply the same existing `min-width: 0` constraint to AJAX-rendered card text containers. No forced clicks or overlay workarounds were used in the passing test.
+- **Retest (local Chrome):** the same filtered heart can be clicked normally, including while a delayed save is in progress; the complete favourites interaction test passes.
+- **Live:** not deployed or retested.
+
+### C-32 An old filter response overwrites the current discovery results
+
+- **As the client:** I try a low price limit, then clear it while the connection is slow. Studios briefly reappear, then disappear again even though the price box is empty.
+- **Steps to reproduce:** submit maximum price ₱1, delay that request by 1.8 seconds, then press Clear All. Let the cleared result arrive first. The delayed empty result replaced all 10 current provider cards. `tests/Browser/client-discovery.mjs` failed with `0 !== 10` before the fix.
+- **Cause:** every `applyFilters()` response could replace cards, counts and loading/error state regardless of newer filter requests.
+- **Fix:** each filter request gets a sequence number; only the latest response or failure may update the page.
+- **Retest (local Chrome):** low-price empty state, Clear All restoration and the delayed-old-response sequence all pass. No data was changed.
+- **Live:** not deployed or retested.
+
+### C-33 A delayed package response clears the selected booking package
+
+- **As the client:** I select a package and finish the dates and terms. Proceed to Summary unexpectedly says "Package Required", because another package response silently cleared my choice.
+- **Steps to reproduce:** let the budget-based initial package request start, hold its response for two seconds, select a category to load current packages and select a package. Release the original response. `tests/Browser/client-packages-race.mjs` failed with `0 !== 1` selected radios. The ordinary booking test also caught the "Package Required" alert intermittently before this deterministic reproduction.
+- **Cause:** every category response rebuilt the package list and reset `selectedPackageId`; the page's delayed automatic category load could also duplicate an immediate user selection.
+- **Fix:** sequence package requests so stale success/error callbacks are ignored; clear selected package when changing category, not in a stale callback; skip the delayed automatic load if a category request has already started.
+- **Retest (local Chrome):** the delayed initial response no longer clears the selected radio. The full tested booking-to-summary flow passes again, including time changes, closed-hours refusal, stale availability, calendar and summary close.
+- **Live:** not deployed or retested.
+
+### C-34 Successful rescheduling loses keyboard focus inside the booking window
+
+- **As the client:** I accept the studio's offered time, then press Escape to close Booking Details. Nothing happens. Keyboard focus left the window when the request form disappeared.
+- **Steps to reproduce:** in a paid test booking, request a new time, let the owner offer an alternative, accept it, then press Escape. The test timed out waiting for focus to remain inside `#bookingModal` after the successful update.
+- **Cause:** `mountReschedule()` replaces the panel's HTML after saving. This removes the focused submit button and leaves focus on the document body, outside Bootstrap's modal keyboard handler.
+- **Fix:** focus the saved-status message inside the updated panel, with `tabIndex = -1` and `preventScroll`. Initial panel loading does not steal focus.
+- **Retest (local Chrome):** repeated the owner-offer/customer-accept flow; focus remains inside the booking window, Escape closes it, and balance payment succeeds afterwards.
+- **Live:** not deployed or retested.
+
+### C-39 "Expiring Soon" appears on a plan with months left
+
+- **As the studio owner:** my Studio Growth Annual plan is valid until July 23, 2027, but the subscription page shows an orange Expiring Soon badge in October 2026.
+- **Steps to reproduce:** open `/owner/view/subscription` for Quarry Road on October 25, 2026. The summary shows 271 days remaining and the badge. `tests/Browser/owner-subscription-badge.mjs` failed with "A plan with 271 days left must not say Expiring Soon".
+- **Cause:** Carbon 3 returns a signed difference. `end_date->diffInDays(now())` returned -271 for a future end date, and `-271 <= 7` was true. The warning therefore appeared for every future expiry.
+- **Fix:** calculate `now()->diffInDays($end_date, false)` and show the badge only when the result is between 0 and 7 days.
+- **Retest (local Chrome):** the same plan shows no Expiring Soon badge with 271 days left. Plan Details and Subscription History both opened and showed the plan limits, prices and history rows.
+- **Live:** not deployed or retested.
+
+### C-38 Saving a hardcopy quote loses keyboard focus in Booking Details
+
+- **As the studio owner:** I create a hardcopy quote, then press Escape to close Booking Details. Nothing happens because the focused Save button disappeared when the quote section reloaded.
+- **Steps to reproduce:** on the owner's confirmed booking **BK-6ADC6C55376A8**, enter a 500-peso print quote, click Create hardcopy quote, then press Escape. The modal stayed open and `document.activeElement` was `BODY`, outside `#bookingModal`. This was the same focus pattern as C-34 but in the hardcopy AJAX section.
+- **Cause:** `partials/hardcopy-script.blade.php` replaced the section and prepended a status message but did not restore focus inside the open modal.
+- **Fix:** make the saved-status message focusable and focus it after the section reloads.
+- **Retest (local Chrome):** created a new 300-peso test quote **Order #5** on **BK-6ADD9A0FD3B8D**, confirmed focus was on the in-modal "Hardcopy order saved" message, and Escape closed the window. Reopened and cancelled that test quote; its row shows Cancelled. The earlier accepted 500-peso quote remains on **BK-6ADC6C55376A8** as local test data and raised that booking's displayed balance to ₱10,100.00.
+- **Live:** not deployed or retested.
+
+### C-37 Clicking an admin user's name does nothing
+
+- **As the client (admin):** I click a person's name in Registered Users because it looks like a link. Nothing opens. The small eye button in Actions opens the profile.
+- **Steps to reproduce:** on `/admin/view/users`, click the name link `.link-reset.view-user`. The detail request loads, but `#userModal` never gains `show`. `tests/Browser/admin-user-name-link.mjs` failed waiting for the modal.
+- **Cause:** the name link and the Actions eye button shared the `.view-user` data loader, but only the eye button had Bootstrap's `data-bs-toggle="modal" data-bs-target="#userModal"` attributes. The loader changed hidden modal content without opening it.
+- **Fix:** give the name link the same modal attributes. No JavaScript or data endpoint changed.
+- **Retest (local Chrome):** the name opens the correct profile after its details load, Escape closes it, and the eye action still opens the same modal.
+- **Live:** not deployed or retested.
++
++### C-36 Payroll deducts more than the employee earned
+
+- **As the client (HR/finance):** I generate payroll for an employee with no attendance in the period. The generated record shows gross ₱0.00, deductions ₱32,375.00 and net ₱0.00. The deductions include absence plus fixed contributions, and net is silently held at zero.
+- **Steps to reproduce:** as HR Zacarias, open Generate Payroll, choose Quarry Road, Regular Employee, October 1–25, load employees, select Zacarias, generate, then view the payroll on the HR or finance page. Before the fix: **PAY-20261025-WRYO6H** showed that mismatch.
+- **Cause:** `GeneratePayrollController` calculated deductions independently of gross earnings, summed them for display, then clamped only `net_amount` to zero. The saved deduction breakdown could therefore exceed gross.
+- **Fix:** `PayrollDeductionService::capToGross()` now caps absence deduction first, then other deductions to the remaining gross; all saved deduction lines sum to the displayed total and never exceed gross. Used by payroll generation before totals are calculated.
+- **TDD evidence:** `tests/Unit/PayrollDeductionCapTest.php` failed with the class missing, then passed after implementation (2 tests, 6 assertions).
+- **Retest (local browser):** generated a new payroll for Alfonso, **PAY-20261025-6JOQJT**. It showed gross ₱0.00, deductions ₱0.00 and net ₱0.00. Finance opened details and approved it. Submitting a rejection with a missing reason kept the rejection dialog open and showed the browser's required-field message; no rejection was recorded.
+- **Test-data note:** the earlier broken record **PAY-20261025-WRYO6H** remains as local evidence created before the fix; no attempt was made to rewrite its stored history. The new record and approval are test data.
+- **Live:** not deployed or retested.
++
++### C-35 Recovery-page controls appear behind the sidebar
+
+- **As the studio owner:** I open the test booking from Refund Queue and enter a refund amount. Save refund target cannot be clicked because the Members navigation item covers it.
+- **Steps to reproduce:** at the normal desktop viewport, open the owner's recovery page for booking 68 and click Save refund target. The browser repeatedly reports a `.sidenav-menu` link intercepting the click. No forced clicks were used.
+- **Cause:** the owner recovery view lacked the portal's `.content-page` wrapper, so the fixed sidebar overlaid its content. The client photographer-replacement view had the same missing wrapper.
+- **Fix:** wrap both recovery pages in the existing `.content-page` layout offset. No sidebar positioning or global styling was changed.
+- **Regression proof:** `PortalLayoutRegressionTest::test_cancellation_recovery_pages_keep_actions_clear_of_the_sidebar` failed before the fix, then passed for both templates.
+- **Retest (local Chrome):** the owner clicked Save refund target normally. The full refund journey then completed through admin recording and customer confirmation. The client replacement layout is covered by the regression test; active replacement acceptance/decline remains on the broader walkthrough checklist.
+- **Live:** not deployed or retested.
+
+## Previous agent's final full pass (25 Oct 2026)
 
 Result: **no new issues.** Every issue C-01 to C-27 is Fixed and retested.
 
@@ -325,3 +449,173 @@ Result: **no new issues.** Every issue C-01 to C-27 is Fixed and retested.
 - **Live end-to-end checks:** booking times and studio hours, Complete payment, chat, favourites, freelancer service, leave overlap and procurement limits (see each issue above).
 - **Not an error:** the profile page of every portal contains the words "Server Error", but only as the title of an error pop-up in the page script.
 
+## Resumed verification (25 Oct 2026)
+
+**Status: In progress.** The previous pass above is historical evidence, not a new claim that every feature has been exercised in this resumed session. C-01 through C-27 retain their recorded historical statuses until new evidence reopens an issue.
+
+- Baseline: commit `554d81a9`. Existing browser scripts, screenshots and uploaded files preserved.
+- Scope: resume functional client testing without redesigning the platform. New fixes require reproduction, root-cause analysis, a regression test and a client retest.
+- Safety: local testing only for now. No production writes, deployment or Git push authorized by this continuation.
+- Browser setup: shared browser tool reported its Chrome profile already in use. Resumed tests use a separate, temporary Chrome context instead of closing another session's browser.
+- Fresh checks launched: complete PHPUnit suite (JUnit evidence: `output/client-retest-junit.xml`), production asset build, actual page navigation across all seven portals (`tests/Browser/client-resume.mjs`, evidence: `output/client-resume/pages.json`). Page navigation is only a baseline; it is not a substitute for submitting and completing workflows.
+- Completion gate remains open: record client interactions and edge cases for every feature, resolve and retest all new issues, then record a final full pass with zero new issues in the transcript.
+
+### Fresh results recorded during continuation
+
+- **PHPUnit:** 764 passed, 3,894 assertions, after all six resumed fixes. One pre-existing runner deprecation remains: doc-comment metadata in `PortalMiddlewareDownloadTest` (not a client-facing failure).
+- **Build:** `npm run build` passed. `node --check public/assets/js/app.js` passed.
+- **Page navigation:** first crawl passed 144 URLs; final explicit HTML-page inventory passed 131 pages across all seven roles with no server failures, visible exception pages or uncaught JavaScript errors. The smaller inventory omits JSON/data endpoints from the original list, not failed pages. Evidence: `tests/Browser/portal-pages.json` and `output/client-resume/pages.json`.
+- **Client booking interaction:** `tests/Browser/client-booking.mjs` passed package selection, duration calculation, C-11 time-change retest, C-12 opening/closing boundary refusals, end-before-start validation, C-13 delayed-response retest, availability calendar next month/Escape, and priced summary open/close. No booking or payment was submitted. Test-only Escape timing failures were corrected by waiting for Bootstrap modal focus. The separate intermittent "Package Required" failure was a real defect, reproduced and fixed under C-33.
+- **Client budget interaction:** full create/view/edit/filter/cancel-delete/delete pass recorded under C-29.
+- **First-visit login and manual settings:** passed under C-28.
+- **Discovery/favourites:** passed C-20 double-click regression, favourite persistence across filters/reload, normal filtered-card clickability and delayed-save/re-render duplicate protection (C-30 and C-31).
+- **All seven roles, theme/mobile smoke checks:** `tests/Browser/portal-controls.mjs` passed fresh-visit login without unsolicited settings, manual settings open/close, dark/light changes, theme persistence after reload, and no horizontal page overflow on each dashboard/profile at 390px. This does not claim a full accessibility or all-page mobile audit.
+- **Staff leave requests:** `tests/Browser/staff-leave.mjs` passed create, duplicate-date refusal (C-26), details, edit without self-overlap, dismiss cancellation, confirm cancellation and delete for photographer, HR and finance. Only this test's three leave requests were deleted; existing requests were untouched. Approval chains remain to be repeated in the browser.
+- **Discovery and package races:** C-32 and C-33 regression tests passed after failing before their respective fixes.
+
+### Latest verification checkpoint (not the full-platform completion gate)
+
+After the last application fix, all nine browser scripts ran consecutively with exit code 0 and no new issues in their tested coverage: first-visit login, budgets, package-response race, booking form/summary, favourites, discovery-response race, three-role leave workflow, seven-role theme/mobile smoke checks, and the 131-page portal crawl. Per-script transcripts are saved under `output/client-resume/*.mjs.log`; the same results are recorded in the conversation transcript. The full PHPUnit suite also passed again (764 tests, 3,894 assertions). This is a clean pass of the currently implemented browser checks, **not** a claim that every platform feature has been tested end to end.
+
+Browser scripts live in `tests/Browser/`. They expect the running local server and seeded development database, Chrome, and `PLAYWRIGHT_MODULE` pointing to the installed Playwright `index.mjs`. Run each with `node tests/Browser/<script>.mjs`. No new application dependencies were installed.
+
+### Current checkpoint after the direct browser round
+
+- **New issues:** C-34 through C-39. All are recorded above as Fixed and retested (local).
+- **Fresh automated verification after the last fix:** 767 PHPUnit tests passed, 3,904 assertions; production build passed; `git diff --check` passed. One pre-existing PHPUnit metadata deprecation remains.
+- **Fresh Playwright checks after the last fix:** admin user name and eye links open the correct modal and Escape closes it; the subscription badge is absent with 271 days remaining; the gallery ZIP returns 200 with a 231,930-byte attachment. The hardcopy focus fix was retested interactively with a temporary quote, then that quote was cancelled.
+- **Direct seven-role browser sweep:** logged in as admin, owner, HR, finance, photographer, client and freelancer, then opened 74 primary pages through Playwright. Result: 74 checked, 0 failures. No server error page or leaked exception text appeared.
+- **Scope honesty:** the sweep proves the main pages load for each role. It does not replace the remaining interactive workflows listed above.
+- **Direct browser journey coverage now includes:** login/first visit, seven-role page navigation, client discovery/filters/favourites, budgets CRUD, booking creation, checkout abandonment/resume, deposit and balance test payments, rescheduling request/refusal/alternative/acceptance, cancellation, owner target and real Stripe test refunds, admin refund evidence, procurement draft→completion, attendance history, overtime creation/approval, payroll generation/approval/rejection validation, messaging, notifications, gallery approval/view/download, equipment assignment, hardcopy quote creation/acceptance/focus, freelancer services/packages, admin review flag/restore, category create/delete and user details.
+- **Test data:** procurement **PR-20261025-3754**, po **PO-20261025-0089**, overtime **OT-20261025195502-WUN8O**, payroll **PAY-20261025-WRYO6H** (pre-fix evidence) and **PAY-20261025-6JOQJT**, hardcopy **Order #4** accepted and **Order #5** cancelled, and the approved seed gallery **FS-BKS-00021**. The cancelled/refunded booking **BK-6ADDE413313F5** remains as transaction evidence. These are local only.
+- **Status:** all issues found in this direct browser round are fixed and retested; the platform-wide acceptance gate is still open because the remaining checklist above has not been exercised.
+
+### Remaining acceptance coverage (not yet claimed complete)
+
+- Attendance clock-in/out and late/undertime creation through the live clock, which today is blocked because the selected studio schedule does not include Sunday.
+- Employee/invitation creation, role and permission changes, studio-schedule edits, payroll-settings create/update, and the permission-failure paths around them.
+- Subscription purchase, renewal, cancellation, trial expiry, and plan change through checkout; only plan details, history and the expiry badge have been exercised.
+- Admin studio approve/reject, freelancer management, location create/delete, booking-report moderation, category edit (create/delete passed), and subscription administration.
+- New gallery upload to a fresh, unpublished booking; gallery revision request/accept on a booking whose revision window is still open; hardcopy courier/address validation; equipment removal and photographer confirmation; review/report submission and moderation response.
+- Chatbot start/message/end/history/helpful flows; the launcher was not present on the tested client dashboard or notifications pages.
+- Full interactive cross-role messaging checks beyond the client/owner conversation, plus notification links from each portal.
+- A final full pass after the last fix. The current run passed the implemented checks, but this checklist is not empty.
+
+## Continued transaction testing (25 Oct 2026, evening)
+
+The following checks used actual browser controls, not direct writes to booking records. New test booking **68**, **BK-6ADDE413313F5**, belongs to the seeded client Beatriz and Quarry Road Studio. Existing customer bookings were not changed.
+
+- **Safety:** confirmed the local database host and both Stripe test-mode configuration and `sk_test_` key before payment. Only Stripe's 4242 test card was used. No real charge or production write occurred. Mail configuration is not currently `log`, so account creation, studio moderation and other email-sending flows were not attempted during this round.
+- **Booking creation:** selected package, January 20, 2027, 10:00–13:00, accepted terms and submitted the booking through its summary.
+- **Checkout abandonment:** cancelled the first payment confirmation, opened My Bookings, saw Complete payment, cancelled that dialog once, and then resumed checkout successfully.
+- **Deposit:** Stripe test checkout succeeded for ₱2,370. The booking became confirmed and partially paid. Reloading the payment success page did not create another payment.
+- **Rescheduling:** customer requested January 21 at 07:00–10:00. Requests can be submitted for provider review, but the owner cannot approve an unavailable time: approving this request showed the studio-hours refusal. The owner offered 10:00–13:00 instead; the customer accepted and saw the new schedule. This is intentional provider-review behavior, not an application defect.
+- **Focus regression:** C-34 was found, fixed and retested during that flow.
+- **Balance payment:** customer paid the remaining ₱5,530 through Stripe test checkout. The booking became paid, with exactly two succeeded payments totaling ₱7,900.
+- **Cancellation:** the dialog explained that the studio decides the refund up to ₱7,900. Keep booking preserved it. A missing reason returned 422. Entering a reason cancelled the booking successfully, and the customer's Refunds page showed the request.
+- **Evidence:** state and booking ID are in `output/client-resume/payment-journey.json`; browser scripts are `booking-payment.mjs`, `booking-after-payment.mjs` and `booking-cancellation.mjs` under `tests/Browser/`.
+
+### Resolved environment interruption: local MySQL stopped before refund processing
+
+- **Observed:** `/auth/login` returned HTTP 500. The application log reports MySQL connection refused (`SQLSTATE[HY000] [2002]`) while reading the session. Port 3306 is no longer listening, and no MySQL/MariaDB process or registered Windows service is running. PHP still listens on port 8000.
+- **Not an application fix:** no source or database configuration was changed to hide this failure. Both XAMPP and Laragon are installed; the correct previous database instance must be identified before starting one.
+- **At interruption:** owner refund target, actual Stripe test refunds, admin evidence recording and customer refunded-status confirmation were pending. `booking-refund.mjs` initially stopped at login before changing a refund target or issuing a refund.
+- **Prepared:** `create-test-refunds.php` refuses live keys, non-local databases, unrelated bookings and live/unpaid payment intents. It creates real Stripe test refund references rather than fabricated evidence. Do not call it until the existing local database instance is restored.
+- **Resolution:** Laragon's MySQL error log identifies the exact former process ID (26092) observed at the start of testing. Restarted that same MySQL 8.4.3 installation with its existing `my.ini` and `C:/laragon/data/mysql-8.4` directory. No database was recreated, migrated or reseeded. The site resumed working and refund testing continued.
+- **Current status:** this environment blocker is resolved. The complete-platform final pass remains outstanding.
+
+### Transaction journey completed locally
+
+- **Owner:** opened the booking from Refund Queue, selected ₱7,900 and saved the target with an ordinary click. This revealed and verified C-35.
+- **Provider-side refund:** `create-test-refunds.php` used the stored test checkout sessions to identify their test payment intents, then created two genuine Stripe test-mode refunds, ₱2,370 and ₱5,530. Both returned `succeeded`. Idempotency keys prevent a repeated helper call from issuing another refund. Evidence: `output/client-resume/refund-evidence.json`.
+- **Admin:** saw the correct ₱7,900 target, tried reusing one refund reference for both payments and received 422, then entered each genuine refund reference. Recording succeeded, and the booking left the pending refund queue.
+- **Customer:** Refunds shows the booking as refunded. Details confirm the booking stays cancelled, its payment status is refunded, and both payments are refunded.
+- **Final transaction state:** `BK-6ADDE413313F5` (68) is cancelled and fully refunded in test mode. No real funds or production records were changed. Test booking, payments, recovery history and in-app notifications remain as audit evidence.
+- **Coverage completed in this round:** actual booking submission → abandoned checkout → resumed test deposit → owner-reviewed reschedule with an alternative time → balance payment → cancel/keep and missing-reason checks → cancellation → owner refund target → actual test refunds → admin evidence → customer refund confirmation. Photo delivery and the other checklist areas still require separate journeys.
+- **Fresh regression verification after C-34/C-35:** 765 PHPUnit tests passed, 3,898 assertions; production asset build passed; `git diff --check` passed. The existing PHPUnit doc-comment deprecation remains. These results do not close the full-platform acceptance checklist.
+
+## Live website verification (25 Oct 2026)
+
+**Host:** https://lumoraphotography.online. **Method:** Playwright browser against the deployed site. **Safety:** read-only checks only. No bookings, payments, messages, invitations, approvals, deletions, account changes or refunds were submitted. No email was sent.
+
+- **Page load:** logged in as the seven seeded roles. Opened 74 primary pages across admin, owner, HR, finance, photographer, client and freelancer. Result: 74 checked, 0 server failures and no leaked exception text.
+- **C-28 still present live:** after clearing cookies and local storage, the Admin Customizer panel opened over `/auth/login` by itself and showed the Buy Now link. The deployed site does not contain the local fix.
+- **C-37 still present live:** on `/admin/view/users`, clicking the first user's name, **Probe Deploy**, loaded that user's details into the hidden modal but did not show the modal. The fix is local only.
+- **C-39 still present live:** the owner subscription page showed **Studio Growth Annual**, valid until **Jul 23, 2027**, with **Expiring Soon**. The deployed site does not contain the local badge fix.
+- **C-31 live observation:** after Clear All on client discovery, the first favourite heart measured about 12 pixels beyond its card boundary. It was still clickable at this viewport, unlike the local overlap that blocked clicks. No client write was used to test the full favourites interaction.
+- **Not tested live due to safety:** C-29 budget creation cleanup, C-30/C-31 favourite toggling, C-32/C-33 delayed requests, C-34 reschedule actions, C-35 refund targets, C-36 payroll generation, C-38 hardcopy creation. These all require writes to the live database. The local fixes therefore remain unverified on live.
+- **Cleanup note confirmed live:** the **Probe Deploy** account is still present in Registered Users. It is the account previously recorded for owner cleanup. It was not deleted during this read-only pass.
+- **Deployment status:** the local fixes are uncommitted and undeployed. Live currently behaves like the pre-fix code for C-28, C-37 and C-39.
+
+## Direct Playwright browser walkthrough (user-requested, no shell-run tests)
+
+**Status: In progress.** This round uses Playwright browser tools directly to click, type and inspect rendered screens. Previous shell-run browser scripts are not being counted as this requested walkthrough.
+
+### Procurement, photographer Eduardo
+
+- Logged in through the visible login form, expanded Request and clicked Request Procurement.
+- Submitted an empty request: a Request Error dialog listed the missing purpose, date, item, quantity, unit and cost. The expected validation request returned 422; this is not a JavaScript crash.
+- Entered a local test request for two 128GB SD cards at ₱1,500 each, required November 20. Saved Draft.
+- Queue shows **PR-20261025-3754**, request **17**, Draft, ₱3,000. Opened its action menu and clicked View: details show the correct item, quantity, unit price, total and Draft Saved timeline entry.
+- Screenshots/snapshots are recorded by the browser tools under `.playwright-mcp/`, including `page-2026-10-25T11-35-51-787Z.yml` for opening details.
+- Edited the draft, clicked Add Item, confirmed a second row appeared, removed it, and confirmed one row remained. Submitted the request; queue changed to Pending Finance Review.
+- Finance: clicked View, tried Return without a note and saw "A note is required for this action." Cancelled. Approved with a note; queue changed to Pending Owner Approval.
+- Owner: clicked View, confirmed finance note, approved with a note; queue changed to Approved.
+- Finance: generated PO **PO-20261025-0089** for a local test supplier, changed approved unit cost to ₱1,400 (approved total ₱2,800), then recorded delivery. Saving without a receipt was blocked by the file requirement. Added a test-only marked PNG and delivery note; queue changed to Delivered.
+- Photographer: opened details, confirmed the delivery file. Tried receiving 3 of 2 and saw "Partial deliveries are not supported in this workflow. Received quantities must match ordered quantities." Tried receiving equipment without asset fields and saw the required serial/acquisition/location message. Entered serial **TEST-SD-PAIR-001**, acquisition cost, and a local-test cabinet, then confirmed receipt; queue changed to Received.
+- Finance: confirmed the payment statement and approved total, tried Start Payment Processing without documents and was blocked by the two required file inputs. Added clearly named test-only invoice/proof files, invoice **TEST-INV-20261025-01**, payment **TEST-PAY-20261025-01**, and started payment processing. Queue changed to Payment Processing. Clicked Complete, confirmed "Complete Procurement?", and the queue changed to Completed.
+- Result: procurement completed end to end through rendered browser controls. The uploaded files and records are local test-only; no real supplier, payment or delivery took place. Empty-request, missing-note, partial-receipt and missing-document paths all gave plain, actionable messages.
+
+### Payroll, HR through finance
+
+- HR loaded two regular employees, generated a payroll for each, and saw both new records under View Generated Payrolls.
+- This exposed C-36: the first new record showed ₱32,375.00 deductions against ₱0.00 gross. Fixed and recorded above.
+- Generated a fresh record after the fix: **PAY-20261025-6JOQJT** showed ₱0.00 gross, ₱0.00 deductions, ₱0.00 net and a complete attendance/deduction breakdown.
+- Finance opened the details, approved it, and the row changed to Approved with Alfonso as reviewer. Finance then opened a separate pending record, chose Reject, and submitting without a reason kept the reason dialog open with the browser's required-field message. No rejection was submitted.
+- The payroll approval page's loading placeholder was briefly visible after a rapid modal close/reopen; a normal reload and open showed the complete record. The automated/browser interaction that caused the stale open did not reproduce after reload, so no application change is claimed for that transient test sequence.
+
+### Attendance and overtime
+
+- Photographer attendance loaded the selected Quarry Road Studio, showed the live clock, schedule and geofence, kept Check-In/Check-Out disabled because today is not one of the studio's operating days, and showed 23 own history records. Opening the August 13 late record showed check-in 09:12 AM, 12 minutes late, check-out 06:00 PM, and total 08:48:00.
+- Initially the page briefly showed "Waiting for selection" while Quarry Road was already selected. A reload showed the correct "Ready" state. It did not persist under a repeat load, so it is recorded as observed test-server timing, not an application fix.
+- Photographer submitted a two-hour overtime request (**OT-20261025195502-WUN8O**, March 10, 2027, 6–8 PM). HR opened the detail and approved it after the confirmation; the queue changed to Approved.
+
+### Messaging
+
+- Client Beatriz opened the Yolanda conversation for booking **BK-6ADC6C55376A8**. A message of spaces showed "Type a message first." and was not added. Sent "Browser client test: please confirm the final schedule." and saw "Message sent."
+- Logged in as Yolanda and opened the same conversation. All three messages were present, including the client's message. Existing `<script>` and `<b>` test text appeared as plain text, not executed or rendered as markup.
+- The send button briefly remained in "Sending..." state before completing; it then updated normally. No duplicate message appeared.
+
+### Admin moderation and category CRUD
+
+- Admin flagged Jasmine Zabala's Quarry Road review; its badge changed to FLAGGED. Clicked Publish and the same row returned to PUBLISHED. This restored the original state.
+- Opened Create Category, submitted empty and saw "Category name is required." Created **Browser Test Category 20261025**, saw the success dialog, found it on page 2 of View Categories, clicked Delete, confirmed the irreversible-action dialog, and saw it removed. No seeded category was changed.
+- Admin users, studios, freelancers, categories, locations, subscriptions, reports and booking-refund queue pages were covered by the page crawl earlier; deeper CRUD for each is still on the remaining checklist.
+
+### Galleries
+
+- Owner Online Gallery showed published, pending-approval and no-gallery rows. Approved pending gallery **FS-BKS-00021** and saw the row change to Approved. This changed local seeded state; no rejection or deletion was performed.
+- Client Beatriz saw three published galleries, including both studio and freelancer delivery. Opened the Quarry Road gallery, confirmed both photos, individual download links and "Download all photos (ZIP)."
+- Individual photo download produced a file. The ZIP endpoint was checked with Playwright's request client: 200, `application/zip`, attachment filename `GAL-6ADCA65FEDF96.zip`, 231,930 bytes. An in-page `fetch()` reported 204 because Chrome handles an attachment response differently; this was a test-method artifact, not an application defect. Regression check: `tests/Browser/gallery-download.mjs` passes.
+- Photographer tried adding a third photo to an already published gallery and received the intended message: "This gallery is already published to the client. Ask the client to request a revision before uploading new photos." No photo was added.
+- Existing published gallery **BK-6ADCA27549033** has no Revision Requested control on the client gallery or its booking-history row because its older record has no active revision deadline. The route and form exist in source; this was not changed, because changing revision eligibility would alter the business rule.
+
+### Freelancer
+
+- Lorena's service list showed two categories and three services in each. Search with real keystrokes narrowed to Wedding; category filter narrowed to one. Opened Wedding service details; C-07 remains fixed (no error), with all three services listed.
+- Package list showed four packages with category, price, gallery, time customization, duration, photo count and status. Opened a package edit form, cleared its name and pressed Save Changes: the browser blocked the empty required field and stayed on the same page. No seeded package was saved or changed.
+
+### Admin users
+
+- Searched Registered Users by typing "Quality Tester" and opened the eye action. The User Profile modal showed full name, UUID, email, mobile, location, status and verification date. The name link itself does not open this modal; only the Actions eye does. This is acceptable, but the name is styled as a link while doing nothing, and remains a usability issue to decide later rather than a broken workflow.
+- The **Quality Tester** account and the older `probe.deploy.*` account are test-data cleanup items already recorded for the owner; they were not deleted.
+- Clicking a user's name exposed C-37. The name link opened no profile. The missing Bootstrap modal attributes are fixed; the Playwright regression test now opens by name and by eye, closes with Escape, and verifies the right person's name in the modal.
+
+### Booking preparation, equipment and hardcopy
+
+- Opened confirmed booking **BK-6ADC6C55376A8**, which already had one photographer and two paid editing add-ons. Assigned the available **Camera MARK VI / NIKON** to the booking. The section changed to "Equipment assigned... Waiting for the photographer to confirm." The photographer and equipment catalog rendered correctly.
+- Created a 500-peso, 8x10 hardcopy quote from Booking Details. The quote showed as Order #4, Pending, with the studio pickup suggestion.
+- Client opened the same booking, saw the quote and total, chose Studio pickup and accepted. Reopened: total became ₱10,100.00, the client choice is shown as final, and the remaining balance updated to ₱10,100.00. This is deliberate local test data.
+- While testing this, C-38 was found and fixed: saving a quote left keyboard focus outside the modal and Escape failed.
+- After the fix, a 300-peso quote on **BK-6ADD9A0FD3B8D** was created, focus stayed on the saved-status message, Escape closed the dialog, and the quote was reopened and cancelled as Order #5.
+- The older accepted quote remains local test data; no payment was made for the added balance.

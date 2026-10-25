@@ -16,7 +16,9 @@ window.mountReschedule = function (element, url) {
                 saved.setAttribute('role', 'status');
                 saved.className = 'fw-medium';
                 saved.textContent = message;
+                saved.tabIndex = -1;
                 element.prepend(saved);
+                saved.focus({preventScroll: true});
             }
         } catch (error) {
             if (element.rescheduleMount === mount) element.textContent = error.message;

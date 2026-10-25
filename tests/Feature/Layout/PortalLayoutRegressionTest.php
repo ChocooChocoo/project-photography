@@ -49,6 +49,18 @@ class PortalLayoutRegressionTest extends TestCase
         }
     }
 
+    public function test_cancellation_recovery_pages_keep_actions_clear_of_the_sidebar(): void
+    {
+        foreach (['owner', 'client'] as $role) {
+            $contents = $this->readView("resources/views/{$role}/cancellation-recovery.blade.php");
+            $this->assertMatchesRegularExpression(
+                '/@section\(\'content\'\)\s*<div class="content-page">/',
+                $contents,
+                "The {$role} recovery page must use the portal content offset."
+            );
+        }
+    }
+
     public function test_owned_sidebars_link_the_logo_to_the_site_root(): void
     {
         foreach (self::OWNED_SIDEBARS as $path) {

@@ -1,6 +1,7 @@
 @extends('layouts.client.app')
 
 @section('content')
+<div class="content-page">
 <div class="container py-4">
     <h1 class="h4">Photographer replacement</h1>
     <p>A replacement photographer is available for booking {{ $recovery->booking->booking_reference }}.</p>
@@ -19,6 +20,7 @@
     @else
         <p>Status: <strong>{{ str_replace('_', ' ', $recovery->status) }}</strong></p>
     @endif
+</div>
 </div>
 @endsection
 

@@ -45,7 +45,8 @@ window.mountHardcopy = function (element, bookingId, owner) {
             if (element.hardcopyMount !== mount) return;
             if (!response.ok) throw new Error(result.message || 'Could not save the order. Try again.');
             await load();
-            const saved = document.createElement('p'); saved.setAttribute('role', 'status'); saved.textContent = 'Hardcopy order saved. Reopen booking details to refresh payment controls.'; element.prepend(saved);
+            const saved = document.createElement('p'); saved.setAttribute('role', 'status'); saved.tabIndex = -1; saved.textContent = 'Hardcopy order saved. Reopen booking details to refresh payment controls.'; element.prepend(saved);
+            saved.focus({preventScroll: true});
         } catch (error) { if (element.hardcopyMount === mount) feedback.textContent = error.message; }
         finally { buttons.forEach(button => button.disabled = false); }
     };

@@ -357,6 +357,8 @@
 
             // Studio IDs already favorited by this client
             const favoritedStudioIds = @json($favoriteStudioIds->all());
+            const pendingFavoriteStudioIds = new Set();
+            let filterRequestId = 0;
 
             // Filter variables
             let activeFilters = {
@@ -397,7 +399,7 @@
                                                 class="rounded" alt="${photographer.name}" 
                                                 style="width: 100px; height: 100px; object-fit: cover;">
                                         </div>                                            
-                                        <div class="flex-grow-1 ms-3">
+                                        <div class="flex-grow-1 ms-3" style="min-width: 0;">
                                             <div class="d-flex align-items-center gap-2">
                                                 <h4 class="card-title mb-1 text-truncate">${photographer.name}</h4>
                                                 ${favoriteButton}
@@ -442,6 +444,7 @@
 
             // Update the applyFilters function to include rating
             function applyFilters() {
+                const requestId = ++filterRequestId;
                 // Show loading spinner
                 $('#loading-spinner').show();
                 $('#no-results').hide();
@@ -495,6 +498,7 @@
                         min_rating: minRating
                     },
                     success: function(response) {
+                        if (requestId !== filterRequestId) return;
                         // Hide loading spinner
                         $('#loading-spinner').hide();
 
@@ -509,6 +513,7 @@
                         }
                     },
                     error: function(xhr) {
+                        if (requestId !== filterRequestId) return;
                         $('#loading-spinner').hide();
                         $('#photographer-cards-container').show();
                         
@@ -736,8 +741,8 @@
                 const studioId = btn.data('studio-id');
 
                 // A double click must not send two toggles (which would undo the first).
-                if (btn.data('busy')) return;
-                btn.data('busy', true);
+                if (pendingFavoriteStudioIds.has(studioId)) return;
+                pendingFavoriteStudioIds.add(studioId);
 
                 $.ajax({
                     url: '{{ route("client.favorites.toggle") }}',
@@ -749,7 +754,13 @@
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
-                            const icon = btn.find('i');
+                            const favoriteIndex = favoritedStudioIds.indexOf(studioId);
+                            if (response.favorited && favoriteIndex === -1) {
+                                favoritedStudioIds.push(studioId);
+                            } else if (!response.favorited && favoriteIndex !== -1) {
+                                favoritedStudioIds.splice(favoriteIndex, 1);
+                            }
+                            const icon = $(`.favorite-toggle-btn[data-studio-id="${studioId}"]`).find('i');
                             if (response.favorited) {
                                 icon.removeClass('ti-heart').addClass('ti-heart-filled text-danger');
                                 Swal.fire({
@@ -782,7 +793,7 @@
                         });
                     },
                     complete: function() {
-                        btn.data('busy', false);
+                        pendingFavoriteStudioIds.delete(studioId);
                     }
                 });
             });

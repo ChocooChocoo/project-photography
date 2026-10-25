@@ -30,7 +30,8 @@
                         <div>
                             <strong>Current Plan:</strong> {{ $currentSubscription->plan->name ?? 'Unknown' }}
                             (Valid until {{ $currentSubscription->end_date->format('M d, Y') }})
-                            @if($currentSubscription->end_date->diffInDays(now()) <= 7)
+                            @php $daysUntilExpiry = now()->diffInDays($currentSubscription->end_date, false); @endphp
+                            @if($daysUntilExpiry >= 0 && $daysUntilExpiry <= 7)
                                 <span class="badge bg-warning ms-2">Expiring Soon</span>
                             @endif
                             @if($currentSubscription->isOnTrial())

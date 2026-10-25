@@ -365,6 +365,12 @@
             // ==================== INITIALIZATION ====================
             let selectedBudgetId = null;
 
+            function escapeHtml(value) {
+                return String(value ?? '').replace(/[&<>"']/g, character => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                })[character]);
+            }
+
             // ==================== LOAD BUDGETS WITH FILTERS ====================
             function loadBudgets() {
                 let filters = {
@@ -445,14 +451,14 @@
                     html += `
                         <tr>
                             <td>
-                                <div class="fw-semibold">${budget.budget_name || 'Unnamed Budget'}</div>
-                                <small class="text-muted">${budget.description ? budget.description.substring(0, 50) + (budget.description.length > 50 ? '...' : '') : 'No description'}</small>
+                                <div class="fw-semibold">${escapeHtml(budget.budget_name || 'Unnamed Budget')}</div>
+                                <small class="text-muted">${escapeHtml(budget.description ? budget.description.substring(0, 50) + (budget.description.length > 50 ? '...' : '') : 'No description')}</small>
                             </td>
-                            <td>${categoryName}</td>
+                            <td>${escapeHtml(categoryName)}</td>
                             <td>
-                                <div class="budget-amount">${budgetRange}</div>
+                                <div class="budget-amount">${escapeHtml(budgetRange)}</div>
                             </td>
-                            <td>${budgetType}</td>
+                            <td>${escapeHtml(budgetType)}</td>
                             <td>${statusBadge}</td>
                             <td><small>${createdDate}</small></td>
                             <td>
@@ -571,10 +577,7 @@
                             let budget = response.budget;
                             
                             // Build category options with selected value
-                            let categoryOptions = '<option value="">Select Category</option>';
-                            @foreach($categories as $category)
-                                categoryOptions += `<option value="{{ $category->id }}" ${budget.category_id == {{ $category->id }} ? 'selected' : ''}>{{ $category->category_name }}</option>`;
-                            @endforeach
+                            let categoryOptions = $('#category_id').html();
                             
                             // Build type options with selected value
                             let typeOptions = `
@@ -602,7 +605,7 @@
                                                 Budget Name <span class="text-muted">(Optional)</span>
                                             </label>
                                             <input type="text" id="edit_budget_name" name="budget_name" class="form-control" 
-                                                placeholder="e.g., Wedding Budget 2024" value="${budget.budget_name || ''}">
+                                                placeholder="e.g., Wedding Budget 2024" value="${escapeHtml(budget.budget_name || '')}">
                                             <small class="text-muted">Give your budget a name for easy reference</small>
                                         </div>
 
@@ -646,7 +649,7 @@
                                                 Description <span class="text-muted">(Optional)</span>
                                             </label>
                                             <textarea id="edit_description" name="description" class="form-control" 
-                                                    rows="3" placeholder="Add any notes or details about this budget...">${budget.description || ''}</textarea>
+                                                    rows="3" placeholder="Add any notes or details about this budget...">${escapeHtml(budget.description || '')}</textarea>
                                         </div>
                                     </div>
 
@@ -662,6 +665,7 @@
                             `;
                             
                             $('#editBudgetModal .modal-body').html(editFormContent);
+                            $('#edit_category_id').val(budget.category_id || '');
                         }
                     },
                     error: function() {
@@ -794,13 +798,13 @@
                                     <div class="col-12 col-lg-8">
                                         <div class="d-flex align-items-center flex-column flex-md-row">
                                             <div class="flex-grow-1 ms-md-2 text-center text-md-start">
-                                                <h2 class="mb-1 h3 h3-md">${budget.budget_name || 'Unnamed Budget'}</h2>
+                                                <h2 class="mb-1 h3 h3-md">${escapeHtml(budget.budget_name || 'Unnamed Budget')}</h2>
                                                 <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-2 flex-wrap">
                                                     ${statusBadge}
                                                 </div>
                                             
                                                 <p class="text-muted mb-0">
-                                                    <i class="ti ti-info-circle me-1"></i> ${budget.description || 'No description provided'}
+                                                    <i class="ti ti-info-circle me-1"></i> ${escapeHtml(budget.description || 'No description provided')}
                                                 </p>
                                             </div>
                                         </div>
@@ -821,7 +825,7 @@
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
                                                         <label class="text-muted small mb-1">Category</label>
-                                                        <p class="mb-0 fw-medium">${categoryName}</p>
+                                                        <p class="mb-0 fw-medium">${escapeHtml(categoryName)}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -835,7 +839,7 @@
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
                                                         <label class="text-muted small mb-1">Budget Type</label>
-                                                        <p class="mb-0 fw-medium">${budgetType}</p>
+                                                        <p class="mb-0 fw-medium">${escapeHtml(budgetType)}</p>
                                                     </div>
                                                 </div>
                                             </div>

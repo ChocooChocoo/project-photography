@@ -626,6 +626,7 @@
         $(document).ready(function() {
             // Initialize variables
             let selectedPackageId = null;
+            let packageLoadId = 0;
             let bookingData = null;
             let bookingId = null;
             let selectedPackageFlexibility = null;
@@ -834,7 +835,7 @@
                 
                 // Trigger the change event to load packages
                 setTimeout(function() {
-                    $('#serviceCategory').trigger('change');
+                    if (packageLoadId === 0) $('#serviceCategory').trigger('change');
                 }, 150); // Slightly longer delay to ensure tabs are rendered
                 
             } else if (hasBudgets && availableBudgetCategories.length === 0) {
@@ -886,6 +887,8 @@
 
             // Load packages when category is selected
             $('#serviceCategory').on('change', function() {
+                const requestId = ++packageLoadId;
+                selectedPackageId = null;
                 // Reset location type when category changes
                 resetLocationUI();
                 
@@ -928,6 +931,7 @@
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
+                        if (requestId !== packageLoadId) return;
                         console.log('Packages response:', response);
                         
                         if (response.success && response.packages && response.packages.length > 0) {
@@ -1256,6 +1260,7 @@
                         }
                     },
                     error: function(xhr) {
+                        if (requestId !== packageLoadId) return;
                         console.error('Packages AJAX error:', xhr);
                         
                         $('#packagesContainer').html(`
