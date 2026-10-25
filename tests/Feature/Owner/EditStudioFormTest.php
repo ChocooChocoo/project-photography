@@ -43,5 +43,7 @@ class EditStudioFormTest extends TestCase
 
         $this->assertMatchesRegularExpression('/<select[^>]*id="barangaySelect"[^>]*>\s*<option value="Bucandala III" selected>Bucandala III<\/option>/', $html);
         $this->assertMatchesRegularExpression('/<input type="hidden" id="hiddenZipCode" name="zip_code" value="4106">/', $html);
+        // The old page script added a second hidden ZIP input next to this one.
+        $this->assertStringNotContainsString('initialZipCode', $html);
     }
 }

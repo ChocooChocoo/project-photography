@@ -699,12 +699,6 @@
                 });
             }
 
-            // Create hidden input for zip_code if exists
-            const initialZipCode = $('#zipCodeInput').val();
-            if (initialZipCode && initialZipCode !== '' && initialZipCode !== 'Loading...') {
-                $('#zipCodeInput').after(`<input type="hidden" id="hiddenZipCode" name="zip_code" value="${initialZipCode}">`);
-            }
-
             // Function to validate operating days
             function validateOperatingDays() {
                 const checkedDays = $('#operatingDaysGroup input[type="checkbox"]:checked');
