@@ -28,7 +28,7 @@ class UpdateOvertimeRequest extends FormRequest
     {
         return [
             'overtime_date' => ['required', 'date', 'after_or_equal:today'],
-            'start_time' => ['required', 'date_format:H:i'],
+            'start_time' => ['required', 'date_format:H:i', \App\Rules\NoOverlappingTimeOff::overtime($this->route('id'))],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'reason' => ['required', 'string', 'min:10', 'max:1000'],
         ];

@@ -35,6 +35,7 @@ Testing the platform the way a studio client uses it every day: every portal, th
 | C-23 | Admin, studios | The "delete studio" action crashes with a server error. | Fixed |
 | C-24 | Leave and overtime (HR, finance, photographer, owner), chatbot intents | Approving, cancelling or deleting a leave or overtime request (or a chatbot answer) that was already removed shows a server error. | Fixed |
 | C-25 | Client booking | When a studio's plan has lapsed, I'm told "An active subscription or grace period is required for this studio." | Fixed |
+| C-26 | Leave and overtime (HR, finance, photographer) | I can file the same leave dates twice (or overlapping dates, or the same overtime hours), so HR and payroll see duplicates. | Fixed |
 
 ### C-01 Theme settings pictures are broken
 
@@ -254,3 +255,13 @@ Testing the platform the way a studio client uses it every day: every portal, th
 - **Fix:** client routes get "This studio isn't taking bookings right now. Please choose another studio." and no owner link.
 - **Test:** `SubscriptionAccessTest::test_a_client_booking_a_studio_without_a_plan_gets_a_client_message` (failed before).
 - **Retest (local):** the client's booking calls without a studio now answer with that message. Live: pending.
+
+### C-26 Duplicate and overlapping leave or overtime requests are accepted
+
+- **As the client (photographer):** I press Submit twice on my vacation request for 1 to 3 December. Two pending requests appear for HR; I can also file 3 to 5 December on top of an approved request.
+- **Steps to reproduce:** as Eduardo, post the same leave request twice and an overlapping one (`/studio-photographer/leave-requests`). All three were accepted (requests 16, 17 and 18).
+- **Cause:** the leave and overtime forms checked only the dates themselves, never the person's other requests.
+- **Fix:** new rule `App\Rules\NoOverlappingTimeOff` refuses a leave request that overlaps one of your own pending or approved requests ("You already have a pending or approved leave request for these dates."), and the same for overtime hours on one day. It is on all 12 store/update forms for HR, finance and photographers; an edit does not clash with itself, and rejected or cancelled requests do not count.
+- **Also checked (no issue):** approving twice, rejecting after approval, and deleting or cancelling an approved request are all refused with clear messages ("Only pending leave requests can be processed.", "Approved leave requests cannot be deleted.").
+- **Test:** `tests/Feature/StudioEmployee/TimeOffOverlapTest.php` (overlap, edit, rejected, overtime hours, and that all 12 forms use the rule).
+- **Retest (local):** the same dates as approved request 16 and an overlapping range are refused with that message; a non-overlapping day is accepted; the same overtime hours twice are refused. Test requests 17, 18, 19 and overtime 21 were cancelled afterwards. Live: pending.

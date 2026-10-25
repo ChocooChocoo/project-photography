@@ -30,7 +30,7 @@ class UpdateLeaveRequest extends FormRequest
     {
         return [
             'leave_type' => ['required', Rule::in(array_keys(LeaveRequestModel::getAvailableLeaveTypes()))],
-            'start_date' => ['required', 'date', 'after_or_equal:today'],
+            'start_date' => ['required', 'date', 'after_or_equal:today', \App\Rules\NoOverlappingTimeOff::leave($this->route('id'))],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
             'reason' => ['required', 'string', 'min:10', 'max:1000'],
         ];
