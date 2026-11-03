@@ -50,6 +50,7 @@ class BookingAssignedPhotographerModel extends Model
         'on_site_proof_image',
         'latitude',
         'longitude',
+        'arrival_distance_meters',
     ];
 
     /**

@@ -17,6 +17,14 @@ class AssignedBookingController extends Controller
     use Notifiable;
 
     /**
+     * How far (metres) a photographer may be from the venue pin or studio
+     * when checking in on site.
+     * ponytail: one constant for every studio; make it a per-studio setting
+     * (like attendance_radius_meters) if owners need different radii.
+     */
+    public const ARRIVAL_RADIUS_METERS = 300;
+
+    /**
      * Display assigned bookings for the photographer
      */
     public function index()
@@ -248,6 +256,18 @@ class AssignedBookingController extends Controller
                         ], 422);
                     }
 
+                    $arrivalDistance = $this->arrivalDistance($booking, (float) $request->input('latitude'), (float) $request->input('longitude'));
+                    if (! is_null($arrivalDistance) && $arrivalDistance > self::ARRIVAL_RADIUS_METERS) {
+                        $target = $booking->location_type === 'on-location' ? 'venue pin' : 'studio';
+
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Your location is about '.number_format($arrivalDistance).' m from the '.$target
+                                .'. Check in when you are within '.self::ARRIVAL_RADIUS_METERS.' m.',
+                            'distance_meters' => $arrivalDistance,
+                        ], 422);
+                    }
+
                     $proofPath = $request->file('on_site_proof_image')->store('on-site-proofs/'.$booking->id, 'public');
                     if (! $proofPath) {
                         throw new \RuntimeException('Could not save arrival proof. Please try again.');
@@ -255,6 +275,7 @@ class AssignedBookingController extends Controller
                     $updateData['on_site_proof_image'] = $proofPath;
                     $updateData['latitude'] = $request->input('latitude');
                     $updateData['longitude'] = $request->input('longitude');
+                    $updateData['arrival_distance_meters'] = $arrivalDistance;
                     $updateData['on_site_at'] = now();
 
                     // A studio booking that is still Confirmed advances to In Progress
@@ -267,6 +288,7 @@ class AssignedBookingController extends Controller
 
                     // Create notification for client to confirm on-site presence
                     $this->createClientConfirmationNotification($assignment);
+                    $this->announceArrival($assignment, $booking, $photographerName, $arrivalDistance);
                     break;
 
                 case 'in_progress':
@@ -440,6 +462,71 @@ class AssignedBookingController extends Controller
     }
 
     // ========== Helper method to create studio owner notification ==========
+    /**
+     * Straight-line metres from the check-in point to the venue pin
+     * (on-location) or the studio's attendance pin (in-studio). Null when the
+     * booking has no pin to measure against, such as older bookings.
+     */
+    private function arrivalDistance(BookingModel $booking, float $latitude, float $longitude): ?int
+    {
+        if ($booking->location_type === 'on-location') {
+            [$targetLat, $targetLng] = [$booking->venue_latitude, $booking->venue_longitude];
+        } else {
+            $studio = StudiosModel::find($booking->provider_id);
+            [$targetLat, $targetLng] = [$studio?->attendance_latitude, $studio?->attendance_longitude];
+        }
+
+        if (is_null($targetLat) || is_null($targetLng)) {
+            return null;
+        }
+
+        return app(\App\Services\AttendanceGeolocationService::class)
+            ->calculateDistanceMeters($latitude, $longitude, (float) $targetLat, (float) $targetLng);
+    }
+
+    /**
+     * Arrival alert: in-app notice to the owner, email to the client and the
+     * owner. The client's in-app notice is sent by createClientConfirmationNotification().
+     */
+    private function announceArrival($assignment, BookingModel $booking, string $photographerName, ?int $distance): void
+    {
+        $where = is_null($distance) ? '' : ' ('.number_format($distance).' m from the '.($booking->location_type === 'on-location' ? 'venue pin' : 'studio').')';
+
+        $this->createOwnerNotification(
+            $assignment,
+            'photographer_arrived',
+            'Photographer Arrived',
+            "{$photographerName} checked in on site for booking #{$booking->booking_reference}{$where}.",
+            [
+                'booking_id' => $booking->id,
+                'booking_reference' => $booking->booking_reference,
+                'assignment_id' => $assignment->id,
+                'distance_meters' => $distance,
+                'route' => route('owner.booking.index', [], false),
+            ],
+            'map-pin',
+            'success'
+        );
+
+        $recipients = [
+            [\App\Models\UserModel::find($booking->client_id)?->email, route('client.my-bookings.index')],
+            [$assignment->studio?->user?->email, route('owner.booking.index')],
+        ];
+
+        foreach ($recipients as [$email, $url]) {
+            if (! $email) {
+                continue;
+            }
+            try {
+                \Illuminate\Support\Facades\Mail::to($email)->send(
+                    new \App\Mail\PhotographerArrivedMail($booking, $photographerName, $distance, $url)
+                );
+            } catch (\Throwable $e) {
+                \Log::error('Arrival email failed', ['booking_id' => $booking->id, 'error' => $e->getMessage()]);
+            }
+        }
+    }
+
     private function createOwnerNotification($assignment, $type, $title, $message, $data, $icon, $color)
     {
         try {

@@ -3,6 +3,7 @@
 
 {{-- STYLES --}}
 @section('styles')
+    <link rel="stylesheet" href="{{ asset('assets/plugins/leaflet/leaflet.css') }}">
     <style>
         .calendar-grid {
             display: grid;
@@ -439,6 +440,21 @@
                                             
                                             <small class="text-muted d-block mt-2" id="multipleLocationsNote"></small>
                                         </div>
+
+                                        {{-- VENUE PIN: the photographer's arrival check-in is measured against it --}}
+                                        <div id="venuePinBlock" class="col-12 mb-3" style="display: none;">
+                                            <label class="form-label" id="venuePinLabel">Pin the venue on the map</label>
+                                            <p class="small text-muted mb-2" id="venuePinHelp">Tap the map where the shoot happens. Your photographer checks in from this spot when they arrive.</p>
+                                            <div id="venuePinMap" class="rounded border" style="height: 260px;" role="application" aria-labelledby="venuePinLabel" aria-describedby="venuePinHelp"></div>
+                                            <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" id="venueUseMyLocation" style="min-height: 44px;">
+                                                    <i class="ti ti-current-location me-1" aria-hidden="true"></i> Use my current location
+                                                </button>
+                                                <small id="venuePinStatus" aria-live="polite" class="text-muted">No pin yet.</small>
+                                            </div>
+                                            <input type="hidden" id="venueLatitude" name="venue_latitude">
+                                            <input type="hidden" id="venueLongitude" name="venue_longitude">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -627,6 +643,7 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
+    <script src="{{ asset('assets/plugins/leaflet/leaflet.js') }}"></script>
     <script>
         $(document).ready(function() {
             // Initialize variables
@@ -1505,6 +1522,53 @@
                 removeLocation($(this));
             });
             
+            // ========== VENUE PIN ==========
+            let venueMap = null;
+            let venueMarker = null;
+            function setVenuePin(lat, lng) {
+                const point = [Number(lat.toFixed(7)), Number(lng.toFixed(7))];
+                if (venueMarker) {
+                    venueMarker.setLatLng(point);
+                } else {
+                    venueMarker = L.marker(point, {draggable: true}).addTo(venueMap);
+                    venueMarker.on('dragend', () => {
+                        const moved = venueMarker.getLatLng();
+                        setVenuePin(moved.lat, moved.lng);
+                    });
+                }
+                $('#venueLatitude').val(point[0]);
+                $('#venueLongitude').val(point[1]);
+                $('#venuePinStatus').text('Venue pinned. Drag the pin to adjust.');
+            }
+            function showVenuePin(show) {
+                $('#venuePinBlock').toggle(show);
+                if (!show || typeof L === 'undefined') return;
+                if (!venueMap) {
+                    // Default view: Cavite, the province the booking form covers.
+                    venueMap = L.map('venuePinMap').setView([14.4791, 120.8970], 11);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(venueMap);
+                    venueMap.on('click', (event) => setVenuePin(event.latlng.lat, event.latlng.lng));
+                }
+                setTimeout(() => venueMap.invalidateSize(), 0);
+            }
+            $('#venueUseMyLocation').on('click', function() {
+                if (!navigator.geolocation) {
+                    $('#venuePinStatus').text('This browser cannot share your location. Tap the map instead.');
+                    return;
+                }
+                $('#venuePinStatus').text('Finding your location...');
+                navigator.geolocation.getCurrentPosition((position) => {
+                    setVenuePin(position.coords.latitude, position.coords.longitude);
+                    venueMap.setView([position.coords.latitude, position.coords.longitude], 16);
+                }, () => $('#venuePinStatus').text('Location not shared. Tap the map instead.'), {enableHighAccuracy: true, timeout: 15000});
+            });
+            $('#locationType').on('change.venuePin', function() {
+                showVenuePin($(this).val() === 'on-location');
+            });
+
             // ========== LOCATION TYPE CHANGE HANDLER ==========
             $('#locationType').on('change', function() {
                 const locationValue = $(this).val();
@@ -1908,6 +1972,11 @@
                     bookingData.street = $('#street').val();
                     bookingData.barangay = $('#barangay').val();
                     bookingData.city = $('#city').val();
+                }
+
+                if ($('#locationType').val() === 'on-location') {
+                    bookingData.venue_latitude = $('#venueLatitude').val();
+                    bookingData.venue_longitude = $('#venueLongitude').val();
                 }
                 
                 console.log('Final booking data:', bookingData);
@@ -2385,6 +2454,16 @@
                         text: 'Please select a location type.',
                         confirmButtonColor: '#0d6efd'
                     });
+                    return false;
+                }
+                if (locationType === 'on-location' && (!$('#venueLatitude').val() || !$('#venueLongitude').val())) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Pin the Venue',
+                        text: 'Tap the map to pin where the shoot happens.',
+                        confirmButtonColor: '#0d6efd'
+                    });
+                    document.getElementById('venuePinBlock').scrollIntoView({behavior: 'smooth', block: 'center'});
                     return false;
                 }
                 // ========== END LOCATION VALIDATION ==========

@@ -83,6 +83,8 @@ class BookingModel extends Model
         'barangay',
         'city',
         'province',
+        'venue_latitude',
+        'venue_longitude',
         'multiple_locations',
         'special_requests',
         'total_amount',

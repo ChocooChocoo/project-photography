@@ -62,12 +62,12 @@
     <h6>Photographer arrival proof</h6>
     @forelse($booking->assignedPhotographers->whereNotNull('on_site_proof_image') as $assignment)
         <figure>
-            <figcaption>{{ $assignment->photographer?->first_name }} {{ $assignment->photographer?->last_name }}: {{ $assignment->on_site_at?->format('M d, Y g:i A') }}</figcaption>
+            <figcaption>{{ $assignment->photographer?->first_name }} {{ $assignment->photographer?->last_name }}: arrived {{ $assignment->on_site_at?->format('M d, Y g:i A') }}@if(! is_null($assignment->arrival_distance_meters)) · {{ number_format($assignment->arrival_distance_meters) }} m from the {{ $booking->location_type === 'on-location' ? 'venue pin' : 'studio' }}@endif</figcaption>
             <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($assignment->on_site_proof_image) }}" target="_blank" rel="noopener" class="d-inline-block" style="min-width:44px;min-height:44px">
                 <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($assignment->on_site_proof_image) }}" alt="Arrival proof submitted by {{ $assignment->photographer?->first_name }}" class="img-fluid rounded" style="max-height:240px">
             </a>
             @if($assignment->latitude !== null && $assignment->longitude !== null)
-                <p>Submitted coordinates: {{ $assignment->latitude }}, {{ $assignment->longitude }} (not independently verified).</p>
+                <p>Check-in coordinates: {{ $assignment->latitude }}, {{ $assignment->longitude }} (from the photographer's phone GPS).</p>
             @endif
         </figure>
     @empty

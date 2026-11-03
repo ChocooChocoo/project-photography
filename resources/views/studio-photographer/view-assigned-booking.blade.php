@@ -1133,12 +1133,34 @@
             });
             
             // Update assignment status
-            function updateAssignmentStatus(status, reason = null, proof = null) {
+            function updateAssignmentStatus(status, reason = null, proof = null, coords = null) {
+                // Arrival check-in sends the phone's GPS position; the server
+                // checks it against the venue pin or the studio.
+                if (status === 'on_site' && !coords) {
+                    if (!navigator.geolocation) {
+                        Swal.fire({icon: 'error', title: 'Location unavailable', text: 'This browser cannot share your location. Use a phone browser with location turned on.'});
+                        return;
+                    }
+                    $('#confirmStatusUpdate').prop('disabled', true).html('<span class="loading-spinner"></span> Getting your location...');
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => updateAssignmentStatus(status, reason, proof, position.coords),
+                        () => {
+                            $('#confirmStatusUpdate').prop('disabled', false).text('Update Status');
+                            Swal.fire({icon: 'warning', title: 'Location needed', text: 'Allow location access in your browser, then check in again.'});
+                        },
+                        {enableHighAccuracy: true, timeout: 20000, maximumAge: 0}
+                    );
+                    return;
+                }
                 const payload = new FormData();
                 payload.append('status', status);
                 payload.append('_token', '{{ csrf_token() }}');
                 if (reason) payload.append('cancellation_reason', reason);
                 if (proof) payload.append('on_site_proof_image', proof);
+                if (coords) {
+                    payload.append('latitude', coords.latitude.toFixed(7));
+                    payload.append('longitude', coords.longitude.toFixed(7));
+                }
                 $.ajax({
                     url: '{{ route("assignment.update-status", ":id") }}'.replace(':id', currentAssignmentId),
                     type: 'POST',

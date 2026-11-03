@@ -1056,7 +1056,8 @@
                         const figure = $('<figure>');
                         $('<figcaption>').text((a.photographer?.first_name || '') + ' ' + (a.photographer?.last_name || '')).appendTo(figure);
                         $('<img class="img-fluid rounded" style="max-height:240px">').attr('src', '{{ asset("storage") }}/' + a.on_site_proof_image).attr('alt', 'Photographer arrival proof').appendTo(figure);
-                        if (a.latitude !== null && a.latitude !== undefined) $('<p>').text('Submitted coordinates: ' + a.latitude + ', ' + a.longitude + ' (not independently verified).').appendTo(figure);
+                        if (a.on_site_at) $('<p class="mb-1">').text('Arrived ' + new Date(a.on_site_at).toLocaleString('en-PH', {dateStyle: 'medium', timeStyle: 'short'}) + (a.arrival_distance_meters !== null && a.arrival_distance_meters !== undefined ? ' · ' + Number(a.arrival_distance_meters).toLocaleString() + ' m from the ' + (booking.location_type === 'on-location' ? 'venue pin' : 'studio') : '')).appendTo(figure);
+                        if (a.latitude !== null && a.latitude !== undefined) $('<p>').text('Check-in coordinates: ' + a.latitude + ', ' + a.longitude + ' (from the photographer's phone GPS).').appendTo(figure);
                         section.append(figure);
                     });
                     $('#bookingModalBody').append(section);

@@ -525,6 +525,10 @@ class BookingController extends Controller
         // ==== FIXED: Conditional validation based on location type ====
         // For on-location bookings, validate location fields
         if ($request->location_type === 'on-location') {
+            // The venue pin: the photographer's on-site check-in is measured against it.
+            $rules['venue_latitude'] = 'required|numeric|between:-90,90';
+            $rules['venue_longitude'] = 'required|numeric|between:-180,180';
+
             // Check if multiple locations are enabled
             if ($request->has('locations') && is_array($request->locations) && count($request->locations) > 0) {
                 // Validate multiple locations
@@ -581,6 +585,8 @@ class BookingController extends Controller
         $rules['editing_services.*'] = 'distinct|in:'.implode(',', array_keys(StudioPackagesModel::EDITING_SERVICES)).',enhanced';
 
         $request->validate($rules, [
+            'venue_latitude.required' => 'Pin the venue on the map.',
+            'venue_longitude.required' => 'Pin the venue on the map.',
             'terms_agree.required' => 'You must agree to the booking terms and conditions.',
             'terms_agree.accepted' => 'You must agree to the booking terms and conditions.',
         ]);
@@ -694,6 +700,9 @@ class BookingController extends Controller
 
             // Handle locations based on location type
             if ($request->location_type === 'on-location') {
+                $bookingData['venue_latitude'] = $request->venue_latitude;
+                $bookingData['venue_longitude'] = $request->venue_longitude;
+
                 // For on-location bookings, handle multiple or single locations
                 if ($request->has('locations') && is_array($request->locations) && count($request->locations) > 0) {
                     // Multiple locations

@@ -23,8 +23,8 @@ class UpdateAssignmentStatusRequest extends FormRequest
         return [
             'status' => 'required|in:confirmed,on_site,in_progress,completed,cancelled',
             'on_site_proof_image' => 'required_if:status,on_site|nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'latitude' => 'nullable|numeric|between:-90,90|required_with:longitude',
-            'longitude' => 'nullable|numeric|between:-180,180|required_with:latitude',
+            'latitude' => 'nullable|required_if:status,on_site|numeric|between:-90,90|required_with:longitude',
+            'longitude' => 'nullable|required_if:status,on_site|numeric|between:-180,180|required_with:latitude',
             'cancellation_reason' => 'required_if:status,cancelled|nullable|string|max:500',
             'client_confirmation_notes' => 'nullable|string|max:500'
         ];
@@ -55,6 +55,8 @@ class UpdateAssignmentStatusRequest extends FormRequest
         return [
             'status.required' => 'Status is required',
             'status.in' => 'Invalid status value. Allowed values: confirmed, on_site, in_progress, completed, cancelled',
+            'latitude.required_if' => 'Share your location to check in on site. Allow location access in your browser and try again.',
+            'longitude.required_if' => 'Share your location to check in on site. Allow location access in your browser and try again.',
             'cancellation_reason.required_if' => 'Cancellation reason is required when cancelling assignment',
             'cancellation_reason.max' => 'Cancellation reason cannot exceed 500 characters',
             'client_confirmation_notes.max' => 'Confirmation notes cannot exceed 500 characters'

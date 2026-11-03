@@ -83,6 +83,18 @@ class StudioOpeningHoursTest extends TestCase
             ->assertJsonPath('available', true);
     }
 
+    public function test_an_on_location_booking_needs_a_venue_pin(): void
+    {
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', [
+                'location_type' => 'on-location', 'city' => 'Imus', 'barangay' => 'Alapan I-A', 'payment_type' => 'full_payment',
+            ] + $this->payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['venue_latitude', 'venue_longitude'])
+            ->assertJsonPath('errors.venue_latitude.0', 'Pin the venue on the map.');
+        $this->assertSame(0, BookingModel::count());
+    }
+
     public function test_a_fixed_package_sets_its_own_end_time(): void
     {
         // The browser sends 10:00, but the 4-hour package ends at 13:00.

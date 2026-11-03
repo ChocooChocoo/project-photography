@@ -125,7 +125,7 @@ class AssignmentLifecycleTest extends TestCase
 
         $proof = \Illuminate\Http\UploadedFile::fake()->createWithContent('arrival.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWf8AAAAASUVORK5CYII='));
         $this->actingAs($photographer)
-            ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site', 'on_site_proof_image' => $proof])
+            ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site', 'on_site_proof_image' => $proof, 'latitude' => 14.4791, 'longitude' => 120.897])
             ->assertOk();
 
         $assignment->refresh();
@@ -197,7 +197,7 @@ class AssignmentLifecycleTest extends TestCase
         $this->app->instance(\App\Services\BookingEventRecorder::class, $recorder);
         $proof = \Illuminate\Http\UploadedFile::fake()->createWithContent('arrival.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWf8AAAAASUVORK5CYII='));
         $this->actingAs($photographer)->postJson("/_test/photographer/assignment/{$assignment->id}/status", [
-            'status' => 'on_site', 'on_site_proof_image' => $proof,
+            'status' => 'on_site', 'on_site_proof_image' => $proof, 'latitude' => 14.4791, 'longitude' => 120.897,
         ])->assertStatus(500);
         $this->assertSame('confirmed', $assignment->fresh()->status);
         $this->assertNull($assignment->fresh()->on_site_proof_image);
@@ -413,6 +413,7 @@ class AssignmentLifecycleTest extends TestCase
             $table->timestamp('response_deadline')->nullable();
             $table->timestamp('confirmed_at')->nullable();
             $table->timestamp('on_site_at')->nullable();
+            $table->unsignedInteger('arrival_distance_meters')->nullable();
             $table->timestamp('client_confirmed_at')->nullable();
             $table->text('client_confirmation_notes')->nullable();
             $table->timestamp('started_at')->nullable();

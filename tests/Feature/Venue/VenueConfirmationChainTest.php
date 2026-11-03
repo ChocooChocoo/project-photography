@@ -36,6 +36,7 @@ class VenueConfirmationChainTest extends TestCase
             $table->string('on_site_proof_image')->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
+            $table->unsignedInteger('arrival_distance_meters')->nullable();
         });
         \Illuminate\Support\Facades\Storage::fake('public');
         $this->owner = $this->createUser('owner', 'venue-owner@example.com');
@@ -45,6 +46,40 @@ class VenueConfirmationChainTest extends TestCase
         Route::post('/_test/client/assignment/{id}/confirm', [MyBookingsController::class, 'confirmPhotographerOnSite']);
         Route::get('/_test/client/pending-confirmations', [MyBookingsController::class, 'getPendingConfirmations']);
         Route::put('/_test/owner/booking/{id}/complete', [OwnerBookingController::class, 'completeBooking']);
+    }
+
+    public function test_on_site_check_in_needs_gps_within_300_m_of_the_venue_pin_and_emails_client_and_owner(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $client = $this->createUser('client', 'venue-client@example.com');
+        $photographer = $this->createUser('studio-photographer', 'venue-photographer@example.com');
+        $studio = $this->createStudio();
+        $this->grantAssignmentPermission($photographer, $studio);
+        $booking = $this->createBooking($studio, $client, 'confirmed', 'on-location');
+        $booking->update(['venue_latitude' => 14.4791000, 'venue_longitude' => 120.8970000]);
+        $assignment = $this->createAssignment($booking, $studio, $photographer, 'confirmed');
+        $url = "/_test/photographer/assignment/{$assignment->id}/status";
+
+        // No coordinates: refused.
+        $this->actingAs($photographer)->postJson($url, ['status' => 'on_site', 'on_site_proof_image' => $this->proof()])
+            ->assertUnprocessable()->assertJsonValidationErrors(['latitude', 'longitude']);
+
+        // About 1.1 km away: refused, nothing stored.
+        $this->actingAs($photographer)->postJson($url, ['status' => 'on_site', 'on_site_proof_image' => $this->proof(), 'latitude' => 14.4891, 'longitude' => 120.8970])
+            ->assertUnprocessable()->assertJsonPath('success', false);
+        $this->assertSame('confirmed', $assignment->fresh()->status);
+        $this->assertSame([], \Illuminate\Support\Facades\Storage::disk('public')->allFiles());
+
+        // About 100 m away: accepted.
+        $this->actingAs($photographer)->postJson($url, ['status' => 'on_site', 'on_site_proof_image' => $this->proof(), 'latitude' => 14.4800, 'longitude' => 120.8970])
+            ->assertOk()->assertJsonPath('success', true);
+        $assignment->refresh();
+        $this->assertSame('on_site', $assignment->status);
+        $this->assertEqualsWithDelta(100, $assignment->arrival_distance_meters, 5);
+
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\PhotographerArrivedMail::class, fn ($mail) => $mail->hasTo('venue-client@example.com'));
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\PhotographerArrivedMail::class, fn ($mail) => $mail->hasTo('venue-owner@example.com'));
+        $this->assertDatabaseHas('tbl_notifications', ['user_id' => $this->owner->id, 'type' => 'photographer_arrived']);
     }
 
     public function test_on_location_full_chain_reaches_completed_assignment_and_booking(): void
@@ -66,7 +101,7 @@ class VenueConfirmationChainTest extends TestCase
         $this->assertSame('in_progress', $booking->status);
 
         $this->actingAs($photographer)
-            ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site', 'on_site_proof_image' => $this->proof()])
+            ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site', 'on_site_proof_image' => $this->proof(), 'latitude' => 14.4791, 'longitude' => 120.897])
             ->assertOk()
             ->assertJsonPath('success', true);
 
@@ -124,7 +159,7 @@ class VenueConfirmationChainTest extends TestCase
         $this->payInFull($booking);
 
         $this->actingAs($photographer)
-            ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site', 'on_site_proof_image' => $this->proof()])
+            ->postJson("/_test/photographer/assignment/{$assignment->id}/status", ['status' => 'on_site', 'on_site_proof_image' => $this->proof(), 'latitude' => 14.4791, 'longitude' => 120.897])
             ->assertOk()
             ->assertJsonPath('success', true);
 
@@ -324,6 +359,8 @@ class VenueConfirmationChainTest extends TestCase
             $table->string('start_time')->nullable();
             $table->string('end_time')->nullable();
             $table->string('location_type')->default('in-studio');
+            $table->decimal('venue_latitude', 10, 7)->nullable();
+            $table->decimal('venue_longitude', 10, 7)->nullable();
             $table->decimal('total_amount', 10, 2);
             $table->decimal('down_payment', 10, 2);
             $table->string('payment_type');
