@@ -196,6 +196,11 @@ class BookingController extends Controller
      */
     public function checkAvailability(Request $request)
     {
+        $package = $this->requestedPackage($request);
+        if ($endMessage = $this->applyFixedEndTime($request, $package)) {
+            return response()->json(['success' => false, 'available' => false, 'message' => $endMessage, 'outside_hours' => true]);
+        }
+
         $request->validate([
             'type'         => 'required|in:studio,freelancer',
             'provider_id'  => 'required|integer',
@@ -250,7 +255,7 @@ class BookingController extends Controller
 
             $maxBookings = $provider->max_clients_per_day ?? 3;
 
-            if ($hoursMessage = $this->studioHoursMessage($request, $request->start_time, $request->end_time)) {
+            if ($hoursMessage = $this->studioHoursMessage($request, $request->start_time, $request->end_time, $package)) {
                 return response()->json([
                     'success'      => false,
                     'available'    => false,
@@ -336,14 +341,51 @@ class BookingController extends Controller
      * In-studio sessions must fit the studio's opening hours. On-location work
      * (an evening wedding, say) is not limited by when the studio is open.
      */
-    private function studioHoursMessage(Request $request, ?string $startTime, ?string $endTime): ?string
+    private function studioHoursMessage(Request $request, ?string $startTime, ?string $endTime, $package = null): ?string
     {
         if ($request->type !== 'studio' || $request->input('location_type') !== 'in-studio' || ! $startTime || ! $endTime) {
             return null;
         }
 
         return \App\Models\StudioOwner\StudioScheduleModel::where('studio_id', $request->provider_id)->first()
-            ?->outsideHoursMessage($startTime, $endTime);
+            ?->outsideHoursMessage($startTime, $endTime, (bool) $package?->allow_time_customization);
+    }
+
+    /**
+     * The provider's package named in the request, if any. No category or
+     * status check: callers that need those still use validatePackage().
+     */
+    private function requestedPackage(Request $request)
+    {
+        if (! $request->filled('package_id')) {
+            return null;
+        }
+
+        return $request->type === 'studio'
+            ? StudioPackagesModel::where('studio_id', $request->provider_id)->find($request->package_id)
+            : FreelancerPackagesModel::where('user_id', $request->provider_id)->find($request->package_id);
+    }
+
+    /**
+     * A fixed-duration package sets the end time itself (start + duration),
+     * whatever the browser sent. Returns a message when that passes midnight.
+     */
+    private function applyFixedEndTime(Request $request, $package): ?string
+    {
+        if (! $package || $package->allow_time_customization || ! $package->duration
+            || ! preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string) $request->start_time)) {
+            return null;
+        }
+
+        [$hour, $minute] = array_map('intval', explode(':', $request->start_time));
+        $endMinutes = $hour * 60 + $minute + (int) $package->duration * 60;
+        if ($endMinutes > 23 * 60 + 59) {
+            return 'This '.$package->duration.'-hour package must end by midnight. Choose an earlier start time.';
+        }
+
+        $request->merge(['end_time' => sprintf('%02d:%02d', intdiv($endMinutes, 60), $endMinutes % 60)]);
+
+        return null;
     }
 
     /**
@@ -433,6 +475,15 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
+        $requestedPackage = $this->requestedPackage($request);
+        if ($endMessage = $this->applyFixedEndTime($request, $requestedPackage)) {
+            return response()->json([
+                'success' => false,
+                'message' => $endMessage,
+                'errors' => ['start_time' => [$endMessage]],
+            ], 422);
+        }
+
         // Validate all input first - MODIFIED to handle location-based validation
         $rules = [
             'type' => 'required|in:studio,freelancer',
@@ -541,7 +592,7 @@ class BookingController extends Controller
             'terms_agree.accepted' => 'You must agree to the booking terms and conditions.',
         ]);
 
-        if ($hoursMessage = $this->studioHoursMessage($request, $request->start_time, $request->end_time)) {
+        if ($hoursMessage = $this->studioHoursMessage($request, $request->start_time, $request->end_time, $requestedPackage)) {
             return response()->json([
                 'success' => false,
                 'message' => $hoursMessage,

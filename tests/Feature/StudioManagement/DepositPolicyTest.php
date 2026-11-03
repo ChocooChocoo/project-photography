@@ -370,6 +370,7 @@ class DepositPolicyTest extends TestCase
             $table->text('package_description')->nullable();
             $table->json('package_inclusions')->nullable();
             $table->integer('duration')->nullable();
+            $table->boolean('allow_time_customization')->default(false);
             $table->integer('maximum_edited_photos')->nullable();
             $table->string('coverage_scope')->nullable();
             $table->json('materials')->nullable();

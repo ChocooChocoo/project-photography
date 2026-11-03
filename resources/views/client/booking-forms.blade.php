@@ -241,10 +241,14 @@
                                             <input type="time" class="form-control" id="startTime" name="start_time"
                                                 value="08:00" placeholder="Enter start time" required>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">End Time</label>
+                                        <div class="col-md-6" id="endTimeGroup">
+                                            <label class="form-label" for="endTime">End Time</label>
                                             <input type="time" class="form-control" id="endTime" name="end_time"
                                                 value="18:00" placeholder="Enter end time" required>
+                                        </div>
+                                        <div class="col-md-6 d-none" id="fixedEndGroup">
+                                            <span class="form-label d-block">Ends at</span>
+                                            <p class="form-control-plaintext fw-semibold mb-0" id="fixedEndText" aria-live="polite"></p>
                                         </div>
                                     </div>
 
@@ -1282,7 +1286,8 @@
             // ========== PACKAGE SELECTION HANDLER ==========
             $(document).on('change', '.package-radio', function() {
                 selectedPackageId = $(this).val();
-                selectedPackageFlexibility = $(this).data('allow-time-customization') === '1';
+                // jQuery .data() turns "1" into the number 1, so compare as a string.
+                selectedPackageFlexibility = String($(this).data('allow-time-customization')) === '1';
                 selectedPackageDuration = parseInt($(this).data('duration')) || 0;
                 
                 console.log('Package selected:', {
@@ -1591,6 +1596,7 @@
                     data: {
                         type:        type,
                         provider_id: providerId,
+                        package_id:  selectedPackageId || undefined,
                         date:        selectedDate,
                         end_date:    $('#eventEndDate').val() || undefined,
                         start_time:  startTime,
@@ -1968,14 +1974,19 @@
                 const timeHelpText = $('#dateStatusText').parent().find('.time-restriction-info');
                 timeHelpText.remove();
                 
-                if (selectedPackageFlexibility === false && selectedPackageDuration > 0) {
+                const isFixed = selectedPackageFlexibility === false && selectedPackageDuration > 0;
+                $('#endTimeGroup').toggleClass('d-none', isFixed);
+                $('#fixedEndGroup').toggleClass('d-none', !isFixed);
+                $('#endTime').prop('required', !isFixed);
+
+                if (isFixed) {
                     // Fixed duration package - show restriction info
                     const restrictionHtml = `
                         <div class="alert alert-info mt-2 mb-0 py-2 time-restriction-info" style="font-size: 0.85rem;">
                             <i class="ti ti-info-circle me-1"></i>
-                            <strong>Fixed Duration Package:</strong> You must select a time range of exactly 
+                            <strong>Fixed Duration Package:</strong> This session lasts
                             <strong>${selectedPackageDuration} ${selectedPackageDuration > 1 ? 'hours' : 'hour'}</strong>.
-                            The system will automatically calculate and validate the end time.
+                            Choose a start time; the end time is set for you.
                         </div>
                     `;
                     
@@ -2001,7 +2012,7 @@
                     const flexibleHtml = `
                         <div class="alert alert-success mt-2 mb-0 py-2 time-restriction-info" style="font-size: 0.85rem;">
                             <i class="ti ti-clock-edit me-1"></i>
-                            <strong>Flexible Time Package:</strong> You can select any start and end time that works for you.
+                            <strong>Flexible Time Package:</strong> Choose any start and end time. In-studio sessions start during opening hours and may run past closing until midnight.
                         </div>
                     `;
                     
@@ -2027,8 +2038,13 @@
                 const endHours = endDate.getHours().toString().padStart(2, '0');
                 const endMinutes = endDate.getMinutes().toString().padStart(2, '0');
                 const calculatedEndTime = `${endHours}:${endMinutes}`;
-                
+                const passesMidnight = endDate.getDate() !== startDate.getDate();
+
                 $('#endTime').val(calculatedEndTime);
+                $('#fixedEndText').text(passesMidnight
+                    ? 'After midnight. Choose an earlier start time.'
+                    : formatTime(calculatedEndTime))
+                    .toggleClass('text-danger', passesMidnight);
                 console.log(`Auto-calculated end time: ${calculatedEndTime} for start time ${startTime} + ${durationHours} hours`);
                 
                 // Trigger change event to check availability

@@ -82,4 +82,46 @@ class StudioOpeningHoursTest extends TestCase
             ->assertOk()
             ->assertJsonPath('available', true);
     }
+
+    public function test_a_fixed_package_sets_its_own_end_time(): void
+    {
+        // The browser sends 10:00, but the 4-hour package ends at 13:00.
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', ['start_time' => '09:00', 'end_time' => '10:00', 'payment_type' => 'full_payment'] + $this->payload)
+            ->assertOk();
+        $this->assertSame('13:00', substr((string) BookingModel::first()->end_time, 0, 5));
+    }
+
+    public function test_a_fixed_package_that_would_pass_midnight_is_refused(): void
+    {
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', ['start_time' => '21:00', 'end_time' => '23:00', 'payment_type' => 'full_payment'] + $this->payload)
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'This 4-hour package must end by midnight. Choose an earlier start time.');
+        $this->assertSame(0, BookingModel::count());
+    }
+
+    public function test_a_flexible_in_studio_session_may_run_past_closing(): void
+    {
+        \App\Models\StudioOwner\PackagesModel::whereKey($this->payload['package_id'])->update(['allow_time_customization' => true]);
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/check', [
+                'type' => 'studio', 'provider_id' => $this->studio->id, 'package_id' => $this->payload['package_id'],
+                'date' => $this->payload['event_date'], 'start_time' => '16:00', 'end_time' => '22:00', 'location_type' => 'in-studio',
+            ])
+            ->assertOk()
+            ->assertJsonPath('available', true);
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', ['start_time' => '16:00', 'end_time' => '22:00', 'payment_type' => 'full_payment'] + $this->payload)
+            ->assertOk();
+        $this->assertSame('22:00', substr((string) BookingModel::first()->end_time, 0, 5));
+
+        // The start still has to be within opening hours.
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', ['start_time' => '18:30', 'end_time' => '20:00', 'payment_type' => 'full_payment'] + $this->payload)
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'The studio is open 8:00 AM to 6:00 PM. Start within those hours; the session may run past closing until midnight.');
+    }
 }

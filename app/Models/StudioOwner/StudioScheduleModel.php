@@ -43,19 +43,32 @@ class StudioScheduleModel extends Model
 
     /**
      * Null when an in-studio session from $startTime to $endTime (H:i) fits the
-     * opening hours; otherwise the message to show the client.
+     * opening hours; otherwise the message to show the client. A flexible-duration
+     * session only has to start within opening hours; it may run past closing
+     * until midnight (the same-day end-after-start rule caps it).
      */
-    public function outsideHoursMessage(string $startTime, string $endTime): ?string
+    public function outsideHoursMessage(string $startTime, string $endTime, bool $flexibleEnd = false): ?string
     {
         $open = substr((string) $this->getRawOriginal('opening_time'), 0, 5);
         $close = substr((string) $this->getRawOriginal('closing_time'), 0, 5);
 
-        if ($open === '' || $close === '' || ($startTime >= $open && $endTime <= $close)) {
+        if ($open === '' || $close === '') {
             return null;
         }
 
-        return 'The studio is open '.\Carbon\Carbon::parse($open)->format('g:i A').' to '.\Carbon\Carbon::parse($close)->format('g:i A')
-            .'. Choose a time within those hours, or choose On-Location.';
+        $hours = \Carbon\Carbon::parse($open)->format('g:i A').' to '.\Carbon\Carbon::parse($close)->format('g:i A');
+
+        if ($flexibleEnd) {
+            return ($startTime >= $open && $startTime < $close)
+                ? null
+                : 'The studio is open '.$hours.'. Start within those hours; the session may run past closing until midnight.';
+        }
+
+        if ($startTime >= $open && $endTime <= $close) {
+            return null;
+        }
+
+        return 'The studio is open '.$hours.'. Choose a time within those hours, or choose On-Location.';
     }
 
     /**
