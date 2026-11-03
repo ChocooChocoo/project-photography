@@ -101,7 +101,7 @@
                                                 @endif
                                             </td>
                                             <!-- ==== End: Time Customization Display ==== -->
-                                            <td>PHP {{ number_format($package->package_price, 2) }}</td>
+                                            <td>₱{{ number_format($package->package_price, 2) }}</td>
                                             <td>
                                                 @if($package->online_gallery)
                                                     <span class="badge badge-soft-success fs-8 px-1 w-100">

@@ -104,7 +104,7 @@ class ChatbotFeatureTest extends TestCase
             $systemPrompt = $request['messages'][0]['content'];
 
             return str_contains($systemPrompt, 'Wedding Essential')
-                && str_contains($systemPrompt, 'PHP 15,000.00')
+                && str_contains($systemPrompt, '₱15,000.00')
                 && ! str_contains($systemPrompt, 'Luxury Wedding');
         });
     }
@@ -130,7 +130,7 @@ class ChatbotFeatureTest extends TestCase
         Http::assertSent(function ($request) {
             $systemPrompt = $request['messages'][0]['content'];
 
-            return str_contains($systemPrompt, '1 active packages, priced from PHP')
+            return str_contains($systemPrompt, '1 active packages, priced from ₱')
                 && ! str_contains($systemPrompt, '- Portrait Basic --');
         });
     }

@@ -9,10 +9,10 @@
         <div class="table-responsive">
             <table class="table"><caption class="visually-hidden">Hardcopy items and prices</caption>
                 <thead><tr><th>Item / size</th><th>Quantity</th><th>Unit price</th></tr></thead>
-                <tbody>@foreach($order->items as $item)<tr><td>{{ $item->name }} {{ $item->size }}</td><td>{{ $item->quantity }}</td><td>PHP {{ number_format($item->unit_price, 2) }}</td></tr>@endforeach</tbody>
+                <tbody>@foreach($order->items as $item)<tr><td>{{ $item->name }} {{ $item->size }}</td><td>{{ $item->quantity }}</td><td>₱{{ number_format($item->unit_price, 2) }}</td></tr>@endforeach</tbody>
             </table>
         </div>
-        <p><strong>Total: PHP {{ number_format($order->amount, 2) }}</strong></p>
+        <p><strong>Total: ₱{{ number_format($order->amount, 2) }}</strong></p>
         @php($suggested = $order->suggested_fulfillment_method ?? $order->fulfillment_method)
         @if($order->accepted_at)
             <p>
@@ -62,5 +62,5 @@
     </form>
 @endif
 @if(!$owner && $orders->contains(fn($o) => $o->accepted_at) && $booking->remaining_balance > 0)
-    <p class="mt-3">Remaining booking balance: PHP {{ number_format($booking->remaining_balance, 2) }}. Use the booking's payment button to pay through existing checkout.</p>
+    <p class="mt-3">Remaining booking balance: ₱{{ number_format($booking->remaining_balance, 2) }}. Use the booking's payment button to pay through existing checkout.</p>
 @endif

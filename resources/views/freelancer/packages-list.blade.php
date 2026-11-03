@@ -46,7 +46,7 @@
                                                 <p class="text-muted mb-0">{{ $package->category->category_name ?? 'Uncategorized' }}</p>
 
                                                 <div class="my-4">
-                                                    <h1 class="display-6 fw-bold mb-0">PHP {{ number_format($package->package_price, 2) }}</h1>
+                                                    <h1 class="display-6 fw-bold mb-0">₱{{ number_format($package->package_price, 2) }}</h1>
                                                     
                                                     <!-- ==== Start: Time Customization in Price Card ==== -->
                                                     @if($package->allow_time_customization)
@@ -403,7 +403,7 @@
                                         </div>
                                         <div class="flex-grow-1 ms-3">
                                             <label class="text-muted small mb-1">Package Price</label>
-                                            <p class="mb-0 fw-medium">PHP ${package.package_price ? parseFloat(package.package_price).toFixed(2) : '0.00'}</p>
+                                            <p class="mb-0 fw-medium">₱${package.package_price ? parseFloat(package.package_price).toFixed(2) : '0.00'}</p>
                                         </div>
                                     </div>
                                 </div>

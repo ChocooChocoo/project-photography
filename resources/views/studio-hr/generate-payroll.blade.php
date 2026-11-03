@@ -295,9 +295,9 @@
                                                             -
                                                             {{ $generatedPayroll->period_end?->format('M d, Y') ?? 'N/A' }}
                                                         </td>
-                                                        <td>PHP {{ number_format((float) $generatedPayroll->gross_amount, 2) }}</td>
-                                                        <td>PHP {{ number_format((float) $generatedPayroll->total_deductions, 2) }}</td>
-                                                        <td><strong>PHP {{ number_format((float) $generatedPayroll->net_amount, 2) }}</strong></td>
+                                                        <td>₱{{ number_format((float) $generatedPayroll->gross_amount, 2) }}</td>
+                                                        <td>₱{{ number_format((float) $generatedPayroll->total_deductions, 2) }}</td>
+                                                        <td><strong>₱{{ number_format((float) $generatedPayroll->net_amount, 2) }}</strong></td>
                                                         <td>
                                                             <span class="badge {{ $statusBadgeClass }}">
                                                                 {{ ucfirst($generatedPayroll->status) }}
@@ -459,8 +459,8 @@
                                                         <tr>
                                                             <td>Loading...</td>
                                                             <td class="text-start">1</td>
-                                                            <td class="text-start">PHP 0.00</td>
-                                                            <td class="text-start">PHP 0.00</td>
+                                                            <td class="text-start">₱0.00</td>
+                                                            <td class="text-start">₱0.00</td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -473,23 +473,23 @@
                                                             <tbody>
                                                                 <tr>
                                                                     <td class="text-muted">Attendance Amount</td>
-                                                                    <td class="text-end fw-medium" id="modalAttendanceAmount">PHP 0.00</td>
+                                                                    <td class="text-end fw-medium" id="modalAttendanceAmount">₱0.00</td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td class="text-muted">Booking Amount</td>
-                                                                    <td class="text-end fw-medium" id="modalBookingAmount">PHP 0.00</td>
+                                                                    <td class="text-end fw-medium" id="modalBookingAmount">₱0.00</td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td class="text-muted">Gross Amount</td>
-                                                                    <td class="text-end fw-medium" id="modalFooterGrossAmount">PHP 0.00</td>
+                                                                    <td class="text-end fw-medium" id="modalFooterGrossAmount">₱0.00</td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td class="text-muted">Total Deductions</td>
-                                                                    <td class="text-end fw-medium text-danger" id="modalTotalDeductionsSummary">- PHP 0.00</td>
+                                                                    <td class="text-end fw-medium text-danger" id="modalTotalDeductionsSummary">- ₱0.00</td>
                                                                 </tr>
                                                                 <tr class="border-top">
                                                                     <td class="fw-semibold">Net Amount</td>
-                                                                    <td class="text-end fw-bold fs-5" id="modalFooterNetAmount">PHP 0.00</td>
+                                                                    <td class="text-end fw-bold fs-5" id="modalFooterNetAmount">₱0.00</td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -685,13 +685,13 @@
                                 <div><strong>Late:</strong> ${attendance.late_minutes ?? 0} minute(s)</div>
                                 <div><strong>Undertime:</strong> ${attendance.undertime_minutes ?? 0} minute(s)</div>
                                 <div><strong>Approved OT:</strong> ${attendance.approved_overtime_hours ?? 0} hour(s)</div>
-                                <div><strong>Regular Pay:</strong> PHP ${formatCurrency(attendance.regular_attendance_amount ?? 0)}</div>
-                                <div><strong>OT Pay:</strong> PHP ${formatCurrency(attendance.overtime_amount ?? 0)}</div>
-                                <div><strong>Preview:</strong> PHP ${formatCurrency(attendance.attendance_amount ?? getAttendancePreviewAmount(employee))}</div>
+                                <div><strong>Regular Pay:</strong> ₱${formatCurrency(attendance.regular_attendance_amount ?? 0)}</div>
+                                <div><strong>OT Pay:</strong> ₱${formatCurrency(attendance.overtime_amount ?? 0)}</div>
+                                <div><strong>Preview:</strong> ₱${formatCurrency(attendance.attendance_amount ?? getAttendancePreviewAmount(employee))}</div>
                             </td>
                             <td>
                                 <div><strong>Bookings:</strong> ${booking.booking_count ?? 0}</div>
-                                <div><strong>Preview:</strong> PHP ${formatCurrency(booking.booking_amount ?? 0)}</div>
+                                <div><strong>Preview:</strong> ₱${formatCurrency(booking.booking_amount ?? 0)}</div>
                             </td>
                         </tr>
                     `);
@@ -795,9 +795,9 @@
                                 <div class="text-muted small">${item.description}</div>
                             </td>
                             <td class="text-start">${item.quantity}</td>
-                            <td class="text-start">PHP ${formatCurrency(item.unitPrice)}</td>
+                            <td class="text-start">₱${formatCurrency(item.unitPrice)}</td>
                             <td class="text-start ${item.isDeduction ? 'text-danger' : ''}">
-                                ${item.isDeduction ? '- ' : ''}PHP ${formatCurrency(item.total)}
+                                ${item.isDeduction ? '- ' : ''}₱${formatCurrency(item.total)}
                             </td>
                         </tr>
                     `;
@@ -854,14 +854,14 @@
                 `);
                 $('#modalBookingCount').text(data.booking_count + ' booking(s)');
                 $('#modalInvoiceLineItems').html(renderInvoiceLineItems(data));
-                $('#modalSummaryGrossAmount').text('PHP ' + data.gross_amount);
-                $('#modalSummaryNetAmount').text('PHP ' + data.net_amount);
-                $('#modalFooterGrossAmount').text('PHP ' + data.gross_amount);
-                $('#modalFooterNetAmount').text('PHP ' + data.net_amount);
-                $('#modalTotalDeductionsSummary').text('- PHP ' + data.total_deductions);
+                $('#modalSummaryGrossAmount').text('₱' + data.gross_amount);
+                $('#modalSummaryNetAmount').text('₱' + data.net_amount);
+                $('#modalFooterGrossAmount').text('₱' + data.gross_amount);
+                $('#modalFooterNetAmount').text('₱' + data.net_amount);
+                $('#modalTotalDeductionsSummary').text('- ₱' + data.total_deductions);
                 $('#modalPayrollNotes').text(data.notes);
-                $('#modalAttendanceAmount').text('PHP ' + data.attendance_amount);
-                $('#modalBookingAmount').text('PHP ' + data.booking_amount);
+                $('#modalAttendanceAmount').text('₱' + data.attendance_amount);
+                $('#modalBookingAmount').text('₱' + data.booking_amount);
             }
 
             function openGeneratedPayrollModal(payrollId) {

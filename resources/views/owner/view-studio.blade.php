@@ -580,7 +580,7 @@
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <label class="text-muted small mb-1">Starting Price</label>
-                                                    <p class="mb-0 fw-medium">PHP {{ number_format($studio->starting_price, 2) }}</p>
+                                                    <p class="mb-0 fw-medium">₱{{ number_format($studio->starting_price, 2) }}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -597,7 +597,7 @@
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <label class="text-muted small mb-1">Maximum Price</label>
-                                                    <p class="mb-0 fw-medium">PHP {{ number_format($studio->maximum_price, 2) }}</p>
+                                                    <p class="mb-0 fw-medium">₱{{ number_format($studio->maximum_price, 2) }}</p>
                                                 </div>
                                             </div>
                                         </div>

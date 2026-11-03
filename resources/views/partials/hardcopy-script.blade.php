@@ -12,7 +12,7 @@ window.mountHardcopy = function (element, bookingId, owner) {
             <label class="form-label" for="hc-name-${index}">Item name</label><input id="hc-name-${index}" name="items[${index}][name]" class="form-control mb-2" maxlength="255" required>
             <label class="form-label" for="hc-size-${index}">Size</label><input id="hc-size-${index}" name="items[${index}][size]" class="form-control mb-2" maxlength="100">
             <div class="row"><div class="col-6"><label class="form-label" for="hc-qty-${index}">Quantity</label><input id="hc-qty-${index}" name="items[${index}][quantity]" type="number" min="1" max="100" value="1" class="form-control mb-2" required></div>
-            <div class="col-6"><label class="form-label" for="hc-price-${index}">Unit price (PHP)</label><input id="hc-price-${index}" name="items[${index}][unit_price]" type="number" min="0" max="99999.99" step="0.01" class="form-control mb-2" required></div></div>
+            <div class="col-6"><label class="form-label" for="hc-price-${index}">Unit price (₱)</label><input id="hc-price-${index}" name="items[${index}][unit_price]" type="number" min="0" max="99999.99" step="0.01" class="form-control mb-2" required></div></div>
             <button type="button" class="btn btn-outline-secondary" style="min-height:44px" data-hardcopy-remove>Remove item</button>`;
         row.querySelector('[data-hardcopy-remove]').onclick = () => row.remove();
         form.querySelector('[data-hardcopy-items]').append(row);

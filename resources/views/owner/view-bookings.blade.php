@@ -126,8 +126,8 @@
                                                 @endphp
                                                 <span class="badge {{ $paymentBadge }} fs-8 px-1 w-100 text-uppercase">{{ str_replace('_', ' ', $booking->payment_status) }}</span>
                                             </td>
-                                            <td>PHP {{ number_format($booking->remaining_balance, 2) }}</td>
-                                            <td data-sort-value="{{ $booking->total_amount }}">PHP {{ number_format($booking->total_amount, 2) }}</td>
+                                            <td>₱{{ number_format($booking->remaining_balance, 2) }}</td>
+                                            <td data-sort-value="{{ $booking->total_amount }}">₱{{ number_format($booking->total_amount, 2) }}</td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
                                                     <button class="btn btn-sm view-booking-btn" 
@@ -637,9 +637,9 @@
                         packagesHtml += `
                             <div class="d-flex justify-content-between mb-1">
                                 <span class="text-muted">${pkg.package_name}:</span>
-                                <span class="fw-medium">PHP ${parseFloat(pkg.package_price).toFixed(2)}</span>
+                                <span class="fw-medium">₱${parseFloat(pkg.package_price).toFixed(2)}</span>
                             </div>
-                            <div class="d-flex justify-content-between mb-1"><span class="text-muted">Photo editing:</span><span class="fw-medium text-end">${pkg.editing_summary || 'Unedited (RAW) photos'}${parseFloat(pkg.enhancement_amount) > 0 ? ` (PHP ${parseFloat(pkg.enhancement_amount).toFixed(2)})` : ''}</span></div>
+                            <div class="d-flex justify-content-between mb-1"><span class="text-muted">Photo editing:</span><span class="fw-medium text-end">${pkg.editing_summary || 'Unedited (RAW) photos'}${parseFloat(pkg.enhancement_amount) > 0 ? ` (₱${parseFloat(pkg.enhancement_amount).toFixed(2)})` : ''}</span></div>
                             ${(pkg.materials || []).map(m => `<div class="small text-muted">${parseInt(m.quantity) || 1} &times; ${$('<div>').text(m.name || '').html()}</div>`).join('')}
                         `;
                     });
@@ -918,7 +918,7 @@
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <label class="text-muted small mb-1">Total Amount</label>
-                                                    <p class="mb-0 fw-semibold fs-5">PHP ${parseFloat(booking.total_amount).toFixed(2)}</p>
+                                                    <p class="mb-0 fw-semibold fs-5">₱${parseFloat(booking.total_amount).toFixed(2)}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -933,7 +933,7 @@
                                                 <div class="flex-grow-1 ms-3">
                                                     <label class="text-muted small mb-1">Down Payment</label>
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <span class="fw-medium">PHP ${parseFloat(booking.down_payment).toFixed(2)}</span>
+                                                        <span class="fw-medium">₱${parseFloat(booking.down_payment).toFixed(2)}</span>
                                                         <span class="badge ${booking.deposit_policy ? 'badge-soft-primary' : 'badge-soft-success'} px-2 fw-medium">${booking.deposit_policy ? 'Yes' : 'No'}</span>
                                                     </div>
                                                 </div>
@@ -949,7 +949,7 @@
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <label class="text-muted small mb-1">Amount Paid</label>
-                                                    <p class="mb-0 fw-medium text-success">PHP ${totalPaid.toFixed(2)}</p>
+                                                    <p class="mb-0 fw-medium text-success">₱${totalPaid.toFixed(2)}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -963,7 +963,7 @@
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <label class="text-muted small mb-1">Remaining Balance</label>
-                                                    <p class="mb-0 fw-medium ${remainingBalance > 0 ? 'text-danger' : 'text-success'}">PHP ${remainingBalance.toFixed(2)}</p>
+                                                    <p class="mb-0 fw-medium ${remainingBalance > 0 ? 'text-danger' : 'text-success'}">₱${remainingBalance.toFixed(2)}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -986,15 +986,15 @@
                                             <div class="bg-light p-3 rounded">
                                                 <div class="d-flex justify-content-between mb-2">
                                                     <span class="text-muted">Total Amount:</span>
-                                                    <span class="fw-medium">PHP ${parseFloat(booking.total_amount).toFixed(2)}</span>
+                                                    <span class="fw-medium">₱${parseFloat(booking.total_amount).toFixed(2)}</span>
                                                 </div>
                                                 <div class="d-flex justify-content-between mb-2">
                                                     <span class="text-muted">Amount Paid:</span>
-                                                    <span class="fw-medium">PHP ${totalPaid.toFixed(2)}</span>
+                                                    <span class="fw-medium">₱${totalPaid.toFixed(2)}</span>
                                                 </div>
                                                 <div class="d-flex justify-content-between pt-2 border-top">
                                                     <span class="fw-semibold">Remaining:</span>
-                                                    <span class="fw-bold ${remainingBalance > 0 ? 'text-danger' : 'text-success'}">PHP ${remainingBalance.toFixed(2)}</span>
+                                                    <span class="fw-bold ${remainingBalance > 0 ? 'text-danger' : 'text-success'}">₱${remainingBalance.toFixed(2)}</span>
                                                 </div>
                                             </div>
                                         </div>

@@ -82,7 +82,7 @@ TXT;
             'event_dates' => $dates,
             'event_time' => date('g:i A', strtotime($booking->start_time)).' to '.date('g:i A', strtotime($booking->end_time)),
             'location' => $location ?: 'the agreed location',
-            'total' => 'PHP '.number_format((float) $booking->total_amount, 2),
+            'total' => '₱'.number_format((float) $booking->total_amount, 2),
         ];
     }
 

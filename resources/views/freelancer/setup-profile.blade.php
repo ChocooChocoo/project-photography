@@ -178,7 +178,7 @@
                                     <div class="col-12 col-md-6 mb-3">
                                         <label class="form-label">Starting Price</label>
                                         <div class="input-group">
-                                            <span class="input-group-text">PHP</span>
+                                            <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="starting_price" placeholder="00.00" required>
                                             <div class="invalid-feedback">
                                                 Please enter your starting price.
@@ -209,7 +209,7 @@
                                                 <label class="form-label">Deposit Type</label>
                                                 <select class="form-control" name="deposit_type" id="depositType">
                                                     <option value="" disabled selected>Select deposit type</option>
-                                                    <option value="fixed">Fixed Amount (PHP)</option>
+                                                    <option value="fixed">Fixed Amount (₱)</option>
                                                     <option value="percentage">Percentage (%)</option>
                                                 </select>
                                                 <div class="invalid-feedback">
@@ -220,7 +220,7 @@
                                             <div class="col-12 col-md-6 mb-3">
                                                 <label class="form-label" id="depositAmountLabel">Deposit Amount</label>
                                                 <div class="input-group">
-                                                    <span class="input-group-text" id="depositAmountSymbol">PHP</span>
+                                                    <span class="input-group-text" id="depositAmountSymbol">₱</span>
                                                     <input type="number" class="form-control" name="deposit_amount" id="depositAmount" placeholder="Enter amount" step="0.01" min="0.01">
                                                 </div>
                                                 <small class="text-muted" id="depositAmountHint">Enter the fixed amount required as deposit</small>
@@ -400,7 +400,7 @@
                     $('#depositConfigSection').slideUp(300);
                     // Remove required and clear values
                     $('#depositType, #depositAmount').prop('required', false).val('');
-                    $('#depositAmountSymbol').text('PHP');
+                    $('#depositAmountSymbol').text('₱');
                     $('#depositAmountHint').text('Enter the fixed amount required as deposit');
                 }
             }
@@ -418,8 +418,8 @@
                 const depositType = $(this).val();
                 
                 if (depositType === 'fixed') {
-                    $('#depositAmountSymbol').text('PHP');
-                    $('#depositAmountLabel').text('Deposit Amount (PHP)');
+                    $('#depositAmountSymbol').text('₱');
+                    $('#depositAmountLabel').text('Deposit Amount (₱)');
                     $('#depositAmountHint').text('Enter the fixed amount required as deposit');
                     $('#depositAmount').attr({
                         'min': '1',

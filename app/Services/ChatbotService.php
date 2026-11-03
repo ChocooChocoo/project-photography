@@ -294,7 +294,7 @@ RULES;
         $limit = (int) config('services.groq.package_context_limit', 10);
 
         foreach ($packages->take($limit) as $package) {
-            $line = $package->package_name.' -- PHP '.number_format((float) $package->package_price, 2);
+            $line = $package->package_name.' -- ₱'.number_format((float) $package->package_price, 2);
 
             if ($package->category?->category_name) {
                 $line .= ' ('.$package->category->category_name.')';
@@ -334,8 +334,8 @@ RULES;
 
         $prices = $packages->pluck('package_price')->map(fn ($price) => (float) $price);
 
-        return $packages->count().' active packages, priced from PHP '
-            .number_format($prices->min(), 2).' to PHP '.number_format($prices->max(), 2)
+        return $packages->count().' active packages, priced from ₱'
+            .number_format($prices->min(), 2).' to ₱'.number_format($prices->max(), 2)
             .'. Categories: '.$packages->pluck('category.category_name')->filter()->unique()->take(8)->implode(', ')
             .'. Full per-package details are not loaded for this question -- if the user asks about prices or inclusions, invite them to ask about pricing directly.';
     }
@@ -571,7 +571,7 @@ RULES;
         return $packages->map(function ($package) {
             return [
                 'name' => $package->package_name,
-                'price' => 'PHP '.number_format((float) $package->package_price, 2),
+                'price' => '₱'.number_format((float) $package->package_price, 2),
                 'category' => $package->category?->category_name,
                 'description' => $package->package_description,
                 'inclusions' => array_values(array_slice((array) $package->package_inclusions, 0, 3)),

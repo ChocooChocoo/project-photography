@@ -192,9 +192,9 @@
                                     </div>
 
                                     <div class="col-12 mb-3">
-                                        <label class="form-label">Package Price (PHP)</label>
+                                        <label class="form-label">Package Price (₱)</label>
                                         <div class="input-group">
-                                            <span class="input-group-text">PHP</span>
+                                            <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" name="package_price" value="{{ $package->package_price }}" placeholder="00.00" step="0.01" min="0" required>
                                         </div>
                                         <div class="invalid-feedback">Please enter valid package price.</div>

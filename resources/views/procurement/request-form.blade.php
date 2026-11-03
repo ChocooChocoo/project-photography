@@ -63,7 +63,7 @@
 
                         <div class="border rounded p-3 bg-light-subtle mb-3">
                             <label class="text-muted small mb-1 d-block">Estimated Total</label>
-                            <h3 class="mb-0">PHP <span id="estimatedTotalPreview">0.00</span></h3>
+                            <h3 class="mb-0">₱<span id="estimatedTotalPreview">0.00</span></h3>
                             <small class="text-muted">Auto-calculated from all request line items.</small>
                         </div>
 

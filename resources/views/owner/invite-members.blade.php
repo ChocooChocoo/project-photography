@@ -751,7 +751,7 @@
                                                         </div>
                                                         <div class="flex-grow-1 ms-3">
                                                             <label class="text-muted small mb-1">Starting Price</label>
-                                                            <p class="mb-0 fs-5">PHP ${profile.starting_price ? parseFloat(profile.starting_price).toLocaleString('en-PH', {minimumFractionDigits: 2}) : '0.00'}</p>
+                                                            <p class="mb-0 fs-5">₱${profile.starting_price ? parseFloat(profile.starting_price).toLocaleString('en-PH', {minimumFractionDigits: 2}) : '0.00'}</p>
                                                         </div>
                                                     </div>
                                                 </div>

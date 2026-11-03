@@ -73,7 +73,7 @@
                                             </td>
                                             <td>{{ \Illuminate\Support\Str::limit($procurementRequest->purpose, 70) }}</td>
                                             <td>{{ $procurementRequest->required_date?->format('M d, Y') ?? 'N/A' }}</td>
-                                            <td>PHP {{ number_format((float) $procurementRequest->estimated_total, 2) }}</td>
+                                            <td>₱{{ number_format((float) $procurementRequest->estimated_total, 2) }}</td>
                                             <td><span class="badge badge-soft-{{ $procurementRequest->status_badge_class }}">{{ $procurementRequest->status_label }}</span></td>
                                             <td class="text-end">
                                                 <div class="dropdown">
@@ -267,8 +267,8 @@
                         <td>${item.item_name}</td>
                         <td>${item.category}</td>
                         <td>${item.quantity} ${item.unit_of_measure}</td>
-                        <td>PHP ${Number(item.estimated_unit_cost).toFixed(2)}</td>
-                        <td>PHP ${Number(item.estimated_total_cost).toFixed(2)}</td>
+                        <td>₱${Number(item.estimated_unit_cost).toFixed(2)}</td>
+                        <td>₱${Number(item.estimated_total_cost).toFixed(2)}</td>
                     </tr>
                 `).join('');
 
@@ -303,8 +303,8 @@
                             <div class="border rounded p-3 mb-3">
                                 <h6 class="mb-3">Summary</h6>
                                 <p class="mb-1"><strong>Required Date:</strong> ${data.required_date_display}</p>
-                                <p class="mb-1"><strong>Estimated Total:</strong> PHP ${data.estimated_total}</p>
-                                <p class="mb-1"><strong>Approved Total:</strong> PHP ${data.approved_total}</p>
+                                <p class="mb-1"><strong>Estimated Total:</strong> ₱${data.estimated_total}</p>
+                                <p class="mb-1"><strong>Approved Total:</strong> ₱${data.approved_total}</p>
                                 <p class="mb-0"><strong>Inventory Bypass Reason:</strong> ${data.inventory_bypass_reason || 'None'}</p>
                             </div>
                             <div class="border rounded p-3">

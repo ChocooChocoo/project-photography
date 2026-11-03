@@ -44,7 +44,7 @@
 
             function money(value) {
                 const amount = parseFloat(value) || 0;
-                return 'PHP ' + amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return '₱' + amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
 
             function eventDate(value) {

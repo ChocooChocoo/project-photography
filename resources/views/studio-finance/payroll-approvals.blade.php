@@ -61,7 +61,7 @@
                                                     -
                                                     {{ $generatedPayroll->period_end?->format('M d, Y') ?? 'N/A' }}
                                                 </td>
-                                                <td><strong>PHP {{ number_format((float) $generatedPayroll->net_amount, 2) }}</strong></td>
+                                                <td><strong>₱{{ number_format((float) $generatedPayroll->net_amount, 2) }}</strong></td>
                                                 <td>
                                                     <div>
                                                         <span class="badge {{ $statusBadgeClass }} payroll-status-badge">
@@ -203,9 +203,9 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-4"><div class="border rounded p-3 bg-light-subtle h-100"><label class="text-muted small mb-1 d-block">Attendance Amount</label><h5 class="mb-0" id="approvalModalAttendanceAmount">PHP 0.00</h5></div></div>
-                            <div class="col-12 col-md-4"><div class="border rounded p-3 bg-light-subtle h-100"><label class="text-muted small mb-1 d-block">Booking Amount</label><h5 class="mb-0" id="approvalModalBookingAmount">PHP 0.00</h5></div></div>
-                            <div class="col-12 col-md-4"><div class="border rounded p-3 bg-light-subtle h-100"><label class="text-muted small mb-1 d-block">Total Deductions</label><h5 class="mb-0 text-danger" id="approvalModalTotalDeductionsSummary">- PHP 0.00</h5></div></div>
+                            <div class="col-12 col-md-4"><div class="border rounded p-3 bg-light-subtle h-100"><label class="text-muted small mb-1 d-block">Attendance Amount</label><h5 class="mb-0" id="approvalModalAttendanceAmount">₱0.00</h5></div></div>
+                            <div class="col-12 col-md-4"><div class="border rounded p-3 bg-light-subtle h-100"><label class="text-muted small mb-1 d-block">Booking Amount</label><h5 class="mb-0" id="approvalModalBookingAmount">₱0.00</h5></div></div>
+                            <div class="col-12 col-md-4"><div class="border rounded p-3 bg-light-subtle h-100"><label class="text-muted small mb-1 d-block">Total Deductions</label><h5 class="mb-0 text-danger" id="approvalModalTotalDeductionsSummary">- ₱0.00</h5></div></div>
                             <div class="col-12"><div class="border rounded p-3"><label class="text-muted small mb-1 d-block">Notes</label><p class="mb-0" id="approvalModalPayrollNotes">No remarks provided.</p></div></div>
                             <div class="col-12"><div class="border rounded p-3"><label class="text-muted small mb-1 d-block">Rejection Reason</label><p class="mb-0" id="approvalModalRejectionReason">No rejection reason provided.</p></div></div>
                         </div>
@@ -215,11 +215,11 @@
                     <div class="d-flex gap-3">
                         <div>
                             <label class="text-muted small d-block">Gross Amount</label>
-                            <strong id="approvalModalFooterGrossAmount">PHP 0.00</strong>
+                            <strong id="approvalModalFooterGrossAmount">₱0.00</strong>
                         </div>
                         <div>
                             <label class="text-muted small d-block">Net Amount</label>
-                            <strong id="approvalModalFooterNetAmount">PHP 0.00</strong>
+                            <strong id="approvalModalFooterNetAmount">₱0.00</strong>
                         </div>
                     </div>
                     <div class="d-flex gap-2">
@@ -371,9 +371,9 @@
                                 <div class="text-muted small">${item.description}</div>
                             </td>
                             <td class="text-start">${item.quantity}</td>
-                            <td class="text-start">PHP ${formatCurrency(item.unitPrice)}</td>
+                            <td class="text-start">₱${formatCurrency(item.unitPrice)}</td>
                             <td class="text-start ${item.isDeduction ? 'text-danger' : ''}">
-                                ${item.isDeduction ? '- ' : ''}PHP ${formatCurrency(item.total)}
+                                ${item.isDeduction ? '- ' : ''}₱${formatCurrency(item.total)}
                             </td>
                         </tr>
                     `;
@@ -448,15 +448,15 @@
                 `);
                 $('#approvalModalBookingCount').text(data.booking_count + ' booking(s)');
                 $('#approvalModalInvoiceLineItems').html(renderInvoiceLineItems(data));
-                $('#approvalModalSummaryGrossAmount').text('PHP ' + data.gross_amount);
-                $('#approvalModalSummaryNetAmount').text('PHP ' + data.net_amount);
-                $('#approvalModalFooterGrossAmount').text('PHP ' + data.gross_amount);
-                $('#approvalModalFooterNetAmount').text('PHP ' + data.net_amount);
-                $('#approvalModalTotalDeductionsSummary').text('- PHP ' + data.total_deductions);
+                $('#approvalModalSummaryGrossAmount').text('₱' + data.gross_amount);
+                $('#approvalModalSummaryNetAmount').text('₱' + data.net_amount);
+                $('#approvalModalFooterGrossAmount').text('₱' + data.gross_amount);
+                $('#approvalModalFooterNetAmount').text('₱' + data.net_amount);
+                $('#approvalModalTotalDeductionsSummary').text('- ₱' + data.total_deductions);
                 $('#approvalModalPayrollNotes').text(data.notes);
                 $('#approvalModalRejectionReason').text(data.rejection_reason);
-                $('#approvalModalAttendanceAmount').text('PHP ' + data.attendance_amount);
-                $('#approvalModalBookingAmount').text('PHP ' + data.booking_amount);
+                $('#approvalModalAttendanceAmount').text('₱' + data.attendance_amount);
+                $('#approvalModalBookingAmount').text('₱' + data.booking_amount);
                 $('#approvalModalApproveBtn').attr('data-id', data.id).prop('disabled', !data.can_approve);
                 $('#approvalModalRejectBtn').attr('data-id', data.id).prop('disabled', !data.can_reject);
             }

@@ -82,7 +82,7 @@
                                                 @endphp
                                                 <span class="badge {{ $paymentBadge }} fs-8 px-1 w-100 text-uppercase">{{ str_replace('_', ' ', $booking->payment_status) }}</span>
                                             </td>
-                                            <td data-sort-value="{{ $booking->total_amount }}">PHP {{ number_format($booking->total_amount, 2) }}</td>
+                                            <td data-sort-value="{{ $booking->total_amount }}">₱{{ number_format($booking->total_amount, 2) }}</td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
                                                     <button class="btn btn-sm view-booking-btn" 
@@ -195,7 +195,7 @@
                         packagesHtml += `
                             <div class="d-flex justify-content-between mb-1">
                                 <span class="text-muted">${pkg.package_name}:</span>
-                                <span class="fw-medium">PHP ${parseFloat(pkg.package_price).toFixed(2)}</span>
+                                <span class="fw-medium">₱${parseFloat(pkg.package_price).toFixed(2)}</span>
                             </div>
                         `;
                     });

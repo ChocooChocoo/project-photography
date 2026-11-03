@@ -90,7 +90,7 @@
                                                 @endphp
                                                 <span class="badge {{ $statusBadge }} fs-8 px-1 w-100 text-uppercase">{{ str_replace('_', ' ', $booking->status) }}</span>
                                             </td>
-                                            <td>PHP {{ number_format($booking->total_amount, 2) }}</td>
+                                            <td>₱{{ number_format($booking->total_amount, 2) }}</td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
                                                     <a href="#" class="btn btn-sm view-booking-history-btn" data-booking-id="{{ $booking->id }}" data-bs-toggle="modal" data-bs-target="#bookingHistoryModal">
@@ -202,7 +202,7 @@
                         packagesHtml += `
                             <div class="d-flex justify-content-between mb-1">
                                 <span class="text-muted">${pkg.package_name}:</span>
-                                <span class="fw-medium">PHP ${parseFloat(pkg.package_price).toFixed(2)}</span>
+                                <span class="fw-medium">₱${parseFloat(pkg.package_price).toFixed(2)}</span>
                             </div>
                         `;
                     });
@@ -361,16 +361,16 @@
                                 <div class="bg-light p-3 rounded">
                                     <div class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Total Amount:</span>
-                                        <span class="fw-bold">PHP ${parseFloat(booking.total_amount).toFixed(2)}</span>
+                                        <span class="fw-bold">₱${parseFloat(booking.total_amount).toFixed(2)}</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Amount Paid:</span>
-                                        <span class="fw-medium text-success">PHP ${totalPaid.toFixed(2)}</span>
+                                        <span class="fw-medium text-success">₱${totalPaid.toFixed(2)}</span>
                                     </div>
                                     <div class="d-flex justify-content-between pt-2 border-top">
                                         <span class="fw-semibold">Remaining Balance:</span>
                                         <span class="fw-bold ${(parseFloat(booking.total_amount) - totalPaid) > 0 ? 'text-danger' : 'text-success'}">
-                                            PHP ${(parseFloat(booking.total_amount) - totalPaid).toFixed(2)}
+                                            ₱${(parseFloat(booking.total_amount) - totalPaid).toFixed(2)}
                                         </span>
                                     </div>
                                 </div>

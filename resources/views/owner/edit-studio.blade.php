@@ -288,7 +288,7 @@
                                     </div>
 
                                     <div class="col-12 col-md-6 mb-3">
-                                        <label class="form-label">Starting Price (PHP)</label>
+                                        <label class="form-label">Starting Price (₱)</label>
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" placeholder="Enter your starting price" name="starting_price" step="0.01" min="0" value="{{ $studio->starting_price }}" required>
@@ -319,7 +319,7 @@
                                     </div>
 
                                     <div class="col-12 col-md-6 mb-3">
-                                        <label class="form-label" for="downpaymentAmount">Fixed Downpayment Amount (PHP)</label>
+                                        <label class="form-label" for="downpaymentAmount">Fixed Downpayment Amount (₱)</label>
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" id="downpaymentAmount" name="downpayment_amount" step="0.01" min="1" placeholder="e.g. 2000" value="{{ $studio->downpayment_amount }}" aria-describedby="downpaymentAmountHelp">
@@ -329,7 +329,7 @@
                                 </div>
 
                                     <div class="col-12 col-md-6 mb-3">
-                                        <label class="form-label">Maximum Price (PHP) <span class="text-muted">(Optional)</span></label>
+                                        <label class="form-label">Maximum Price (₱) <span class="text-muted">(Optional)</span></label>
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
                                             <input type="number" class="form-control" placeholder="Enter your maximum price" name="maximum_price" step="0.01" min="0" value="{{ $studio->maximum_price }}">

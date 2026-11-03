@@ -59,7 +59,7 @@ class HardcopyOrderController extends Controller
             $this->editable($booking);
             abort_if(HardcopyOrderModel::where('booking_id', $booking->id)->whereNotIn('status', ['cancelled', 'delivered'])->exists(), 409, 'An active hardcopy order already exists.');
             $cents = collect($data['items'])->sum(fn ($item) => (int) round($item['unit_price'] * 100) * $item['quantity']);
-            abort_if($cents > 100000000, 422, 'Hardcopy total cannot exceed PHP 1,000,000.');
+            abort_if($cents > 100000000, 422, 'Hardcopy total cannot exceed ₱1,000,000.');
             // The studio only suggests a method; the client's accepted choice is final.
             $order = HardcopyOrderModel::create(['booking_id' => $booking->id, 'fulfillment_method' => $data['fulfillment_method'], 'suggested_fulfillment_method' => $data['fulfillment_method'], 'amount' => $cents / 100, 'status' => 'pending']);
             $order->items()->createMany($data['items']);

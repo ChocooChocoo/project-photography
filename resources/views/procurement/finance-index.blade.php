@@ -71,7 +71,7 @@
                                             <td>{{ $procurementRequest->requester->full_name ?? 'N/A' }}</td>
                                             <td>{{ $procurementRequest->studio->studio_name ?? 'N/A' }}</td>
                                             <td><span class="badge badge-soft-{{ $procurementRequest->status_badge_class }}">{{ $procurementRequest->status_label }}</span></td>
-                                            <td>PHP {{ number_format((float) $procurementRequest->estimated_total, 2) }}</td>
+                                            <td>₱{{ number_format((float) $procurementRequest->estimated_total, 2) }}</td>
                                             <td class="text-end">
                                                 <div class="dropdown">
                                                     <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -465,7 +465,7 @@
                             </div>
                             <div class="ms-3">
                                 <label class="text-muted small mb-1">Approved Total</label>
-                                <p class="mb-0 fw-semibold">PHP ${paymentSummary.approved_total || data.approved_total}</p>
+                                <p class="mb-0 fw-semibold">₱${paymentSummary.approved_total || data.approved_total}</p>
                             </div>
                         </div>
                     </div>
@@ -532,8 +532,8 @@
                     <td>${item.item_name}</td>
                     <td>${item.quantity} ${item.unit_of_measure}</td>
                     <td>${item.category}</td>
-                    <td>PHP ${Number(item.estimated_total_cost).toFixed(2)}</td>
-                    <td>${item.approved_total_cost !== null ? `PHP ${Number(item.approved_total_cost).toFixed(2)}` : 'Pending'}</td>
+                    <td>₱${Number(item.estimated_total_cost).toFixed(2)}</td>
+                    <td>${item.approved_total_cost !== null ? `₱${Number(item.approved_total_cost).toFixed(2)}` : 'Pending'}</td>
                 </tr>
             `).join('');
 
@@ -569,8 +569,8 @@
                         <div class="border rounded p-3 mb-3">
                             <h6 class="mb-3">Summary</h6>
                             <p class="mb-1"><strong>Required Date:</strong> ${data.required_date_display}</p>
-                            <p class="mb-1"><strong>Estimated Total:</strong> PHP ${data.estimated_total}</p>
-                            <p class="mb-1"><strong>Approved Total:</strong> PHP ${data.approved_total}</p>
+                            <p class="mb-1"><strong>Estimated Total:</strong> ₱${data.estimated_total}</p>
+                            <p class="mb-1"><strong>Approved Total:</strong> ₱${data.approved_total}</p>
                             <p class="mb-1"><strong>Finance Note:</strong> ${data.finance_review_note || 'None'}</p>
                             <p class="mb-0"><strong>Owner Note:</strong> ${data.owner_review_note || 'None'}</p>
                         </div>

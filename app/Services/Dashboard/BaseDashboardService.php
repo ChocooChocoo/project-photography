@@ -146,7 +146,7 @@ abstract class BaseDashboardService
      */
     protected function formatCurrency(float|int|string $amount): string
     {
-        return 'PHP ' . number_format((float) $amount, 2);
+        return '₱' . number_format((float) $amount, 2);
     }
 
     /**

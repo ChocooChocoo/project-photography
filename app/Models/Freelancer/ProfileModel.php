@@ -122,7 +122,7 @@ class ProfileModel extends Model
         }
 
         if ($this->deposit_type === 'fixed') {
-            return 'PHP ' . number_format($this->deposit_amount, 2) . ' fixed deposit';
+            return '₱' . number_format($this->deposit_amount, 2) . ' fixed deposit';
         } elseif ($this->deposit_type === 'percentage') {
             return $this->deposit_amount . '% of total amount deposit';
         }

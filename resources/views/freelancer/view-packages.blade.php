@@ -65,7 +65,7 @@
                                     <tr class="package-row" data-status="{{ $package->status }}">
                                         <td>{{ $package->category->category_name ?? 'N/A' }}</td>
                                         <td>{{ $package->package_name }}</td>
-                                        <td>PHP {{ number_format($package->package_price, 2) }}</td>
+                                        <td>₱{{ number_format($package->package_price, 2) }}</td>
                                         <td>
                                             @if($package->online_gallery)
                                                 <span class="badge badge-soft-success fs-8 px-1 w-100">

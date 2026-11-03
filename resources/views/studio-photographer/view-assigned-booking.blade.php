@@ -86,7 +86,7 @@
                                             </td>
                                             <td data-sort-value="{{ $assignment->booking ? $assignment->booking->total_amount : 0 }}">
                                                 <span class="fw-semibold">
-                                                    PHP {{ $assignment->booking ? number_format($assignment->booking->total_amount, 2) : '0.00' }}
+                                                    ₱{{ $assignment->booking ? number_format($assignment->booking->total_amount, 2) : '0.00' }}
                                                 </span>
                                                 <br>
                                                 <small class="text-muted">{{ ucfirst(str_replace('_', ' ', $assignment->booking->payment_status ?? 'pending')) }}</small>
@@ -346,7 +346,7 @@
                         packagesHtml += `
                             <div class="d-flex justify-content-between mb-1">
                                 <span class="text-muted">${pkg.package_name}:</span>
-                                <span class="fw-medium">PHP ${parseFloat(pkg.package_price).toFixed(2)}</span>
+                                <span class="fw-medium">₱${parseFloat(pkg.package_price).toFixed(2)}</span>
                             </div>
                             <p class="small mb-2"><span class="text-muted">Photo editing:</span> <strong>${pkg.editing_summary || 'Unedited (RAW) photos'}</strong></p>
                         `;
@@ -467,7 +467,7 @@
                             <div class="alert alert-danger mb-3">
                                 <i data-lucide="alert-circle" class="me-2"></i>
                                 <strong>Payment Required</strong>
-                                <p class="mb-0 mt-1">This booking is not fully paid. Remaining balance: <strong>PHP ${remainingBalance.toFixed(2)}</strong></p>
+                                <p class="mb-0 mt-1">This booking is not fully paid. Remaining balance: <strong>₱${remainingBalance.toFixed(2)}</strong></p>
                                 <p class="mb-0 small text-muted">You cannot mark this assignment as completed until the client has paid the full amount.</p>
                             </div>
                         `;
@@ -594,7 +594,7 @@
                                     <p class="mb-0 fw-medium">
                                         <span class="badge ${paymentStatusClass} me-2">${paymentStatusText}</span>
                                         ${!paymentInfo.is_fully_paid ? 
-                                            `<small class="text-danger d-block mt-1">Remaining: PHP ${paymentInfo.remaining_balance.toFixed(2)}</small>` : 
+                                            `<small class="text-danger d-block mt-1">Remaining: ₱${paymentInfo.remaining_balance.toFixed(2)}</small>` : 
                                             `<small class="d-block mt-1 ${galleryUploadMissing ? 'text-warning' : 'text-success'}">${galleryUploadMissing ? 'Fully paid - completion locked until gallery upload' : 'Fully paid - Ready for completion'}</small>`
                                         }
                                     </p>
@@ -857,7 +857,7 @@
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <label class="text-muted small mb-1">Total Amount</label>
-                                                    <p class="mb-0 fw-semibold fs-5">PHP ${parseFloat(booking.total_amount).toFixed(2)}</p>
+                                                    <p class="mb-0 fw-semibold fs-5">₱${parseFloat(booking.total_amount).toFixed(2)}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -882,15 +882,15 @@
                                             <div class="bg-light p-3 rounded">
                                                 <div class="d-flex justify-content-between mb-2">
                                                     <span class="text-muted">Total Amount:</span>
-                                                    <span class="fw-medium">PHP ${parseFloat(booking.total_amount).toFixed(2)}</span>
+                                                    <span class="fw-medium">₱${parseFloat(booking.total_amount).toFixed(2)}</span>
                                                 </div>
                                                 <div class="d-flex justify-content-between mb-2">
                                                     <span class="text-muted">Amount Paid:</span>
-                                                    <span class="fw-medium">PHP ${totalPaid.toFixed(2)}</span>
+                                                    <span class="fw-medium">₱${totalPaid.toFixed(2)}</span>
                                                 </div>
                                                 <div class="d-flex justify-content-between pt-2 border-top">
                                                     <span class="fw-semibold">Remaining:</span>
-                                                    <span class="fw-bold ${remainingBalance > 0 ? 'text-danger' : 'text-success'}">PHP ${remainingBalance.toFixed(2)}</span>
+                                                    <span class="fw-bold ${remainingBalance > 0 ? 'text-danger' : 'text-success'}">₱${remainingBalance.toFixed(2)}</span>
                                                 </div>
                                             </div>
                                         </div>

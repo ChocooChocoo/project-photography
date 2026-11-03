@@ -80,7 +80,7 @@
                                         <div class="text-center text-lg-end">
                                             <span class="text-muted d-block">Starting Price at</span>
                                             <h3 class="text-success mb-0 h4">
-                                                PHP 
+                                                ₱
                                                 @if($type === 'studio')
                                                     {{ number_format($studio->starting_price, 2) }}
                                                 @else

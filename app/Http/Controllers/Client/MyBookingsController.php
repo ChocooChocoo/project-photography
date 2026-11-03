@@ -516,7 +516,7 @@ class MyBookingsController extends Controller
             if ($request->amount > $remainingBalance) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Payment amount cannot exceed remaining balance of PHP '.number_format($remainingBalance, 2),
+                    'message' => 'Payment amount cannot exceed remaining balance of ₱'.number_format($remainingBalance, 2),
                 ]);
             }
 

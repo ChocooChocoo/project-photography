@@ -144,7 +144,7 @@ class AssignedBookingController extends Controller
                 if ($totalPaid < $booking->total_amount) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Cannot mark as completed because the booking is not fully paid. Remaining balance: PHP '.number_format($booking->total_amount - $totalPaid, 2),
+                        'message' => 'Cannot mark as completed because the booking is not fully paid. Remaining balance: ₱'.number_format($booking->total_amount - $totalPaid, 2),
                     ], 403);
                 }
 

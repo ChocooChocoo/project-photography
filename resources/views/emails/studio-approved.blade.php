@@ -105,7 +105,7 @@
                 </div>
                 @if($studio->starting_price)
                 <div class="info-item">
-                    <i>💰</i> <strong>Starting Price:</strong> PHP {{ number_format($studio->starting_price, 2) }}
+                    <i>💰</i> <strong>Starting Price:</strong> ₱{{ number_format($studio->starting_price, 2) }}
                 </div>
                 @endif
             </div>

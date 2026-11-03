@@ -89,7 +89,7 @@
                                                     <span class="badge badge-soft-warning ms-1">High Value</span>
                                                 @endif
                                             </td>
-                                            <td>PHP {{ number_format((float) $procurementRequest->estimated_total, 2) }}</td>
+                                            <td>₱{{ number_format((float) $procurementRequest->estimated_total, 2) }}</td>
                                             <td class="text-end">
                                                 <div class="dropdown">
                                                     <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -255,7 +255,7 @@
                     <td>${item.quantity} ${item.unit_of_measure}</td>
                     <td>${item.category}</td>
                     <td>${item.expense_type.toUpperCase()}</td>
-                    <td>PHP ${Number(item.estimated_total_cost).toFixed(2)}</td>
+                    <td>₱${Number(item.estimated_total_cost).toFixed(2)}</td>
                 </tr>
             `).join('');
 
@@ -292,8 +292,8 @@
                             <h6 class="mb-3">Summary</h6>
                             <p class="mb-1"><strong>Required Date:</strong> ${data.required_date_display}</p>
                             <p class="mb-1"><strong>Requester Role:</strong> ${data.requester_role || 'N/A'}</p>
-                            <p class="mb-1"><strong>Estimated Total:</strong> PHP ${data.estimated_total}</p>
-                            <p class="mb-1"><strong>Approved Total:</strong> PHP ${data.approved_total}</p>
+                            <p class="mb-1"><strong>Estimated Total:</strong> ₱${data.estimated_total}</p>
+                            <p class="mb-1"><strong>Approved Total:</strong> ₱${data.approved_total}</p>
                             <p class="mb-1"><strong>Finance Note:</strong> ${data.finance_review_note || 'None'}</p>
                             <p class="mb-0"><strong>Owner Note:</strong> ${data.owner_review_note || 'None'}</p>
                         </div>

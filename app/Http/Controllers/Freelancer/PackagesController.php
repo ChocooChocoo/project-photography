@@ -343,7 +343,7 @@ class PackagesController extends Controller
             return [
                 'category' => $package->category->category_name ?? 'N/A',
                 'package_name' => $package->package_name,
-                'price' => 'PHP ' . number_format($package->package_price, 2),
+                'price' => '₱' . number_format($package->package_price, 2),
                 'duration' => $package->duration . ' hours',
                 'max_photos' => $package->maximum_edited_photos,
                 'locations' => $package->allow_multiple_locations 
