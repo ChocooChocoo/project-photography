@@ -409,8 +409,8 @@ class AssignedBookingController extends Controller
                         $cancelledOnSite ? 'photographer_cancelled_on_site' : 'photographer_cancelled_assignment',
                         $cancelledOnSite ? 'Photographer Left the Shoot' : 'Photographer Cancelled Assignment',
                         $cancelledOnSite
-                            ? "Photographer {$photographerName} cancelled on site for booking #{$booking->booking_reference}. Reason: {$request->cancellation_reason}. Assign a replacement to finish the job."
-                            : "Photographer {$photographerName} cancelled the assignment for booking #{$booking->booking_reference}. Reason: {$request->cancellation_reason}.",
+                            ? "Photographer {$photographerName} cancelled on site for booking #{$booking->booking_reference}. Reason: ".rtrim((string) $request->cancellation_reason, ".").". Assign a replacement to finish the job."
+                            : "Photographer {$photographerName} cancelled the assignment for booking #{$booking->booking_reference}. Reason: ".rtrim((string) $request->cancellation_reason, ".").".",
                         [
                             'booking_id' => $booking->id,
                             'booking_reference' => $booking->booking_reference,
