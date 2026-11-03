@@ -1545,7 +1545,7 @@
                 if (!show || typeof L === 'undefined') return;
                 if (!venueMap) {
                     // Default view: Cavite, the province the booking form covers.
-                    venueMap = L.map('venuePinMap').setView([14.4791, 120.8970], 11);
+                    venueMap = L.map('venuePinMap').setView([14.33, 120.90], 10);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         maxZoom: 19,
                         attribution: '&copy; OpenStreetMap contributors'

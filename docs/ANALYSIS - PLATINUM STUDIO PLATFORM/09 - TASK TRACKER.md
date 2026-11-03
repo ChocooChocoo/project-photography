@@ -2,7 +2,7 @@
 
 [Back to start](00%20-%20START%20HERE.md) · Previous: [08 - ROADMAP TRACKER](08%20-%20ROADMAP%20TRACKER.md) · Next: [10 - WORD LIST](10%20-%20WORD%20LIST.md)
 
-**Last checked:** 24 October 2026 (T-13 client-defects entry; historical task statuses retained)
+**Last checked:** 3 November 2026 (T-14 platform updates entry; historical task statuses retained)
 
 Every task below is a piece of work from a frozen user-authored prompt. The prompt remains exact under `MATERIAL/LEGACY DOCUMENTATION/tasks/`.
 
@@ -21,6 +21,7 @@ Every task below is a piece of work from a frozen user-authored prompt. The prom
 | T-11 | Implement Phase 4 workflow improvements through subscription-rank transparency. | `MATERIAL/LEGACY DOCUMENTATION/tasks/11.md` | Historical discovery and workflow proposal. | [R-14](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-4--expand-discovery-and-advanced-operations) | ✅ |
 | T-12 | Resolve municipality permission behavior and standardize task documentation. | `MATERIAL/LEGACY DOCUMENTATION/tasks/12.md` | Owner studio creation lookup and documentation consistency. | [R-04](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-1--make-the-foundations-dependable) | 🔵 |
 | T-13 | Fix the client-reported T02 defects and build the requested enhancements. | `MATERIAL/LEGACY DOCUMENTATION/tasks/13.md` (frozen copy of `docs/tasks/T02.md`) | Employees page error, CSRF retry, gallery-approval notification, equipment inventory and confirmation, printed-photo delivery gate and fulfillment rule, downpayment settings, cancellation and refund rules, photo editing pricing, and rescheduling requests. | [R-05](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-2--complete-booking-and-media-journeys), [R-15](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-4--expand-discovery-and-advanced-operations) | ✅ |
+| T-14 | Build the platform feature and UI updates. | `MATERIAL/LEGACY DOCUMENTATION/tasks/14.md` (asked for in conversation, 3 November 2026) | Landing page redesign, messages icon in the topbar, tutorial rework, peso sign, per-package discounts, camera specs before booking, fixed and flexible booking times, venue pin and GPS arrival check-in with alerts, on-site cancellation and replacement, freelancer group names, and a before-and-after photo slider. | [R-05](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-2--complete-booking-and-media-journeys), [R-13](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-4--expand-discovery-and-advanced-operations) | ✅ |
 
 ## Tasks that serve no roadmap item
 
@@ -42,6 +43,14 @@ This entry does not close Phase 1's unreproduced production login issue. Portfol
 | 10 | Thesis-panel failures not covered by T02: S06 "Photos, videos and extras on packages", S19 "Freelancer filling in" and RC "Full walkthrough: freelancer booking". A second studio can now get its own plan and packages, owners can invite freelancers to any studio they own, fallback freelancer access lasts until completion, and package videos are hidden. | [Phase 10](../implementation-plan/t02-client-defects/phase-10.md): 725 PHP tests / 3676 assertions and 21 JavaScript tests passed, and the build succeeded. S06, S19 and RC passed a browser re-run on 24 October 2026. | ✅ Locally verified, 24 October 2026; production unverified. |
 
 The acceptance-test sheet is outside this repo, and its testers must still mark the five tests as passing. They also need edit access and a notes column for "Doesn't work" results; this involves no app code. Open questions from the re-run: a freelancer booking can be completed without a delivered gallery, unlike a studio booking; and a booking cannot be rescheduled once the photographer has accepted it. T-13 reverses the T01 instruction to disable downpayments; see [decisions](02%20-%20DOCUMENT%20FINDINGS.md#decisions-already-made).
+
+## T-14 platform updates
+
+| Phases | Scope | Source and verification | Status |
+|---|---|---|---|
+| 1–11 | Everything in T-14. The answers to its open questions are recorded in the plan. Studio discount rules are retired because they never changed a price; package discounts replace them. | [T-14 plan](../implementation-plan/platform-updates-2026-11/README.md): 775 PHP tests / 4021 assertions passed. A local browser run checked the landing page at desktop and phone widths, the client topbar, the fixed-package end time, and the venue pin map. | ✅ Locally verified, 3 November 2026; production unverified. |
+
+Not covered: direct freelancer bookings do not use GPS check-in or on-site cancellation, because they have no assignment record. Six migrations must run on production before the code is deployed.
 
 ## Status legend
 
