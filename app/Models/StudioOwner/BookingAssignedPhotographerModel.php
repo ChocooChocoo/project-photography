@@ -358,17 +358,21 @@ class BookingAssignedPhotographerModel extends Model
     }
 
     /**
-     * Check if the photographer can cancel this assignment
-     * Cancellation is only allowed in 'assigned' or 'confirmed' states
-     * Once 'on_site' or beyond, cancellation is prohibited
+     * Check if the photographer can cancel this assignment. Allowed before
+     * arrival and while on site (with a reason); after an on-site cancel the
+     * owner assigns a replacement to finish the job.
      */
     public function canCancel(): bool
     {
-        // Allowed cancellation states
-        $allowedCancellationStates = ['assigned', 'confirmed'];
+        return in_array($this->status, ['assigned', 'confirmed', 'on_site', 'in_progress'], true);
+    }
 
-        // Check if current status is in allowed states
-        return in_array($this->status, $allowedCancellationStates);
+    /**
+     * True when the photographer cancelled after checking in on site.
+     */
+    public function cancelledOnSite(): bool
+    {
+        return $this->status === 'cancelled' && ! is_null($this->on_site_at);
     }
 
     /**
@@ -381,8 +385,6 @@ class BookingAssignedPhotographerModel extends Model
         }
 
         $restrictedStates = [
-            'on_site' => 'You have already marked as on-site and cannot cancel this booking.',
-            'in_progress' => 'You have already started working and cannot cancel this booking.',
             'completed' => 'This booking has been completed and cannot be cancelled.',
             'cancelled' => 'This booking is already cancelled.',
         ];

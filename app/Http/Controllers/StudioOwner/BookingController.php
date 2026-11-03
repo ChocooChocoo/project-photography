@@ -736,6 +736,28 @@ class BookingController extends Controller
                 $isBatchAssignment = $assignedCount > 1;
                 $batchText = $isBatchAssignment ? " (as part of a team of {$assignedCount})" : '';
 
+                // A replacement after an on-site cancellation: tell the client who is coming.
+                if ($booking->hasOnSiteCancellation()) {
+                    $replacementNames = collect($createdAssignments)
+                        ->map(fn ($created) => UserModel::find($created->photographer_id))
+                        ->filter()
+                        ->map(fn ($person) => $person->first_name.' '.$person->last_name)
+                        ->implode(', ');
+                    $this->createNotification(
+                        $booking->client_id,
+                        'replacement_photographer_assigned',
+                        'Replacement Photographer Assigned',
+                        "{$replacementNames} will finish your shoot for booking #{$booking->booking_reference}. Confirm their arrival when they check in.",
+                        [
+                            'booking_id' => $booking->id,
+                            'booking_reference' => $booking->booking_reference,
+                            'route' => route('client.my-bookings.index', [], false),
+                        ],
+                        'user-check',
+                        'info'
+                    );
+                }
+
                 // ========== NOTIFICATION 1: Send to each newly assigned photographer ==========
                 $photographerNames = []; // Track names for owner notification
 

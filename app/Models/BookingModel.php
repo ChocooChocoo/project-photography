@@ -352,6 +352,15 @@ class BookingModel extends Model
     }
 
     /**
+     * True when this booking has had an on-site cancellation, so a newly
+     * assigned photographer is a replacement the client should hear about.
+     */
+    public function hasOnSiteCancellation(): bool
+    {
+        return $this->assignedPhotographers()->where('status', 'cancelled')->whereNotNull('on_site_at')->exists();
+    }
+
+    /**
      * Get assigned photographers for this booking.
      */
     public function assignedPhotographers()

@@ -14,8 +14,8 @@
             $nextStatuses = match($assignment->status) {
                 'assigned' => ['confirmed' => 'Accept assignment', 'cancelled' => 'Decline assignment'],
                 'confirmed' => ['on_site' => 'Confirm arrival', 'cancelled' => 'Cancel assignment'],
-                'on_site' => ['in_progress' => 'Start work'],
-                'in_progress' => ['completed' => 'Complete work'],
+                'on_site' => ['in_progress' => 'Start work', 'cancelled' => 'Cancel on site'],
+                'in_progress' => ['completed' => 'Complete work', 'cancelled' => 'Cancel on site'],
                 default => [],
             };
         @endphp
@@ -63,7 +63,7 @@
                 <label class="form-label" for="proof-{{ $assignment->id }}">Arrival photo (required to confirm arrival)</label>
                 <input class="form-control mb-3" type="file" id="proof-{{ $assignment->id }}" name="on_site_proof_image" accept="image/jpeg,image/png,image/webp">
                 @endif
-                @if(in_array($assignment->status, ['assigned', 'confirmed']))
+                @if(in_array($assignment->status, ['assigned', 'confirmed', 'on_site', 'in_progress']))
                 <label class="form-label" for="reason-{{ $assignment->id }}">Reason (required to decline or cancel)</label>
                 <textarea class="form-control mb-3" id="reason-{{ $assignment->id }}" name="cancellation_reason" maxlength="500"></textarea>
                 @endif

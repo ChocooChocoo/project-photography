@@ -386,9 +386,14 @@
 
                 // Helper function to check if cancel is allowed
                 function canCancel(status) {
-                    // Cancellation only allowed in 'assigned' or 'confirmed' states
-                    return ['assigned', 'confirmed'].includes(status);
+                    // A photographer may cancel before arrival and while on site;
+                    // the owner then assigns a replacement to finish the job.
+                    return ['assigned', 'confirmed', 'on_site', 'in_progress'].includes(status);
                 }
+                const cancelOnSiteBtn = `
+                    <button class="btn btn-soft-danger me-2" id="cancelAssignmentBtn">
+                        <i data-lucide="x" class="me-1"></i> Cancel on site
+                    </button>`;
                 
                 // ========== UPDATED: Status action buttons with payment-based enable/disable ==========
                 let statusActions = '';
@@ -435,9 +440,9 @@
                             <div class="alert alert-warning mb-3">
                                 <i data-lucide="clock" class="me-2"></i>
                                 You have marked as on-site. Waiting for client to confirm your presence.
-                                <br><small class="text-danger"><i class="ti ti-alert-triangle me-1"></i>Cancellation is not allowed at this stage.</small>
+                                <br><small>If you cannot finish, cancel with a reason. The owner assigns a replacement.</small>
                             </div>
-                            <!-- Cancel button intentionally omitted -->
+                            ${cancelOnSiteBtn}
                         `;
                     } else if (hasOnSite && hasClientConfirmed) {
                         // Client confirmed - CANCEL NOT ALLOWED
@@ -446,7 +451,7 @@
                                 <i data-lucide="check-circle" class="me-2"></i>
                                 Client has confirmed your on-site presence. You may now begin working.
                             </div>
-                            <!-- Cancel button intentionally omitted -->
+                            ${cancelOnSiteBtn}
                             <button class="btn btn-primary" id="startAssignmentBtn">
                                 <i data-lucide="play" class="me-1"></i> Mark as In Progress
                             </button>
@@ -506,13 +511,14 @@
                             <div class="alert alert-info mb-3">
                                 <i data-lucide="info" class="me-2"></i>
                                 You are currently working on this booking.
-                                <br><small class="text-danger"><i class="ti ti-alert-triangle me-1"></i>Cancellation is not allowed once work has started.</small>
+                                <br><small>If you cannot finish, cancel with a reason. The owner assigns a replacement.</small>
                             </div>
                             
                             ${paymentWarningHtml}
                             ${galleryWarningHtml}
                             
                             <div class="d-flex justify-content-end">
+                                ${cancelOnSiteBtn}
                                 ${completeButtonHtml}
                             </div>
                         </div>
@@ -1001,7 +1007,7 @@
                         success: function(response) {
                             if (response.success) {
                                 const assignment = response.assignment;
-                                const canCancel = ['assigned', 'confirmed'].includes(assignment.status);
+                                const canCancel = ['assigned', 'confirmed', 'on_site', 'in_progress'].includes(assignment.status);
                                 
                                 if (!canCancel) {
                                     Swal.fire({

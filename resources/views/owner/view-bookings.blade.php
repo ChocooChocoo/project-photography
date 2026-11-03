@@ -1008,6 +1008,16 @@
                         <div class="col-12">
                             <div class="card border-0 shadow-none">
                                 <div class="card-body p-0">
+                                    ${(() => {
+                                        const leftOnSite = (assignedPhotographers || []).filter(a => a.status === 'cancelled' && a.on_site_at);
+                                        if (!leftOnSite.length || ['completed', 'cancelled'].includes(booking.status) || data.current_assigned_count >= data.max_photographers) return '';
+                                        const names = leftOnSite.map(a => escapeAssignmentText(((a.photographer?.first_name || '') + ' ' + (a.photographer?.last_name || '')).trim())).join(', ');
+                                        const reasons = leftOnSite.map(a => escapeAssignmentText(a.cancellation_reason || 'No reason given')).join('; ');
+                                        return `<div class="alert alert-danger" role="alert">
+                                            <strong>Needs a replacement photographer.</strong> ${names} cancelled on site (${reasons}).
+                                            Use <strong>Assign Photographer</strong> to send someone to finish the shoot. The client is notified.
+                                        </div>`;
+                                    })()}
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div>
                                             <h6 class="card-title mb-0 fw-semibold text-uppercase small text-primary">

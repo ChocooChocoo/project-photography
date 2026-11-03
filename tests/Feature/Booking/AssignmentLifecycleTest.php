@@ -161,6 +161,63 @@ class AssignmentLifecycleTest extends TestCase
         $this->assertNotNull($assignment->completed_at);
     }
 
+    public function test_photographer_cancels_on_site_and_owner_replacement_finishes_the_job(): void
+    {
+        $client = $this->createUser('client', 'onsite-client@example.com');
+        $leaver = $this->createUser('studio-photographer', 'leaver@example.com');
+        $replacement = $this->createUser('studio-photographer', 'replacement@example.com');
+        $studio = $this->createStudio();
+        $this->grantAssignmentPermission($leaver, $studio);
+        $replacement->roles()->attach(RoleModel::where('name', 'studio-photographer')->value('id'), ['studio_id' => $studio->id]);
+        foreach ([$leaver, $replacement] as $photographer) {
+            StudioPhotographersModel::create([
+                'studio_id' => $studio->id, 'owner_id' => $this->owner->id,
+                'photographer_id' => $photographer->id, 'status' => 'active',
+            ]);
+        }
+        $booking = $this->createBooking($studio, $client, 'confirmed', 'on-location');
+        $booking->update(['start_time' => '09:00:00', 'end_time' => '12:00:00']);
+        PaymentModel::create([
+            'booking_id' => $booking->id, 'payment_reference' => 'PAY-ONSITE',
+            'amount' => 1000, 'payment_method' => 'card', 'status' => 'succeeded',
+        ]);
+        $first = $this->createAssignment($booking, $studio, $leaver, 'assigned');
+        $proof = fn () => \Illuminate\Http\UploadedFile::fake()->createWithContent('arrival.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWf8AAAAASUVORK5CYII='));
+        $onSite = fn () => ['status' => 'on_site', 'on_site_proof_image' => $proof(), 'latitude' => 14.4791, 'longitude' => 120.897];
+
+        $this->actingAs($leaver)->postJson("/_test/photographer/assignment/{$first->id}/status", ['status' => 'confirmed'])->assertOk();
+        $this->actingAs($leaver)->postJson("/_test/photographer/assignment/{$first->id}/status", $onSite())->assertOk();
+
+        // A reason is required.
+        $this->actingAs($leaver)->postJson("/_test/photographer/assignment/{$first->id}/status", ['status' => 'cancelled'])
+            ->assertUnprocessable()->assertJsonValidationErrors('cancellation_reason');
+
+        // Cancelling on site skips the paid-booking recovery and keeps the shoot in progress.
+        $this->actingAs($leaver)->postJson("/_test/photographer/assignment/{$first->id}/status", ['status' => 'cancelled', 'cancellation_reason' => 'Family emergency'])
+            ->assertOk()->assertJsonPath('recovery', null);
+        $this->assertSame('cancelled', $first->fresh()->status);
+        $this->assertSame('Family emergency', $first->fresh()->cancellation_reason);
+        $this->assertSame('in_progress', $booking->fresh()->status);
+        $this->assertDatabaseHas('tbl_notifications', ['user_id' => $client->id, 'type' => 'photographer_cancelled_on_site']);
+        $this->assertDatabaseHas('tbl_notifications', ['user_id' => $this->owner->id, 'type' => 'photographer_cancelled_on_site']);
+
+        // The owner assigns a replacement through the normal assign flow; the client is told.
+        Auth::setUser($this->owner);
+        $this->actingAs($this->owner)->postJson("/_test/owner/booking/{$booking->id}/assign", ['photographer_ids' => [$replacement->id]])
+            ->assertOk()->assertJsonPath('success', true);
+        $this->assertDatabaseHas('tbl_notifications', ['user_id' => $client->id, 'type' => 'replacement_photographer_assigned']);
+        $second = BookingAssignedPhotographerModel::where('booking_id', $booking->id)->where('photographer_id', $replacement->id)->firstOrFail();
+
+        // The replacement checks in, the client confirms, and the work is completed.
+        $this->actingAs($replacement)->postJson("/_test/photographer/assignment/{$second->id}/status", ['status' => 'confirmed'])->assertOk();
+        $this->actingAs($replacement)->postJson("/_test/photographer/assignment/{$second->id}/status", $onSite())->assertOk();
+        $this->actingAs($client)->postJson("/_test/client/assignment/{$second->id}/confirm", [])->assertOk();
+        $this->actingAs($replacement)->postJson("/_test/photographer/assignment/{$second->id}/status", ['status' => 'in_progress'])->assertOk();
+        $this->actingAs($replacement)->postJson("/_test/photographer/assignment/{$second->id}/status", ['status' => 'completed'])
+            ->assertOk()->assertJsonPath('success', true);
+        $this->assertSame('completed', $second->fresh()->status);
+    }
+
     public function test_deadline_command_warns_but_does_not_cancel(): void
     {
         $client = $this->createUser('client', 'deadline-client@example.com');

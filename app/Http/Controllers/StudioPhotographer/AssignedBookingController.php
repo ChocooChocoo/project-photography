@@ -377,17 +377,40 @@ class AssignedBookingController extends Controller
                     $updateData['cancelled_at'] = now();
                     $updateData['cancellation_reason'] = $request->cancellation_reason;
 
-                    if ($booking->booking_type === 'studio' && $booking->payments()->where('status', 'succeeded')->exists()) {
+                    // On-site cancellations skip the refund-or-replace recovery: the
+                    // shoot is under way, so the owner assigns a replacement to
+                    // finish it. Payments are left as they are.
+                    $cancelledOnSite = in_array($assignment->status, ['on_site', 'in_progress'], true);
+
+                    if (! $cancelledOnSite && $booking->booking_type === 'studio' && $booking->payments()->where('status', 'succeeded')->exists()) {
                         $recovery = app(BookingCancellationRecoveryService::class)
                             ->photographerCancelled($assignment, $request->cancellation_reason);
                         $updateData = [];
                     }
 
+                    if ($cancelledOnSite) {
+                        $this->createNotification(
+                            $booking->client_id,
+                            'photographer_cancelled_on_site',
+                            'Photographer Replacement Coming',
+                            "Your photographer for booking #{$booking->booking_reference} had to leave. The studio is assigning a replacement to finish your shoot.",
+                            [
+                                'booking_id' => $booking->id,
+                                'booking_reference' => $booking->booking_reference,
+                                'route' => route('client.my-bookings.index', [], false),
+                            ],
+                            'user-x',
+                            'warning'
+                        );
+                    }
+
                     $this->createOwnerNotification(
                         $assignment,
-                        'photographer_cancelled_assignment',
-                        'Photographer Cancelled Assignment',
-                        "Photographer {$photographerName} cancelled the assignment for booking #{$booking->booking_reference}. Reason: {$request->cancellation_reason}.",
+                        $cancelledOnSite ? 'photographer_cancelled_on_site' : 'photographer_cancelled_assignment',
+                        $cancelledOnSite ? 'Photographer Left the Shoot' : 'Photographer Cancelled Assignment',
+                        $cancelledOnSite
+                            ? "Photographer {$photographerName} cancelled on site for booking #{$booking->booking_reference}. Reason: {$request->cancellation_reason}. Assign a replacement to finish the job."
+                            : "Photographer {$photographerName} cancelled the assignment for booking #{$booking->booking_reference}. Reason: {$request->cancellation_reason}.",
                         [
                             'booking_id' => $booking->id,
                             'booking_reference' => $booking->booking_reference,
