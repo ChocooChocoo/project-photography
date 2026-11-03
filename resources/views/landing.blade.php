@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="Book verified photography studios and freelance photographers for weddings, portraits, events, and brand work, with clear peso pricing and private online galleries.">
+    <meta name="theme-color" content="#0d0c0b">
     <title>Platinum Photography</title>
 
     <link href="{{ asset('assets/images/favicon.ico') }}" rel="icon"/>
@@ -12,345 +14,173 @@
 
     <link href="{{ asset('assets/css/vendors.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
-
-    <style>
-        .hero-section {
-            background-color: #1e293b;
-        }
-        [data-bs-theme="dark"] .hero-section {
-            background-color: var(--bs-body-bg);
-        }
-        .cta-section {
-            background-color: #1e293b;
-        }
-        [data-bs-theme="dark"] .cta-section {
-            background-color: var(--bs-body-bg);
-        }
-        .hero-section h1 {
-            animation: fadeInUp 0.8s ease-out;
-        }
-        .hero-section .lead {
-            animation: fadeInUp 0.8s ease-out 0.15s both;
-        }
-        .hero-section .btn {
-            animation: fadeInUp 0.8s ease-out 0.3s both;
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .service-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem auto;
-        }
-        .testimonial-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--bs-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-        .theme-settings-btn {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 1040;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--bs-primary);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            transition: transform 0.2s;
-        }
-        .theme-settings-btn:hover {
-            transform: scale(1.1);
-            color: #fff;
-        }
-        [data-bs-theme="dark"] .navbar {
-            background-color: var(--bs-body-bg) !important;
-        }
-        [data-bs-theme="dark"] .navbar .navbar-brand {
-            color: var(--bs-body-color);
-        }
-        [data-bs-theme="dark"] .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-        }
-        [data-bs-theme="dark"] footer {
-            background-color: var(--bs-body-bg) !important;
-            color: var(--bs-body-color) !important;
-        }
-        footer {
-            background-color: #1e293b;
-            border-top: 1px solid var(--bs-border-color);
-        }
-        footer p {
-            color: #fff;
-        }
-        .navbar {
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        }
-        .navbar.is-scrolled {
-            background-color: color-mix(in srgb, var(--bs-body-bg) 80%, transparent) !important;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-        }
-    </style>
+    <link href="{{ asset('assets/css/landing.css').'?v='.filemtime(public_path('assets/css/landing.css')) }}" rel="stylesheet" type="text/css" />
 </head>
-<body>
+<body class="landing">
+    <a href="#main" class="visually-hidden-focusable lp-btn lp-btn-gold position-absolute m-2" style="z-index: 20;">Skip to content</a>
 
-    <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/">
-                <i data-lucide="camera" class="text-primary" width="28" height="28"></i>
-                Platinum Photography
+    <header class="lp-header">
+        <nav class="navbar navbar-expand-lg lp-wrap" aria-label="Main">
+            <a class="lp-brand" href="/" aria-label="Platinum Photography, home">
+                <b>PLATINUM</b>
+                <small>Photography</small>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Open menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="mainNav">
-                <div class="ms-auto d-flex flex-column flex-lg-row gap-2">
-                    <a href="{{ route('login') }}" class="btn btn-primary">Login</a>
+                <div class="lp-nav ms-auto d-flex align-items-center gap-1">
+                    <a href="#services">Services</a>
+                    <a href="#how">How it works</a>
+                    @if($studios->isNotEmpty())<a href="#studios">Studios</a>@endif
+                    <a href="#for-studios">For studios</a>
+                    <a href="{{ route('login') }}" class="lp-btn lp-btn-ghost ms-lg-2">Login</a>
+                    <a href="{{ route('register') }}" class="lp-btn lp-btn-gold">Book a session</a>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <section class="hero-section text-white text-center py-5">
-        <div class="container py-5">
-            <h1 class="display-4 fw-bold">Capturing Moments That Last Forever</h1>
-            <p class="lead mx-auto mt-3 opacity-75" style="max-width: 640px;">Platinum Photography connects you with professional photographers and studios for weddings, events, portraits, and commercial shoots.</p>
-            <a href="{{ route('login') }}" class="btn btn-primary btn-lg mt-4 px-4">Find a Photographer</a>
-        </div>
-    </section>
+    <main id="main">
+        <section class="lp-hero" aria-labelledby="hero-title">
+            <div class="lp-hero-media" aria-hidden="true">
+                @if(! empty($photos))
+                    <img src="{{ asset('storage/'.$photos[0]) }}" alt="" fetchpriority="high">
+                @endif
+            </div>
+            <div class="lp-wrap">
+                <p class="lp-eyebrow lp-rise">Photography studios &amp; photographers in Cavite</p>
+                <h1 id="hero-title" class="lp-serif lp-rise lp-rise-2">Every frame, <em>beautifully</em> kept.</h1>
+                <p class="lp-lead lp-rise lp-rise-3">Book verified studios and freelance photographers for weddings, portraits, events, and brand work. Clear prices in pesos, a photographer who checks in when they arrive, and your photos delivered to a private gallery.</p>
+                <div class="lp-actions lp-rise lp-rise-3">
+                    <a href="{{ route('register') }}" class="lp-btn lp-btn-gold">Book a session</a>
+                    <a href="#for-studios" class="lp-btn lp-btn-ghost">List your studio</a>
+                </div>
+                @if(($counts['studios'] ?? 0) > 0 || ($counts['freelancers'] ?? 0) > 0)
+                    <div class="lp-proof lp-rise lp-rise-3">
+                        @if($counts['studios'] > 0)
+                            <span><strong>{{ number_format($counts['studios']) }}</strong>{{ \Illuminate\Support\Str::plural('studio', $counts['studios']) }} open for booking</span>
+                        @endif
+                        @if($counts['freelancers'] > 0)
+                            <span><strong>{{ number_format($counts['freelancers']) }}</strong>freelance {{ \Illuminate\Support\Str::plural('photographer', $counts['freelancers']) }}</span>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </section>
 
-    <section class="py-5">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="fw-bold">Our Services</h2>
-                <p class="text-muted">Whatever your occasion, we have the right photographer for you.</p>
-            </div>
-            <div class="row g-4">
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 text-center shadow-sm border-0">
-                        <div class="card-body py-4">
-                            <div class="service-icon bg-primary bg-opacity-10">
-                                <i data-lucide="heart" class="text-primary" width="32" height="32"></i>
-                            </div>
-                            <h5 class="card-title">Weddings</h5>
-                            <p class="card-text text-muted">Elegant coverage of your special day, from preparations to the final dance.</p>
-                        </div>
+        @if(count($photos) >= 4)
+            <section class="lp-section" aria-labelledby="work-title">
+                <div class="lp-wrap">
+                    <div class="lp-heading">
+                        <h2 id="work-title" class="lp-serif">Recent work from our studios</h2>
+                        <p class="lp-muted">Real packages and portfolios, straight from the photographers you can book.</p>
+                    </div>
+                    <div class="lp-mosaic">
+                        @foreach($photos as $photo)
+                            <figure><img src="{{ asset('storage/'.$photo) }}" alt="Photo from a Platinum studio portfolio" loading="lazy" decoding="async"></figure>
+                        @endforeach
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 text-center shadow-sm border-0">
-                        <div class="card-body py-4">
-                            <div class="service-icon bg-success bg-opacity-10">
-                                <i data-lucide="party-popper" class="text-success" width="32" height="32"></i>
-                            </div>
-                            <h5 class="card-title">Events</h5>
-                            <p class="card-text text-muted">Birthdays, corporate functions, and everything in between, captured beautifully.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 text-center shadow-sm border-0">
-                        <div class="card-body py-4">
-                            <div class="service-icon bg-warning bg-opacity-10">
-                                <i data-lucide="user" class="text-warning" width="32" height="32"></i>
-                            </div>
-                            <h5 class="card-title">Portraits</h5>
-                            <p class="card-text text-muted">Professional headshots and personal portraits that bring out your best.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 text-center shadow-sm border-0">
-                        <div class="card-body py-4">
-                            <div class="service-icon bg-info bg-opacity-10">
-                                <i data-lucide="building-2" class="text-info" width="32" height="32"></i>
-                            </div>
-                            <h5 class="card-title">Commercial</h5>
-                            <p class="card-text text-muted">Product, food, and brand photography tailored to your business needs.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+            </section>
+        @endif
 
-    <section class="bg-body-secondary py-5">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="fw-bold">About Us</h2>
-            </div>
-            <div class="row align-items-center justify-content-center">
-                <div class="col-lg-8 text-center">
-                    <p class="lead">Platinum Photography connects clients with the finest photographers and studios across the region. Whether you need a wedding photographer, event coverage, professional headshots, or commercial product photography, our platform makes finding and booking the right creative partner effortless.</p>
-                    <div class="row g-4 mt-4">
-                        <div class="col-sm-4">
-                            <h3 class="fw-bold text-primary mb-0">50+</h3>
-                            <p class="text-muted mb-0">Photographers</p>
-                        </div>
-                        <div class="col-sm-4">
-                            <h3 class="fw-bold text-primary mb-0">500+</h3>
-                            <p class="text-muted mb-0">Bookings Completed</p>
-                        </div>
-                        <div class="col-sm-4">
-                            <h3 class="fw-bold text-primary mb-0">4.8</h3>
-                            <p class="text-muted mb-0">Average Rating</p>
-                        </div>
-                    </div>
+        <section class="lp-section" id="services" aria-labelledby="services-title">
+            <div class="lp-wrap">
+                <div class="lp-heading">
+                    <h2 id="services-title" class="lp-serif">Made for the moments you keep</h2>
+                    <p class="lp-muted">Compare packages side by side: hours, edited photos, cameras, and any discount, before you book.</p>
+                </div>
+                <div class="lp-services">
+                    <article class="lp-service"><span class="lp-index">I</span><h3>Weddings</h3><p>Full-day coverage, multiple locations, and a contract for multi-day events.</p></article>
+                    <article class="lp-service"><span class="lp-index">II</span><h3>Portraits</h3><p>Studio sessions, family, and graduation, with edited photos you can compare to the originals.</p></article>
+                    <article class="lp-service"><span class="lp-index">III</span><h3>Events</h3><p>Birthdays, debuts, and corporate nights. Flexible packages can run past closing until midnight.</p></article>
+                    <article class="lp-service"><span class="lp-index">IV</span><h3>Commercial</h3><p>Product, food, and brand shoots, delivered to a private online gallery.</p></article>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section class="py-5">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="fw-bold">What Our Clients Say</h2>
-                <p class="text-muted">Real feedback from people who booked through our platform.</p>
+        <section class="lp-section" id="how" aria-labelledby="how-title">
+            <div class="lp-wrap">
+                <div class="lp-heading">
+                    <h2 id="how-title" class="lp-serif">Three steps to your gallery</h2>
+                </div>
+                <ol class="lp-steps">
+                    <li><h3>Choose your photographer</h3><p>Browse studios and freelancers, see their work and cameras, and pick a package that fits your budget.</p></li>
+                    <li><h3>Book and pay the deposit</h3><p>Pick a date and time, agree to the terms, and pay securely. Your provider assigns a photographer.</p></li>
+                    <li><h3>Shoot, then receive your photos</h3><p>You get an alert when your photographer checks in on site. Afterwards your edited photos arrive in your private gallery.</p></li>
+                </ol>
             </div>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card h-100 shadow-sm border-0">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="testimonial-avatar">MJ</div>
+        </section>
+
+        @if($studios->isNotEmpty())
+            <section class="lp-section" id="studios" aria-labelledby="studios-title">
+                <div class="lp-wrap">
+                    <div class="lp-heading">
+                        <h2 id="studios-title" class="lp-serif">Studios open for booking</h2>
+                        <p class="lp-muted">Ratings come from clients who completed a booking.</p>
+                    </div>
+                    <div class="lp-studios">
+                        @foreach($studios as $studio)
+                            <article class="lp-studio">
+                                @if($studio->studio_logo)
+                                    <img src="{{ asset('storage/'.$studio->studio_logo) }}" alt="" loading="lazy">
+                                @else
+                                    <span class="lp-monogram" aria-hidden="true">{{ mb_substr($studio->studio_name, 0, 1) }}</span>
+                                @endif
                                 <div>
-                                    <p class="fw-semibold mb-0">Maria &amp; John</p>
-                                    <div class="text-warning">
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                    </div>
+                                    <h3>{{ $studio->studio_name }}</h3>
+                                    <p>
+                                        {{ $studio->location->municipality ?? 'Cavite' }}
+                                        @if((int) $studio->total_reviews > 0) · <span class="lp-gold">★ {{ number_format((float) $studio->avg_rating, 1) }}</span> ({{ $studio->total_reviews }}) @endif
+                                        @if($studio->starting_price) · from ₱{{ number_format($studio->starting_price) }} @endif
+                                    </p>
                                 </div>
-                            </div>
-                            <p class="card-text text-muted">"Our wedding photos are absolutely stunning. The photographer captured every emotion perfectly. The booking process was seamless."</p>
-                        </div>
+                            </article>
+                        @endforeach
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card h-100 shadow-sm border-0">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="testimonial-avatar" style="background: var(--bs-success);">AR</div>
-                                <div>
-                                    <p class="fw-semibold mb-0">Alex Rivera</p>
-                                    <div class="text-warning">
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="card-text text-muted">"Booking a photographer for our product launch was effortless. The results exceeded our expectations and the turnaround was incredibly fast."</p>
-                        </div>
-                    </div>
+            </section>
+        @endif
+
+        <section class="lp-section" id="for-studios" aria-labelledby="for-studios-title">
+            <div class="lp-wrap lp-split">
+                <div>
+                    <p class="lp-eyebrow">For studios &amp; freelancers</p>
+                    <h2 id="for-studios-title" class="lp-serif lp-split-title">Run your whole studio in one place.</h2>
+                    <p class="lp-muted mt-3 mb-4 lp-split-lead">Platinum handles bookings, payments, staff, and delivery, so you can spend your time behind the camera.</p>
+                    <a href="{{ route('register') }}" class="lp-btn lp-btn-gold">Create a studio account</a>
                 </div>
-                <div class="col-md-4">
-                    <div class="card h-100 shadow-sm border-0">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="testimonial-avatar" style="background: var(--bs-info);">SL</div>
-                                <div>
-                                    <p class="fw-semibold mb-0">Sarah Lim</p>
-                                    <div class="text-warning">
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                        <i data-lucide="star" width="14" height="14" fill="currentColor"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="card-text text-muted">"The portraits came out beautiful. Professional service from start to finish. Highly recommended to anyone looking for quality photography."</p>
-                        </div>
-                    </div>
+                <ul class="lp-ticks">
+                    <li><strong>Packages with their own discounts</strong><span>Set hours, inclusions, and a discount per package.</span></li>
+                    <li><strong>Photographers who check in</strong><span>GPS arrival check-in, and a replacement if someone has to leave mid-shoot.</span></li>
+                    <li><strong>Staff, payroll, and permissions</strong><span>Give each role only the access it needs.</span></li>
+                    <li><strong>Galleries clients love</strong><span>Deliver online, with before-and-after sliders.</span></li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="lp-section lp-cta" aria-labelledby="cta-title">
+            <div class="lp-wrap">
+                <h2 id="cta-title" class="lp-serif">Your next favourite photo starts here.</h2>
+                <p class="lp-muted">Create a free account to browse studios, compare packages, and book.</p>
+                <div class="lp-actions">
+                    <a href="{{ route('register') }}" class="lp-btn lp-btn-gold">Book a session</a>
+                    <a href="{{ route('login') }}" class="lp-btn lp-btn-ghost">I already have an account</a>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </main>
 
-    <section class="cta-section text-white py-5">
-        <div class="container py-4">
-            <div class="row align-items-center g-4">
-                <div class="col-lg-7">
-                    <h2 class="fw-bold mb-2">Ready to Book Your Photographer?</h2>
-                    <p class="lead mb-4 opacity-75">Join Platinum Photography today and find the perfect photographer for your next event.</p>
-                    <div class="d-flex flex-column flex-sm-row flex-wrap gap-3">
-                        <span class="d-flex align-items-center gap-2">
-                            <i data-lucide="badge-check" width="20" height="20"></i>
-                            Verified photographers
-                        </span>
-                        <span class="d-flex align-items-center gap-2">
-                            <i data-lucide="calendar-check" width="20" height="20"></i>
-                            Easy booking &amp; payment
-                        </span>
-                        <span class="d-flex align-items-center gap-2">
-                            <i data-lucide="image" width="20" height="20"></i>
-                            Galleries delivered online
-                        </span>
-                    </div>
-                </div>
-                <div class="col-lg-5 text-lg-end">
-                    <a href="{{ route('register') }}" class="btn btn-light btn-lg px-5">
-                        Get Started
-                        <i data-lucide="arrow-right" width="20" height="20" class="ms-1"></i>
-                    </a>
-                    <p class="small opacity-75 mt-2 mb-0">Free to join — no hidden fees</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="text-white text-center py-3">
-        <div class="container">
-            <p class="mb-0 opacity-50">&copy; {{ date('Y') }} Platinum Photography. All rights reserved.</p>
+    <footer class="lp-footer">
+        <div class="lp-wrap d-flex flex-wrap justify-content-between gap-2">
+            <span>&copy; {{ date('Y') }} Platinum Photography. All rights reserved.</span>
+            <span>Prices shown in Philippine pesos (₱).</span>
         </div>
     </footer>
-
-    <!-- Floating theme settings button -->
-    <button class="theme-settings-btn" data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas" title="Display Settings">
-        <i class="ti ti-settings icon-spin fs-24"></i>
-    </button>
-
-    <!-- Theme settings offcanvas -->
-    @include('layouts.client.theme')
 
     <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/vendors.min.js') }}"></script>
     <script src="{{ asset('assets/js/app.js').'?v='.filemtime(public_path('assets/js/app.js')) }}"></script>
-
-    <script>
-        (function () {
-            var nav = document.querySelector('.navbar');
-            if (!nav) return;
-            var toggle = function () {
-                nav.classList.toggle('is-scrolled', window.scrollY > 10);
-            };
-            window.addEventListener('scroll', toggle, { passive: true });
-            toggle();
-        })();
-    </script>
 </body>
 </html>

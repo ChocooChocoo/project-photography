@@ -786,24 +786,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
 });
 
 // Public landing page (guest-accessible root)
-Route::get('/', function () {
-    if (auth()->check()) {
-        $user = auth()->user();
-        $routes = [
-            'admin' => 'admin.dashboard',
-            'owner' => 'owner.dashboard',
-            'freelancer' => 'freelancer.dashboard',
-            'client' => 'client.dashboard',
-            'studio-photographer' => 'studio-photographer.dashboard',
-            'studio-hr' => 'studio-hr.dashboard',
-            'studio-finance' => 'studio-finance.dashboard',
-        ];
-
-        return redirect()->route($routes[$user->role] ?? 'login');
-    }
-
-    return view('landing');
-});
+Route::get('/', \App\Http\Controllers\LandingController::class);
 
 // Fallback route for 404 errors (MUST BE AT THE END)
 Route::fallback(function () {
