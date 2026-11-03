@@ -26,6 +26,7 @@ class ProfileModel extends Model
         'contract_template',
         'location_id',
         'brand_name',
+        'group_name',
         'tagline',
         'bio',
         'years_experience',
@@ -179,4 +180,21 @@ class ProfileModel extends Model
     }
 
     // ==== End: Deposit Policy Enhancement ==== //
+
+    /**
+     * Other freelancers who show the same group name (case-insensitive).
+     * ponytail: the group name is free text, so anyone can type any name;
+     * switch to invite-based groups if names get misused.
+     */
+    public function groupMates()
+    {
+        if (blank($this->group_name)) {
+            return collect();
+        }
+
+        return static::with('user:id,first_name,last_name')
+            ->whereRaw('LOWER(TRIM(group_name)) = ?', [mb_strtolower(trim($this->group_name))])
+            ->where('id', '!=', $this->id)
+            ->get();
+    }
 }

@@ -35,6 +35,20 @@ class ProfileController extends Controller
     }
 
     /**
+     * Set or clear the group name this freelancer works under.
+     */
+    public function updateGroup(Request $request)
+    {
+        $data = $request->validate(['group_name' => 'nullable|string|max:100']);
+
+        $profile = ProfileModel::where('user_id', auth()->id())->firstOrFail();
+        $profile->update(['group_name' => filled($data['group_name'] ?? null) ? trim($data['group_name']) : null]);
+
+        return redirect()->route('freelancer.profile.index')
+            ->with('success', $profile->group_name ? 'Group name saved.' : 'Group name removed.');
+    }
+
+    /**
      * Show the profile setup form.
      */
     public function setup()
@@ -116,6 +130,7 @@ class ProfileController extends Controller
                 'user_id' => $user->id,
                 'location_id' => $location->id,
                 'brand_name' => $request->brand_name,
+                'group_name' => filled($request->group_name) ? trim($request->group_name) : null,
                 'tagline' => $request->professional_tagline,
                 'bio' => $request->bio,
                 'contract_template' => $request->contract_template,

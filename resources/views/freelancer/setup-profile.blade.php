@@ -57,6 +57,11 @@
                                             Please enter your brand name.
                                         </div>
                                     </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label" for="setupGroupName">Group name <small class="text-muted">(optional)</small></label>
+                                        <input type="text" class="form-control" id="setupGroupName" name="group_name" maxlength="100" placeholder="Shared name if you work with other freelancers">
+                                        <small class="text-muted">Clients see freelancers with the same group name listed together. Bookings, payments, and reviews stay yours.</small>
+                                    </div>
 
                                     <div class="col-12 mb-3">
                                         <label class="form-label">Professional Tagline</label>

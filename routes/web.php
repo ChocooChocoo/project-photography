@@ -560,6 +560,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::get('view/profile', [\App\Http\Controllers\Freelancer\ProfileController::class, 'index'])->name('freelancer.profile.index');
         Route::get('setup/profile', [\App\Http\Controllers\Freelancer\ProfileController::class, 'setup'])->name('freelancer.profile.setup');
         Route::post('profile/store', [\App\Http\Controllers\Freelancer\ProfileController::class, 'store'])->name('freelancer.profile.store');
+        Route::post('profile/group', [\App\Http\Controllers\Freelancer\ProfileController::class, 'updateGroup'])->name('freelancer.profile.group');
         Route::post('profile/get-barangays', [\App\Http\Controllers\Freelancer\ProfileController::class, 'getBarangays'])->name('freelancer.profile.get-barangays');
 
         // Services

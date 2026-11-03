@@ -273,7 +273,7 @@
                                         </div>                                            
                                         <div class="flex-grow-1 ms-3" style="min-width: 0;">
                                             <h4 class="card-title mb-1 text-truncate" title="{{ $freelancer->brand_name }}">{{ $freelancer->brand_name }}</h4>
-                                            <p class="text-muted mb-1">Freelancer</p>
+                                            <p class="text-muted mb-1">Freelancer @if($freelancer->group_name)<span class="badge badge-soft-primary ms-1 text-wrap">{{ $freelancer->group_name }}</span>@endif</p>
                                             <div class="mb-2">
                                                 <span class="text-muted small">
                                                     <i class="ti ti-map-pin me-1"></i>

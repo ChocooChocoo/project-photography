@@ -183,6 +183,7 @@ class DashboardController extends Controller
             if ($query) {
                 $freelancerQuery->where(function($q) use ($query) {
                     $q->where('brand_name', 'like', "%{$query}%")
+                      ->orWhere('group_name', 'like', "%{$query}%")
                       ->orWhere('tagline', 'like', "%{$query}%")
                       ->orWhere('bio', 'like', "%{$query}%");
                 });

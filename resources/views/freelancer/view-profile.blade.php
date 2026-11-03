@@ -12,6 +12,26 @@
                             <h4 class="card-title">Your Freelance Profile</h4>
                         </div>
                         <div class="card-body">
+                            @if(session('success'))
+                                <div class="alert alert-success" role="status">{{ session('success') }}</div>
+                            @endif
+                            <form method="POST" action="{{ route('freelancer.profile.group') }}" class="border rounded p-3 mb-4">
+                                @csrf
+                                <label for="groupName" class="form-label fw-semibold">Group name <small class="text-muted fw-normal">(optional)</small></label>
+                                <p class="small text-muted mb-2" id="groupNameHelp">Work with other freelancers? Use the same group name and clients see you listed together. Bookings, payments, and reviews stay with each of you.</p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <input type="text" id="groupName" name="group_name" maxlength="100" class="form-control" style="max-width: 24rem;"
+                                        value="{{ old('group_name', $profile->group_name) }}" aria-describedby="groupNameHelp" placeholder="For example: Golden Hour Collective">
+                                    <button type="submit" class="btn btn-primary" style="min-height: 44px;">Save group name</button>
+                                </div>
+                                @error('group_name')<p class="text-danger small mt-1 mb-0">{{ $message }}</p>@enderror
+                                @if($profile->group_name)
+                                    @php $mates = $profile->groupMates(); @endphp
+                                    <p class="small mt-2 mb-0">
+                                        {{ $mates->isEmpty() ? 'No other freelancer uses this group name yet.' : 'Also in this group: '.$mates->map(fn ($mate) => trim(($mate->user->first_name ?? '').' '.($mate->user->last_name ?? '')) ?: $mate->brand_name)->implode(', ').'.' }}
+                                    </p>
+                                @endif
+                            </form>
                             <div class="row align-items-center mb-4">
                                 <div class="col-12">
                                     <div class="d-flex align-items-center flex-column flex-md-row">

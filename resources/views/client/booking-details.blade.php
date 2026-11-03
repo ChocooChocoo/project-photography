@@ -31,6 +31,16 @@
                                                     {{ $freelancer->brand_name }}
                                                 @endif
                                             </h2>
+                                            @if($type !== 'studio' && $freelancer->group_name)
+                                                @php $groupMates = $freelancer->groupMates(); @endphp
+                                                <p class="mb-2 small">
+                                                    Part of <strong>{{ $freelancer->group_name }}</strong>@if($groupMates->isNotEmpty()). Also in this group:
+                                                        @foreach($groupMates as $mate)
+                                                            <a href="{{ route('client.booking-details', ['type' => 'freelancer', 'id' => $mate->user_id]) }}" class="d-inline-block py-1">{{ $mate->brand_name }}</a>@if(! $loop->last), @endif
+                                                        @endforeach
+                                                    @endif
+                                                </p>
+                                            @endif
                                             <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-2 flex-wrap">
                                                 <span class="text-warning me-2">
                                                     @php

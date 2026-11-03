@@ -29,6 +29,7 @@ class ProfileSetupRequest extends FormRequest
             
             // Brand Identity
             'brand_name' => 'required|string|max:255',
+            'group_name' => 'nullable|string|max:100',
             'professional_tagline' => 'nullable|string|max:255',
             'bio' => 'required|string|min:50|max:2000',
             'contract_template' => 'nullable|string|max:5000',
