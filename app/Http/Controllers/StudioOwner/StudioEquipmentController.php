@@ -27,6 +27,7 @@ class StudioEquipmentController extends Controller
         return $request->validate([
             'name' => 'required|string|max:255', 'type' => 'required|string|max:80',
             'brand' => 'nullable|string|max:255', 'model' => 'nullable|string|max:255',
+            'specs' => 'nullable|string|max:1000',
             'status' => 'required|in:available,maintenance,retired',
         ]);
     }

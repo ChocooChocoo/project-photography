@@ -214,6 +214,15 @@ class StudiosModel extends Model
     }
 
     /**
+     * Cameras and gear the studio lists. Clients see the items that are not
+     * retired on the studio profile before they book.
+     */
+    public function equipment()
+    {
+        return $this->hasMany(StudioEquipmentModel::class, 'studio_id');
+    }
+
+    /**
      * Get the discount rules configured for the studio.
      */
     public function discountRules()

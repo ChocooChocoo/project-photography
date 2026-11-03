@@ -283,7 +283,7 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
-    <script src="{{ asset('assets/js/booking-preparation.js') }}"></script>
+    <script src="{{ asset('assets/js/booking-preparation.js').'?v='.filemtime(public_path('assets/js/booking-preparation.js')) }}"></script>
     @include('partials.contract-block-js')
     @include('partials.hardcopy-script')
     @include('partials.booking-reschedule-script')

@@ -151,6 +151,10 @@
                                     </div>
                                     @endif
 
+                                    @if($type === 'studio')
+                                        @include('partials.studio-gear', ['equipment' => $studio->equipment])
+                                    @endif
+
                                     {{-- PACKAGES --}}
                                     <div class="mb-4">
                                         <h5 class="card-title text-primary mb-3">List of Packages</h5>

@@ -461,6 +461,12 @@
                                         <small id="preferredCameraBrandHelp">Brands from this studio's equipment. Preference only; the studio shows the equipment assigned to your booking.</small>
                                     </div>
                                 @endif
+                                @if($type === 'studio' && $provider->equipment->where('status', '!=', 'retired')->isNotEmpty())
+                                    <details class="mb-3">
+                                        <summary class="fw-medium">See this studio's cameras and gear</summary>
+                                        @include('partials.studio-gear', ['equipment' => $provider->equipment, 'title' => 'Cameras & gear', 'class' => 'mt-2'])
+                                    </details>
+                                @endif
                                 <div class="mb-3">
                                     <label class="form-label fw-medium">Special Requests / Notes</label>
                                     <textarea class="form-control" rows="3" id="specialRequests" name="special_requests"

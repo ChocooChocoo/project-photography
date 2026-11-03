@@ -64,6 +64,8 @@
                     <div class="row g-2">
                         ${[['name','Name'],['type','Type'],['brand','Brand (optional)'],['model','Model (optional)']].map(([name,label]) => `<div class="col-md-6"><label for="catalog-${name}" class="form-label">${label}</label><input id="catalog-${name}" name="${name}" class="form-control" maxlength="${name === 'type' ? 80 : 255}" ${['name','type'].includes(name) ? 'required' : ''}></div>`).join('')}
                     </div>
+                    <label for="catalog-specs" class="form-label mt-2">Specs (optional, shown to clients before they book)</label>
+                    <textarea id="catalog-specs" name="specs" class="form-control" rows="2" maxlength="1000" placeholder="For example: 24 MP full-frame, 24-70mm f/2.8 lens"></textarea>
                     <label for="catalogStatus" class="form-label mt-2">Status</label><select id="catalogStatus" name="status" class="form-select"><option value="available">Available</option><option value="maintenance">Maintenance</option><option value="retired">Retired</option></select>
                     <button type="submit" class="btn btn-primary mt-2">Save catalog item</button>
                     <button type="reset" class="btn btn-outline-secondary mt-2">Clear catalog form</button>
@@ -91,7 +93,7 @@
                     : 'No available equipment. Add equipment to the studio catalog below first.';
                 if (!available.length) root.querySelector('details').open = true;
                 root.querySelector('.equipment-list').innerHTML = '<h6>Assigned equipment</h6>' + (assigned.data.length ? `<ul class="ps-3">${assigned.data.map(i => `<li class="mb-2 text-break">${escape(i.equipment_name)} (${escape(i.equipment_type)})<br>Brand: ${escape(i.brand || 'Not specified')}.${i.brand_mismatch ? ` <strong>Brand differs from the client's preference (${escape(booking.preferred_camera_brand)}).</strong>` : ''} ${i.confirmed ? 'Confirmed by photographer' : 'Waiting for the photographer to confirm'} ${['completed','cancelled'].includes(booking.status) ? '' : `<button type="button" class="btn btn-outline-danger ms-2" data-remove="${i.id}">Remove equipment</button>`}</li>`).join('')}</ul>` : '<p>No equipment assigned yet.</p>');
-                root.querySelector('.catalog-list').innerHTML = catalog.length ? `<ul class="ps-3">${catalog.map(i => `<li class="mb-2 text-break">${escape([i.name,i.brand,i.model,i.status].filter(Boolean).join(' / '))}<div class="d-flex gap-2 mt-1"><button type="button" class="btn btn-outline-primary" data-edit="${i.id}">Edit ${escape(i.name)}</button><button type="button" class="btn btn-outline-danger" data-delete="${i.id}">Delete ${escape(i.name)}</button></div></li>`).join('')}</ul>` : '<p>No catalog items yet. Add equipment below.</p>';
+                root.querySelector('.catalog-list').innerHTML = catalog.length ? `<ul class="ps-3">${catalog.map(i => `<li class="mb-2 text-break">${escape([i.name,i.brand,i.model,i.status].filter(Boolean).join(' / '))}${i.specs ? `<br><small class="text-muted">${escape(i.specs)}</small>` : ''}<div class="d-flex gap-2 mt-1"><button type="button" class="btn btn-outline-primary" data-edit="${i.id}">Edit ${escape(i.name)}</button><button type="button" class="btn btn-outline-danger" data-delete="${i.id}">Delete ${escape(i.name)}</button></div></li>`).join('')}</ul>` : '<p>No catalog items yet. Add equipment below.</p>';
             } catch (error) {
                 report(error.message, true);
                 root.querySelector('.equipment-list').innerHTML = '<button type="button" class="btn btn-outline-primary equipment-retry">Retry equipment</button>';
@@ -131,7 +133,7 @@
             if (button.classList.contains('equipment-retry')) { await refresh(); return; }
             if (button.dataset.edit) {
                 const item = catalog.find(i => String(i.id) === button.dataset.edit);
-                for (const key of ['id','name','type','brand','model','status']) catalogForm.elements[key].value = item[key] ?? '';
+                for (const key of ['id','name','type','brand','model','specs','status']) catalogForm.elements[key].value = item[key] ?? '';
                 root.querySelector('.catalog-form-title').textContent = 'Edit catalog item';
                 catalogForm.elements.name.focus(); return;
             }

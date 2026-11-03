@@ -311,7 +311,7 @@
         #ownerEquipmentPanel .equipment-feedback { overflow-wrap: anywhere; }
         #ownerEquipmentPanel .row { margin-inline: 0; }
     </style>
-    <script src="{{ asset('assets/js/booking-preparation.js') }}"></script>
+    <script src="{{ asset('assets/js/booking-preparation.js').'?v='.filemtime(public_path('assets/js/booking-preparation.js')) }}"></script>
     @php
         $equipmentRoutes = [
             'catalog' => route('owner.equipment.catalog', '__ID__', false),

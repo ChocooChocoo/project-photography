@@ -28,7 +28,7 @@ class BookingDetailsController extends Controller
             // Fetch studio details with ratings
             $studio = StudiosModel::whereIn('status', ['approved', 'active', 'verified'])
                 ->subscriptionAccessible()
-                ->with(['location', 'category', 'packages', 'schedules', 'user', 'services.category'])
+                ->with(['location', 'category', 'packages', 'schedules', 'user', 'services.category', 'equipment'])
                 ->findOrFail($id);
 
             // Use the stored aggregate (kept in sync by StudioRatingModel::updateAggregate())

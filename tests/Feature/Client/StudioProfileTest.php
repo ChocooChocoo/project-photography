@@ -128,6 +128,22 @@ class StudioProfileTest extends TestCase
             ->assertJsonPath('results.0.profile_url', $url);
     }
 
+    public function test_client_sees_camera_specs_before_booking(): void
+    {
+        foreach (['available' => 'Sony A7 IV', 'retired' => 'Old Canon body'] as $status => $name) {
+            \App\Models\StudioOwner\StudioEquipmentModel::create([
+                'studio_id' => $this->studio->id, 'name' => $name, 'type' => 'Camera', 'brand' => 'Sony',
+                'model' => 'ILCE-7M4', 'specs' => '33 MP full-frame, 24-70mm f/2.8', 'status' => $status,
+            ]);
+        }
+
+        $this->actingAs($this->client)->get('/client/studios/'.$this->studio->id)
+            ->assertOk()->assertSee('Cameras &amp; gear', false)->assertSee('Sony A7 IV')
+            ->assertSee('33 MP full-frame, 24-70mm f/2.8')->assertDontSee('Old Canon body');
+        $this->get(route('client.booking-forms', ['type' => 'studio', 'id' => $this->studio->id]))
+            ->assertOk()->assertSee('33 MP full-frame, 24-70mm f/2.8');
+    }
+
     public function test_profile_shows_active_packages_and_only_published_ratings(): void
     {
         $category = CategoriesModel::create(['category_name' => 'Portrait', 'status' => 'active']);
