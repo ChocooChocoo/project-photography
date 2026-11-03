@@ -120,6 +120,17 @@ class PortalLayoutRegressionTest extends TestCase
         $this->assertStringContainsString('padding-bottom: 6rem;', $contents);
     }
 
+    public function test_messages_link_lives_in_every_topbar_not_the_sidebar(): void
+    {
+        foreach (['admin', 'owner', 'client', 'freelancer', 'studio-hr', 'studio-finance', 'studio-photographer'] as $role) {
+            $this->assertStringContainsString("@include('partials.chat-topbar-link')", $this->readView("resources/views/layouts/{$role}/topbar.blade.php"));
+            $this->assertStringNotContainsString('chat-', $this->readView("resources/views/layouts/{$role}/sidebar.blade.php"));
+        }
+        $partial = $this->readView('resources/views/partials/chat-topbar-link.blade.php');
+        $this->assertStringContainsString('aria-label="Messages"', $partial);
+        $this->assertStringContainsString('data-chat-unread', $partial);
+    }
+
     public function test_tutorial_can_be_replayed_from_business_and_client_profile_menus(): void
     {
         foreach (['client', 'owner', 'freelancer'] as $role) {

@@ -11,6 +11,7 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
+            @include('partials.chat-topbar-link')
             <div class="topbar-item">
                 <div class="dropdown">
                     <button class="topbar-link dropdown-toggle drop-arrow-none" data-bs-toggle="dropdown"
