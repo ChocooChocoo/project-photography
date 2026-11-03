@@ -47,6 +47,7 @@
 
                                                 <div class="my-4">
                                                     <h1 class="display-6 fw-bold mb-0">₱{{ number_format($package->package_price, 2) }}</h1>
+                                                    @if((float) $package->discount_percentage > 0)<span class="badge badge-soft-success">{{ rtrim(rtrim(number_format($package->discount_percentage, 2), '0'), '.') }}% off: clients pay ₱{{ number_format($package->discountedPrice(), 2) }}</span>@endif
                                                     
                                                     <!-- ==== Start: Time Customization in Price Card ==== -->
                                                     @if($package->allow_time_customization)

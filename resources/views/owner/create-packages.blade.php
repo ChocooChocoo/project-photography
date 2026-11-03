@@ -245,6 +245,14 @@
                                         </div>
                                         <div class="invalid-feedback">Please enter valid package price.</div>
                                     </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label" for="discountPercentage">Discount (%) <small class="text-muted">(optional)</small></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="discountPercentage" name="discount_percentage" value="" placeholder="0" step="0.01" min="0" max="100">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <small class="text-muted">Taken off this package's price when a client books it. Leave blank for no discount.</small>
+                                    </div>
 
                                     <div class="col-12 mb-3">
                                         <label class="form-label d-block">Online Gallery</label>

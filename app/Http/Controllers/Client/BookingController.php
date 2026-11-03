@@ -90,9 +90,6 @@ class BookingController extends Controller
                 $operatingDays = json_decode($operatingDays, true) ?? [];
             }
             
-            // Active discount rules offered by this studio
-            $discounts = $provider->discountRules()->active()->get();
-
             // Brands the client can prefer come from the studio's equipment.
             $equipmentBrands = self::studioEquipmentBrands((int) $id);
         } else {
@@ -118,9 +115,6 @@ class BookingController extends Controller
                 $operatingDays = json_decode($operatingDays, true) ?? [];
             }
             
-            // No discount rules apply to freelancer bookings
-            $discounts = collect();
-
             // Freelancers have no equipment catalog; the brand stays free text.
             $equipmentBrands = null;
         }
@@ -159,7 +153,6 @@ class BookingController extends Controller
             'municipalities',
             'operatingDays',
             'clientBudgets', // ADD THIS
-            'discounts', // ADD THIS
             'equipmentBrands',
             'depositTerms'
         ));
@@ -655,7 +648,7 @@ class BookingController extends Controller
             }
             ['option' => $photoEditOption, 'amount' => $enhancementAmount, 'services' => $editingServices] = $photoEdit;
 
-            $totalAmount = $package->package_price + $enhancementAmount;
+            $totalAmount = $package->discountedPrice() + $enhancementAmount;
 
             // Throws when the studio's subscription no longer allows bookings
             $provider = $request->type === 'studio'
@@ -756,6 +749,8 @@ class BookingController extends Controller
                     'package_type' => $request->type,
                     'package_name' => $package->package_name,
                     'package_price' => $package->package_price,
+                    'discount_percentage' => $package->discount_percentage ?? 0,
+                    'discount_amount' => $package->discountAmount(),
                     'package_inclusions' => json_encode($package->package_inclusions),
                     'duration' => $package->duration,
                     'maximum_edited_photos' => $package->maximum_edited_photos,
@@ -1838,7 +1833,7 @@ class BookingController extends Controller
         }
         ['option' => $photoEditOption, 'amount' => $enhancementAmount, 'services' => $editingServices] = $photoEdit;
 
-        $totalAmount = $package->package_price + $enhancementAmount;
+        $totalAmount = $package->discountedPrice() + $enhancementAmount;
         $terms = BookingModel::paymentTerms($request->type, $provider, (float) $totalAmount, $request->input('payment_type'));
         $paymentType = $terms['payment_type'];
         $downpaymentPercentage = $terms['downpayment_percentage'];
@@ -1848,6 +1843,8 @@ class BookingController extends Controller
         $packageData = [
             'package_name' => $package->package_name,
             'package_price' => number_format($package->package_price, 2),
+            'discount_percentage' => (float) $package->discount_percentage,
+            'discount_amount' => number_format($package->discountAmount(), 2),
             'photo_edit_option' => $photoEditOption,
             'enhancement_amount' => number_format($enhancementAmount, 2),
             'editing_services' => array_map(fn ($key) => $package->editingOptions()[$key]['label'], array_keys($editingServices)),
@@ -2583,7 +2580,7 @@ class BookingController extends Controller
                         // ==== END: Enhanced location data handling with proper JSON parsing ====
                         
                         // ========== START: DSS - Calculate budget match ==========
-                        $budgetMatch = $this->calculateBudgetMatch($package->package_price, $clientBudget);
+                        $budgetMatch = $this->calculateBudgetMatch($package->discountedPrice(), $clientBudget);
                         // ========== END: DSS - Calculate budget match ==========
                         
                         return [
@@ -2591,6 +2588,8 @@ class BookingController extends Controller
                             'package_name' => $package->package_name,
                             'package_description' => $package->package_description,
                             'package_price' => $package->package_price,
+                            'discount_percentage' => (float) $package->discount_percentage,
+                            'discounted_price' => $package->discountedPrice(),
                             'duration' => $package->duration,
                             'maximum_edited_photos' => $package->maximum_edited_photos,
                             'package_inclusions' => $package->package_inclusions,
@@ -2649,7 +2648,7 @@ class BookingController extends Controller
                         ];
                         
                         // ========== START: DSS - Calculate budget match ==========
-                        $budgetMatch = $this->calculateBudgetMatch($package->package_price, $clientBudget);
+                        $budgetMatch = $this->calculateBudgetMatch($package->discountedPrice(), $clientBudget);
                         // ========== END: DSS - Calculate budget match ==========
                         
                         return [
@@ -2657,6 +2656,8 @@ class BookingController extends Controller
                             'package_name' => $package->package_name,
                             'package_description' => $package->package_description,
                             'package_price' => $package->package_price,
+                            'discount_percentage' => (float) $package->discount_percentage,
+                            'discounted_price' => $package->discountedPrice(),
                             'duration' => $package->duration,
                             'maximum_edited_photos' => $package->maximum_edited_photos,
                             'package_inclusions' => $package->package_inclusions,

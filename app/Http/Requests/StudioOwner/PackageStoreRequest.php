@@ -96,6 +96,7 @@ class PackageStoreRequest extends FormRequest
                 },
             ],
             'package_price' => 'required|numeric|min:0',
+            'discount_percentage' => 'required|numeric|min:0|max:100',
             'online_gallery' => 'required|boolean',
             'photographer_count' => 'required|integer|min:0|max:10',
             'status' => 'required|in:active,inactive',
@@ -164,6 +165,8 @@ class PackageStoreRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $input = $this->all();
+        // A blank discount means no discount.
+        $input['discount_percentage'] = blank($input['discount_percentage'] ?? null) ? 0 : $input['discount_percentage'];
 
         // Materials arrive as a JSON string from the repeater.
         if (isset($input['materials']) && is_string($input['materials'])) {

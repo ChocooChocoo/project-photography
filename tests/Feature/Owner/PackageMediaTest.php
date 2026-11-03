@@ -174,6 +174,8 @@ class PackageMediaTest extends TestCase
             $table->integer('maximum_edited_photos')->nullable();
             $table->string('coverage_scope')->nullable();
             $table->decimal('package_price', 10, 2)->default(0);
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->boolean('online_gallery')->default(false);
             $table->integer('photographer_count')->default(1);
             $table->json('package_location')->nullable();

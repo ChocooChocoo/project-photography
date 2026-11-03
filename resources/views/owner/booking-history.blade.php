@@ -202,7 +202,7 @@
                         packagesHtml += `
                             <div class="d-flex justify-content-between mb-1">
                                 <span class="text-muted">${pkg.package_name}:</span>
-                                <span class="fw-medium">₱${parseFloat(pkg.package_price).toFixed(2)}</span>
+                                <span class="fw-medium">₱${parseFloat(pkg.package_price).toFixed(2)}${parseFloat(pkg.discount_amount) > 0 ? ` <small class="text-success">(-₱${parseFloat(pkg.discount_amount).toFixed(2)} discount)</small>` : ''}</span>
                             </div>
                         `;
                     });

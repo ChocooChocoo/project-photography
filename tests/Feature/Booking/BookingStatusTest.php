@@ -43,6 +43,8 @@ class BookingStatusTest extends TestCase
             $table->unsignedBigInteger('category_id')->nullable();
             $table->string('status');
             $table->decimal('package_price', 10, 2);
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->string('package_name');
             $table->boolean('online_gallery')->default(false);
             $table->softDeletes();

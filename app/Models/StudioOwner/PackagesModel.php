@@ -35,6 +35,7 @@ class PackagesModel extends Model
         'maximum_edited_photos',
         'coverage_scope',
         'package_price',
+        'discount_percentage',
         'online_gallery',
         'photographer_count',
         'package_location',
@@ -57,6 +58,7 @@ class PackagesModel extends Model
     protected $casts = [
         'package_inclusions' => 'array',
         'package_price' => 'decimal:2',
+        'discount_percentage' => 'decimal:2',
         'online_gallery' => 'boolean',
         'photographer_count' => 'integer',
         'package_location' => 'array',
@@ -318,5 +320,21 @@ class PackagesModel extends Model
         }
 
         return $path;
+    }
+
+    /**
+     * Money taken off the package price by its discount.
+     */
+    public function discountAmount(): float
+    {
+        return round((float) $this->package_price * (float) $this->discount_percentage / 100, 2);
+    }
+
+    /**
+     * The package price after its discount.
+     */
+    public function discountedPrice(): float
+    {
+        return round((float) $this->package_price - $this->discountAmount(), 2);
     }
 }

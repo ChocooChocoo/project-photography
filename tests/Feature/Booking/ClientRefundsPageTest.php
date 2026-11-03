@@ -244,6 +244,8 @@ class ClientRefundsPageTest extends TestCase
             $table->string('package_type')->nullable();
             $table->string('package_name')->nullable();
             $table->decimal('package_price', 10, 2)->nullable();
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->json('package_inclusions')->nullable();
             $table->string('duration')->nullable();
             $table->unsignedInteger('maximum_edited_photos')->nullable();

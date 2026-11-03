@@ -192,12 +192,6 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::post('/studio/{id}/permit/resubmit', [\App\Http\Controllers\StudioOwner\StudioController::class, 'resubmitPermit'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.permit.resubmit');
         Route::get('/studio/permit-notice', [\App\Http\Controllers\StudioOwner\StudioController::class, 'permitNotice'])->middleware('permission:owner.studios.manage')->withoutMiddleware('permit.verified')->name('owner.studio.permit.notice');
 
-        // Manage Discount Rules
-        Route::get('/discounts', [\App\Http\Controllers\StudioOwner\DiscountRuleController::class, 'index'])->middleware('permission:owner.studios.manage')->name('owner.discounts.index');
-        Route::post('/discounts', [\App\Http\Controllers\StudioOwner\DiscountRuleController::class, 'store'])->middleware('permission:owner.studios.manage')->name('owner.discounts.store');
-        Route::put('/discounts/{rule}', [\App\Http\Controllers\StudioOwner\DiscountRuleController::class, 'update'])->middleware('permission:owner.studios.manage')->name('owner.discounts.update');
-        Route::delete('/discounts/{rule}', [\App\Http\Controllers\StudioOwner\DiscountRuleController::class, 'destroy'])->middleware('permission:owner.studios.manage')->name('owner.discounts.destroy');
-
         // Manage Bookings
         Route::get('/view/bookings', [\App\Http\Controllers\StudioOwner\BookingController::class, 'index'])->middleware('permission:owner.bookings.manage')->name('owner.booking.index');
         Route::get('/feedback', [\App\Http\Controllers\StudioOwner\FeedbackController::class, 'index'])->middleware('permission:owner.bookings.manage')->name('owner.feedback.index');

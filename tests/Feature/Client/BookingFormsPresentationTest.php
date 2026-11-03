@@ -297,6 +297,8 @@ class BookingFormsPresentationTest extends TestCase
             $table->string('package_name');
             $table->text('package_description')->nullable();
             $table->decimal('package_price', 10, 2);
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->integer('duration')->nullable();
             $table->integer('maximum_edited_photos')->nullable();
             $table->json('package_inclusions')->nullable();

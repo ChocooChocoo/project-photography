@@ -449,6 +449,8 @@ class AssignmentLifecycleTest extends TestCase
             $table->string('package_type');
             $table->string('package_name');
             $table->decimal('package_price', 10, 2)->nullable();
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->timestamps();
         });
         Schema::create('tbl_packages', function (Blueprint $table) {
@@ -456,6 +458,8 @@ class AssignmentLifecycleTest extends TestCase
             $table->foreignId('studio_id');
             $table->string('package_name');
             $table->decimal('package_price', 10, 2);
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->boolean('online_gallery')->default(false);
             $table->integer('photographer_count')->default(0);
             $table->string('status');

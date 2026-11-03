@@ -262,6 +262,8 @@ class ClientFavoritesTest extends TestCase
             $table->foreignId('category_id');
             $table->string('package_name');
             $table->decimal('package_price', 10, 2);
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->string('status');
             $table->json('cover_images')->nullable();
             $table->softDeletes();

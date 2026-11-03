@@ -403,6 +403,8 @@ class CrossStudioIsolationTest extends TestCase
             $table->string('package_type')->nullable();
             $table->string('package_name')->nullable();
             $table->decimal('package_price', 10, 2)->nullable();
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->json('package_inclusions')->nullable();
             $table->integer('duration')->nullable();
             $table->integer('maximum_edited_photos')->nullable();
@@ -415,6 +417,8 @@ class CrossStudioIsolationTest extends TestCase
             $table->foreignId('category_id')->nullable();
             $table->string('package_name');
             $table->decimal('package_price', 10, 2)->default(0);
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->boolean('online_gallery')->nullable();
             $table->string('status');
             

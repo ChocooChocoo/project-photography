@@ -27,6 +27,8 @@ class BookingPackageModel extends Model
         'package_type',
         'package_name',
         'package_price',
+        'discount_percentage',
+        'discount_amount',
         'package_inclusions',
         'duration',
         'maximum_edited_photos',

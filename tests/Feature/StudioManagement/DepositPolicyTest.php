@@ -198,6 +198,44 @@ class DepositPolicyTest extends TestCase
         $this->assertSame([['name' => 'Photo frame', 'quantity' => 2]], $snapshot->fresh()->materials);
     }
 
+    public function test_package_discount_lowers_the_total_deposit_and_payment(): void
+    {
+        $studio = $this->createStudio();
+        $payload = ['payment_type' => 'full_payment'] + $this->bookingPayload($studio);
+        StudioPackagesModel::whereKey($payload['package_id'])->update(['discount_percentage' => 15, 'enhanced_photos_price' => 500]);
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking-summary', ['package_id' => $payload['package_id'], 'type' => 'studio', 'photo_edit_option' => 'enhanced'])
+            ->assertOk()
+            ->assertJsonPath('summary.package_price', '10,000.00')
+            ->assertJsonPath('summary.discount_amount', '1,500.00')
+            ->assertJsonPath('summary.total_amount', '9,000.00');
+
+        $this->actingAs($this->client)
+            ->postJson('/_test/client/booking', $payload + ['photo_edit_option' => 'enhanced'])
+            ->assertOk();
+
+        $booking = BookingModel::latest('id')->first();
+        $snapshot = \App\Models\BookingPackageModel::where('booking_id', $booking->id)->first();
+
+        // Editing add-ons are not discounted: 10,000 - 15% + 500.
+        $this->assertEquals(9000, $booking->total_amount);
+        $this->assertEquals(9000, $booking->down_payment);
+        $this->assertEquals(9000, \App\Models\PaymentModel::where('booking_id', $booking->id)->value('amount'));
+        $this->assertEquals(15, $snapshot->discount_percentage);
+        $this->assertEquals(1500, $snapshot->discount_amount);
+        $this->assertEquals(10000, $snapshot->package_price);
+    }
+
+    public function test_package_discount_must_be_between_0_and_100(): void
+    {
+        $request = new \App\Http\Requests\StudioOwner\PackageStoreRequest;
+        $rule = $request->rules()['discount_percentage'];
+        $this->assertTrue(\Illuminate\Support\Facades\Validator::make(['discount_percentage' => 100], ['discount_percentage' => $rule])->passes());
+        $this->assertTrue(\Illuminate\Support\Facades\Validator::make(['discount_percentage' => 101], ['discount_percentage' => $rule])->fails());
+        $this->assertTrue(\Illuminate\Support\Facades\Validator::make(['discount_percentage' => -1], ['discount_percentage' => $rule])->fails());
+    }
+
     public function test_raw_choice_keeps_base_price_and_enhanced_is_rejected_without_a_price(): void
     {
         $studio = $this->createStudio();
@@ -377,6 +415,7 @@ class DepositPolicyTest extends TestCase
             $table->decimal('enhanced_photos_price', 10, 2)->nullable();
             $table->json('editing_prices')->nullable();
             $table->decimal('package_price', 10, 2);
+            $table->decimal('discount_percentage', 5, 2)->default(0);
             $table->json('package_location')->nullable();
             $table->boolean('allow_multiple_locations')->default(false);
             $table->integer('max_locations')->default(1);
@@ -427,6 +466,8 @@ class DepositPolicyTest extends TestCase
             $table->string('package_type');
             $table->string('package_name');
             $table->decimal('package_price', 10, 2);
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->json('package_inclusions')->nullable();
             $table->integer('duration')->nullable();
             $table->integer('maximum_edited_photos')->nullable();

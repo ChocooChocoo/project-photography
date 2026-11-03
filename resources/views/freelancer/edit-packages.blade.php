@@ -128,6 +128,14 @@
                                         </div>
                                         <div class="invalid-feedback">Please enter valid package price.</div>
                                     </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label" for="discountPercentage">Discount (%) <small class="text-muted">(optional)</small></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="discountPercentage" name="discount_percentage" value="{{ (float) $package->discount_percentage ?: '' }}" placeholder="0" step="0.01" min="0" max="100">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <small class="text-muted">Taken off this package's price when a client books it. Leave blank for no discount.</small>
+                                    </div>
 
                                     <div class="col-12 mb-3">
                                         <label class="form-label d-block">Online Gallery</label>
@@ -330,6 +338,7 @@
                 uploadData.append('maximum_edited_photos', $('input[name="maximum_edited_photos"]').val());
                 uploadData.append('coverage_scope', $('input[name="coverage_scope"]').val());
                 uploadData.append('package_price', $('input[name="package_price"]').val());
+                uploadData.append('discount_percentage', $('input[name="discount_percentage"]').val());
                 uploadData.append('status', $('select[name="status"]').val());
                 uploadData.append('online_gallery', $('input[name="online_gallery"]:checked').val());
                 inclusions.forEach(inclusion => uploadData.append('package_inclusions[]', inclusion));

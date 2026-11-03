@@ -161,6 +161,14 @@
                                         </div>
                                         <div class="invalid-feedback">Please enter valid package price.</div>
                                     </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label" for="discountPercentage">Discount (%) <small class="text-muted">(optional)</small></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="discountPercentage" name="discount_percentage" value="" placeholder="0" step="0.01" min="0" max="100">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <small class="text-muted">Taken off this package's price when a client books it. Leave blank for no discount.</small>
+                                    </div>
 
                                     <div class="col-12 mb-3">
                                         <label class="form-label d-block">Online Gallery</label>
@@ -506,6 +514,7 @@
                     maximum_edited_photos: $('input[name="maximum_edited_photos"]').val(),
                     coverage_scope: $('input[name="coverage_scope"]').val(),
                     package_price: $('input[name="package_price"]').val(),
+                    discount_percentage: $('input[name="discount_percentage"]').val(),
                     status: $('select[name="status"]').val(),
                     online_gallery: $('input[name="online_gallery"]:checked').val(),
                     package_inclusions: []

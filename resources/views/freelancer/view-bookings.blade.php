@@ -333,7 +333,7 @@
                         packagesHtml += `
                             <div class="d-flex justify-content-between mb-1">
                                 <span class="text-muted">${pkg.package_name}:</span>
-                                <span class="fw-medium">₱${parseFloat(pkg.package_price).toFixed(2)}</span>
+                                <span class="fw-medium">₱${parseFloat(pkg.package_price).toFixed(2)}${parseFloat(pkg.discount_amount) > 0 ? ` <small class="text-success">(-₱${parseFloat(pkg.discount_amount).toFixed(2)} discount)</small>` : ''}</span>
                             </div>
                             <div class="d-flex justify-content-between mb-1"><span class="text-muted">Photo editing:</span><span class="fw-medium text-end">${pkg.editing_summary || 'Unedited (RAW) photos'}${parseFloat(pkg.enhancement_amount) > 0 ? ` (₱${parseFloat(pkg.enhancement_amount).toFixed(2)})` : ''}</span></div>
                             ${(pkg.materials || []).map(m => `<div class="small text-muted">${parseInt(m.quantity) || 1} &times; ${$('<div>').text(m.name || '').html()}</div>`).join('')}

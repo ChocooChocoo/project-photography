@@ -248,6 +248,8 @@ trait BuildsChatbotSchema
             $table->integer('maximum_edited_photos')->default(0);
             $table->json('coverage_scope')->nullable();
             $table->decimal('package_price', 10, 2);
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->string('status')->default('active');
             
             $table->softDeletes();$table->timestamps();

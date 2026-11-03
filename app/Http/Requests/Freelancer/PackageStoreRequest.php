@@ -21,6 +21,11 @@ class PackageStoreRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
+        // A blank discount means no discount.
+        if (blank($this->discount_percentage)) {
+            $this->merge(['discount_percentage' => 0]);
+        }
+
         // Convert package_inclusions to array if it's a JSON string
         if ($this->has('package_inclusions') && is_string($this->package_inclusions)) {
             try {
@@ -93,6 +98,7 @@ class PackageStoreRequest extends FormRequest
             'maximum_edited_photos' => 'required|integer|min:1|max:1000',
             'coverage_scope' => 'nullable|string|max:255',
             'package_price' => 'required|numeric|min:0',
+            'discount_percentage' => 'required|numeric|min:0|max:100',
             'online_gallery' => 'required|boolean',
             'status' => 'required|in:active,inactive',
             'cover_images' => 'nullable|array|max:5',

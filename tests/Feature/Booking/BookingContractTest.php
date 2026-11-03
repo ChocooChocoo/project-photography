@@ -432,6 +432,8 @@ class BookingContractTest extends TestCase
             $table->json('materials')->nullable();
             $table->decimal('enhanced_photos_price', 10, 2)->nullable();
             $table->decimal('package_price', 10, 2);
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->json('package_location')->nullable();
             $table->boolean('allow_multiple_locations')->default(false);
             $table->integer('max_locations')->default(1);
@@ -482,6 +484,8 @@ class BookingContractTest extends TestCase
             $table->string('package_type');
             $table->string('package_name');
             $table->decimal('package_price', 10, 2);
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->json('package_inclusions')->nullable();
             $table->integer('duration')->nullable();
             $table->integer('maximum_edited_photos')->nullable();

@@ -479,6 +479,8 @@ class OwnerCompletionGateTest extends TestCase
             $table->unsignedBigInteger('category_id')->nullable();
             $table->string('package_name');
             $table->decimal('package_price', 10, 2)->nullable();
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->boolean('online_gallery')->default(false);
             $table->unsignedInteger('photographer_count')->default(1);
             $table->string('status')->default('active');
@@ -492,6 +494,8 @@ class OwnerCompletionGateTest extends TestCase
             $table->string('package_type')->nullable();
             $table->string('package_name')->nullable();
             $table->decimal('package_price', 10, 2)->nullable();
+            $table->decimal('discount_percentage', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
             $table->text('package_inclusions')->nullable();
             $table->integer('duration')->nullable();
             $table->integer('maximum_edited_photos')->nullable();

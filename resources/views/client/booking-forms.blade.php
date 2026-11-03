@@ -354,15 +354,6 @@
                                         </div>
                                     @endif
 
-                                    @if($type === 'studio' && !empty($discounts) && $discounts->count() > 0)
-                                        <div class="mt-2">
-                                            <i class="ti ti-tag me-1 text-success"></i>
-                                            <span class="fw-medium">Discounts available:</span>
-                                            @foreach($discounts as $discount)
-                                                <span class="badge badge-soft-success ms-1">{{ $discount->name }} ({{ rtrim(rtrim(number_format($discount->percentage, 2), '0'), '.') }}% OFF)</span>
-                                            @endforeach
-                                        </div>
-                                    @endif
 
                                     {{-- Shown by JS only when the selected package offers photo editing --}}
                                     <fieldset id="photoEditOptions" class="mt-3" style="display: none;" aria-describedby="photoEditHelp">
@@ -564,6 +555,10 @@
                         <div class="d-flex justify-content-between mb-2">
                             <span>Package Price:</span>
                             <span class="fw-medium" id="packagePrice">₱0</span>
+                        </div>
+                        <div class="d-flex d-none justify-content-between mb-2" id="discountRow">
+                            <span id="discountLabel">Package discount:</span>
+                            <span class="fw-medium text-success" id="discountAmount"></span>
                         </div>
                         <div class="d-flex d-none justify-content-between mb-2" id="enhancementRow">
                             <span id="enhancementLabel">Photo editing:</span>
@@ -964,7 +959,10 @@
                                     .replace(/"/g, '&quot;') // Escape quotes for HTML attribute
                                     .replace(/'/g, "&#39;"); // Escape single quotes
                                 
-                                const priceText = `₱${parseFloat(package.package_price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                const money = (value) => `₱${parseFloat(value).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                const priceText = parseFloat(package.discount_percentage) > 0
+                                    ? `<del class="text-muted fw-normal small me-1">${money(package.package_price)}</del>${money(package.discounted_price)} <span class="badge badge-soft-success">${parseFloat(package.discount_percentage)}% off</span>`
+                                    : money(package.package_price);
                                 
                                 // Parse inclusions safely
                                 let inclusions = [];
@@ -2946,6 +2944,10 @@
              * Update summary price display
              */
             function renderEnhancementRow(summary) {
+                const discount = parseFloat(String(summary.discount_amount || '0').replace(/,/g, ''));
+                $('#discountLabel').text('Package discount (' + (summary.discount_percentage || 0) + '% off):');
+                $('#discountAmount').text('-₱' + summary.discount_amount);
+                $('#discountRow').toggleClass('d-none', !(discount > 0));
                 $('#enhancementLabel').text('Photo editing (' + (summary.editing_services || []).join(', ') + '):');
                 $('#enhancementAmount').text('₱' + summary.enhancement_amount);
                 $('#enhancementRow').toggleClass('d-none', summary.photo_edit_option !== 'enhanced');

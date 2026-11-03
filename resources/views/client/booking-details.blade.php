@@ -188,7 +188,15 @@
                                                                     <!-- Package Name & Price -->
                                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                                         <h6 class="card-title fw-bold mb-0">{{ $package->package_name }}</h6>
-                                                                        <span class="text-success fw-bold">₱{{ number_format($package->package_price, 2) }}</span>
+                                                                        <span class="text-success fw-bold text-end">
+                                                                            @if((float) $package->discount_percentage > 0)
+                                                                                <del class="text-muted fw-normal small d-block">₱{{ number_format($package->package_price, 2) }}</del>
+                                                                                ₱{{ number_format($package->discountedPrice(), 2) }}
+                                                                                <span class="badge badge-soft-success d-block mt-1">{{ rtrim(rtrim(number_format($package->discount_percentage, 2), '0'), '.') }}% off</span>
+                                                                            @else
+                                                                                ₱{{ number_format($package->package_price, 2) }}
+                                                                            @endif
+                                                                        </span>
                                                                     </div>
                                                                     
                                                                     <!-- Package Description -->

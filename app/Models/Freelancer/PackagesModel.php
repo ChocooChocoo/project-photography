@@ -34,6 +34,7 @@ class PackagesModel extends Model
         'maximum_edited_photos',
         'coverage_scope',
         'package_price',
+        'discount_percentage',
         'online_gallery',
         'status',
         // ==== NEW FIELDS START ====
@@ -55,6 +56,7 @@ class PackagesModel extends Model
     protected $casts = [
         'package_inclusions' => 'array',
         'package_price' => 'decimal:2',
+        'discount_percentage' => 'decimal:2',
         'online_gallery' => 'boolean',
         'allow_time_customization' => 'boolean',
         // ==== NEW CASTS START ====
@@ -228,5 +230,21 @@ class PackagesModel extends Model
         return $this->allow_time_customization 
             ? 'ti ti-clock-edit' 
             : 'ti ti-clock';
+    }
+
+    /**
+     * Money taken off the package price by its discount.
+     */
+    public function discountAmount(): float
+    {
+        return round((float) $this->package_price * (float) $this->discount_percentage / 100, 2);
+    }
+
+    /**
+     * The package price after its discount.
+     */
+    public function discountedPrice(): float
+    {
+        return round((float) $this->package_price - $this->discountAmount(), 2);
     }
 }

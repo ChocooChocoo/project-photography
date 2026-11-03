@@ -72,6 +72,7 @@
                                             <!-- ==== End: Time Customization Badge ==== -->
                                             <div class="my-4">
                                                 <h1 class="display-6 fw-bold mb-0">₱{{ number_format($package->package_price, 2) }}</h1>
+                                                @if((float) $package->discount_percentage > 0)<span class="badge badge-soft-success">{{ rtrim(rtrim(number_format($package->discount_percentage, 2), '0'), '.') }}% off: clients pay ₱{{ number_format($package->discountedPrice(), 2) }}</span>@endif
                                                 <!-- ==== Start: Update duration display ==== -->
                                                 @if(!$package->allow_time_customization && $package->duration)
                                                     <small class="d-block text-muted fs-base">{{ $package->duration }} Hours (Fixed)</small>
