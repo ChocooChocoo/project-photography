@@ -221,6 +221,7 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
+    <script src="{{ asset('assets/js/before-after.js').'?v='.filemtime(public_path('assets/js/before-after.js')) }}"></script>
     <script>
         $(document).ready(function() {
             let currentImages = [];
@@ -272,15 +273,19 @@
                             // Generate images grid
                             let imagesHtml = '';
                             $.each(gallery.images, function(index, image) {
+                                const original = (gallery.originals || [])[index];
+                                const media = original
+                                    ? BeforeAfter.slider(`{{ asset('storage') }}/${original}`, `{{ asset('storage') }}/${image}`, `Photo ${index + 1}`)
+                                    : `<img src="{{ asset('storage') }}/${image}" 
+                                                class="card-img-top gallery-image" 
+                                                alt="Gallery Image ${index + 1}"
+                                                style="height: 200px; width: 100%; object-fit: cover; cursor: pointer;">`;
                                 imagesHtml += `
                                     <div class="col-md-4 col-sm-6">
                                         <div class="card gallery-image-card" data-index="${index}">
-                                            <img src="{{ asset('storage') }}/${image}" 
-                                                class="card-img-top gallery-image" 
-                                                alt="Gallery Image ${index + 1}"
-                                                style="height: 200px; width: 100%; object-fit: cover; cursor: pointer;">
+                                            ${media}
                                             <div class="card-body p-2 text-center">
-                                                <small class="text-muted">Photo ${index + 1}</small>
+                                                <small class="text-muted">Photo ${index + 1}${original ? ' · drag to compare before and after' : ''}</small>
                                             </div>
                                         </div>
                                     </div>

@@ -60,6 +60,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
     Route::get('/password/change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'show'])->name('password.change')->withoutMiddleware('password.changed');
     Route::post('/password/change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'store'])->name('password.change.store')->withoutMiddleware('password.changed');
 
+    // Unedited original for a delivered photo (before-and-after slider). The controller checks who may manage the gallery.
+    Route::post('/gallery-originals/{type}/{galleryId}', [\App\Http\Controllers\GalleryOriginalController::class, 'store'])
+        ->whereIn('type', ['studio', 'freelancer'])->whereNumber('galleryId')->name('gallery.originals.store');
+
     // Notifications Routes ================================================================================================================================================
     Route::prefix('notifications')->group(function () {
 

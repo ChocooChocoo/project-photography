@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 class FreelanceOnlineGalleryModel extends Model
 {
     use HasFactory;
+    use \App\Models\Concerns\HasBeforeAfterPairs;
 
     /**
      * Gallery delivery states.
@@ -59,6 +60,7 @@ class FreelanceOnlineGalleryModel extends Model
         'gallery_name',
         'description',
         'images',
+        'raw_images',
         'status',
         'total_photos',
         'published_at',
@@ -80,6 +82,7 @@ class FreelanceOnlineGalleryModel extends Model
      */
     protected $casts = [
         'images' => 'array',
+        'raw_images' => 'array',
         'published_at' => 'datetime',
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',

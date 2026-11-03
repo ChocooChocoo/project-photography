@@ -575,6 +575,7 @@
 
 {{-- SCRIPTS --}}
 @section('scripts')
+    <script src="{{ asset('assets/js/before-after.js').'?v='.filemtime(public_path('assets/js/before-after.js')) }}"></script>
     <script>
         $(document).ready(function() {
             let selectedBookingId = null;
@@ -893,6 +894,9 @@
                                                                 <i class="ti ti-calendar-time me-1"></i>
                                                                 ${new Date().toLocaleDateString()}
                                                             </small>
+                                                            <button type="button" class="btn btn-sm ${(gallery.raw_images || {})[image] ? 'btn-soft-success' : 'btn-soft-secondary'} add-original me-1" data-image="${image}" data-url="{{ url('gallery-originals/studio') }}/${gallery.id}" title="Upload the unedited original for a before-and-after slider">
+                                                                <i class="ti ti-photo-up" aria-hidden="true"></i> <span class="add-original-text">${(gallery.raw_images || {})[image] ? 'Original added' : 'Add original'}</span>
+                                                            </button>
                                                             <button class="btn btn-sm btn-soft-danger delete-image" data-image="${image}" title="Delete this image">
                                                                 <i class="ti ti-trash me-1"></i>
                                                             </button>

@@ -211,6 +211,8 @@ class OnlineGalleryController extends Controller
                     'gallery_name' => $gallery->gallery_name,
                     'description' => $gallery->description,
                     'images' => $gallery->images ?? [],
+                    // Unedited originals, index-aligned with images (null where none).
+                    'originals' => $gallery->originalsInImageOrder(),
                     'download_urls' => $gallery->isApproved() ? collect($gallery->images ?? [])->keys()
                         ->map(fn ($index) => route('client.online-gallery.download', [$gallery->id, $type, $index], false))->all() : [],
                     'zip_url' => $gallery->isApproved() && ! empty($gallery->images)
