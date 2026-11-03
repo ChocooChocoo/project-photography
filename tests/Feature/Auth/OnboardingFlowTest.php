@@ -160,6 +160,9 @@ class OnboardingFlowTest extends TestCase
         foreach ($headings as $heading) {
             $response->assertSee($heading);
         }
+        // The tutorial explains the platform, not just a list of steps.
+        $response->assertSee('How Platinum works')->assertSee('The path every booking takes')
+            ->assertSee('What it is')->assertSee('Why it matters')->assertSee('Where to find it');
         $response->assertDontSee('Welcome to Lumora');
     }
 
