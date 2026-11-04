@@ -759,6 +759,28 @@
                 });
             }
 
+            // Readable duration: flexible packages may store a default, so
+            // prefer the hours actually booked between the start and end times.
+            function formatPackageDuration(pkg, booking) {
+                const minutes = value => {
+                    const match = String(value || '').match(/^(\d{1,2}):(\d{2})/);
+                    return match ? Number(match[1]) * 60 + Number(match[2]) : null;
+                };
+                const start = minutes(booking && booking.start_time);
+                const end = minutes(booking && booking.end_time);
+                let booked = null;
+                if (start !== null && end !== null) {
+                    booked = (end >= start ? end - start : end + 1440 - start) / 60;
+                }
+                if (pkg.duration == null) {
+                    return booked ? `Flexible duration (${booked} hours booked)` : 'Flexible duration';
+                }
+                if (booked !== null && booked > 0 && Number(booked) !== Number(pkg.duration)) {
+                    return `${booked} hours (booked)`;
+                }
+                return `${pkg.duration} hours`;
+            }
+
             // Render booking details
             function renderBookingDetails(data) {
                 const booking = data.booking;
@@ -914,7 +936,7 @@
                                         </div>
                                         <div class="flex-grow-1 ms-3">
                                             <label class="text-muted small mb-1">Duration</label>
-                                            <p class="mb-0 fw-medium">${pkg.duration == null ? 'Flexible duration' : `${pkg.duration} hours`}</p>
+                                            <p class="mb-0 fw-medium">${formatPackageDuration(pkg, booking)}</p>
                                         </div>
                                     </div>
                                 </div>

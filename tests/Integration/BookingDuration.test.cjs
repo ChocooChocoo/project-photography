@@ -4,13 +4,28 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const source = fs.readFileSync('resources/views/client/view-my-bookings.blade.php', 'utf8');
-const template = source.match(/<label class="text-muted small mb-1">Duration<\/label>\s*<p class="mb-0 fw-medium">([^\n]+)<\/p>/)[1];
-const render = duration => vm.runInNewContext('`' + template + '`', {pkg: {duration}});
+const start = source.indexOf('function formatPackageDuration(');
+assert.notEqual(start, -1, 'Duration formatter is missing');
+const end = source.indexOf('// Render booking details', start);
+assert.notEqual(end, -1, 'Duration formatter end marker is missing');
+const format = new Function('pkg', 'booking', `${source.slice(start, end)}\nreturn formatPackageDuration(pkg, booking);`);
 
-test('flexible booking duration does not display null hours', () => {
-    assert.equal(render(null), 'Flexible duration');
+test('flexible package shows booked hours, not null', () => {
+    assert.equal(format({duration: null}, {start_time: '16:00', end_time: '21:00'}), 'Flexible duration (5 hours booked)');
 });
 
-test('fixed booking duration keeps its hours', () => {
-    assert.equal(render(3), '3 hours');
+test('flexible package without times stays plain', () => {
+    assert.equal(format({duration: null}, {}), 'Flexible duration');
+});
+
+test('fixed package keeps its matching package duration', () => {
+    assert.equal(format({duration: 3}, {start_time: '10:00', end_time: '13:00'}), '3 hours');
+});
+
+test('stored default that differs from the booked window shows booked hours', () => {
+    assert.equal(format({duration: 8}, {start_time: '10:00', end_time: '15:00'}), '5 hours (booked)');
+});
+
+test('overnight window is handled', () => {
+    assert.equal(format({duration: 3}, {start_time: '22:00', end_time: '01:00'}), '3 hours');
 });
