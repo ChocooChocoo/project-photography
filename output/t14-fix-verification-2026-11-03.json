@@ -1,0 +1,125 @@
+{
+  "scope": "Follow-up fixes for confirmed T-14 browser discrepancies",
+  "baseline_commit": "0b9c39e8",
+  "working_tree_changes": true,
+  "original_report": "output/t14-browser-verification-2026-11-03.json",
+  "overall_acceptance": "INCOMPLETE",
+  "latest_review": {
+    "method": "Compared T-14 requirements with original browser evidence and post-fix evidence. Reran all five saved Playwright MCP regression scripts; all assertions passed. Did not infer complete feature acceptance from those script results.",
+    "fresh_browser_regressions": {
+      "freelancer_form": "PASS: map visible; no-pin submission refused; location selection opens correctly labelled summary; total 4200, deposit 1260, balance 2940; reopening creates no duplicate labels; midnight overflow blocked with correct message.",
+      "group_discovery": "PASS: search returns two group members with badges; nonexistent query shows empty state; Clear All restores results.",
+      "landing_navigation": "PASS: 375-pixel Studios anchor navigates, closes menu, updates aria-expanded, and has no horizontal overflow.",
+      "published_owner_gallery": "PASS: original-upload controls disabled on published gallery.",
+      "owner_package_table": "PASS: base 5000, discounted 4000, and 20-percent discount match."
+    },
+    "feature_acceptance": {
+      "peso_prices": "FURTHER_VERIFICATION: inspected screens use peso; every price, receipt, and email not covered.",
+      "messages": "PASS_TESTED_SCOPE: seven-role placement/navigation and owner/client unread delivery verified in prior actual browser interactions; all role-pair messaging not claimed.",
+      "booking_times": "PASS_TESTED_SCOPE: fixed computation and midnight rejection; flexible studio late finish and invalid start checked. Every date/time boundary not claimed.",
+      "package_discounts": "FURTHER_VERIFICATION: save/rejection, displayed prices, and summary arithmetic verified; fresh gateway charge after fixes not verified.",
+      "camera_specs": "PASS_TESTED_SCOPE: specs visible before booking; catalog create/edit validation remains unverified in this follow-up.",
+      "venue_pin": "PASS_TESTED_SCOPE: missing pin blocked, studio and freelancer controls usable; complete multi-location, permission, and keyboard coverage not claimed.",
+      "gps_arrival": "FURTHER_VERIFICATION: distant rejection, nearby persistence, client confirmation and in-app alerts verified; email and exact boundary/permission cases outstanding.",
+      "cancellation_replacement": "PASS_TESTED_SCOPE: required reason, unchanged payments, replacement workflow and corrected labels/status badge verified; obsolete deadline cleanup has JavaScript proof only.",
+      "freelancer_groups": "PASS_TESTED_SCOPE: search, badges, member links, saved spelling, empty state and clearing checked; exhaustive mobile coverage not claimed.",
+      "before_after": "FURTHER_VERIFICATION: client slider and persistence verified; owner published controls verified; unpublished uploads and remaining role controls outstanding.",
+      "tutorial": "PASS_TESTED_SCOPE: explanatory client content, replay, Next/Back/Finish verified earlier; other roles/mobile visual acceptance outstanding.",
+      "landing": "FURTHER_VERIFICATION: corrected mobile menu verified; subjective visual acceptance and exhaustive desktop/mobile/accessibility cases outstanding."
+    },
+    "current_reproduced_failures_in_five_regressions": 0,
+    "unverified_is_not_pass": true,
+    "historical_failures_preserved": true
+  },
+  "method": "Playwright MCP normal UI interactions with regression assertions. No forced clicks, disabled-field overrides, direct API submissions, or database manipulation. GPS and image uploads use declared local test fixtures.",
+  "browser_verified_fixes": [
+    {
+      "id": "owner-package-table-discount",
+      "status": "PASS",
+      "proof": "Regression failed when owner table showed only base price 5000. After fix it shows struck-through base 5000, client price 4000, and 20% off, matching card and summary.",
+      "test": "tests/Integration/T14PackageTable.browser.js",
+      "evidence": ".playwright-mcp/fixed-package-table.png"
+    },
+    {
+      "id": "freelancer-venue-pin",
+      "status": "PASS",
+      "cause": "Programmatic On-Location selection did not trigger the map visibility handler.",
+      "proof": "Regression failed with hidden venuePinMap before fix. After fix, map is visible, missing pin still blocks summary, emulated current location sets pin, and normal continuation opens summary.",
+      "test": "tests/Integration/T14FreelancerBooking.browser.js",
+      "evidence": ".playwright-mcp/fixed-freelancer-summary.png"
+    },
+    {
+      "id": "summary-location-and-duplicates",
+      "status": "PASS",
+      "proof": "Before fix, freelancer summary incorrectly said In-Studio Package. After fix, selected On-Location appears correctly; reopening summary leaves exactly one location, type, gallery, and duration label. Four-hour session is 09:00 to 13:00, total 4200, deposit 1260, balance 2940.",
+      "test": "tests/Integration/T14FreelancerBooking.browser.js"
+    },
+    {
+      "id": "fixed-midnight-message",
+      "status": "PASS",
+      "proof": "Regression reproduced hidden-field End time must be after the start time message. After fix, 22:00 plus four hours reports midnight overflow and keeps continuation disabled.",
+      "test": "tests/Integration/T14FreelancerBooking.browser.js"
+    },
+    {
+      "id": "group-search-and-filter-badges",
+      "status": "PASS",
+      "proof": "Regression failed because searchbox was absent. Added search uses existing server query filter, returns both Golden Hour members, retains badges, supports empty-result state, and Clear All restores providers and clears input.",
+      "test": "tests/Integration/T14GroupDiscovery.browser.js",
+      "evidence": ".playwright-mcp/fixed-group-discovery.png"
+    },
+    {
+      "id": "group-spelling",
+      "status": "PASS",
+      "proof": "Failing PHP regression demonstrated inconsistent spelling on save. Model now reuses earliest matching group spelling. Marco's existing lowercase group was saved through Save group name and became Golden Hour Collective, persisting after reload. No bulk data rewrite.",
+      "test": "tests/Feature/Freelancer/FreelancerGroupTest.php",
+      "evidence": ".playwright-mcp/fixed-group-spelling.png"
+    },
+    {
+      "id": "mobile-landing-menu",
+      "status": "PASS",
+      "proof": "Regression reproduced open menu after Studios anchor click. After fix, 375-pixel viewport navigates to #studios, menu closes, aria-expanded becomes false, and page has no horizontal overflow. Handler also waits if collapse opening transition is still active.",
+      "test": "tests/Integration/T14LandingMenu.browser.js",
+      "evidence": ".playwright-mcp/fixed-landing-menu.png"
+    },
+    {
+      "id": "published-original-control",
+      "status": "PASS_FOR_OWNER_BROWSER",
+      "proof": "Regression reproduced enabled Add original on published gallery 70. After fix, published original-upload controls are disabled. Same condition applied to photographer and freelancer templates; those roles still need direct browser retests. Server-side published-gallery rejection remains intact.",
+      "test": "tests/Integration/T14PublishedGallery.browser.js",
+      "evidence": ".playwright-mcp/fixed-published-gallery.png"
+    },
+    {
+      "id": "replacement-labels",
+      "status": "PASS",
+      "proof": "After actual on-site cancellation on booking 69, owner Assign Photographer shows Replacement Assignment and Cancelled on site, not Initial Assignment or Rejected this assignment. Cancelled photographer remains disabled. PHP lifecycle regression failed before fix and passed afterward.",
+      "test": "tests/Feature/Booking/AssignmentLifecycleTest.php",
+      "evidence": ".playwright-mcp/fixed-replacement-labels.png"
+    },
+    {
+      "id": "photographer-table-refresh",
+      "status": "PASS_FOR_STATUS_BADGE",
+      "proof": "Actual browser assignment 69 changed table badge to CONFIRMED, ON SITE, and CANCELLED without page reload. JavaScript regression verifies status class/text and removal of obsolete response deadline. Deadline removal added after browser run and needs a fresh transition for direct browser proof.",
+      "test": "tests/Integration/PhotographerStatusRefresh.test.cjs",
+      "evidence": ".playwright-mcp/fixed-cancellation-table.png"
+    }
+  ],
+  "automated_checks": {
+    "focused_php": "28 passed, 177 assertions; pre-existing PHPUnit doc-comment metadata deprecation warning",
+    "focused_javascript": "2 passed: photographer row refresh and owner booking refresh",
+    "full_php": "776 passed, 4026 assertions, 96.18 seconds. Completed before final owner-table display fix; that fix subsequently passed its browser regression.",
+    "build": "npm run build passed: Vite built 56 modules in 4.31 seconds",
+    "diff_check": "No whitespace errors; existing CRLF-to-LF notice for freelancer gallery template"
+  },
+  "additional_local_test_data": [
+    "Booking BK-6AE9C3F4EF9C6 (69): owner assigned Cesar; photographer accepted, checked in with simulated studio GPS and fixture image, then cancelled with regression-test reason. Booking now needs replacement. No payment charge was made.",
+    "Marco's existing group spelling saved through normal profile UI to match Golden Hour Collective."
+  ],
+  "remaining_verification": [
+    "Fresh sandbox payment amount and completed charge after these fixes",
+    "Email delivery and GPS permission-denial/exact-boundary cases",
+    "Unpublished original-upload paths across roles and published controls in photographer/freelancer browsers",
+    "Camera catalog editing and validation",
+    "Full role-specific tutorial and mobile visual/accessibility coverage",
+    "Full platform-wide price, receipt, email, and error-state coverage"
+  ]
+}

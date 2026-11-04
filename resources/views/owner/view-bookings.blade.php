@@ -881,7 +881,7 @@
                                                 </div>
                                                 <div class="flex-grow-1 ms-3">
                                                     <label class="text-muted small mb-1">Event Location</label>
-                                                    <p class="mb-0 fw-medium">${booking.venue_name || booking.street || 'N/A'}, ${booking.city || 'N/A'}, ${booking.province || 'N/A'}</p>
+                                                    <p class="mb-0 fw-medium">${booking.location_type === 'in-studio' ? 'In-Studio' : escapeAssignmentText([booking.venue_name || booking.street, booking.city, booking.province].filter(Boolean).join(', ') || 'Not provided')}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -1247,7 +1247,9 @@
                 $('#assignBookingDetails').text(`${booking.event_date} • ${booking.event_name}`);
                 
                 // Show requirement info in status badge
-                if (assignmentInfo.is_initial_assignment) {
+                if (assignmentInfo.is_replacement) {
+                    $('#assignBookingStatus').text(`Replacement Assignment: Need ${assignmentInfo.remaining_needed} photographer(s)`);
+                } else if (assignmentInfo.is_initial_assignment) {
                     $('#assignBookingStatus').text(`Initial Assignment: Need ${assignmentInfo.required_photographers} photographers`);
                 } else {
                     $('#assignBookingStatus').text(`Adding: Need ${assignmentInfo.remaining_needed} more of ${assignmentInfo.required_photographers}`);
@@ -1570,7 +1572,8 @@
                     'in_progress_conflict': 'badge badge-soft-warning text-warning',
                     'reserved_conflict': 'badge badge-soft-info text-info',
                     'already_assigned': 'badge badge-soft-secondary text-secondary',
-                    'rejected': 'badge badge-soft-danger text-danger'
+                    'rejected': 'badge badge-soft-danger text-danger',
+                    'cancelled_on_site': 'badge badge-soft-danger text-danger'
                 };
 
                 return badgeClasses[status] || 'badge badge-soft-secondary text-secondary';
@@ -1583,7 +1586,8 @@
                     'in_progress_conflict': 'In Progress',
                     'reserved_conflict': 'Reserved',
                     'already_assigned': 'Already Assigned',
-                    'rejected': 'Rejected'
+                    'rejected': 'Rejected',
+                    'cancelled_on_site': 'Cancelled on site'
                 };
 
                 return labels[status] || 'Unavailable';

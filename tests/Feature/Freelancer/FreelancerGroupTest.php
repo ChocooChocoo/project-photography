@@ -51,4 +51,15 @@ class FreelancerGroupTest extends TestCase
         app(ProfileController::class)->updateGroup(Request::create('/', 'POST', ['group_name' => '']));
         $this->assertNull($ana->fresh()->group_name);
     }
+
+    public function test_joining_an_existing_group_reuses_its_display_spelling(): void
+    {
+        $this->freelancer('Ana', 'Golden Hour');
+        $ben = $this->freelancer('Ben');
+        $this->actingAs($ben->user);
+
+        app(ProfileController::class)->updateGroup(Request::create('/', 'POST', ['group_name' => ' golden HOUR ']));
+
+        $this->assertSame('Golden Hour', $ben->fresh()->group_name);
+    }
 }

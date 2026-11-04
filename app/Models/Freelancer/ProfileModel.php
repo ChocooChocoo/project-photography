@@ -58,6 +58,16 @@ class ProfileModel extends Model
         // ==== End: Deposit Policy Enhancement ==== //
     ];
 
+    public function setGroupNameAttribute(?string $value): void
+    {
+        $name = trim($value ?? '');
+        $existing = $name === '' ? null : static::query()
+            ->whereRaw('LOWER(TRIM(group_name)) = ?', [mb_strtolower($name)])
+            ->orderBy('id')->value('group_name');
+
+        $this->attributes['group_name'] = $name === '' ? null : trim($existing ?? $name);
+    }
+
     /**
      * Get the user associated with the freelancer profile.
      */

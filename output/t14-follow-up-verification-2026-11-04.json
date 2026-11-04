@@ -1,0 +1,120 @@
+{
+  "overall_acceptance": "INCOMPLETE",
+  "follow_up": "output/t14-resumed-verification-2026-11-04.json fixes the four findings below, adds keyboard-package regression proof, and completes tutorial destination navigation. Original findings retained as historical evidence.",
+  "scope": "Resume unfinished T-14 checks and fix the two previously confirmed bugs. Previous evidence retained, not rerun wholesale.",
+  "method": "Actual Playwright MCP interactions. One context and one tab at every recorded count check; no contexts or tabs created by test code. Normal logout/login account changes. Existing local JPEGs used as explicit test fixtures. No forced clicks, validation overrides, direct browser API submissions, or application database writes outside normal UI forms.",
+  "previous_evidence": [
+    "output/t14-browser-verification-2026-11-03.json",
+    "output/t14-fix-verification-2026-11-03.json",
+    "output/t14-single-browser-verification-2026-11-03.json"
+  ],
+  "resolved_failures": [
+    {
+      "id": "flexible-duration-booking-details",
+      "root_cause": "Client booking details appended hours to a nullable package duration.",
+      "change": "Null duration now displays Flexible duration; fixed durations retain their hours.",
+      "regression_proof": "Node test first failed with null hours, then passed after the template change. Fixed-duration test also passed.",
+      "browser_actual": "Beatriz opened booking BK-6AE9F0AB26000 through its View Details button. Flexible duration displayed alongside the unchanged 16:00 - 21:00 schedule.",
+      "evidence": [".playwright-mcp/t14-duration-fixed.png"]
+    },
+    {
+      "id": "freelancer-gallery-publishes-before-original-upload",
+      "root_cause": "Freelancer uploadImages explicitly set published status and timestamp on creation; there was no separate publish operation.",
+      "change": "Booking-photo uploads create a self-approved draft. Freelancer uses explicit Publish to Client after attaching originals. Published original restriction remains unchanged, and additional edited-image uploads are now refused for published galleries.",
+      "regression_proof": "New PHP tests first failed on immediate publication, missing publish operation, and accepted uploads to a published gallery. Tests then passed, including draft hidden from client, published visible to client, foreign-user publication refused, and originals locked after publication.",
+      "browser_actual": "Lorena uploaded one local JPEG on FS-BKF-00002. Row showed Draft, Published Date showed Not published, and Add original was enabled. Original was attached through file selection and survived reload. Normal Publish to Client confirmation changed row to Published. Original and image-upload controls were disabled afterward. Cristian logged in normally, completed his client tutorial, opened this gallery, loaded edited and original images, and moved the slider from 50 to 51 using ArrowRight. Escape closed the gallery modal after its transition.",
+      "gallery_reference": "FL-GAL-6AEA039F11B51",
+      "evidence": [
+        ".playwright-mcp/t14-freelancer-draft.png",
+        ".playwright-mcp/t14-freelancer-published.png",
+        ".playwright-mcp/t14-freelancer-client-slider.png"
+      ]
+    }
+  ],
+  "additional_passed": [
+    {
+      "id": "camera-required-fields-and-edit-persistence",
+      "actual": "Owner clicked Save catalog item with empty required fields. Browser refused submission and displayed Please fill out this field. Owner created explicitly named T14 Verification Camera, edited specs, saved, reloaded, and reopened equipment catalog. Edited specs persisted.",
+      "limitation": "This proves native required-field validation, not every server-side validation or authorization case.",
+      "evidence": [".playwright-mcp/t14-camera-edit-persisted.png"]
+    },
+    {
+      "id": "edited-camera-specs-before-booking",
+      "actual": "Beatriz saw edited test-camera specs on studio profile /client/studios/4 and, after opening See this studio's cameras and gear, on the booking form. No booking or payment was required.",
+      "evidence": [".playwright-mcp/t14-client-camera-specs.png", ".playwright-mcp/t14-booking-camera-specs.png"]
+    },
+    {
+      "id": "supported-role-tutorial-content-and-controls",
+      "actual": "Client: read all five explanatory sections, exercised Back, Next, Finish, replay from profile menu, and Skip. Owner: replayed and read all six sections, finished normally. Freelancer: replayed and read all five sections, exercised Back, Next, Finish. Sections explain what each tool does, why it matters, and where to find it, rather than merely listing actions.",
+      "limitation": "Only client, owner, and freelancer are supported by OnboardingController. Other roles have no tutorial in current implementation. All tutorial destination links were not individually opened.",
+      "evidence": [".playwright-mcp/t14-freelancer-tutorial-delivery.png"]
+    },
+    {
+      "id": "mobile-booking-form-overflow",
+      "actual": "At 390 x 844, booking form stacked and showed edited camera specs; document scroll width was 375 and viewport width was 390, with no horizontal page overflow. Proceed to Summary remained reachable at bottom.",
+      "limitation": "Single viewport/page check, not full mobile or accessibility approval. Touch-target and contrast failures recorded separately.",
+      "evidence": [".playwright-mcp/t14-mobile-booking-camera.png", ".playwright-mcp/t14-mobile-form-bottom.png"]
+    }
+  ],
+  "new_confirmed_issues": [
+    {
+      "id": "freelancer-dashboard-demo-dollar-metrics",
+      "actual": "Freelancer dashboard displayed $124.70K Total Sales, 2358 Orders Placed, 839 Active Customers, and 41 Refund Requests. Source hard-codes these values; DashboardController passes no account metrics. Fails peso display and real-data accuracy expectations.",
+      "source": "resources/views/freelancer/dashboard.blade.php:24-82; app/Http/Controllers/Freelancer/DashboardController.php:12",
+      "status": "NOT FIXED",
+      "evidence": [".playwright-mcp/t14-freelancer-dashboard-dollar-fixture.png"]
+    },
+    {
+      "id": "owner-in-studio-location-placeholder",
+      "actual": "Owner details for in-studio booking BK-6AE9F0AB26000 show Event Location: N/A, N/A, Cavite, while client details correctly identify In-Studio.",
+      "status": "NOT FIXED",
+      "evidence": [".playwright-mcp/t14-camera-edit-persisted.png"]
+    },
+    {
+      "id": "booking-dark-mode-heading-contrast",
+      "actual": "Client Information heading uses rgb(52,117,219), 15px, weight 500, on opaque rgb(27,28,34). WCAG contrast checker computed 3.81:1, below normal-text 4.5:1 requirement.",
+      "checker": "python C:/Users/marka/.config/opencode/skills/antislop-human/contrast-check.py #3475DB #1B1C22",
+      "status": "NOT FIXED",
+      "evidence": [".playwright-mcp/t14-mobile-booking-camera.png"]
+    },
+    {
+      "id": "mobile-controls-below-touch-target-guideline",
+      "actual": "Several booking form inputs and Proceed to Summary measure 36px tall. They fall below selected 44px mobile design guideline. This measurement alone is not a claim of WCAG 2.2 AA target-size failure, whose minimum differs.",
+      "status": "NOT FIXED",
+      "evidence": [".playwright-mcp/t14-mobile-form-bottom.png"]
+    }
+  ],
+  "email_evidence": {
+    "status": "DELIVERY UNVERIFIED",
+    "actual": "Local application log contains two rendered Your photographer has arrived messages for BK-6AE9F0AB26000. This supports message generation only, not SMTP acceptance or inbox delivery. No mailbox connector or actual recipient inbox evidence available.",
+    "next_requirement": "Controlled recipient mailbox access or delivery-provider evidence linked to a real test message. Do not infer delivery from success UI or rendered logs."
+  },
+  "remaining_unverified": [
+    "Actual arrival and payment-confirmation email delivery.",
+    "All camera server-validation and unauthorized-edit cases through browser UI.",
+    "Tutorial destination navigation for every supported-role section; no tutorial currently exists for staff roles.",
+    "Complete price, receipt, and error coverage across all portal screens. Freelancer dashboard already provides a counterexample to universal peso/data correctness.",
+    "Full mobile/tablet, light/dark, keyboard-focus, zoom, contrast, and real-device accessibility coverage.",
+    "Exact 300m boundary and real GPS uncertainty remain unverified from previous run."
+  ],
+  "automated_checks": {
+    "php": "65 tests passed, 323 assertions: tests/Feature/Gallery plus CrossPortalGalleryPermissionTest.php",
+    "node": "3 tests passed: BookingDuration.test.cjs plus PhotographerStatusRefresh.test.cjs",
+    "build": "npm run build passed, 56 modules transformed",
+    "diff_check": "git diff --check passed; existing CRLF normalization warning only",
+    "browser_console": "Latest page returned zero console errors; 18 warnings remain, not claimed resolved.",
+    "limitation": "These are focused affected regressions. Previously completed full-suite result retained as historical evidence, not claimed as rerun."
+  },
+  "test_data_changes": [
+    "New gallery FL-GAL-6AEA039F11B51 on existing booking FS-BKF-00002, one edited JPEG and one original, explicitly published through UI.",
+    "New studio equipment T14 Verification Camera, Sony, model T14-FIXTURE; edited specs: 33 MP test fixture, 50mm lens, edited specification. Not assigned to a booking.",
+    "Cristian completed client tutorial through normal Finish action; existing users replayed tutorials."
+  ],
+  "environment_notes": [
+    "Started app at port 8013 after restart. Initial default configuration produced database-login error; restarted only this run's server using --env=local. No credential files changed.",
+    "Browser surfaced about:blank during resumed work; returned to app without creating contexts/tabs. Cookie session remained owner, then switched normally. Earlier evidence retained.",
+    "No commits, pushes, merges, production migrations, or production-readiness approval."
+  ],
+  "browser_context_count_last_checked": 1,
+  "browser_tab_count_last_checked": 1
+}

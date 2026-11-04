@@ -47,7 +47,7 @@
                                             <td class="text-center">
                                                 @if ($booking->has_gallery)
                                                     <span class="badge badge-soft-success w-100">
-                                                        <i class="ti ti-photo-check me-1"></i> Gallery Created
+                                                        <i class="ti ti-photo-check me-1"></i> {{ $booking->gallery->gallery_status === 'published' ? 'Published' : 'Draft' }}
                                                     </span>
                                                 @else
                                                     <span class="badge badge-soft-warning w-100">
@@ -138,6 +138,8 @@
                                 </div>
                             </div>
                         </div>
+
+                        <button type="button" id="publishGalleryBtn" class="btn btn-primary mb-3" style="display: none;">Publish to Client</button>
 
                         <div class="row mb-3">
                             <div class="col">
@@ -495,6 +497,7 @@
                 $('#uploadGalleryForm')[0].reset();
                 $('#imagePreview').empty();
                 $('#editGalleryForm').addClass('d-none');
+                $('#publishGalleryBtn').hide();
 
                 // Set booking ID in form
                 $('#bookingId').val(bookingId);
@@ -513,6 +516,8 @@
 
                             if (response.has_gallery && response.gallery) {
                                 currentGalleryId = response.gallery.id;
+                                $('#publishGalleryBtn').toggle(response.gallery.gallery_status !== 'published');
+                                $('#showUploadFormBtn').prop('disabled', response.gallery.gallery_status === 'published');
 
                                 $('#noGalleryMessage').hide();
                                 $('#galleryInfo').show();
@@ -592,6 +597,28 @@
                 });
             });
 
+            $('#publishGalleryBtn').on('click', async function() {
+                const confirmation = await Swal.fire({
+                    icon: 'question',
+                    title: 'Publish Gallery',
+                    text: 'Attach any originals first. Publishing makes these photos visible to the client and locks original uploads.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, publish it!',
+                });
+                if (!confirmation.isConfirmed) return;
+                const button = $(this).prop('disabled', true);
+                $.ajax({
+                    url: `{{ url('freelancer/online-gallery') }}/${currentGalleryId}/publish`,
+                    type: 'POST',
+                    data: {_token: '{{ csrf_token() }}'},
+                    success: function() { window.location.reload(); },
+                    error: function(xhr) {
+                        Swal.fire({icon: 'error', title: 'Unable to publish', text: xhr.responseJSON?.message || 'Please try again.'});
+                        button.prop('disabled', false);
+                    },
+                });
+            });
+
             // Show upload form
             $('#showUploadFormBtn').on('click', function() {
                 $('#uploadFormContainer').slideDown();
@@ -656,7 +683,7 @@
                                             <i class="ti ti-calendar-time me-1"></i>
                                             ${new Date().toLocaleDateString()}
                                         </small>
-                                        <button type="button" class="btn btn-sm ${(gallery.raw_images || {})[image] ? 'btn-soft-success' : 'btn-soft-secondary'} add-original me-1" data-image="${image}" data-url="{{ url('gallery-originals/freelancer') }}/${gallery.id}" title="Upload the unedited original for a before-and-after slider">
+                                        <button type="button" class="btn btn-sm ${(gallery.raw_images || {})[image] ? 'btn-soft-success' : 'btn-soft-secondary'} add-original me-1" data-image="${image}" data-url="{{ url('gallery-originals/freelancer') }}/${gallery.id}" ${gallery.gallery_status === 'published' ? 'disabled' : ''} title="${gallery.gallery_status === 'published' ? 'Request a revision before changing published photos' : 'Upload the unedited original for a before-and-after slider'}">
                                             <i class="ti ti-photo-up" aria-hidden="true"></i> <span class="add-original-text">${(gallery.raw_images || {})[image] ? 'Original added' : 'Add original'}</span>
                                         </button>
                                         <button class="btn btn-sm btn-soft-danger delete-image" data-image="${image}" title="Delete this image">

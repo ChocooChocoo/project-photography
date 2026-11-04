@@ -1,0 +1,89 @@
+{
+  "method": "Actual Playwright MCP interactions in exactly one browser context and one tab; account changes through normal logout/login. No extra windows, new contexts, forced clicks, disabled-control overrides, direct API submissions, or database writes outside normal forms. Read-only browser network inspection used to confirm original-upload response.",
+  "overall_acceptance": "INCOMPLETE",
+  "follow_up": "output/t14-follow-up-verification-2026-11-04.json resolves both historical failures below and records additional confirmed issues and remaining gaps. Original observations retained as history.",
+  "booking_reference": "BK-6AE9F0AB26000",
+  "booking_id": 71,
+  "gallery_reference": "GAL-6AE9F23D43A1C",
+  "gallery_id": 7,
+  "passed": [
+    {
+      "id": "published-original-controls-all-management-roles",
+      "expected": "Published photos cannot receive originals without revision.",
+      "actual": "Owner and assigned photographer original buttons on gallery 7 were disabled after publication. Freelancer Add original on existing published gallery 1 was disabled with revision instruction. All three management roles checked through normal logout/login in the same tab."
+    },
+    {
+      "id": "studio-discount-checkout-and-payment",
+      "expected": "Package 5000 less 20 percent gives 4000 total; 30 percent deposit is 1200; remaining balance 2800.",
+      "actual": "Normal form summary matched all values. Stripe checkout visibly showed Sandbox and cs_test session, charging 1200 using standard Stripe test card. Returned success page showed 1200 paid; client payment history recorded succeeded payment PAY-6AE9F0AB2B5DB. Reloaded client booking and owner booking showed 4000 total, 1200 paid, and 2800 remaining. Session stayed in same tab.",
+      "payment_environment": "Stripe Sandbox; no real payment card or live charge",
+      "evidence": [".playwright-mcp/single-browser-stripe-sandbox.png", ".playwright-mcp/single-browser-payment-success.png", ".playwright-mcp/single-browser-payment-receipt.png"]
+    },
+    {
+      "id": "photographer-status-and-deadline-refresh",
+      "expected": "Assignment acceptance updates status without reload and removes obsolete respond-by deadline.",
+      "actual": "Owner assigned Bernadette through normal booking UI. Photographer accepted; table showed CONFIRMED and response-deadline count was zero without reloading."
+    },
+    {
+      "id": "gps-permission-denied",
+      "expected": "Refused browser permission must not mark photographer on site; show actionable error.",
+      "actual": "Browser geolocation permission emulated as denied through Playwright CDP permission controls. After ordinary photo selection and arrival submission, UI showed Location needed and instructed allowing location access. Assignment remained CONFIRMED.",
+      "evidence": [".playwright-mcp/single-browser-location-denied.png"]
+    },
+    {
+      "id": "gps-radius-near-boundary",
+      "expected": "Studio arrival beyond 300 m rejected; within 300 m accepted.",
+      "actual": "Playwright-emulated location approximately 301 m from studio produced explicit within-300-m rejection. Location approximately 299 m was accepted; client booking showed saved arrival proof at 299 m. Client confirmed arrival through normal prompt; photographer then started work.",
+      "limitation": "299 m and 301 m exercised, not mathematically exact 300 m or device GPS accuracy behavior.",
+      "simulation": "Playwright geolocation and an existing local gallery JPEG used as test proof, not actual physical presence.",
+      "evidence": [".playwright-mcp/single-browser-arrival-299m.png"]
+    },
+    {
+      "id": "photographer-unpublished-original-upload",
+      "expected": "Assigned photographer can upload edited photo and original before publication; data survives reload.",
+      "actual": "Bernadette created Single-browser regression gallery on booking 71, uploaded a local edited JPEG, then selected local original through native file chooser. UI showed Original added; it remained after reload. Browser network showed POST gallery-originals/studio/7 returned 200."
+    },
+    {
+      "id": "owner-unpublished-original-upload",
+      "expected": "Owner can attach or replace original before publication, preserving mapping to edited image.",
+      "actual": "After photographer submitted gallery for review, owner replaced original through normal file chooser. Browser network response returned 200 with success true and raw_images mapping. Original added persisted after reload.",
+      "response": "Original added. The client sees a before-and-after slider for this photo."
+    },
+    {
+      "id": "gallery-approval-publication-and-client-slider",
+      "expected": "Photographer submits, owner approves/publishes, client can see both images and compare; published originals locked.",
+      "actual": "Photographer submitted for review; owner saw Pending Approval, approved and published through confirmation dialogs. Owner original button became disabled. Client opened new gallery, both original and edited images loaded, ArrowRight moved comparison from 50 to 51.",
+      "evidence": [".playwright-mcp/single-browser-photographer-original.png", ".playwright-mcp/single-browser-published-slider.png"]
+    }
+  ],
+  "failures": [
+    {
+      "id": "freelancer-gallery-publishes-before-original-upload",
+      "expected": "Freelancers can attach unedited originals before delivery so clients get before-and-after comparisons.",
+      "actual": "Lorena created Single-browser freelancer test gallery for seeded booking FS-BKF-00001 through normal Create Gallery and Upload Images. Gallery immediately displayed Published Date November 3, 2026. Add original was disabled, and modal offered no separate draft/publication step to attach an original first. Existing published freelancer gallery also correctly disabled original uploads. No lock was bypassed.",
+      "gallery_reference": "FL-GAL-6AE9F4B61C682",
+      "evidence": [".playwright-mcp/single-browser-freelancer-original-lock.png"]
+    },
+    {
+      "id": "flexible-duration-booking-details",
+      "expected": "Flexible package displays meaningful duration or Flexible label.",
+      "actual": "Paid booking details display Duration: null hours, although actual event times are 16:00 to 21:00. Reproduced after reload.",
+      "evidence": [".playwright-mcp/single-browser-payment-receipt.png"]
+    }
+  ],
+  "requires_further_verification": [
+    "Actual email delivery: success page claims an email was sent; that message alone is not delivery evidence.",
+    "Exact 300-m comparison and real-device GPS uncertainty.",
+    "Freelancer original upload requires a usable pre-publication workflow; current normal upload path auto-publishes and locks originals.",
+    "Remaining camera editing, role-specific tutorial, mobile/accessibility, and complete price-screen coverage."
+  ],
+  "local_test_data_created": [
+    "Booking 71, November 25, 2026 16:00-21:00, paid 1200 in Stripe Sandbox.",
+    "Bernadette assigned, accepted, arrived with test fixture, client-confirmed, and started work.",
+    "Gallery 7 with one edited image and original, submitted, approved, and published.",
+    "Lorena created gallery FL-GAL-6AE9F4B61C682 with one local test JPEG on seeded booking FS-BKF-00001; normal upload published it immediately."
+  ],
+  "product_code_modified_in_this_run": false,
+  "browser_context_count": 1,
+  "browser_tab_count": 1
+}

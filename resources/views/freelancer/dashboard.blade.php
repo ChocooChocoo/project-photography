@@ -9,8 +9,8 @@
                     </div>
                 </div>          
 
+                <p class="text-muted">All-time direct freelancer bookings. Payments received exclude failed payments and recorded refunds.</p>
                 <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1">
-                    <!-- Total Sales Widget -->
                     <div class="col">
                         <div class="card">
                             <div class="card-body">
@@ -21,15 +21,14 @@
                                         </span>
                                     </div>
                                     <div class="text-end">
-                                        <h3 class="mb-2 fw-normal">$<span data-target="124.7">0</span>K</h3>
-                                        <p class="mb-0 text-muted"><span>Total Sales</span></p>
+                                        <h3 class="mb-2 fw-normal">₱{{ number_format($summary['payments_received'], 2) }}</h3>
+                                        <p class="mb-0 text-muted">Payments received</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Orders Placed Widget -->
                     <div class="col">
                         <div class="card">
                             <div class="card-body">
@@ -40,15 +39,14 @@
                                         </span>
                                     </div>
                                     <div class="text-end">
-                                        <h3 class="mb-2 fw-normal"><span data-target="2358">0</span></h3>
-                                        <p class="mb-0 text-muted"><span>Orders Placed</span></p>
+                                        <h3 class="mb-2 fw-normal">{{ number_format($summary['bookings']) }}</h3>
+                                        <p class="mb-0 text-muted">Bookings</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Active Customers Widget -->
                     <div class="col">
                         <div class="card">
                             <div class="card-body">
@@ -59,15 +57,14 @@
                                         </span>
                                     </div>
                                     <div class="text-end">
-                                        <h3 class="mb-2 fw-normal"><span data-target="839">0</span></h3>
-                                        <p class="mb-0 text-muted"><span>Active Customers</span></p>
+                                        <h3 class="mb-2 fw-normal">{{ number_format($summary['clients']) }}</h3>
+                                        <p class="mb-0 text-muted">Clients</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Refund Requests Widget -->
                     <div class="col">
                         <div class="card">
                             <div class="card-body">
@@ -78,8 +75,8 @@
                                         </span>
                                     </div>
                                     <div class="text-end">
-                                        <h3 class="mb-2 fw-normal"><span data-target="41">0</span></h3>
-                                        <p class="mb-0 text-muted"><span>Refund Requests</span></p>
+                                        <h3 class="mb-2 fw-normal">{{ number_format($summary['refunds_pending']) }}</h3>
+                                        <p class="mb-0 text-muted">Refunds pending</p>
                                     </div>
                                 </div>
                             </div>

@@ -5,6 +5,38 @@
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/plugins/leaflet/leaflet.css') }}">
     <style>
+        #bookingForm .card-title.text-primary {
+            color: #2563b8 !important;
+        }
+
+        [data-bs-theme="dark"] #bookingForm .card-title.text-primary {
+            color: #8ab8ff !important;
+        }
+
+        #bookingForm .btn-primary {
+            --ins-btn-bg: #2c65bf;
+            --ins-btn-border-color: #2c65bf;
+            --ins-btn-hover-bg: #235299;
+            --ins-btn-hover-border-color: #235299;
+        }
+
+        #bookingForm :is(input, select, textarea, button, a):focus-visible,
+        #bookingForm .btn-check:focus-visible + label {
+            outline: 3px solid var(--ins-body-color) !important;
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 767.98px) {
+            #bookingForm :is(.form-control, .form-select, .btn) {
+                min-height: 44px;
+            }
+
+            #bookingForm .form-check-label {
+                min-height: 44px;
+                align-content: center;
+            }
+        }
+
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -145,7 +177,7 @@
                                 <div class="mb-3">
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label class="form-label">Full Name</label>
+                                            <label class="form-label" for="fullName">Full Name</label>
                                             <input type="text" class="form-control" id="fullName"
                                                 value="{{ $user->first_name . ' ' . $user->last_name }}"
                                                 placeholder="Enter your full name" required>
@@ -154,7 +186,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Contact Number</label>
+                                            <label class="form-label" for="contactNumber">Contact Number</label>
                                             <input type="tel" class="form-control" id="contactNumber"
                                                 value="{{ $user->mobile_number }}" placeholder="Enter your contact number"
                                                 required>
@@ -163,7 +195,7 @@
                                             </div>
                                         </div>
                                         <div class="col-12">
-                                            <label class="form-label">Email Address</label>
+                                            <label class="form-label" for="email">Email Address</label>
                                             <input type="email" class="form-control" id="email"
                                                 value="{{ $user->email }}" placeholder="Enter your email address" required>
                                             <div class="invalid-feedback">
@@ -176,7 +208,7 @@
                                 {{-- SERVICE AND PACKAGES SELECTION --}}
                                 <h4 class="card-title text-primary mb-3">Service and Packages Selection</h4>
                                 <div class="mb-3">
-                                    <label class="form-label fw-medium">Service Category</label>
+                                    <label class="form-label fw-medium" for="serviceCategory">Service Category</label>
                                     <div class="form-select-wrapper">
                                         <select class="form-select" id="serviceCategory" name="category_id" required>
                                             <option value="">Select Category</option>
@@ -207,7 +239,7 @@
                                 <div class="mb-3">
                                     <div class="row g-3">
                                         <div class="col-md-12">
-                                            <label class="form-label">Event Date</label>
+                                            <label class="form-label" for="eventDate">Event Date</label>
                                             <div class="input-group">
                                                 <input type="date" class="form-control" id="eventDate" name="event_date"
                                                     min="{{ date('Y-m-d') }}"
@@ -230,7 +262,7 @@
                                             </small>
                                         </div>
                                         <div class="col-md-12">
-                                            <label class="form-label">End Date <small class="text-muted">(optional, for multi-day bookings)</small></label>
+                                            <label class="form-label" for="eventEndDate">End Date <small class="text-muted">(optional, for multi-day bookings)</small></label>
                                             <input type="date" class="form-control" id="eventEndDate" name="event_end_date"
                                                 min="{{ date('Y-m-d', strtotime('+1 day')) }}"
                                                 max="{{ date('Y-m-d', strtotime('+90 days')) }}">
@@ -238,7 +270,7 @@
                                             <small class="text-muted d-block" id="multiDayRecurringNote" style="display:none !important;">Multi-day and recurring bookings cannot be combined.</small>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Start Time</label>
+                                            <label class="form-label" for="startTime">Start Time</label>
                                             <input type="time" class="form-control" id="startTime" name="start_time"
                                                 value="08:00" placeholder="Enter start time" required>
                                         </div>
@@ -300,19 +332,19 @@
                                     </div>
                                     <div id="recurringSection" style="display:none;" class="row g-3 mt-1">
                                         <div class="col-md-4">
-                                            <label class="form-label">Frequency</label>
-                                            <select class="form-select" name="recurrence_pattern[frequency]">
+                                            <label class="form-label" for="recurrenceFrequency">Frequency</label>
+                                            <select class="form-select" id="recurrenceFrequency" name="recurrence_pattern[frequency]">
                                                 <option value="weekly">Weekly</option>
                                                 <option value="monthly">Monthly</option>
                                             </select>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Every (weeks/months)</label>
-                                            <input type="number" class="form-control" name="recurrence_pattern[interval]" value="1" min="1" max="52">
+                                            <label class="form-label" for="recurrenceInterval">Every (weeks/months)</label>
+                                            <input type="number" class="form-control" id="recurrenceInterval" name="recurrence_pattern[interval]" value="1" min="1" max="52">
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Total Sessions</label>
-                                            <input type="number" class="form-control" name="recurrence_pattern[sessions]" value="2" min="2" max="52">
+                                            <label class="form-label" for="recurrenceSessions">Total Sessions</label>
+                                            <input type="number" class="form-control" id="recurrenceSessions" name="recurrence_pattern[sessions]" value="2" min="2" max="52">
                                         </div>
                                     </div>
                                 </div>
@@ -369,7 +401,7 @@
                                 <div class="mb-3">
                                     <div class="row g-3">
                                         <div class="col-12">
-                                            <label class="form-label">Location Type</label>
+                                            <label class="form-label" for="locationType">Location Type</label>
                                             <select class="form-select" id="locationType" name="location_type" required>
                                                 <option value="">Select Location Type</option>
                                                 @if ($type === 'studio')
@@ -388,13 +420,13 @@
                                         {{-- SINGLE LOCATION DETAILS (Default) --}}
                                         <div id="singleLocationDetails" style="display: none;">
                                             <div class="col-12 mb-3">
-                                                <label class="form-label">Venue Name</label>
+                                                <label class="form-label" for="venueName">Venue Name</label>
                                                 <input type="text" class="form-control" id="venueName" name="venue_name" 
                                                     placeholder="Enter venue name (e.g., Hotel, Resort, Event Hall)">
                                             </div>
                                             
                                             <div class="col-12 mb-3">
-                                                <label class="form-label">City/Municipality</label>
+                                                <label class="form-label" for="city">City/Municipality</label>
                                                 <select class="form-select" id="city" name="city" required>
                                                     <option value="">Select City/Municipality</option>
                                                     @foreach($municipalities as $municipality)
@@ -404,20 +436,20 @@
                                             </div>
                                             
                                             <div class="col-12 mb-3">
-                                                <label class="form-label">Barangay</label>
+                                                <label class="form-label" for="barangay">Barangay</label>
                                                 <select class="form-select" id="barangay" name="barangay" required disabled>
                                                     <option value="">Select Barangay</option>
                                                 </select>
                                             </div>
                                             
                                             <div class="col-12 mb-3">
-                                                <label class="form-label">Street / Building / Unit No.</label>
+                                                <label class="form-label" for="street">Street / Building / Unit No.</label>
                                                 <input type="text" class="form-control" id="street" name="street" 
                                                     placeholder="Enter street name, building, unit number (optional)">
                                             </div>
                                             
                                             <div class="col-12 mb-3">
-                                                <label class="form-label">Province</label>
+                                                <label class="form-label" for="province">Province</label>
                                                 <input type="text" class="form-control" id="province" name="province" 
                                                     value="Cavite" readonly>
                                             </div>
@@ -484,7 +516,7 @@
                                     </details>
                                 @endif
                                 <div class="mb-3">
-                                    <label class="form-label fw-medium">Special Requests / Notes</label>
+                                    <label class="form-label fw-medium" for="specialRequests">Special Requests / Notes</label>
                                     <textarea class="form-control" rows="3" id="specialRequests" name="special_requests"
                                         placeholder="Enter special requests or notes..."></textarea>
                                 </div>
@@ -1119,8 +1151,7 @@
                                             id="package${package.id}" 
                                             data-package='${packageJson}'
                                             data-allow-time-customization="${package.allow_time_customization ? '1' : '0'}"
-                                            data-duration="${package.duration || 0}"
-                                            style="display: none;">
+                                            data-duration="${package.duration || 0}">
                                         
                                         <label class="${cardClass}${borderClass}" for="package${package.id}" style="cursor: pointer; position: relative;">
                                             ${badgeHtml}
@@ -1508,6 +1539,8 @@
                 const paymentType = $('input[name="payment_type"]:checked').val();
                 getBookingSummaryWithPaymentType(packageData, paymentType);
                 
+                $('#locationType').trigger('change');
+
                 // Show/hide duration info based on package flexibility
                 updateTimeRestrictionInfo();
             });
@@ -1856,7 +1889,10 @@
                     if (endTime <= startTime) {
                         availabilityCheckId++;
                         $('#dateStatusIcon').html('<i class="ti ti-info-circle text-warning"></i>');
-                        $('#dateStatusText').html('<span class="text-warning fw-medium">End time must be after the start time</span>');
+                        const timingMessage = !selectedPackageFlexibility && selectedPackageDuration > 0
+                            ? 'This session would end after midnight. Choose an earlier start time.'
+                            : 'End time must be after the start time';
+                        $('#dateStatusText').empty().append($('<span class="text-warning fw-medium">').text(timingMessage));
                         $('#submitBookingBtn').prop('disabled', true);
                         return;
                     }
@@ -2620,7 +2656,8 @@
                 const packageName = packageData.package_name;
 
                 // Clear existing dynamic content to prevent duplicates
-                $('#summaryPackage').siblings('.package-type-badge, .package-location-badge, .gallery-info, .photographer-info, .fixed-deposit-info, .multiple-locations-info').remove();
+                $('#summaryPackage').siblings('.summary-package-detail, .package-type-badge, .package-location-badge, .gallery-info, .photographer-info, .fixed-deposit-info, .multiple-locations-info').remove();
+                $('#summaryTime').siblings('.summary-duration').remove();
 
                 // Package name
                 $('#summaryPackage').text(packageName);
@@ -2631,17 +2668,17 @@
                     : '<span class="badge badge-soft-secondary package-type-badge"><i class="ti ti-clock me-1"></i> Fixed Duration: ' + selectedPackageDuration + ' hours</span>';
 
                 $('#summaryPackage').after(`
-                    <p class="text-muted small mb-1">Package Type:</p>
+                    <p class="text-muted small mb-1 summary-package-detail">Package Type:</p>
                     <p class="fw-medium mb-2 package-type-badge">${flexibilityHtml}</p>
                 `);
 
                 // Show package location badge
-                const locationBadge = packageData.package_location === 'On-Location'
+                const locationBadge = bookingData.location_type === 'on-location'
                     ? '<span class="badge badge-soft-info package-location-badge"><i class="ti ti-map-pin me-1"></i> On-Location Package</span>'
                     : '<span class="badge badge-soft-primary package-location-badge"><i class="ti ti-building me-1"></i> In-Studio Package</span>';
 
                 $('#summaryPackage').after(`
-                    <p class="text-muted small mb-1">Package Location:</p>
+                    <p class="text-muted small mb-1 summary-package-detail">Package Location:</p>
                     <p class="fw-medium mb-2 package-location-badge">${locationBadge}</p>
                 `);
 
@@ -2682,8 +2719,8 @@
                     const durationHours = durationMs / (1000 * 60 * 60);
 
                     $('#summaryTime').after(`
-                        <p class="text-muted small mb-1 mt-2">Duration:</p>
-                        <p class="fw-medium mb-2">${durationHours.toFixed(1)} hours (matches package fixed duration)</p>
+                        <p class="text-muted small mb-1 mt-2 summary-duration">Duration:</p>
+                        <p class="fw-medium mb-2 summary-duration">${durationHours.toFixed(1)} hours (matches package fixed duration)</p>
                     `);
                 }
 
@@ -2744,7 +2781,7 @@
 
                     // Display gallery info
                     const galleryHtml = `
-                        <p class="text-muted small mb-1 mt-2">Online Gallery:</p>
+                        <p class="text-muted small mb-1 mt-2 summary-package-detail">Online Gallery:</p>
                         <p class="fw-medium mb-2 gallery-info">
                             <span class="badge badge-soft-${window.bookingSummary.online_gallery ? 'success' : 'warning text-dark'}">
                                 <i class="${window.bookingSummary.online_gallery ? 'ti ti-photo' : 'ti ti-photo-off'} me-1"></i>
@@ -2758,7 +2795,7 @@
                     @if($type === 'studio')
                         if (window.bookingSummary.photographer_count !== undefined) {
                             const photographerHtml = `
-                                <p class="text-muted small mb-1">Assigned Photographers:</p>
+                                <p class="text-muted small mb-1 summary-package-detail">Assigned Photographers:</p>
                                 <p class="fw-medium mb-2 photographer-info">
                                     <span class="badge badge-soft-primary">
                                         <i class="ti ti-users me-1"></i>

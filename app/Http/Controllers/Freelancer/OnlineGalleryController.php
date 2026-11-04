@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Storage;
 
 class OnlineGalleryController extends Controller
 {
+    use \App\Traits\Notifiable;
+
     /**
      * Display list of completed bookings with online gallery feature.
      */
@@ -131,10 +133,12 @@ class OnlineGalleryController extends Controller
                 ->where('status', 'completed')
                 ->firstOrFail();
 
-            DB::beginTransaction();
-
-            // Check if gallery already exists
             $gallery = FreelanceOnlineGalleryModel::where('booking_id', $bookingId)->first();
+            if ($gallery?->gallery_status === FreelanceOnlineGalleryModel::GALLERY_STATUS_PUBLISHED) {
+                return response()->json(['success' => false, 'message' => 'Request a revision before changing published photos.'], 422);
+            }
+
+            DB::beginTransaction();
             
             // Upload images
             $uploadedImages = [];
@@ -171,9 +175,9 @@ class OnlineGalleryController extends Controller
                     'images' => $uploadedImages,
                     'total_photos' => count($uploadedImages),
                     'status' => 'active',
-                    'published_at' => now(),
-                    'gallery_status' => FreelanceOnlineGalleryModel::GALLERY_STATUS_PUBLISHED,
-                    // The freelancer works alone, so the upload is its own approval.
+                    'published_at' => null,
+                    'gallery_status' => FreelanceOnlineGalleryModel::GALLERY_STATUS_DRAFT,
+                    // Freelancers approve their own work, but publish only after attaching originals.
                     'approval_status' => FreelanceOnlineGalleryModel::APPROVAL_APPROVED,
                     'submitted_by' => $userId,
                     'submitted_at' => now(),
@@ -206,6 +210,23 @@ class OnlineGalleryController extends Controller
                 'message' => 'Error uploading images: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function publish($galleryId)
+    {
+        $gallery = FreelanceOnlineGalleryModel::where('freelancer_id', Auth::id())->findOrFail($galleryId);
+        abort_unless($gallery->booking?->status === 'completed' && !empty($gallery->images), 422, 'A completed booking and uploaded photos are required.');
+        abort_unless($gallery->status === 'active', 422, 'Activate the gallery before publishing.');
+
+        if (!$gallery->isPublished()) {
+            $gallery->update([
+                'gallery_status' => FreelanceOnlineGalleryModel::GALLERY_STATUS_PUBLISHED,
+                'published_at' => now(),
+            ]);
+            $this->notifyGalleryPublished($gallery, $gallery->client);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Gallery published to client.', 'gallery' => $gallery]);
     }
 
     /**

@@ -1,8 +1,8 @@
 # T-14: Platform feature and UI updates
 
-**Status:** ✅ Locally verified, 3 November 2026; production unverified.
+**Status:** ⚠️ Locally implemented; acceptance incomplete. Production unverified.
 **Source:** [frozen prompt](../../ANALYSIS%20-%20PLATINUM%20STUDIO%20PLATFORM/MATERIAL/LEGACY%20DOCUMENTATION/tasks/14.md), asked for in conversation on 3 November 2026.
-**Verification:** 775 PHP tests / 4021 assertions and the onboarding JavaScript test pass. A local browser run checked the landing page at 1440 px and 375 px (no horizontal overflow, 44 px tap targets), the client topbar, the fixed-package end time, and the venue pin map.
+**Verification (4 November 2026):** PHP suite and focused browser regressions pass. Actual inbox delivery was proven through a disposable test inbox for registration verification, payment receipt, and photographer arrival messages. Later review of this build found and fixed defects the 3 November run missed, including flexible-duration "null hours", freelancer galleries publishing before originals, hard-coded dashboard figures, an owner location placeholder, booking-form contrast and keyboard package selection, and a false payment-email claim with duplicate sends. Remaining gaps: full cross-portal price/error coverage, real-device GPS and screen-reader checks, and other mail paths. See `output/t14-email-delivery-verification-2026-11-04.json`.
 
 ## Decisions (answers to the prompt's open questions, 3 November 2026)
 

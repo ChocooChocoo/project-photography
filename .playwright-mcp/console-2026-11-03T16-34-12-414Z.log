@@ -1,0 +1,346 @@
+[   41281ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   41281ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   41281ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   41281ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   41281ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   41281ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   41281ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   87253ms] [LOG] Client budgets loaded: [] @ http://127.0.0.1:8013/client/booking-form/studio/4:1417
+[   87254ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1424
+[   87254ms] [LOG] Available budget categories for this provider: [] @ http://127.0.0.1:8013/client/booking-form/studio/4:1434
+[   87254ms] [LOG] Client has no budgets - showing normal dropdown only @ http://127.0.0.1:8013/client/booking-form/studio/4:1553
+[   87268ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   87268ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   87268ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   87268ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   87269ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   87269ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   87269ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   89382ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: false, budget_info: null} @ http://127.0.0.1:8013/client/booking-form/studio/4:1634
+[   89398ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[   89399ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[   89399ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[   89399ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[   89399ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[  131681ms] [LOG] Package selected: {id: 31, flexible: false, duration: 3} @ http://127.0.0.1:8013/client/booking-form/studio/4:1990
+[  131682ms] [LOG] Selected package data: {id: 31, package_name: Vows and Verses Collection - Basic, package_description: Basic wedding coverage with guided timeline planni…remony documentation, and a curated portrait set., package_price: 7900.00, discount_percentage: 0} @ http://127.0.0.1:8013/client/booking-form/studio/4:2012
+[  131687ms] [LOG] Package location flexibility: {options: Array(1), isFlexible: false, singleOption: In-Studio} @ http://127.0.0.1:8013/client/booking-form/studio/4:3780
+[  131688ms] [LOG] Getting summary for package: 31 Payment type: downpayment @ http://127.0.0.1:8013/client/booking-form/studio/4:2822
+[  131691ms] [LOG] Auto-calculated end time: 11:00 for start time 08:00 + 3 hours @ http://127.0.0.1:8013/client/booking-form/studio/4:2802
+[  131752ms] [LOG] Auto-calculated end time: 13:00 for start time 10:00 + 3 hours @ http://127.0.0.1:8013/client/booking-form/studio/4:2802
+[  132353ms] [LOG] Summary response: {success: true, summary: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:2835
+[  188109ms] [LOG] Auto-calculated end time: 13:00 for start time 10:00 + 3 hours @ http://127.0.0.1:8013/client/booking-form/studio/4:2802
+[  201746ms] [LOG] Submit button clicked @ http://127.0.0.1:8013/client/booking-form/studio/4:2553
+[  201746ms] [LOG] Current state: {allowMultipleLocations: false, currentMaxLocations: 1, locationCount: 0, locationType: in-studio} @ http://127.0.0.1:8013/client/booking-form/studio/4:2554
+[  201748ms] [LOG] ========== VALIDATION START ========== @ http://127.0.0.1:8013/client/booking-form/studio/4:2860
+[  201748ms] [LOG] Validating required fields: {fullName: Email Delivery Test, contactNumber: +639190000099, email: va39he2rm4@gmeenramy.com, serviceCategory: 1, eventDate: 2026-12-01} @ http://127.0.0.1:8013/client/booking-form/studio/4:2871
+[  201748ms] [LOG] Date status text: 
+                                available 
+                                (0/3 bookings)
+                             @ http://127.0.0.1:8013/client/booking-form/studio/4:2948
+[  201749ms] [LOG] Location type: in-studio Booking type: studio @ http://127.0.0.1:8013/client/booking-form/studio/4:2994
+[  201749ms] [LOG] In-Studio booking - location fields are optional @ http://127.0.0.1:8013/client/booking-form/studio/4:2999
+[  201749ms] [LOG] Validating fixed duration package @ http://127.0.0.1:8013/client/booking-form/studio/4:3154
+[  201749ms] [LOG] Duration check: {selectedDuration: 3, calculatedDuration: 3} @ http://127.0.0.1:8013/client/booking-form/studio/4:3174
+[  201750ms] [LOG] Payment type found: downpayment @ http://127.0.0.1:8013/client/booking-form/studio/4:3201
+[  201750ms] [LOG] ========== VALIDATION PASSED ========== @ http://127.0.0.1:8013/client/booking-form/studio/4:3260
+[  201750ms] [LOG] Form validation passed, preparing booking data @ http://127.0.0.1:8013/client/booking-form/studio/4:2566
+[  201752ms] [LOG] Studio booking - sending payment_type: downpayment @ http://127.0.0.1:8013/client/booking-form/studio/4:2624
+[  201752ms] [LOG] Final booking data: {type: studio, provider_id: 4, category_id: 1, package_id: 31, event_date: 2026-12-01} @ http://127.0.0.1:8013/client/booking-form/studio/4:2663
+[  243031ms] [LOG] Sending booking data to server: {type: studio, provider_id: 4, category_id: 1, package_id: 31, event_date: 2026-12-01} @ http://127.0.0.1:8013/client/booking-form/studio/4:3480
+[  243872ms] [LOG] Booking store response: {success: true, booking: Object, payment: Object, message: Booking created successfully} @ http://127.0.0.1:8013/client/booking-form/studio/4:3487
+[  323985ms] [WARNING] <link rel=preload> uses an unsupported `as` value @ https://checkout.stripe.com/c/pay/cs_test_a18rLgMwiupa2nYpInlrO88VEBbk2IT85CizDqcQUvUBlznwONcYPj2mGH#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdicyc%2FNSknZHVsTmB8Jz8ndW5acWB2cVowNFZ8UDA0RkdUc240R3xAdD1fNnUxYkljRnBhMmR3QmNAQEkyMUFoTXNwNEJCZmN9bzVGQ0poX1JKTnc3ZHd3RmdRaTdUYTxwZ2NIU2RfY3Rgd1V0ZzxcaTU1Y0duXXY1Q00nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl:0
+[  323985ms] [WARNING] <link rel=preload> uses an unsupported `as` value @ https://checkout.stripe.com/c/pay/cs_test_a18rLgMwiupa2nYpInlrO88VEBbk2IT85CizDqcQUvUBlznwONcYPj2mGH#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdicyc%2FNSknZHVsTmB8Jz8ndW5acWB2cVowNFZ8UDA0RkdUc240R3xAdD1fNnUxYkljRnBhMmR3QmNAQEkyMUFoTXNwNEJCZmN9bzVGQ0poX1JKTnc3ZHd3RmdRaTdUYTxwZ2NIU2RfY3Rgd1V0ZzxcaTU1Y0duXXY1Q00nKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl:0
+[  349191ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  349191ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  349191ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  349191ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  349191ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  349191ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  349191ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  360741ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBfliogyQM4eRncP5U64sa2NzlxvZL991afZANaRvs_nKNdxUVtnlDlqrJc9mnyMI1cP5yLRb0vX7GrfDp6DfEJ176oGlx-vHpSNn2jvqSw5s087L7FNBAq0i7vUIHOhXxRX8C3XSFm1Fvy8X40kwtdwGXz4eo:0
+[  361300ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ https://servedby.flashtalking.com/click/7/296698;10784938;6163831;211;0/?gdpr=&gdpr_consent=&us_privacy=${US_PRIVACY}&ivc_bundle_id=${BUNDLE_ID}&ft_partnerimpid=${AUCTION_ID}&ft_keyword=${CAMPAIGN_ID}&ft_section=${CAMPAIGN_ID}&url=44931169&cbvp=2&rm=1:0
+[  361300ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ https://servedby.flashtalking.com/click/7/296698;10784938;6163831;211;0/?gdpr=&gdpr_consent=&us_privacy=${US_PRIVACY}&ivc_bundle_id=${BUNDLE_ID}&ft_partnerimpid=${AUCTION_ID}&ft_keyword=${CAMPAIGN_ID}&ft_section=${CAMPAIGN_ID}&url=44931169&cbvp=2&rm=1:0
+[  362646ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://sync.search.spotxchange.com/partner?adv_id=7025&gdpr=0&gpp_sid=-1&redir=https%3A%2F%2Fcm.g.doubleclick.net%2Fpixel%3Fgoogle_nid%3Dspotxchange_dbm%26google_hm%3D%24SPOTX_BASE64_USER_ID:0
+[  362680ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://sync.search.spotxchange.com/partner?adv_id=7025&gdpr=0&gpp_sid=-1&uid=CAESEM6NQM5S4lrlMOifvOFKYec&google_cver=1:0
+[  360741ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBfliogyQM4eRncP5U64sa2NzlxvZL991afZANaRvs_nKNdxUVtnlDlqrJc9mnyMI1cP5yLRb0vX7GrfDp6DfEJ176oGlx-vHpSNn2jvqSw5s087L7FNBAq0i7vUIHOhXxRX8C3XSFm1Fvy8X40kwtdwGXz4eo:0
+[  363560ms] [DIR] SyntaxError @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  364082ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  530442ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  530442ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  530442ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  530442ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  530442ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  530442ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  530442ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  596317ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  596317ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  596317ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  596317ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  596317ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  596317ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  596317ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  605998ms] [DIR] SyntaxError @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  606625ms] [DIR] SyntaxError @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  606757ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  607007ms] [TIMEEND] a: 0.013916015625 ms @ https://static.adsafeprotected.com/sca.17.6.4.js:31
+[  607012ms] Failed to read a named property 'document' from 'Window': Blocked a frame with origin "https://googleads.g.doubleclick.net" from accessing a frame with origin "https://temp-mail.io". Protocols, domains, and ports must match.
+[  607263ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  606757ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  607263ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  608183ms] [DIR] SyntaxError @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  608592ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  626488ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  626488ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  626488ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  626488ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  626488ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  626488ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  626488ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  629524ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  635616ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635616ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635616ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635616ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: manage-schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: setup-schedule @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: manage-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: invite-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: apply-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635617ms] [WARNING] Missing translation for key: manage-studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: add-photographer @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: create-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: hr-leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: hr-overtime-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: manage-permissions @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: create-payroll-settings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635618ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: create-category-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: manage-subscription @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: subscription-plans @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: subscription-status @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: ai-assistant @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: chatbot-config @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: manage-intents @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  635619ms] [WARNING] Missing translation for key: conversation-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638395ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638395ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638395ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638395ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: manage-schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: setup-schedule @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: manage-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: invite-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: apply-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: manage-studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638396ms] [WARNING] Missing translation for key: studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: add-photographer @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: create-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: hr-leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: hr-overtime-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: manage-permissions @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: create-payroll-settings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638397ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638398ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638398ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638398ms] [WARNING] Missing translation for key: category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638398ms] [WARNING] Missing translation for key: create-category-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638398ms] [WARNING] Missing translation for key: manage-subscription @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638398ms] [WARNING] Missing translation for key: subscription-plans @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638398ms] [WARNING] Missing translation for key: subscription-status @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638398ms] [WARNING] Missing translation for key: ai-assistant @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638398ms] [WARNING] Missing translation for key: chatbot-config @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638398ms] [WARNING] Missing translation for key: manage-intents @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  638398ms] [WARNING] Missing translation for key: conversation-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  697608ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  703215ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703216ms] [WARNING] Missing translation for key: request @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703216ms] [WARNING] Missing translation for key: request-leave @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703216ms] [WARNING] Missing translation for key: view-requested-leave @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703216ms] [WARNING] Missing translation for key: request-overtime @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703217ms] [WARNING] Missing translation for key: view-requested-overtime @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703217ms] [WARNING] Missing translation for key: request-procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703217ms] [WARNING] Missing translation for key: view-procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703217ms] [WARNING] Missing translation for key: attendance @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703217ms] [WARNING] Missing translation for key: assigned-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703217ms] [WARNING] Missing translation for key: assigned-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703217ms] [WARNING] Missing translation for key: assigned-booking @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703217ms] [WARNING] Missing translation for key: assigned-booking @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  703217ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: request @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: request-leave @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: view-requested-leave @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: request-overtime @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: view-requested-overtime @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: request-procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: view-procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: attendance @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: assigned-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: assigned-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: assigned-booking @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: assigned-booking @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  705905ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  708320ms] [LOG] Assignment Data: {id: 34, status: assigned, on_site_at: null, client_confirmed_at: null, has_on_site: false} @ http://127.0.0.1:8013/studio-photographer/assigned-bookings:1439
+[  717276ms] [LOG] Assignment Data: {id: 34, status: confirmed, on_site_at: null, client_confirmed_at: null, has_on_site: false} @ http://127.0.0.1:8013/studio-photographer/assigned-bookings:1439
+[  717277ms] [LOG] Status check: {current_status: confirmed, hasOnSite: false, hasClientConfirmed: false, cancelAllowed: true, requiresLocationConfirmation: false} @ http://127.0.0.1:8013/studio-photographer/assigned-bookings:1536
+[  737411ms] [LOG] Assignment Data: {id: 34, status: on_site, on_site_at: 2026-11-03T16:46:19.000000Z, client_confirmed_at: null, has_on_site: true} @ http://127.0.0.1:8013/studio-photographer/assigned-bookings:1439
+[  737412ms] [LOG] Status check: {current_status: on_site, hasOnSite: true, hasClientConfirmed: false, cancelAllowed: true, requiresLocationConfirmation: false} @ http://127.0.0.1:8013/studio-photographer/assigned-bookings:1536
+[  747792ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBflir-FazUlCibDYWWTsYZJ81vsBQlhqUa2_DYWaXY79px6-5IENoLCQrPa2q-QKAJgQpj2fOTwaCkGiYjXRYWT8UuqEKNjEtYlV0zkxR03_wjZnsTxoEONUbqHq5eJydvGJSWIZxvSa_QlCFaOIs2x6yMZg:0
+[  747792ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBflir-FazUlCibDYWWTsYZJ81vsBQlhqUa2_DYWaXY79px6-5IENoLCQrPa2q-QKAJgQpj2fOTwaCkGiYjXRYWT8UuqEKNjEtYlV0zkxR03_wjZnsTxoEONUbqHq5eJydvGJSWIZxvSa_QlCFaOIs2x6yMZg:0
+[  747950ms] [TIMEEND] a: 0.016845703125 ms @ https://static.adsafeprotected.com/sca.17.6.4.js:31
+[  748167ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ https://servedby.flashtalking.com/click/7/296698;10784937;6163830;211;0/?gdpr=&gdpr_consent=&us_privacy=${US_PRIVACY}&ivc_bundle_id=${BUNDLE_ID}&ft_partnerimpid=${AUCTION_ID}&ft_keyword=${CAMPAIGN_ID}&ft_section=${CAMPAIGN_ID}&url=44931168&cbvp=2&rm=1:0
+[  748347ms] [DIR] SyntaxError @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  748809ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  749208ms] Failed to read a named property 'document' from 'Window': Blocked a frame with origin "https://googleads.g.doubleclick.net" from accessing a frame with origin "https://temp-mail.io". Protocols, domains, and ports must match.
+[  748167ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ https://servedby.flashtalking.com/click/7/296698;10784937;6163830;211;0/?gdpr=&gdpr_consent=&us_privacy=${US_PRIVACY}&ivc_bundle_id=${BUNDLE_ID}&ft_partnerimpid=${AUCTION_ID}&ft_keyword=${CAMPAIGN_ID}&ft_section=${CAMPAIGN_ID}&url=44931168&cbvp=2&rm=1:0
+[  748809ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  747792ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBflir-FazUlCibDYWWTsYZJ81vsBQlhqUa2_DYWaXY79px6-5IENoLCQrPa2q-QKAJgQpj2fOTwaCkGiYjXRYWT8UuqEKNjEtYlV0zkxR03_wjZnsTxoEONUbqHq5eJydvGJSWIZxvSa_QlCFaOIs2x6yMZg:0
+[  750122ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBflipSUecGhnlICh9m0R-gl-qfnbH0IS7o6UBq_k59mLPBw0WSGg3hhNt8u6Y6fmdBWUbe910Xk-7dNDFuPYFh4PJOvweZWg0dF9anD3BGRKLpu1aYwJRq1-Vnn0OkCujS7Foeev1G53AgMw:0
+[  861222ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861222ms] [WARNING] Missing translation for key: request @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861222ms] [WARNING] Missing translation for key: request-leave @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861222ms] [WARNING] Missing translation for key: view-requested-leave @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861222ms] [WARNING] Missing translation for key: request-overtime @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861223ms] [WARNING] Missing translation for key: view-requested-overtime @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861223ms] [WARNING] Missing translation for key: request-procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861223ms] [WARNING] Missing translation for key: view-procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861223ms] [WARNING] Missing translation for key: attendance @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861223ms] [WARNING] Missing translation for key: assigned-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861223ms] [WARNING] Missing translation for key: assigned-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861223ms] [WARNING] Missing translation for key: assigned-booking @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861223ms] [WARNING] Missing translation for key: assigned-booking @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  861223ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  864193ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  869452ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  869453ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  869453ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  869453ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  869453ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  869453ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  869453ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  871989ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  871989ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  871990ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  871990ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  871990ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  871990ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  871990ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  891133ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  896289ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  896290ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  896290ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  896290ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  896290ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  896290ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  896290ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  923672ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBfliojOEcFwusXPyneLupJSMqN_HATUg2l7LVFOZz226aGXkX4NfieZRU8tpmHueZn8y04Yuzq2-ubC1Gif3TiCMrqDq9TYBhz34xrl2M2avdWEPBg40Xt7tXann8SsgMrAS3KwnKU37Ez-NMZNW-CKQjEGdE:0
+[  925161ms] [DIR] SyntaxError @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  925641ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  925641ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  925641ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  976506ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBfliqstDf5lEHRcF1xD01PdoovRMwLGLiWIGyuSIk3YuJW3aOWi5iydzOBz_icc6uuQfhWKAdrwahCQQAjeERClXAdJRPtim5t0LnchPQAsFQby5YPEaqiURvdthUvv1QE7qK_HbO1kJpkSddJ7dSjuDt_JE0:0
+[  976588ms] [DIR] SyntaxError @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  976881ms] [TIMEEND] a: 0.016845703125 ms @ https://static.adsafeprotected.com/sca.17.6.4.js:31
+[  977072ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  977457ms] Failed to read a named property 'document' from 'Window': Blocked a frame with origin "https://googleads.g.doubleclick.net" from accessing a frame with origin "https://temp-mail.io". Protocols, domains, and ports must match.
+[  925641ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  977072ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  925641ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[  977072ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1002579ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBflioNAQGTIuKhcmxOkLgZr8ifUOrx4i35ZyOmhAXFlVqjjqmdlJ66wzNHoH5qH04dCxbslBc9LvLOgV1c3_nY8f_EUq5-p0hkUUM:0
+[ 1002691ms] [DIR] SyntaxError @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1002963ms] [TIMEEND] a: 0.001953125 ms @ https://static.adsafeprotected.com/sca.17.6.4.js:31
+[ 1003218ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1003585ms] Failed to read a named property 'document' from 'Window': Blocked a frame with origin "https://googleads.g.doubleclick.net" from accessing a frame with origin "https://temp-mail.io". Protocols, domains, and ports must match.
+[ 1031029ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBfliq8vLxbwBlJcKsZsJ8EiVwo5qQW5-MA1YBtoaL0L9kXn1eAIWHfINgamNnZSDHiV5KzSvOYj2f1ywuBD73F7uA45HiWQY3v29xuw_i5e-yvZtSyJW2UrywAqedDM66xyWdvutVNwnt1q1jASiD2G-Xfe44:0
+[ 1031201ms] [DIR] SyntaxError @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1031484ms] [TIMEEND] a: 0.004150390625 ms @ https://static.adsafeprotected.com/sca.17.6.4.js:31
+[ 1031870ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1032137ms] Failed to read a named property 'document' from 'Window': Blocked a frame with origin "https://googleads.g.doubleclick.net" from accessing a frame with origin "https://temp-mail.io". Protocols, domains, and ports must match.
+[ 1032188ms] [DIR] SyntaxError @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1032733ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1031870ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1032733ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1161161ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1161161ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1161161ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1161161ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1161161ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1161161ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1161161ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1163631ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1163631ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1163631ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1163631ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1163631ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1163631ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1163631ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1180017ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBflip4SxmW0b7kXUcu--45P0wjHe-kGf_jbMMEjDCjf-wt8CJF_pJS322AZAuTWl2mBGR8890v4sfugY7xUWDMF6VQVfZ3H4_f49IU:0
+[ 1180216ms] [TIMEEND] a: 0.02099609375 ms @ https://static.adsafeprotected.com/sca.17.6.4.js:31
+[ 1180655ms] [DIR] SyntaxError @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1181276ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1181472ms] Failed to read a named property 'document' from 'Window': Blocked a frame with origin "https://googleads.g.doubleclick.net" from accessing a frame with origin "https://temp-mail.io". Protocols, domains, and ports must match.
+[ 1181276ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ https://js.ad-score.com/score.min.js?pid=1000942&tt=g:1
+[ 1180017ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://dsp.360yield.com/dsp_match/275?ssp=755&google_gid=CAESEOzX6meBJqSHYebw6nFryVo&google_cver=1&google_push=AdBflip4SxmW0b7kXUcu--45P0wjHe-kGf_jbMMEjDCjf-wt8CJF_pJS322AZAuTWl2mBGR8890v4sfugY7xUWDMF6VQVfZ3H4_f49IU:0
+[ 1225908ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1225909ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1225909ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1225909ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1225909ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1225909ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1225909ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[12312559ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://127.0.0.1:8013/client/messages/unread:0
+[29066097ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29096467ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29126812ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29157292ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29187781ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29218144ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29248816ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29279459ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29310150ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29340807ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29371506ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29402156ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29432849ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29463537ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[29494268ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0

@@ -116,12 +116,14 @@
                                             <td>
                                                 {{ \Carbon\Carbon::parse($assignment->assigned_at)->format('M d, Y') }}
                                                 @if($assignment->status === 'assigned' && $assignment->response_deadline)
+                                                    <span class="response-deadline">
                                                     <br>
                                                     @if($assignment->isPastDeadline())
                                                         <span class="badge badge-soft-danger fs-8">Response overdue</span>
                                                     @else
                                                         <span class="text-muted small">Respond by {{ $assignment->response_deadline->format('M d, g:i A') }}</span>
                                                     @endif
+                                                    </span>
                                                 @endif
                                             </td>
                                             <td>
@@ -1181,6 +1183,7 @@
                             Swal.fire({icon: 'error', title: 'Status not updated', text: response.message});
                             return;
                         }
+                        refreshAssignmentRow(currentAssignmentId, status);
                         Swal.fire({
                             icon: 'success',
                             title: 'Success!',
@@ -1218,6 +1221,21 @@
                 });
             }
             
+            function refreshAssignmentRow(assignmentId, status) {
+                const badge = document.querySelector(`tr[data-assignment-id="${assignmentId}"] td:nth-child(8) .badge`);
+                if (!badge) return;
+                const colors = {
+                    assigned: 'info', confirmed: 'primary', on_site: 'warning',
+                    in_progress: 'info', completed: 'success', cancelled: 'danger'
+                };
+                badge.className = `badge badge-soft-${colors[status] || 'secondary'} fs-8 px-1 w-100 text-uppercase`;
+                badge.textContent = status.replaceAll('_', ' ');
+                if (status !== 'assigned') {
+                    document.querySelector(`tr[data-assignment-id="${assignmentId}"] .response-deadline`)?.remove();
+                }
+                window.PlatinumTable?.refresh();
+            }
+
             // Helper functions
             function getStatusTextClass(status) {
                 const textClasses = {

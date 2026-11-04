@@ -209,6 +209,7 @@ class DashboardController extends Controller
                     'starting_price' => number_format($freelancer->starting_price, 2),
                     'description' => $freelancer->tagline,
                     'type_label' => 'Freelancer',
+                    'group_name' => $freelancer->group_name,
                     'rating' => $averageRating,
                     'total_ratings' => $freelancer->ratings_count,
                     'rating_display' => $this->getRatingDisplay($averageRating, $freelancer->ratings_count)

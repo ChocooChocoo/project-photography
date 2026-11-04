@@ -1,0 +1,359 @@
+- generic [ref=f43e1]:
+  - generic [aria-hidden] [ref=f43e2]:
+    - generic [ref=f43e3]:
+      - link [ref=f43e4] [cursor=pointer]:
+        - /url: http://127.0.0.1:8013
+      - text: ｂ 
+      - region [ref=f43e12]:
+        - list [ref=f43e14]:
+          - listitem: Apps
+          - listitem [ref=f43e15]:
+            - link [ref=f43e16] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/owner/dashboard
+              - generic [ref=f43e17]: 
+              - generic [ref=f43e19]: Dashboard
+          - listitem [ref=f43e20]:
+            - link [ref=f43e21] [cursor=pointer]:
+              - /url: "#sidebarManageStudios"
+              - generic [ref=f43e22]: 
+              - generic [ref=f43e24]: Studios
+              - generic [ref=f43e25]: 
+          - listitem [ref=f43e26]:
+            - link [ref=f43e27] [cursor=pointer]:
+              - /url: "#sidebarManageBookings"
+              - generic [ref=f43e28]: 
+              - generic [ref=f43e30]: Bookings
+              - generic [ref=f43e31]: 
+          - listitem [ref=f43e32]:
+            - link [ref=f43e33] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/owner/feedback
+              - generic [aria-hidden] [ref=f43e35]: 
+              - generic [ref=f43e36]: Client Feedback
+          - listitem [ref=f43e37]:
+            - link [ref=f43e38] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/owner/view/online-gallery
+              - generic [ref=f43e39]: 
+              - generic [ref=f43e41]: Online Gallery
+          - listitem [ref=f43e42]:
+            - link [ref=f43e43] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/owner/online-gallery/portfolio
+              - generic [ref=f43e44]: 
+              - generic [ref=f43e46]: Portfolio Gallery
+          - listitem [ref=f43e47]:
+            - link [ref=f43e48] [cursor=pointer]:
+              - /url: "#sidebarManageSchedules"
+              - generic [ref=f43e49]: 
+              - generic [ref=f43e51]: Schedules
+              - generic [ref=f43e52]: 
+          - listitem [ref=f43e53]:
+            - link [ref=f43e54] [cursor=pointer]:
+              - /url: "#sidebarManageMembers"
+              - generic [ref=f43e55]: 
+              - generic [ref=f43e57]: Members
+              - generic [ref=f43e58]: 
+          - listitem [ref=f43e59]:
+            - link [ref=f43e60] [cursor=pointer]:
+              - /url: "#sidebarManageStudioPhotographers"
+              - generic [ref=f43e61]: 
+              - generic [ref=f43e63]: Photographers
+              - generic [ref=f43e64]: 
+          - listitem [ref=f43e65]:
+            - link [ref=f43e66] [cursor=pointer]:
+              - /url: "#sidebarManageEmployee"
+              - generic [ref=f43e67]: 
+              - generic [ref=f43e69]: Employee
+              - generic [ref=f43e70]: 
+          - listitem [ref=f43e71]:
+            - link [ref=f43e72] [cursor=pointer]:
+              - /url: "#sidebarLeaveRequests"
+              - generic [ref=f43e73]: 
+              - generic [ref=f43e75]: Request
+              - generic [ref=f43e76]: 
+          - listitem [ref=f43e77]:
+            - link [ref=f43e78] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/owner/procurement
+              - generic [ref=f43e79]: 
+              - generic [ref=f43e81]: Procurement
+          - listitem [ref=f43e82]:
+            - link [ref=f43e83] [cursor=pointer]:
+              - /url: "#sidebarManageRoles"
+              - generic [ref=f43e84]: 
+              - generic [ref=f43e86]: Roles & Permissions
+              - generic [ref=f43e87]: 
+          - listitem [ref=f43e88]:
+            - link [ref=f43e89] [cursor=pointer]:
+              - /url: "#sidebarManagePayroll"
+              - generic [ref=f43e90]: 𐅉
+              - generic [ref=f43e92]: Payroll
+              - generic [ref=f43e93]: 
+          - listitem [ref=f43e94]:
+            - link [ref=f43e95] [cursor=pointer]:
+              - /url: "#sidebarManagePackages"
+              - generic [ref=f43e96]: 
+              - generic [ref=f43e98]: Packages
+              - generic [ref=f43e99]: 
+          - listitem [ref=f43e100]:
+            - link [ref=f43e101] [cursor=pointer]:
+              - /url: "#sidebarManageCategoryServices"
+              - generic [ref=f43e102]: 﫺
+              - generic [ref=f43e104]: Services
+              - generic [ref=f43e105]: 
+          - listitem [ref=f43e106]:
+            - link [ref=f43e107] [cursor=pointer]:
+              - /url: "#sidebarManageSubscription"
+              - generic [ref=f43e108]: ﺹ
+              - generic [ref=f43e110]: Subscription
+              - generic [ref=f43e111]: 
+          - listitem [ref=f43e112]:
+            - link [ref=f43e113] [cursor=pointer]:
+              - /url: "#sidebarInquiries"
+              - generic [ref=f43e114]: 泌
+              - generic [ref=f43e116]: AI Assistant
+              - generic [ref=f43e117]: 
+    - banner [ref=f43e118]:
+      - generic [ref=f43e119]:
+        - generic [ref=f43e120]:
+          - button [ref=f43e121] [cursor=pointer]:
+            - generic [ref=f43e122]: ｂ
+          - text: ｂ
+        - generic [ref=f43e123]:
+          - link [ref=f43e125] [cursor=pointer]:
+            - /url: http://127.0.0.1:8013/owner/messages
+            - generic [aria-hidden] [ref=f43e126]: 
+          - generic [ref=f43e128]:
+            - button [ref=f43e129] [cursor=pointer]:
+              - generic [ref=f43e133]: "58"
+            - text:  
+          - generic [ref=f43e135]:
+            - link [ref=f43e136] [cursor=pointer]:
+              - /url: "#!"
+              - generic [ref=f43e138]:
+                - heading [level=5] [ref=f43e139]: Yolanda Abad Inocencio
+                - generic [ref=f43e140]: 
+            - text:   奄
+          - button [ref=f43e142] [cursor=pointer]:
+            - generic [ref=f43e143]: 
+    - generic [ref=f43e149]:
+      - heading [level=4] [ref=f43e151]: Online Gallery
+      - searchbox [ref=f43e155]
+      - table [ref=f43e160]:
+        - rowgroup [ref=f43e161]:
+          - row [ref=f43e162]:
+            - columnheader [ref=f43e163]: Booking Ref
+            - columnheader [ref=f43e164]: Client
+            - columnheader [ref=f43e165]: Event Date
+            - columnheader [ref=f43e166]: Category
+            - columnheader [ref=f43e167]: Package
+            - columnheader [ref=f43e168]: Gallery Status
+            - columnheader [ref=f43e169]: Actions
+        - rowgroup [ref=f43e170]:
+          - row [ref=f43e171]:
+            - cell [ref=f43e172]: BK-6AE9F0AB26000
+            - cell [ref=f43e173]: Beatriz Inocencio
+            - cell [ref=f43e174]: Nov 25, 2026
+            - cell [ref=f43e175]: Wedding Photography
+            - cell [ref=f43e176]: E2E Flexible Evening Session
+            - cell [ref=f43e177]:
+              - generic [ref=f43e178]:
+                - generic [ref=f43e179]: 
+                - text: Pending Approval
+            - cell [ref=f43e180]:
+              - button [ref=f43e181] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f43e182]: ﵊
+              - button [ref=f43e183] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f43e184]: 
+              - button [ref=f43e185] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f43e186]: 
+          - row [ref=f43e187]:
+            - cell [ref=f43e188]: BK-6AE9C50EEA1EA
+            - cell [ref=f43e189]: Beatriz Inocencio
+            - cell [ref=f43e190]: Nov 19, 2026
+            - cell [ref=f43e191]: Wedding Photography
+            - cell [ref=f43e192]: Vows and Verses Collection - Essentials
+            - cell [ref=f43e193]:
+              - generic [ref=f43e194]:
+                - generic [ref=f43e195]: 
+                - text: Published
+            - cell [ref=f43e196]:
+              - button [ref=f43e197] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f43e198]: ﵊
+          - row [ref=f43e199]:
+            - cell [ref=f43e200]: BK-6AE9C3F4EF9C6
+            - cell [ref=f43e201]: Beatriz Inocencio
+            - cell [ref=f43e202]: Nov 18, 2026
+            - cell [ref=f43e203]: Wedding Photography
+            - cell [ref=f43e204]: E2E Flexible Evening Session
+            - cell [ref=f43e205]:
+              - generic [ref=f43e206]:
+                - generic [ref=f43e207]: 
+                - text: No Gallery
+            - cell [ref=f43e208]:
+              - button [ref=f43e209] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f43e210]: 
+          - row [ref=f43e211]:
+            - cell [ref=f43e212]: BK-6ADCCB449AC70
+            - cell [ref=f43e213]: Beatriz Inocencio
+            - cell [ref=f43e214]: Oct 23, 2026
+            - cell [ref=f43e215]: Wedding Photography
+            - cell [ref=f43e216]: Annex Portrait Session
+            - cell [ref=f43e217]:
+              - generic [ref=f43e218]:
+                - generic [ref=f43e219]: 
+                - text: Published
+            - cell [ref=f43e220]:
+              - button [ref=f43e221] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f43e222]: ﵊
+          - row [ref=f43e223]:
+            - cell [ref=f43e224]: BK-6ADCA27549033
+            - cell [ref=f43e225]: Beatriz Inocencio
+            - cell [ref=f43e226]: Oct 23, 2026
+            - cell [ref=f43e227]: Wedding Photography
+            - cell [ref=f43e228]: Vows and Verses Collection - Basic
+            - cell [ref=f43e229]:
+              - generic [ref=f43e230]:
+                - generic [ref=f43e231]: 
+                - text: Published
+            - cell [ref=f43e232]:
+              - button [ref=f43e233] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f43e234]: ﵊
+      - generic [ref=f43e236]:
+        - generic [ref=f43e237]: Showing 1 to 5 of 8 gallery
+        - list [ref=f43e239]:
+          - listitem [ref=f43e240]:
+            - link:
+              - /url: "#"
+              - generic: 
+          - listitem [ref=f43e241]:
+            - link [ref=f43e242] [cursor=pointer]:
+              - /url: "#"
+              - text: "1"
+          - listitem [ref=f43e243]:
+            - link [ref=f43e244] [cursor=pointer]:
+              - /url: "#"
+              - text: "2"
+          - listitem [ref=f43e245]:
+            - link [ref=f43e246] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=f43e247]: 
+    - dialog [ref=f43e248]:
+      - generic [ref=f43e249]:
+        - generic [ref=f43e250]:
+          - heading [level=5] [ref=f43e251]: Manage Online Gallery
+          - button [active] [ref=f43e252] [cursor=pointer]
+        - generic [ref=f43e254]:
+          - generic [ref=f43e255]:
+            - generic [ref=f43e257]:
+              - generic [ref=f43e258]: ﵊
+              - generic [ref=f43e261]:
+                - heading [level=2] [ref=f43e262]: Single-browser regression gallery
+                - generic [ref=f43e263]:
+                  - generic [ref=f43e265]:
+                    - generic [ref=f43e266]: 
+                    - text: Active
+                  - generic [ref=f43e268]:
+                    - generic [ref=f43e269]: 
+                    - text: Pending Approval
+                - paragraph [ref=f43e270]:
+                  - generic [ref=f43e271]: 
+                  - text: BK-6AE9F0AB26000
+            - text: 
+          - generic [ref=f43e272]:
+            - generic [ref=f43e273]: Google Drive sharing link
+            - paragraph [ref=f43e274]: Deliver softcopies without uploading images here. Allow the client access in Google Drive, then publish this gallery.
+            - textbox [ref=f43e275]
+            - button [ref=f43e276] [cursor=pointer]: Save Drive link
+          - generic [ref=f43e278]:
+            - generic [ref=f43e279]:
+              - heading [level=5] [ref=f43e280]: BOOKING INFORMATION
+              - generic [ref=f43e282]:
+                - generic [ref=f43e283]: 
+                - generic [ref=f43e286]:
+                  - generic [ref=f43e287]: Client Name
+                  - paragraph [ref=f43e288]: Beatriz Inocencio
+              - generic [ref=f43e290]:
+                - generic [ref=f43e291]: 
+                - generic [ref=f43e294]:
+                  - generic [ref=f43e295]: Email Address
+                  - paragraph [ref=f43e296]: beatriz.inocencio@gmail.com
+              - generic [ref=f43e298]:
+                - generic [ref=f43e299]: 
+                - generic [ref=f43e302]:
+                  - generic [ref=f43e303]: Booking Reference
+                  - paragraph [ref=f43e304]: BK-6AE9F0AB26000
+              - generic [ref=f43e306]:
+                - generic [ref=f43e307]: 
+                - generic [ref=f43e310]:
+                  - generic [ref=f43e311]: Event Date
+                  - paragraph [ref=f43e312]: Nov 25, 2026
+            - generic [ref=f43e313]:
+              - heading [level=5] [ref=f43e314]: GALLERY INFORMATION
+              - generic [ref=f43e316]:
+                - generic [ref=f43e317]: 
+                - generic [ref=f43e320]:
+                  - generic [ref=f43e321]: Gallery Reference
+                  - paragraph [ref=f43e322]: GAL-6AE9F23D43A1C
+              - generic [ref=f43e324]:
+                - generic [ref=f43e325]: 
+                - generic [ref=f43e328]:
+                  - generic [ref=f43e329]: Gallery Name
+                  - paragraph [ref=f43e330]: Single-browser regression gallery
+              - generic [ref=f43e332]:
+                - generic [ref=f43e333]: 
+                - generic [ref=f43e336]:
+                  - generic [ref=f43e337]: Total Photos
+                  - paragraph [ref=f43e338]: 1 images
+              - generic [ref=f43e340]:
+                - generic [ref=f43e341]: 
+                - generic [ref=f43e344]:
+                  - generic [ref=f43e345]: Published Date
+                  - paragraph [ref=f43e346]: Not published
+              - generic [ref=f43e348]:
+                - generic [ref=f43e349]: 
+                - generic [ref=f43e352]:
+                  - generic [ref=f43e353]: Description
+                  - paragraph [ref=f43e354]: Local test fixture for original uploads and publication.
+            - text: 
+            - generic [ref=f43e355]:
+              - heading [level=5] [ref=f43e356]: UPLOAD IMAGES
+              - generic [ref=f43e358]:
+                - generic [ref=f43e359]:
+                  - paragraph [ref=f43e360]: Upload New Images
+                  - generic [ref=f43e361]:
+                    - generic [ref=f43e362]: 
+                    - text: Select up to 50 images. Max 5MB per image.
+                - button [ref=f43e363] [cursor=pointer]:
+                  - generic [ref=f43e364]: 
+                  - text: Upload Images
+              - text:  
+            - generic [ref=f43e365]:
+              - heading [level=5] [ref=f43e366]: GALLERY IMAGES
+              - generic [ref=f43e368]:
+                - paragraph [ref=f43e369]: "Total Images: 1"
+                - generic [ref=f43e370]:
+                  - button [ref=f43e371] [cursor=pointer]:
+                    - generic [ref=f43e372]: 
+                    - text: Edit Gallery Info
+                  - button [ref=f43e373] [cursor=pointer]:
+                    - generic [ref=f43e374]: 
+                    - text: Delete Entire Gallery
+              - generic [ref=f43e378]:
+                - generic [ref=f43e381]:
+                  - generic [ref=f43e382]: 
+                  - text: "1"
+                - generic [ref=f43e384]:
+                  - generic [ref=f43e385]:
+                    - generic [ref=f43e386]: 
+                    - text: 11/3/2026
+                  - button [ref=f43e387] [cursor=pointer]:
+                    - generic [aria-hidden] [ref=f43e388]: 
+                    - generic [ref=f43e389]: Original added
+                  - button [ref=f43e390] [cursor=pointer]:
+                    - generic [ref=f43e391]: 
+              - text:  
+  - button [aria-hidden] [ref=f43e392] [cursor=pointer]:
+    - generic [ref=f43e393]: 
+  - text:  
+  - dialog [ref=f43e396]:
+    - heading "Original added" [level=2] [ref=f43e404]
+    - generic [ref=f43e405]: Original added. The client sees a before-and-after slider for this photo.
+    - text: "!"

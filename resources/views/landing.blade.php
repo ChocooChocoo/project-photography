@@ -182,5 +182,17 @@
     <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/vendors.min.js') }}"></script>
     <script src="{{ asset('assets/js/app.js').'?v='.filemtime(public_path('assets/js/app.js')) }}"></script>
+    <script>
+        document.getElementById('mainNav').addEventListener('click', function(event) {
+            if (event.target.closest('a[href^="#"]')) {
+                const collapse = bootstrap.Collapse.getOrCreateInstance(this, {toggle: false});
+                if (this.classList.contains('collapsing')) {
+                    this.addEventListener('shown.bs.collapse', () => collapse.hide(), {once: true});
+                } else {
+                    collapse.hide();
+                }
+            }
+        });
+    </script>
 </body>
 </html>

@@ -383,6 +383,9 @@ class BookingController extends Controller
                 ->toArray();
 
             $rejectedPhotographerIds = $this->rejectedPhotographerIds($bookingId);
+            $onSiteCancellationIds = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
+                ->where('status', 'cancelled')->whereNotNull('on_site_at')
+                ->pluck('photographer_id')->map(fn ($id) => (int) $id)->all();
 
             $availabilityMap = $this->photographerAvailabilityService->getAvailabilityMapForBooking(
                 $booking,
@@ -415,15 +418,17 @@ class BookingController extends Controller
                         ],
                     ];
                 } elseif (in_array($photographerId, $rejectedPhotographerIds, true)) {
+                    $cancelledOnSite = in_array($photographerId, $onSiteCancellationIds, true);
+                    $reason = $cancelledOnSite ? 'Cancelled on site' : 'Rejected this assignment';
                     $availability = [
                         'is_available' => false,
-                        'availability_status' => 'rejected',
-                        'availability_reason' => 'Rejected this assignment',
+                        'availability_status' => $cancelledOnSite ? 'cancelled_on_site' : 'rejected',
+                        'availability_reason' => $reason,
                         'availability_conflicts' => [
                             [
                                 'type' => 'rejected',
                                 'status' => 'rejected',
-                                'message' => 'Rejected this assignment',
+                                'message' => $reason,
                                 'booking_id' => $booking->id,
                                 'booking_reference' => $booking->booking_reference,
                             ],
@@ -465,7 +470,8 @@ class BookingController extends Controller
                     'required_photographers' => $requiredPhotographers,
                     'current_assigned' => $currentAssignedCount,
                     'remaining_needed' => $remainingNeeded,
-                    'is_initial_assignment' => ($currentAssignedCount === 0),
+                    'is_initial_assignment' => ($currentAssignedCount === 0 && count($onSiteCancellationIds) === 0),
+                    'is_replacement' => count($onSiteCancellationIds) > 0,
                     'assignable_photographers' => $assignablePhotographerCount,
                     'package_name' => $packageName,
                     'package_details' => $packageDetails ? [

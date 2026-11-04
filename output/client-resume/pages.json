@@ -1,0 +1,1050 @@
+[
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/booking-refunds",
+    "status": 200,
+    "landed": "/admin/booking-refunds",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/booking-refunds/view",
+    "status": 200,
+    "landed": "/admin/booking-refunds/view",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/create/categories",
+    "status": 200,
+    "landed": "/admin/create/categories",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/create/location",
+    "status": 200,
+    "landed": "/admin/create/location",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/create/subscription",
+    "status": 200,
+    "landed": "/admin/create/subscription",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/dashboard",
+    "status": 200,
+    "landed": "/admin/dashboard",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/login",
+    "status": 200,
+    "landed": "/admin/dashboard",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/messages",
+    "status": 200,
+    "landed": "/admin/messages",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/otp",
+    "status": 200,
+    "landed": "/admin/dashboard",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/pending/studio",
+    "status": 200,
+    "landed": "/admin/pending/studio",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/profile",
+    "status": 200,
+    "landed": "/admin/profile",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/reports",
+    "status": 200,
+    "landed": "/admin/reports",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/reviews",
+    "status": 200,
+    "landed": "/admin/reviews",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/view/categories",
+    "status": 200,
+    "landed": "/admin/view/categories",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/view/freelancers",
+    "status": 200,
+    "landed": "/admin/view/freelancers",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/view/location",
+    "status": 200,
+    "landed": "/admin/view/location",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/view/studio",
+    "status": 200,
+    "landed": "/admin/view/studio",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/view/subscription",
+    "status": 200,
+    "landed": "/admin/view/subscription",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/admin/view/users",
+    "status": 200,
+    "landed": "/admin/view/users",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "adrian.barrameda@gmail.com",
+    "url": "/notifications",
+    "status": 200,
+    "landed": "/notifications",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/apply/members",
+    "status": 200,
+    "landed": "/owner/apply/members",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/booking/history",
+    "status": 200,
+    "landed": "/owner/booking/history",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/chatbot/config",
+    "status": 200,
+    "landed": "/owner/chatbot/config",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/chatbot/conversations",
+    "status": 200,
+    "landed": "/owner/chatbot/conversations",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/chatbot/intents",
+    "status": 200,
+    "landed": "/owner/chatbot/intents",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/create/employee",
+    "status": 200,
+    "landed": "/owner/create/employee",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/create/packages",
+    "status": 200,
+    "landed": "/owner/create/packages",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/create/services",
+    "status": 200,
+    "landed": "/owner/create/services",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/create/studio",
+    "status": 200,
+    "landed": "/owner/create/studio",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/create/studio-photographers",
+    "status": 200,
+    "landed": "/owner/create/studio-photographers",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/dashboard",
+    "status": 200,
+    "landed": "/owner/dashboard",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/discounts",
+    "status": 200,
+    "landed": "/owner/discounts",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/feedback",
+    "status": 200,
+    "landed": "/owner/feedback",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/hr-leave-requests",
+    "status": 200,
+    "landed": "/owner/hr-leave-requests",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/hr-overtime-requests",
+    "status": 200,
+    "landed": "/owner/hr-overtime-requests",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/invite/members",
+    "status": 200,
+    "landed": "/owner/invite/members",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/messages",
+    "status": 200,
+    "landed": "/owner/messages",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/online-gallery/portfolio",
+    "status": 200,
+    "landed": "/owner/online-gallery/portfolio",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/packages/lists",
+    "status": 200,
+    "landed": "/owner/packages/lists",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/payroll-settings",
+    "status": 200,
+    "landed": "/owner/payroll-settings",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/payroll-settings/create",
+    "status": 200,
+    "landed": "/owner/payroll-settings/create",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/procurement",
+    "status": 200,
+    "landed": "/owner/procurement",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/profile",
+    "status": 200,
+    "landed": "/owner/profile",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/setup/studio-schedules",
+    "status": 200,
+    "landed": "/owner/setup/studio-schedules",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/user-roles",
+    "status": 200,
+    "landed": "/owner/user-roles",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/bookings",
+    "status": 200,
+    "landed": "/owner/view/bookings",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/employee",
+    "status": 200,
+    "landed": "/owner/view/employee",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/members",
+    "status": 200,
+    "landed": "/owner/view/members",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/online-gallery",
+    "status": 200,
+    "landed": "/owner/view/online-gallery",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/packages",
+    "status": 200,
+    "landed": "/owner/view/packages",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/permissions",
+    "status": 200,
+    "landed": "/owner/view/permissions",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/roles",
+    "status": 200,
+    "landed": "/owner/view/roles",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/schedules",
+    "status": 200,
+    "landed": "/owner/view/schedules",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/services",
+    "status": 200,
+    "landed": "/owner/view/services",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/status",
+    "status": 200,
+    "landed": "/owner/view/status",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/studio",
+    "status": 200,
+    "landed": "/owner/view/studio",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/studio-photographers",
+    "status": 200,
+    "landed": "/owner/view/studio-photographers",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/owner/view/subscription",
+    "status": 200,
+    "landed": "/owner/view/subscription",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "yolanda.inocencio@gmail.com",
+    "url": "/notifications",
+    "status": 200,
+    "landed": "/notifications",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/create/employee",
+    "status": 200,
+    "landed": "/studio-hr/create/employee",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/dashboard",
+    "status": 200,
+    "landed": "/studio-hr/dashboard",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/employees-leave-requests",
+    "status": 200,
+    "landed": "/studio-hr/employees-leave-requests",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/employees-overtime-requests",
+    "status": 200,
+    "landed": "/studio-hr/employees-overtime-requests",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/generate-payroll",
+    "status": 200,
+    "landed": "/studio-hr/generate-payroll",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/leave-requests",
+    "status": 200,
+    "landed": "/studio-hr/leave-requests",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/leave-requests/create",
+    "status": 200,
+    "landed": "/studio-hr/leave-requests/create",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/messages",
+    "status": 200,
+    "landed": "/studio-hr/messages",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/overtime-requests",
+    "status": 200,
+    "landed": "/studio-hr/overtime-requests",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/overtime-requests/create",
+    "status": 200,
+    "landed": "/studio-hr/overtime-requests/create",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/payroll-settings",
+    "status": 200,
+    "landed": "/studio-hr/payroll-settings",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/payroll-settings/create",
+    "status": 200,
+    "landed": "/studio-hr/payroll-settings/create",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/procurement",
+    "status": 200,
+    "landed": "/studio-hr/procurement",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/procurement/create",
+    "status": 200,
+    "landed": "/studio-hr/procurement/create",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/profile",
+    "status": 200,
+    "landed": "/studio-hr/profile",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/view/attendance",
+    "status": 200,
+    "landed": "/studio-hr/view/attendance",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/view/employee",
+    "status": 200,
+    "landed": "/studio-hr/view/employee",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/studio-hr/view/online-gallery",
+    "status": 200,
+    "landed": "/studio-hr/view/online-gallery",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "zacarias.panganiban@gmail.com",
+    "url": "/notifications",
+    "status": 200,
+    "landed": "/notifications",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/studio-finance",
+    "status": 200,
+    "landed": "/studio-finance/dashboard",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/studio-finance/dashboard",
+    "status": 200,
+    "landed": "/studio-finance/dashboard",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/studio-finance/leave-requests",
+    "status": 200,
+    "landed": "/studio-finance/leave-requests",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/studio-finance/leave-requests/create",
+    "status": 200,
+    "landed": "/studio-finance/leave-requests/create",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/studio-finance/messages",
+    "status": 200,
+    "landed": "/studio-finance/messages",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/studio-finance/overtime-requests",
+    "status": 200,
+    "landed": "/studio-finance/overtime-requests",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/studio-finance/overtime-requests/create",
+    "status": 200,
+    "landed": "/studio-finance/overtime-requests/create",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/studio-finance/payroll-approvals",
+    "status": 200,
+    "landed": "/studio-finance/payroll-approvals",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/studio-finance/procurement",
+    "status": 200,
+    "landed": "/studio-finance/procurement",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/studio-finance/profile",
+    "status": 200,
+    "landed": "/studio-finance/profile",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/studio-finance/view/attendance",
+    "status": 200,
+    "landed": "/studio-finance/view/attendance",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "alfonso.wenceslao@gmail.com",
+    "url": "/notifications",
+    "status": 200,
+    "landed": "/notifications",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/assigned-bookings",
+    "status": 200,
+    "landed": "/studio-photographer/assigned-bookings",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/dashboard",
+    "status": 200,
+    "landed": "/studio-photographer/dashboard",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/leave-requests",
+    "status": 200,
+    "landed": "/studio-photographer/leave-requests",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/leave-requests/create",
+    "status": 200,
+    "landed": "/studio-photographer/leave-requests/create",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/messages",
+    "status": 200,
+    "landed": "/studio-photographer/messages",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/overtime-requests",
+    "status": 200,
+    "landed": "/studio-photographer/overtime-requests",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/overtime-requests/create",
+    "status": 200,
+    "landed": "/studio-photographer/overtime-requests/create",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/procurement",
+    "status": 200,
+    "landed": "/studio-photographer/procurement",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/procurement/create",
+    "status": 200,
+    "landed": "/studio-photographer/procurement/create",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/profile",
+    "status": 200,
+    "landed": "/studio-photographer/profile",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/view/attendance",
+    "status": 200,
+    "landed": "/studio-photographer/view/attendance",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/view/online-gallery",
+    "status": 200,
+    "landed": "/studio-photographer/view/online-gallery",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/studio-photographer/view/studio",
+    "status": 200,
+    "landed": "/studio-photographer/view/studio",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "eduardo.katigbak@gmail.com",
+    "url": "/notifications",
+    "status": 200,
+    "landed": "/notifications",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "beatriz.inocencio@gmail.com",
+    "url": "/client/budget",
+    "status": 200,
+    "landed": "/client/budget",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "beatriz.inocencio@gmail.com",
+    "url": "/client/dashboard",
+    "status": 200,
+    "landed": "/client/dashboard",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "beatriz.inocencio@gmail.com",
+    "url": "/client/messages",
+    "status": 200,
+    "landed": "/client/messages",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "beatriz.inocencio@gmail.com",
+    "url": "/client/pending-confirmations",
+    "status": 200,
+    "landed": "/client/pending-confirmations",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "beatriz.inocencio@gmail.com",
+    "url": "/client/profile",
+    "status": 200,
+    "landed": "/client/profile",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "beatriz.inocencio@gmail.com",
+    "url": "/client/view/bookings-history",
+    "status": 200,
+    "landed": "/client/view/bookings-history",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "beatriz.inocencio@gmail.com",
+    "url": "/client/view/my-bookings",
+    "status": 200,
+    "landed": "/client/view/my-bookings",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "beatriz.inocencio@gmail.com",
+    "url": "/client/view/online-gallery",
+    "status": 200,
+    "landed": "/client/view/online-gallery",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "beatriz.inocencio@gmail.com",
+    "url": "/client/view/refunds",
+    "status": 200,
+    "landed": "/client/view/refunds",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "beatriz.inocencio@gmail.com",
+    "url": "/notifications",
+    "status": 200,
+    "landed": "/notifications",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/booking/history",
+    "status": 200,
+    "landed": "/freelancer/booking/history",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/create/packages",
+    "status": 200,
+    "landed": "/freelancer/create/packages",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/create/services",
+    "status": 200,
+    "landed": "/freelancer/create/services",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/dashboard",
+    "status": 200,
+    "landed": "/freelancer/dashboard",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/messages",
+    "status": 200,
+    "landed": "/freelancer/messages",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/online-gallery/portfolio",
+    "status": 200,
+    "landed": "/freelancer/online-gallery/portfolio",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/packages/lists",
+    "status": 200,
+    "landed": "/freelancer/packages/lists",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/profile",
+    "status": 200,
+    "landed": "/freelancer/profile",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/setup/profile",
+    "status": 200,
+    "landed": "/freelancer/view/profile",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/studio-assignments",
+    "status": 200,
+    "landed": "/freelancer/studio-assignments",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/view/bookings",
+    "status": 200,
+    "landed": "/freelancer/view/bookings",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/view/member-invitation",
+    "status": 200,
+    "landed": "/freelancer/view/member-invitation",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/view/online-gallery",
+    "status": 200,
+    "landed": "/freelancer/view/online-gallery",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/view/packages",
+    "status": 200,
+    "landed": "/freelancer/view/packages",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/view/profile",
+    "status": 200,
+    "landed": "/freelancer/view/profile",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/freelancer/view/services",
+    "status": 200,
+    "landed": "/freelancer/view/services",
+    "errors": [],
+    "visibleError": false
+  },
+  {
+    "email": "lorena.novilla@gmail.com",
+    "url": "/notifications",
+    "status": 200,
+    "landed": "/notifications",
+    "errors": [],
+    "visibleError": false
+  }
+]

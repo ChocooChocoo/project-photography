@@ -203,6 +203,11 @@ class AssignmentLifecycleTest extends TestCase
 
         // The owner assigns a replacement through the normal assign flow; the client is told.
         Auth::setUser($this->owner);
+        $available = $this->actingAs($this->owner)->getJson("/_test/owner/booking/{$booking->id}/photographers")
+            ->assertOk()->assertJsonPath('assignment_info.is_replacement', true)->json();
+        $departed = collect($available['photographers'])->firstWhere('id', $leaver->id);
+        $this->assertSame('cancelled_on_site', $departed['availability_status']);
+        $this->assertSame('Cancelled on site', $departed['availability_reason']);
         $this->actingAs($this->owner)->postJson("/_test/owner/booking/{$booking->id}/assign", ['photographer_ids' => [$replacement->id]])
             ->assertOk()->assertJsonPath('success', true);
         $this->assertDatabaseHas('tbl_notifications', ['user_id' => $client->id, 'type' => 'replacement_photographer_assigned']);

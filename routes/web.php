@@ -612,6 +612,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         Route::post('/online-gallery/portfolio', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'storePortfolio'])->name('freelancer.online-gallery.portfolio.store');
         Route::get('/online-gallery/{bookingId}/details', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'getGalleryDetails'])->name('freelancer.online-gallery.details');
         Route::post('/online-gallery/{bookingId}/upload', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'uploadImages'])->name('freelancer.online-gallery.upload');
+        Route::post('/online-gallery/{galleryId}/publish', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'publish'])->name('freelancer.online-gallery.publish');
         Route::post('/online-gallery/{bookingId}/drive-link', [\App\Http\Controllers\GalleryDeliveryController::class, 'saveDrive'])->name('freelancer.online-gallery.drive');
         Route::delete('/online-gallery/{galleryId}/image', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'deleteImage'])->name('freelancer.online-gallery.delete-image');
         Route::delete('/online-gallery/{galleryId}', [\App\Http\Controllers\Freelancer\OnlineGalleryController::class, 'deleteGallery'])->name('freelancer.online-gallery.delete');

@@ -1,0 +1,102 @@
+{
+  "overall_acceptance": "INCOMPLETE",
+  "previous_evidence": "output/t14-follow-up-verification-2026-11-04.json",
+  "method": "Actual Playwright MCP interactions. Existing window maximized via Chromium window bounds, desktop viewport 1440x813. One context and one tab throughout recorded checks; normal logout/login for account changes. Temporary mobile viewports restored to desktop. No forced clicks, disabled-control overrides, fabricated network successes, or direct application database writes.",
+  "resolved_previous_findings": [
+    {
+      "id": "freelancer-dashboard-demo-dollar-metrics",
+      "root_cause": "Dashboard template hard-coded sample dollar figures and controller supplied no account data.",
+      "fix": "Dashboard reads direct freelancer bookings and successful payments scoped to authenticated provider. Received payments deduct recorded refunds; failed payments, other providers, studio bookings, and deleted bookings are excluded. Labels describe all-time bookings, distinct clients, pending refunds, and payments received, not unsupported active-customer or revenue claims.",
+      "regression": "New PHP tests failed before implementation, then passed for zero-data account, provider/type/status/deletion isolation, refunds, and removal of demo figures.",
+      "browser_actual": "Lorena dashboard displays 4 bookings, 3 clients, 0 refunds pending, and ₱17,010.00 received. Independent normal UI comparison: active booking FS-BKF-00003 shows ₱1,260 paid; completed history shows paid totals ₱4,200, ₱7,350, and ₱4,200. Sum is ₱17,010.00. History clients Beatriz and Cristian plus active Daniela match 3 distinct clients.",
+      "evidence": [".playwright-mcp/t14-freelancer-dashboard-real-pesos.png"]
+    },
+    {
+      "id": "owner-in-studio-location-placeholder",
+      "fix": "Owner booking location renders In-Studio for in-studio bookings. On-location addresses omit missing components and escape user-supplied text.",
+      "regression": "Node test first reproduced N/A, N/A, Cavite instead of In-Studio. Three final cases pass: studio label, supplied on-location address, escaped venue markup.",
+      "browser_actual": "Owner opened BK-6AE9F0AB26000 through its table action; Event Location displayed In-Studio.",
+      "evidence": [".playwright-mcp/t14-owner-location-fixed.png"]
+    },
+    {
+      "id": "booking-dark-mode-heading-contrast",
+      "fix": "Booking form headings use theme-specific blue text; primary action uses darker blue for white-text contrast. Styling stays local to booking form.",
+      "regression": "Saved Playwright check failed at 3.81:1 before CSS change. Dark heading now measures 8.4001:1 (#8ab8ff on #1b1c22); light heading measures 5.9063:1 (#2563b8 on white). Both exceed 4.5:1. Light/dark changed using visible theme-settings controls; original dark theme restored.",
+      "limitation": "Measured heading pairing, not universal contrast certification for every component or theme skin.",
+      "evidence": [".playwright-mcp/t14-booking-accessibility-desktop-fixed.png", ".playwright-mcp/t14-booking-light-fixed.png"]
+    },
+    {
+      "id": "mobile-controls-below-touch-target-guideline",
+      "fix": "Booking form controls/buttons and checkbox-label areas receive 44px minimum height at mobile breakpoint. Visible focus outlines added and static field labels associated with inputs.",
+      "browser_actual": "At 390x844, visible booking-form form-control, form-select, and btn elements are at least 44px tall. No horizontal page overflow at 320, 390, 768, 1024, or 1440px after responsive layout settles. Mobile-to-desktop sidebar transitions are awaited rather than treating transient geometry as settled layout. Keyboard Tab from Full Name reaches Contact Number with solid 3px focus outline.",
+      "limitation": "Booking form scope only, not every portal control. No claim of real-device screen-keyboard or whole-site accessibility certification.",
+      "evidence": [".playwright-mcp/t14-booking-320-fixed.png", ".playwright-mcp/t14-booking-accessibility-desktop-fixed.png"]
+    }
+  ],
+  "newly_found_and_fixed": [
+    {
+      "id": "package-selection-skipped-by-keyboard",
+      "root_cause": "Package radios had inline display:none despite using Bootstrap btn-check, making every package absent from keyboard tab order.",
+      "fix": "Removed inline display:none. Existing visually hidden native radio styling remains; adjacent package label receives visible focus outline.",
+      "regression": "Actual Playwright Tab traversal failed to reach any package before fix. Saved browser regression reproduced this failure. After fix, Tab reaches a package radio and Space selects it without mouse or validation overrides.",
+      "status": "PASSED"
+    }
+  ],
+  "additional_browser_checks": {
+    "tutorial_destinations": {
+      "client": [
+        ["Open Budget", "/client/budget", "Set Budget"],
+        ["Browse providers", "/client/dashboard", "Client Home"],
+        ["Open Online Gallery", "/client/view/online-gallery", "My Online Galleries"],
+        ["Open My Bookings", "/client/view/my-bookings", "My Bookings"]
+      ],
+      "owner": [
+        ["Open Services", "/owner/view/services", "View Services"],
+        ["Open Packages", "/owner/view/packages", "View Packages"],
+        ["Open Photographers", "/owner/view/studio-photographers", "Registered Studio Photographers"],
+        ["Open Roles", "/owner/view/roles", "Manage Roles"],
+        ["Open Bookings", "/owner/view/bookings", "Client Bookings"]
+      ],
+      "freelancer": [
+        ["Open My Profile", "/freelancer/view/profile", "My Profile"],
+        ["Open Packages", "/freelancer/view/packages", "View Packages"],
+        ["Open My Bookings", "/freelancer/view/bookings", "Client Bookings"],
+        ["Open Online Gallery", "/freelancer/view/online-gallery", "Clients Online Gallery"]
+      ],
+      "actual": "Each of 13 visible tutorial links was clicked in its supported role and reached expected destination URL/title in same tab. Earlier content/Back/Next/Finish/replay evidence retained."
+    },
+    "camera_server_validation": {
+      "actual": "Owner edited only explicit T14 test camera, entered whitespace for required name through normal field, then clicked Save. Server returned 422 with The name field is required. Feedback was role=alert, Save re-enabled, existing test camera remained. Form cleared afterward. No invalid changes persisted.",
+      "evidence": [".playwright-mcp/t14-camera-server-validation.png"],
+      "console_note": "Expected 422 produces a browser resource error in this negative case; it is not an unhandled JavaScript exception."
+    },
+    "booking_invalid_submission": "Proceed to Summary without event date produced Event Date Required / Please select an event date. No booking or payment was submitted.",
+    "price_source_scan": "No literal dollar-number, dollar-span sample metric, USD label, or PHP followed by numeric price remained in resources/views scan. This is source evidence only, not proof that every monetary value on every screen has been browser-verified."
+  },
+  "automated_verification": {
+    "php_focused": "FreelancerDashboardTest: 3 passed, 4 assertions.",
+    "php_full_suite": "782 tests passed, 4046 assertions, 113.72 seconds. First run exceeded 120-second harness timeout without a verdict; no-timeout rerun completed successfully. Existing PHPUnit metadata deprecation warning remains.",
+    "node": "6 passed across BookingDuration, OwnerBookingLocation, and PhotographerStatusRefresh tests.",
+    "playwright": "Latest T14BookingAccessibility.browser.js passed in both light and dark themes: heading contrast, real Tab/Space package selection, associated labels, and 390px sizing/overflow. Final browser state: maximized window, 1440x813 desktop viewport, original dark theme, one context/tab. Screenshot: .playwright-mcp/t14-full-window-final.png.",
+    "build": "npm run build passed, 56 modules transformed.",
+    "diff_check": "git diff --check passed; CRLF normalization warnings only."
+  },
+  "still_unverified_or_blocked": [
+    "Actual arrival and payment-confirmation email delivery: no controlled recipient inbox or delivery-provider evidence available. Prior local rendered messages do not prove delivery. No test inbox tool or local Mailpit/MailHog command discovered.",
+    "Print-dialog receipt output was not exercised because one-window/one-tab constraint remains. Earlier payment and booking receipt values retain their passed evidence. Browser window itself was maximized and verified.",
+    "Full portal-by-portal price, error, permission, and accessibility coverage remains broader than this targeted pass. Camera whitespace rejection supplements earlier validation proof but does not cover every malicious/unauthorized input.",
+    "Real-device GPS uncertainty, exact mathematical 300m edge, screen readers, browser zoom, and on-screen mobile keyboard behavior remain unverified."
+  ],
+  "known_nonblocking_warnings": [
+    "Client page has seven missing English translation-key warnings in existing sidebar localization. Normal labels remain visible; warnings were not suppressed or claimed fixed.",
+    "Existing PHPUnit doc-comment metadata deprecation warning remains in PortalMiddlewareDownloadTest."
+  ],
+  "environment_notes": [
+    "A separate read-only CLI data cross-check could not authenticate using on-disk default/local database configuration. No credentials were changed. Dashboard values were instead reconciled against independent normal booking/history UI views.",
+    "Window confirmed maximized via Browser.getWindowForTarget. Responsive checks briefly resized viewport only; desktop restored to 1440x813.",
+    "No application records created in this pass; invalid camera update rejected. Theme restored to original dark setting. Tests use isolated in-memory database.",
+    "All changes remain uncommitted. No push, merge, production migration, or full approval."
+  ],
+  "browser_context_count": 1,
+  "browser_tab_count": 1
+}

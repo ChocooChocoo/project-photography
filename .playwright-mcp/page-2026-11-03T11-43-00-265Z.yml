@@ -1,0 +1,249 @@
+- generic [ref=f101e1]:
+  - generic [ref=f101e2]:
+    - generic [ref=f101e3]:
+      - link [ref=f101e4] [cursor=pointer]:
+        - /url: http://127.0.0.1:8013
+        - img "logo" [ref=f101e7]
+      - text: ｂ 
+      - region "scrollable content" [ref=f101e12]:
+        - list [ref=f101e14]:
+          - listitem: Apps
+          - listitem [ref=f101e15]:
+            - link " Dashboard" [ref=f101e16] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/studio-photographer/dashboard
+              - generic [ref=f101e17]: 
+              - generic [ref=f101e19]: Dashboard
+          - listitem [ref=f101e20]:
+            - link " Request " [ref=f101e21] [cursor=pointer]:
+              - /url: "#sidebarPhotographerRequest"
+              - generic [ref=f101e22]: 
+              - generic [ref=f101e24]: Request
+              - generic [ref=f101e25]: 
+          - listitem [ref=f101e26]:
+            - link " Attendance" [ref=f101e27] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/studio-photographer/view/attendance
+              - generic [ref=f101e28]: 
+              - generic [ref=f101e30]: Attendance
+          - listitem [ref=f101e31]:
+            - link " Studio " [ref=f101e32] [cursor=pointer]:
+              - /url: "#sidebarManageAssignedStudio"
+              - generic [ref=f101e33]: 
+              - generic [ref=f101e35]: Studio
+              - generic [ref=f101e36]: 
+          - listitem [ref=f101e37]:
+            - link " Booking " [ref=f101e38] [cursor=pointer]:
+              - /url: "#sidebarManageAssignedBooking"
+              - generic [ref=f101e39]: 
+              - generic [ref=f101e41]: Booking
+              - generic [ref=f101e42]: 
+          - listitem [ref=f101e43]:
+            - link " Online Gallery" [ref=f101e44] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/studio-photographer/view/online-gallery
+              - generic [ref=f101e45]: 
+              - generic [ref=f101e47]: Online Gallery
+    - banner [ref=f101e48]:
+      - generic [ref=f101e49]:
+        - generic [ref=f101e50]:
+          - button "ｂ" [ref=f101e51] [cursor=pointer]
+          - text: ｂ
+        - generic [ref=f101e53]:
+          - link "Messages" [ref=f101e55] [cursor=pointer]:
+            - /url: http://127.0.0.1:8013/studio-photographer/messages
+            - generic [aria-hidden] [ref=f101e56]: 
+          - generic [ref=f101e58]:
+            - button "2" [ref=f101e59] [cursor=pointer]
+            - text:  
+          - generic [ref=f101e65]:
+            - link "user-image Cesar Enriquez Lagdameo " [ref=f101e66] [cursor=pointer]:
+              - /url: "#!"
+              - img "user-image" [ref=f101e67]
+              - generic [ref=f101e68]:
+                - heading "Cesar Enriquez Lagdameo" [level=5] [ref=f101e69]
+                - generic [ref=f101e70]: 
+            - text:  奄
+          - button "" [ref=f101e72] [cursor=pointer]
+    - generic [ref=f101e79]:
+      - heading "Online Gallery" [level=4] [ref=f101e81]
+      - searchbox "Search..." [ref=f101e85]
+      - table [ref=f101e90]:
+        - rowgroup [ref=f101e91]:
+          - row [ref=f101e92]:
+            - columnheader "Booking Ref" [ref=f101e93]
+            - columnheader "Client" [ref=f101e94]
+            - columnheader "Event Date" [ref=f101e95]
+            - columnheader "Category" [ref=f101e96]
+            - columnheader "Package" [ref=f101e97]
+            - columnheader "Gallery Status" [ref=f101e98]
+            - columnheader "Actions" [ref=f101e99]
+        - rowgroup [ref=f101e100]:
+          - row [ref=f101e101]:
+            - cell "BK-6AE9C50EEA1EA" [ref=f101e102]
+            - cell "Beatriz Inocencio" [ref=f101e103]
+            - cell "Nov 19, 2026" [ref=f101e104]
+            - cell "Wedding Photography" [ref=f101e105]
+            - cell "Vows and Verses Collection - Essentials" [ref=f101e106]
+            - cell " Draft" [ref=f101e107]:
+              - generic [ref=f101e108]:
+                - generic [ref=f101e109]: 
+                - text: Draft
+            - cell [ref=f101e110]:
+              - button "Manage Gallery" [ref=f101e111] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f101e112]: ﵊
+              - button "Submit for approval" [ref=f101e113] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f101e114]: 
+          - row [ref=f101e115]:
+            - cell "FS-BKS-00020" [ref=f101e116]
+            - cell "Kevin Gonzaga" [ref=f101e117]
+            - cell "Jul 14, 2026" [ref=f101e118]
+            - cell "Event Photography" [ref=f101e119]
+            - cell "Gathering Day Collection - Basic" [ref=f101e120]
+            - cell " No Gallery" [ref=f101e121]:
+              - generic [ref=f101e122]:
+                - generic [ref=f101e123]: 
+                - text: No Gallery
+            - cell [ref=f101e124]:
+              - button "Create Gallery" [ref=f101e125] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f101e126]: 
+      - generic [ref=f101e128]:
+        - generic [ref=f101e129]: Showing 1 to 2 of 2 gallery
+        - list [ref=f101e131]:
+          - listitem [ref=f101e132]:
+            - link "":
+              - /url: "#"
+          - listitem [ref=f101e133]:
+            - link "1" [ref=f101e134] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=f101e135]:
+            - link "":
+              - /url: "#"
+    - dialog [ref=f101e136]:
+      - generic [ref=f101e137]:
+        - generic [ref=f101e138]:
+          - heading "Manage Online Gallery" [level=5] [ref=f101e139]
+          - button "Close" [active] [ref=f101e140] [cursor=pointer]
+        - generic [ref=f101e142]:
+          - generic [ref=f101e143]:
+            - generic [ref=f101e145]:
+              - generic [ref=f101e146]: ﵊
+              - generic [ref=f101e149]:
+                - heading "Imus Heritage Garden Wedding" [level=2] [ref=f101e150]
+                - generic [ref=f101e151]:
+                  - generic [ref=f101e153]:
+                    - generic [ref=f101e154]: 
+                    - text: Active
+                  - generic [ref=f101e156]:
+                    - generic [ref=f101e157]: 
+                    - text: Draft
+                - paragraph [ref=f101e158]:
+                  - generic [ref=f101e159]: 
+                  - text: BK-6AE9C50EEA1EA
+            - generic [ref=f101e160]:
+              - button " Submit for approval" [ref=f101e161] [cursor=pointer]:
+                - generic [ref=f101e162]: 
+                - text: Submit for approval
+              - text: 
+          - generic [ref=f101e164]:
+            - generic [ref=f101e165]:
+              - heading "BOOKING INFORMATION" [level=5] [ref=f101e166]
+              - generic [ref=f101e168]:
+                - generic [ref=f101e169]: 
+                - generic [ref=f101e172]:
+                  - generic [ref=f101e173]: Client Name
+                  - paragraph [ref=f101e174]: Beatriz Inocencio
+              - generic [ref=f101e176]:
+                - generic [ref=f101e177]: 
+                - generic [ref=f101e180]:
+                  - generic [ref=f101e181]: Email Address
+                  - paragraph [ref=f101e182]: beatriz.inocencio@gmail.com
+              - generic [ref=f101e184]:
+                - generic [ref=f101e185]: 
+                - generic [ref=f101e188]:
+                  - generic [ref=f101e189]: Booking Reference
+                  - paragraph [ref=f101e190]: BK-6AE9C50EEA1EA
+              - generic [ref=f101e192]:
+                - generic [ref=f101e193]: 
+                - generic [ref=f101e196]:
+                  - generic [ref=f101e197]: Event Date
+                  - paragraph [ref=f101e198]: Nov 19, 2026
+            - generic [ref=f101e199]:
+              - heading "GALLERY INFORMATION" [level=5] [ref=f101e200]
+              - generic [ref=f101e202]:
+                - generic [ref=f101e203]: 
+                - generic [ref=f101e206]:
+                  - generic [ref=f101e207]: Gallery Reference
+                  - paragraph [ref=f101e208]: GAL-6AE9C83C21AD8
+              - generic [ref=f101e210]:
+                - generic [ref=f101e211]: 
+                - generic [ref=f101e214]:
+                  - generic [ref=f101e215]: Gallery Name
+                  - paragraph [ref=f101e216]: Imus Heritage Garden Wedding
+              - generic [ref=f101e218]:
+                - generic [ref=f101e219]: 
+                - generic [ref=f101e222]:
+                  - generic [ref=f101e223]: Total Photos
+                  - paragraph [ref=f101e224]: 2 images
+              - generic [ref=f101e226]:
+                - generic [ref=f101e227]: 
+                - generic [ref=f101e230]:
+                  - generic [ref=f101e231]: Published Date
+                  - paragraph [ref=f101e232]: Not published
+              - generic [ref=f101e234]:
+                - generic [ref=f101e235]: 
+                - generic [ref=f101e238]:
+                  - generic [ref=f101e239]: Description
+                  - paragraph [ref=f101e240]: Edited selects from the ceremony.
+            - text: 
+            - generic [ref=f101e241]:
+              - heading "UPLOAD IMAGES" [level=5] [ref=f101e242]
+              - generic [ref=f101e244]:
+                - generic [ref=f101e245]:
+                  - paragraph [ref=f101e246]: Upload New Images
+                  - generic [ref=f101e247]:
+                    - generic [ref=f101e248]: 
+                    - text: Select up to 50 images. Max 5MB per image.
+                - button " Upload Images" [ref=f101e249] [cursor=pointer]:
+                  - generic [ref=f101e250]: 
+                  - text: Upload Images
+              - text:  
+            - generic [ref=f101e251]:
+              - heading "GALLERY IMAGES" [level=5] [ref=f101e252]
+              - generic [ref=f101e254]:
+                - paragraph [ref=f101e255]: "Total Images: 2"
+                - generic [ref=f101e256]:
+                  - button " Edit Gallery Info" [ref=f101e257] [cursor=pointer]:
+                    - generic [ref=f101e258]: 
+                    - text: Edit Gallery Info
+                  - button " Delete Entire Gallery" [ref=f101e259] [cursor=pointer]:
+                    - generic [ref=f101e260]: 
+                    - text: Delete Entire Gallery
+              - generic [ref=f101e262]:
+                - generic [ref=f101e264]:
+                  - generic [ref=f101e265]:
+                    - img "Gallery Image" [ref=f101e266]
+                    - generic [ref=f101e267]:
+                      - generic [ref=f101e268]: 
+                      - text: "1"
+                  - generic [ref=f101e270]:
+                    - generic [ref=f101e271]:
+                      - generic [ref=f101e272]: 
+                      - text: 11/3/2026
+                    - button "Original added" [ref=f101e273] [cursor=pointer]:
+                      - generic [aria-hidden] [ref=f101e274]: 
+                    - button "" [ref=f101e276] [cursor=pointer]
+                - generic [ref=f101e279]:
+                  - generic [ref=f101e280]:
+                    - img "Gallery Image" [ref=f101e281]
+                    - generic [ref=f101e282]:
+                      - generic [ref=f101e283]: 
+                      - text: "2"
+                  - generic [ref=f101e285]:
+                    - generic [ref=f101e286]:
+                      - generic [ref=f101e287]: 
+                      - text: 11/3/2026
+                    - button "Add original" [ref=f101e288] [cursor=pointer]:
+                      - generic [aria-hidden] [ref=f101e289]: 
+                    - button "" [ref=f101e291] [cursor=pointer]
+              - generic:  
+  - button "Ask the photography assistant" [ref=f101e293] [cursor=pointer]:
+    - generic [ref=f101e294]: 
+  - text:  

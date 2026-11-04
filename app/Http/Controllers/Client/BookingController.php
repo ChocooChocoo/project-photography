@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\StudioOwner\StudiosModel;
@@ -1610,6 +1611,8 @@ class BookingController extends Controller
      */
     public function paymentSuccess(Request $request)
     {
+        $receiptEmailSent = false;
+
         try {
             \Log::info('Payment success callback', [
                 'query_params' => $request->query(),
@@ -1682,10 +1685,29 @@ class BookingController extends Controller
                 'payment_id' => $payment->id,
                 'reference' => $reference,
             ]);
-            
+
+            try {
+                $details = $payment->payment_details ?? [];
+                if (!empty($details['receipt_emailed_at'])) {
+                    $receiptEmailSent = true;
+                } else {
+                    Mail::to($booking->client->email)->send(new \App\Mail\PaymentReceiptMail($booking, $payment));
+                    $details['receipt_emailed_at'] = now()->toDateTimeString();
+                    $payment->update(['payment_details' => $details]);
+                    $receiptEmailSent = true;
+                }
+            } catch (\Throwable $mailError) {
+                \Log::error('Payment receipt email failed', [
+                    'booking_id' => $booking->id,
+                    'payment_id' => $payment->id,
+                    'error' => $mailError->getMessage(),
+                ]);
+            }
+
             return view('client.payment-success', [
                 'booking' => $booking,
                 'payment' => $payment,
+                'receiptEmailSent' => $receiptEmailSent,
             ]);
             
         } catch (\Exception $e) {

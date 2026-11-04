@@ -1,0 +1,817 @@
+[   43838ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43838ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: manage-schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: setup-schedule @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: manage-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: invite-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: apply-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: manage-studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: add-photographer @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: create-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: hr-leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: hr-overtime-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: manage-permissions @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43839ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: create-payroll-settings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: create-category-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: manage-subscription @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: subscription-plans @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: subscription-status @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: ai-assistant @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: chatbot-config @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: manage-intents @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   43840ms] [WARNING] Missing translation for key: conversation-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   52311ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[   57199ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   57199ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   57199ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   57199ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   57199ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   57199ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   57199ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   62894ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   62894ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   62894ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   62894ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   62894ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   62894ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   62894ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   65919ms] [LOG] Client budgets loaded: {1: Object, 2: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1385
+[   65920ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1392
+[   65920ms] [LOG] Available budget categories for this provider: [1, 2] @ http://127.0.0.1:8013/client/booking-form/studio/4:1402
+[   65920ms] [LOG] Client has budgets - rendering category tabs @ http://127.0.0.1:8013/client/booking-form/studio/4:1491
+[   65932ms] [LOG] Auto-loading packages for first available budget category: 1 @ http://127.0.0.1:8013/client/booking-form/studio/4:1498
+[   65965ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   65966ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   65966ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   65966ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   65966ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   65966ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   65966ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[   68089ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: true, budget_info: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1602
+[   68091ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[   68092ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[   68092ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[   68092ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[   68092ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[  160110ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8013/client/messages/unread:0
+[  161010ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  165690ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165690ms] [WARNING] Missing translation for key: manage-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165690ms] [WARNING] Missing translation for key: view-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165690ms] [WARNING] Missing translation for key: setup-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165690ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165690ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165690ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165691ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165691ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165691ms] [WARNING] Missing translation for key: member-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165691ms] [WARNING] Missing translation for key: view-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165691ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165691ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165691ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165691ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165691ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165691ms] [WARNING] Missing translation for key: services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  165691ms] [WARNING] Missing translation for key: create-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: manage-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: view-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: setup-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: member-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: view-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  176646ms] [WARNING] Missing translation for key: create-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  663506ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  668312ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  668312ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  668312ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  668312ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  668312ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  668313ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  668313ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  670717ms] [LOG] Client budgets loaded: {1: Object, 2: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1385
+[  670717ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1392
+[  670717ms] [LOG] Available budget categories for this provider: [1, 2] @ http://127.0.0.1:8013/client/booking-form/studio/4:1402
+[  670717ms] [LOG] Client has budgets - rendering category tabs @ http://127.0.0.1:8013/client/booking-form/studio/4:1491
+[  670718ms] [LOG] Auto-loading packages for first available budget category: 1 @ http://127.0.0.1:8013/client/booking-form/studio/4:1498
+[  670738ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  670739ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  670739ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  670739ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  670739ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  670739ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  670739ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  672909ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: true, budget_info: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1602
+[  672913ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[  672914ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[  672914ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[  672914ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[  672915ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[  782621ms] [LOG] Client budgets loaded: {1: Object, 2: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1385
+[  782621ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1392
+[  782621ms] [LOG] Available budget categories for this provider: [1, 2] @ http://127.0.0.1:8013/client/booking-form/studio/4:1402
+[  782621ms] [LOG] Client has budgets - rendering category tabs @ http://127.0.0.1:8013/client/booking-form/studio/4:1491
+[  782622ms] [LOG] Auto-loading packages for first available budget category: 1 @ http://127.0.0.1:8013/client/booking-form/studio/4:1498
+[  782638ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  782638ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  782638ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  782638ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  782638ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  782638ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  782638ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  784706ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: true, budget_info: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1602
+[  784706ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[  784707ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[  784707ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[  784708ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[  784708ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1713
+[  804468ms] [LOG] Client budgets loaded: {1: Object, 2: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1417
+[  804468ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1424
+[  804468ms] [LOG] Available budget categories for this provider: [1, 2] @ http://127.0.0.1:8013/client/booking-form/studio/4:1434
+[  804468ms] [LOG] Client has budgets - rendering category tabs @ http://127.0.0.1:8013/client/booking-form/studio/4:1523
+[  804469ms] [LOG] Auto-loading packages for first available budget category: 1 @ http://127.0.0.1:8013/client/booking-form/studio/4:1530
+[  804488ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  804488ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  804488ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  804488ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  804488ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  804488ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  804488ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  806648ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: true, budget_info: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1634
+[  806649ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[  806650ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[  806650ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[  806650ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[  806651ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[  837497ms] [LOG] Client budgets loaded: {1: Object, 2: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1417
+[  837497ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1424
+[  837497ms] [LOG] Available budget categories for this provider: [1, 2] @ http://127.0.0.1:8013/client/booking-form/studio/4:1434
+[  837497ms] [LOG] Client has budgets - rendering category tabs @ http://127.0.0.1:8013/client/booking-form/studio/4:1523
+[  837498ms] [LOG] Auto-loading packages for first available budget category: 1 @ http://127.0.0.1:8013/client/booking-form/studio/4:1530
+[  837513ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  837513ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  837513ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  837513ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  837513ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  837513ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  837513ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  839507ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: true, budget_info: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1634
+[  839507ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[  839508ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[  839509ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[  839509ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[  839509ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[  947487ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[  952752ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: manage-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: view-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: setup-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: member-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: view-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952752ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952753ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952753ms] [WARNING] Missing translation for key: services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  952753ms] [WARNING] Missing translation for key: create-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: manage-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: view-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: setup-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: member-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: view-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978793ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978794ms] [WARNING] Missing translation for key: services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[  978794ms] [WARNING] Missing translation for key: create-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: manage-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: view-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: setup-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: member-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: view-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035191ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035192ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035192ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035192ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035192ms] [WARNING] Missing translation for key: services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1035192ms] [WARNING] Missing translation for key: create-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: manage-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: view-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: setup-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: member-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: view-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1051721ms] [WARNING] Missing translation for key: create-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: manage-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: view-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: setup-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: member-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: view-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1056041ms] [WARNING] Missing translation for key: create-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: manage-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: view-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: setup-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: member-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: view-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058748ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058749ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058749ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058749ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058749ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058749ms] [WARNING] Missing translation for key: services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1058749ms] [WARNING] Missing translation for key: create-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: manage-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: view-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: setup-profile @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: member-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: view-invitation @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1062919ms] [WARNING] Missing translation for key: create-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1072013ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[ 1077584ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: setup-schedule @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: invite-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: apply-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: add-photographer @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: create-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: hr-leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: hr-overtime-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-permissions @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: create-payroll-settings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077584ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: create-category-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: manage-subscription @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: subscription-plans @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: subscription-status @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: ai-assistant @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: chatbot-config @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: manage-intents @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1077585ms] [WARNING] Missing translation for key: conversation-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: manage-schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: setup-schedule @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: manage-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: invite-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: apply-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: manage-studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: add-photographer @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: create-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: hr-leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: hr-overtime-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080940ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: manage-permissions @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: create-payroll-settings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: create-category-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: manage-subscription @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: subscription-plans @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: subscription-status @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: ai-assistant @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: chatbot-config @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: manage-intents @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1080941ms] [WARNING] Missing translation for key: conversation-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: manage-schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088763ms] [WARNING] Missing translation for key: setup-schedule @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: manage-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: invite-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: apply-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: manage-studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: add-photographer @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: create-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: hr-leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: hr-overtime-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: manage-permissions @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088764ms] [WARNING] Missing translation for key: create-payroll-settings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: create-category-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: manage-subscription @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: subscription-plans @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: subscription-status @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: ai-assistant @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: chatbot-config @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: manage-intents @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1088765ms] [WARNING] Missing translation for key: conversation-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092005ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092005ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092005ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092005ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092005ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092005ms] [WARNING] Missing translation for key: bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: manage-schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: setup-schedule @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: manage-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: invite-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: apply-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: manage-studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: add-photographer @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: create-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: hr-leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: hr-overtime-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092006ms] [WARNING] Missing translation for key: procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: manage-permissions @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: create-payroll-settings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: create-category-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: manage-subscription @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: subscription-plans @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: subscription-status @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: ai-assistant @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: chatbot-config @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: manage-intents @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1092007ms] [WARNING] Missing translation for key: conversation-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096006ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096006ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096006ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096006ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096006ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: manage-schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: setup-schedule @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: manage-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: invite-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: apply-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: manage-studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: add-photographer @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: create-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: hr-leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096007ms] [WARNING] Missing translation for key: hr-overtime-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: manage-permissions @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: create-payroll-settings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: create-category-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096008ms] [WARNING] Missing translation for key: manage-subscription @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096009ms] [WARNING] Missing translation for key: subscription-plans @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096009ms] [WARNING] Missing translation for key: subscription-status @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096009ms] [WARNING] Missing translation for key: ai-assistant @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096009ms] [WARNING] Missing translation for key: chatbot-config @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096009ms] [WARNING] Missing translation for key: manage-intents @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1096009ms] [WARNING] Missing translation for key: conversation-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: manage-schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: setup-schedule @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: manage-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: invite-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: apply-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: manage-studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: add-photographer @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: create-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: hr-leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: hr-overtime-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100460ms] [WARNING] Missing translation for key: procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: manage-permissions @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: create-payroll-settings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: create-category-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: manage-subscription @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: subscription-plans @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: subscription-status @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: ai-assistant @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: chatbot-config @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: manage-intents @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1100461ms] [WARNING] Missing translation for key: conversation-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104601ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104601ms] [WARNING] Missing translation for key: manage-studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: studios @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: create-studio @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: portfolio-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: manage-schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: schedules @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: setup-schedule @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: manage-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: invite-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: apply-members @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: manage-studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: studio-photographers @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: add-photographer @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: manage-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: create-employee @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: hr-leave-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104602ms] [WARNING] Missing translation for key: hr-overtime-requests @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: procurement @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: manage-roles @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: manage-permissions @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: manage-payroll @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: create-payroll-settings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: manage-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: create-package @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: list-packages @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: manage-category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: category-services @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: create-category-service @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: manage-subscription @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: subscription-plans @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: subscription-status @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: ai-assistant @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: chatbot-config @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: manage-intents @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1104603ms] [WARNING] Missing translation for key: conversation-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1141973ms] [ERROR] Failed to load resource: the server responded with a status of 422 (Unprocessable Content) @ http://127.0.0.1:8013/owner/equipment-catalog/3:0
+[ 1171306ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0
+[ 1176122ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1176122ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1176122ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1176123ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1176123ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1176123ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1176123ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1179702ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1179702ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1179702ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1179702ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1179702ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1179702ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1179702ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1183090ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1183090ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1183090ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1183090ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1183090ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1183090ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1183090ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1187199ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1187199ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1187199ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1187199ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1187199ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1187199ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1187199ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1190741ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1190741ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1190741ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1190741ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1190741ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1190741ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1190742ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1223112ms] [LOG] Client budgets loaded: {1: Object, 2: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1417
+[ 1223113ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1424
+[ 1223113ms] [LOG] Available budget categories for this provider: [1, 2] @ http://127.0.0.1:8013/client/booking-form/studio/4:1434
+[ 1223113ms] [LOG] Client has budgets - rendering category tabs @ http://127.0.0.1:8013/client/booking-form/studio/4:1523
+[ 1223115ms] [LOG] Auto-loading packages for first available budget category: 1 @ http://127.0.0.1:8013/client/booking-form/studio/4:1530
+[ 1223136ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1223136ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1223136ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1223136ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1223136ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1223136ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1223136ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1223186ms] [LOG] Submit button clicked @ http://127.0.0.1:8013/client/booking-form/studio/4:2554
+[ 1223186ms] [LOG] Current state: {allowMultipleLocations: false, currentMaxLocations: 1, locationCount: 0, locationType: } @ http://127.0.0.1:8013/client/booking-form/studio/4:2555
+[ 1223187ms] [LOG] ========== VALIDATION START ========== @ http://127.0.0.1:8013/client/booking-form/studio/4:2861
+[ 1223187ms] [LOG] Validating required fields: {fullName: Beatriz Inocencio, contactNumber: +63918404400, email: beatriz.inocencio@gmail.com, serviceCategory: 1, eventDate: } @ http://127.0.0.1:8013/client/booking-form/studio/4:2872
+[ 1223198ms] [LOG] Form validation failed @ http://127.0.0.1:8013/client/booking-form/studio/4:2563
+[ 1225317ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: true, budget_info: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1634
+[ 1225318ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1225318ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1225318ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1225318ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1225319ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1265688ms] [LOG] Client budgets loaded: {1: Object, 2: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1417
+[ 1265688ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1424
+[ 1265688ms] [LOG] Available budget categories for this provider: [1, 2] @ http://127.0.0.1:8013/client/booking-form/studio/4:1434
+[ 1265688ms] [LOG] Client has budgets - rendering category tabs @ http://127.0.0.1:8013/client/booking-form/studio/4:1523
+[ 1265689ms] [LOG] Auto-loading packages for first available budget category: 1 @ http://127.0.0.1:8013/client/booking-form/studio/4:1530
+[ 1265717ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1265717ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1265717ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1265717ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1265717ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1265717ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1265718ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1267954ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: true, budget_info: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1634
+[ 1267955ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1267955ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1267956ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1267956ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1267956ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1367123ms] [LOG] Client budgets loaded: {1: Object, 2: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1417
+[ 1367123ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1424
+[ 1367123ms] [LOG] Available budget categories for this provider: [1, 2] @ http://127.0.0.1:8013/client/booking-form/studio/4:1434
+[ 1367124ms] [LOG] Client has budgets - rendering category tabs @ http://127.0.0.1:8013/client/booking-form/studio/4:1523
+[ 1367125ms] [LOG] Auto-loading packages for first available budget category: 1 @ http://127.0.0.1:8013/client/booking-form/studio/4:1530
+[ 1367781ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1367781ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1367781ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1367781ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1367781ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1367781ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1367781ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1369340ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: true, budget_info: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1634
+[ 1369340ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1369341ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1369341ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1369342ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1369342ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1483673ms] [LOG] Client budgets loaded: {1: Object, 2: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1417
+[ 1483673ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1424
+[ 1483674ms] [LOG] Available budget categories for this provider: [1, 2] @ http://127.0.0.1:8013/client/booking-form/studio/4:1434
+[ 1483674ms] [LOG] Client has budgets - rendering category tabs @ http://127.0.0.1:8013/client/booking-form/studio/4:1523
+[ 1483675ms] [LOG] Auto-loading packages for first available budget category: 1 @ http://127.0.0.1:8013/client/booking-form/studio/4:1530
+[ 1483696ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1483696ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1483696ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1483696ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1483696ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1483697ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1483697ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1485815ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: true, budget_info: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1634
+[ 1485816ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1485816ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1485817ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1485817ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1485817ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1495728ms] [LOG] Client budgets loaded: {1: Object, 2: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1417
+[ 1495729ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1424
+[ 1495729ms] [LOG] Available budget categories for this provider: [1, 2] @ http://127.0.0.1:8013/client/booking-form/studio/4:1434
+[ 1495729ms] [LOG] Client has budgets - rendering category tabs @ http://127.0.0.1:8013/client/booking-form/studio/4:1523
+[ 1495730ms] [LOG] Auto-loading packages for first available budget category: 1 @ http://127.0.0.1:8013/client/booking-form/studio/4:1530
+[ 1496366ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1496367ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1496367ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1496367ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1496367ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1496367ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1496367ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1497873ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: true, budget_info: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1634
+[ 1497874ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1497874ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1497874ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1497874ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1497874ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1498235ms] [LOG] Package selected: {id: 31, flexible: false, duration: 3} @ http://127.0.0.1:8013/client/booking-form/studio/4:1990
+[ 1498236ms] [LOG] Selected package data: {id: 31, package_name: Vows and Verses Collection - Basic, package_description: Basic wedding coverage with guided timeline planni…remony documentation, and a curated portrait set., package_price: 7900.00, discount_percentage: 0} @ http://127.0.0.1:8013/client/booking-form/studio/4:2012
+[ 1498238ms] [LOG] Package location flexibility: {options: Array(1), isFlexible: false, singleOption: In-Studio} @ http://127.0.0.1:8013/client/booking-form/studio/4:3780
+[ 1498240ms] [LOG] Getting summary for package: 31 Payment type: downpayment @ http://127.0.0.1:8013/client/booking-form/studio/4:2822
+[ 1498244ms] [LOG] Auto-calculated end time: 11:00 for start time 08:00 + 3 hours @ http://127.0.0.1:8013/client/booking-form/studio/4:2802
+[ 1498930ms] [LOG] Summary response: {success: true, summary: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:2835
+[ 1620797ms] [LOG] Client budgets loaded: {1: Object, 2: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1417
+[ 1620797ms] [LOG] Provider categories: [2, 10, 1] @ http://127.0.0.1:8013/client/booking-form/studio/4:1424
+[ 1620797ms] [LOG] Available budget categories for this provider: [1, 2] @ http://127.0.0.1:8013/client/booking-form/studio/4:1434
+[ 1620797ms] [LOG] Client has budgets - rendering category tabs @ http://127.0.0.1:8013/client/booking-form/studio/4:1523
+[ 1620798ms] [LOG] Auto-loading packages for first available budget category: 1 @ http://127.0.0.1:8013/client/booking-form/studio/4:1530
+[ 1620815ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1620815ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1620815ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1620815ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1620815ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1620815ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1620815ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1622959ms] [LOG] Packages response: {success: true, packages: Array(5), total: 5, has_budget: true, budget_info: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:1634
+[ 1622960ms] [LOG] Package ID: 31 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1622960ms] [LOG] Package ID: 32 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1622961ms] [LOG] Package ID: 33 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1622961ms] [LOG] Package ID: 47 allow_time_customization: false type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1622962ms] [LOG] Package ID: 49 allow_time_customization: true type: boolean @ http://127.0.0.1:8013/client/booking-form/studio/4:1745
+[ 1623285ms] [LOG] Package selected: {id: 31, flexible: false, duration: 3} @ http://127.0.0.1:8013/client/booking-form/studio/4:1990
+[ 1623285ms] [LOG] Selected package data: {id: 31, package_name: Vows and Verses Collection - Basic, package_description: Basic wedding coverage with guided timeline planni…remony documentation, and a curated portrait set., package_price: 7900.00, discount_percentage: 0} @ http://127.0.0.1:8013/client/booking-form/studio/4:2012
+[ 1623287ms] [LOG] Package location flexibility: {options: Array(1), isFlexible: false, singleOption: In-Studio} @ http://127.0.0.1:8013/client/booking-form/studio/4:3780
+[ 1623288ms] [LOG] Getting summary for package: 31 Payment type: downpayment @ http://127.0.0.1:8013/client/booking-form/studio/4:2822
+[ 1623290ms] [LOG] Auto-calculated end time: 11:00 for start time 08:00 + 3 hours @ http://127.0.0.1:8013/client/booking-form/studio/4:2802
+[ 1623883ms] [LOG] Summary response: {success: true, summary: Object} @ http://127.0.0.1:8013/client/booking-form/studio/4:2835
+[ 1787988ms] [WARNING] Missing translation for key: dashboard @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1787988ms] [WARNING] Missing translation for key: manage-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1787988ms] [WARNING] Missing translation for key: view-bookings @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1787988ms] [WARNING] Missing translation for key: booking-history @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1787988ms] [WARNING] Missing translation for key: refunds @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1787988ms] [WARNING] Missing translation for key: online-gallery @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1787988ms] [WARNING] Missing translation for key: budget @ http://127.0.0.1:8013/assets/js/app.js?v=1792932692:781
+[ 1806859ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:8013/auth/login:0

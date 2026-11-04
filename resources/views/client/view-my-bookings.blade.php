@@ -914,7 +914,7 @@
                                         </div>
                                         <div class="flex-grow-1 ms-3">
                                             <label class="text-muted small mb-1">Duration</label>
-                                            <p class="mb-0 fw-medium">${pkg.duration} hours</p>
+                                            <p class="mb-0 fw-medium">${pkg.duration == null ? 'Flexible duration' : `${pkg.duration} hours`}</p>
                                         </div>
                                     </div>
                                 </div>

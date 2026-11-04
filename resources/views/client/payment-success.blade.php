@@ -73,7 +73,11 @@
                             
                             <div class="alert alert-info">
                                 <i class="ti ti-mail me-2"></i>
-                                A confirmation email has been sent to your registered email address.
+                                @if($receiptEmailSent ?? false)
+                                    A payment receipt email was sent to your registered email address.
+                                @else
+                                    Your payment is recorded. We could not confirm an email receipt, so keep this page or print it as your receipt.
+                                @endif
                             </div>
                             
                             <div class="d-grid gap-2 d-md-flex justify-content-center mt-4">

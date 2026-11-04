@@ -1,0 +1,89 @@
+{
+  "overall_acceptance": "INCOMPLETE",
+  "previous_evidence": "output/t14-resumed-verification-2026-11-04.json",
+  "scope": "Prove actual email delivery using user-supplied temporary inbox, and fix any email behavior found wrong.",
+  "method": "Actual Playwright MCP interactions with ONE tab and ONE context. Existing window maximized; desktop viewport 1440x813. Normal registration, Stripe Sandbox payment, owner assignment, photographer GPS check-in, and logout/login. Temporary address provided by user: va39he2rm4@gmeenramy.com on temp-mail.io. No credentials for user's personal mailbox were requested or used.",
+  "email_delivery_proven": [
+    {
+      "id": "registration-verification-email",
+      "delivered": true,
+      "inbox_evidence": "Message 'Verify Your Email Address - PHOTOGRAPHY Platform' appeared in the temp inbox after registering the temporary address as a client.",
+      "message_contents_checked": "Recipient Full Name, Account Type client, registered email, verification link host 127.0.0.1:8013, 24-hour expiry text.",
+      "link_result": "First use returned 'Email verified successfully! You can now login.' Second use of same link returned 'Invalid or expired verification link.', showing single-use/expiry enforcement.",
+      "evidence": [".playwright-mcp/t14-temp-inbox-three-messages.png"],
+      "login_after_verification": "Registered temporary account logged in successfully and reached its client dashboard with compacted, functional Freelancer sidebar. No password or secrets recorded in evidence."
+    },
+    {
+      "id": "payment-receipt-email",
+      "delivered": true,
+      "booking_reference": "BK-6AEA0DF825ABF",
+      "payment_reference": "PAY-6AEA0DF82AF7F",
+      "inbox_evidence": "Message 'Payment received - BK-6AEA0DF825ABF' appeared in temp inbox.",
+      "values_checked": "Amount paid ₱2,370.00, Booking total ₱7,900.00, Remaining balance ₱5,530.00, matching client booking details and payment history exactly.",
+      "environment": "Stripe Sandbox, cs_test session, standard Stripe test card. No live charge.",
+      "evidence": [".playwright-mcp/t14-payment-email-evidence.png", ".playwright-mcp/t14-payment-email-sandbox.png"]
+    },
+    {
+      "id": "photographer-arrival-email",
+      "delivered": true,
+      "booking_reference": "BK-6AEA0DF825ABF",
+      "inbox_evidence": "Message 'Your photographer has arrived - BK-6AEA0DF825ABF' appeared after photographer GPS check-in.",
+      "values_checked": "Photographer name Bernadette Espiritu, booking reference, time, and 'about 299 m from the studio', matching the saved arrival proof.",
+      "recipient_scope": "Client recipient delivery proven in the temp inbox. Owner recipient is sent by the same loop to the owner's registered address; owner inbox independently observed only in local rendered logs, not in an accessible inbox.",
+      "simulation": "Playwright geolocation and existing local JPEG used as explicit test fixtures, not physical presence.",
+      "evidence": [".playwright-mcp/t14-arrival-email-evidence.png"]
+    }
+  ],
+  "defect_found_and_fixed": {
+    "id": "false-payment-email-claim",
+    "root_cause": "Payment success view unconditionally stated a confirmation email had been sent, but no payment receipt mail existed anywhere in the code path.",
+    "proof_before_fix": "Stripe Sandbox charged ₱2,370.00; success page claimed a confirmation email; temp inbox received no payment message after repeated refreshes.",
+    "fix": "Added PaymentReceiptMail with receipt, amount, total, and balance. paymentSuccess now attempts delivery, logs failures, and passes receiptEmailSent so the page claims delivery only when the attempt succeeded. If delivery fails, it tells the user to keep or print the page as receipt.",
+    "regressions": [
+      "New test for receipt contents initially failed because remaining_balance column was missing in the isolated schema; fixed test fixture only.",
+      "New test confirmed route sends exactly one PaymentReceiptMail to the booking client, after adding missing UserModel schema columns in the isolated fixture.",
+      "View test failed first with the old unconditional claim, then passed after the conditional copy.",
+      "Focused booking/auth suite: 13 tests passed, 65 assertions."
+    ],
+    "browser_retest": "Success page now states 'A payment receipt email was sent...' only after a real send. Temp inbox then received Payment received - BK-6AEA0DF825ABF with matching values.",
+    "duplicate_send_fix": "Reloading the success page previously resent the receipt. New test reproduced 2 sends across 2 requests, then passed after adding a receipt_emailed_at marker to the payment record. Browser proof: original 1 receipt, then first guarded visit added 1 (legacy payment had no marker), a second reload added 0, leaving exactly 2 'Payment received - BK-6AEA0DF825ABF' messages in the temp inbox."
+  },
+  "additional_observations": [
+    {
+      "id": "temporary-email-account-onboarding",
+      "actual": "Temporary client completed Skip on first-login tutorial and reached dashboard. The tutorial Skip button completed onboarding normally; earlier keyboard trap finding was on the booking form, not this tutorial.",
+      "status": "PASSED"
+    },
+    {
+      "id": "booking-test-data",
+      "actual": "Booking BK-6AEA0DF825ABF created on December 1, 2026 10:00-13:00 for basic fixed 3-hour package, ₱7,900 total, ₱2,370 deposit. Owner assigned Bernadette; photographer accepted; GPS check-in at 299 m succeeded; booking moved to IN PROGRESS upon arrival, as designed.",
+      "note": "Stripe Sandbox only; test data explicitly identified."
+    }
+  ],
+  "limitations": [
+    "Temp-mail.io is a third-party disposable inbox. Delivery proves SMTP acceptance and receipt into that inbox, not deliverability to a specific real mailbox provider.",
+    "Single-use verification link confirmed; expiry behavior at 24 hours was not waited on.",
+    "Full receipt print-dialog output was not exercised under the one-tab rule; booking and email value matching were verified.",
+    "No claim that all other email paths (studio approval, employee onboarding, subscription lifecycle) were delivered."
+  ],
+  "automated_verification": {
+    "php_full_suite": "787 tests passed, 4061 assertions, 102.27 seconds, after the payment receipt and duplicate-send fixes.",
+    "php_focused": "14 tests passed, 69 assertions: PaymentReceiptEmail, BookingPaymentSettlement, ResumeBookingPayment, Registration.",
+    "build": "npm run build passed, 56 modules transformed.",
+    "diff_check": "git diff --check passed with CRLF normalization warnings only.",
+    "limitation": "Passing tests prove the tested paths; they do not constitute full acceptance."
+  },
+  "data_changes": [
+    "New client account for va39he2rm4@gmeenramy.com (temporary test address), email verified.",
+    "Booking BK-6AEA0DF825ABF, December 1, 2026, ₱7,900 total, ₱2,370 Stripe Sandbox deposit, photographer assigned/checked in, booking now IN PROGRESS.",
+    "Camera catalog unchanged by this pass; T14 Verification Camera remains from prior run."
+  ],
+  "security_and_hygiene": [
+    "No user personal-mail password requested or stored.",
+    "Temporary address only used for this verification.",
+    "No production credentials, commits, pushes, merges, or production migrations.",
+    "Changes remain uncommitted."
+  ],
+  "browser_context_count": 1,
+  "browser_tab_count": 1
+}

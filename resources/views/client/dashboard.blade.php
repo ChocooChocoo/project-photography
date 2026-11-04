@@ -46,6 +46,10 @@
             <div class="row mb-2">
                 <div class="col-lg-12">
                     <div class="d-flex flex-wrap justify-content-end align-items-center gap-3">
+                        <div class="flex-grow-1">
+                            <label for="provider-search" class="form-label">Search studios, freelancers, or groups</label>
+                            <input type="search" id="provider-search" class="form-control" placeholder="Name or group name">
+                        </div>
                         <div class="d-lg-none d-flex gap-2">
                             <button class="btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#productFillterOffcanvas" aria-controls="productFillterOffcanvas">
                                 <i data-lucide="sliders-horizontal"></i>
@@ -404,7 +408,7 @@
                                                 <h4 class="card-title mb-1 text-truncate">${photographer.name}</h4>
                                                 ${favoriteButton}
                                             </div>
-                                            <p class="text-muted mb-1">${photographer.type_label}</p>
+                                            <p class="text-muted mb-1">${photographer.type_label}${photographer.group_name ? ` <span class="badge badge-soft-primary ms-1 text-wrap">${$('<span>').text(photographer.group_name).html()}</span>` : ''}</p>
                                             <div class="mb-2">
                                                 <span class="text-muted small">
                                                     <i class="ti ti-map-pin me-1"></i>
@@ -490,6 +494,7 @@
                     url: '{{ route("client.dashboard.filter") }}',
                     type: 'POST',
                     data: {
+                        query: $('#provider-search').val().trim(),
                         photographer_type: activeFilters.type.length > 0 ? activeFilters.type.join(',') : '',
                         category_id: activeFilters.category.length > 0 ? activeFilters.category[0] : '',
                         location_id: activeFilters.location.length > 0 ? activeFilters.location[0] : '',
@@ -669,6 +674,13 @@
 
             // Event Listeners
             $('#apply-filters').on('click', applyFilters);
+            $('#provider-search').on('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    applyFilters();
+                }
+            });
+            $('#provider-search').on('search', applyFilters);
 
             $('#apply-price-filter').on('click', function() {
                 applyFilters();
@@ -682,6 +694,7 @@
                 // Clear price inputs
                 $('#min-price').val('');
                 $('#max-price').val('');
+                $('#provider-search').val('');
                 
                 // Reset active filters
                 activeFilters = {

@@ -101,7 +101,15 @@
                                                 @endif
                                             </td>
                                             <!-- ==== End: Time Customization Display ==== -->
-                                            <td>₱{{ number_format($package->package_price, 2) }}</td>
+                                            <td>
+                                                @if((float) $package->discount_percentage > 0)
+                                                    <del class="text-muted">₱{{ number_format($package->package_price, 2) }}</del>
+                                                    <div>₱{{ number_format($package->discountedPrice(), 2) }}</div>
+                                                    <small>{{ (float) $package->discount_percentage }}% off</small>
+                                                @else
+                                                    ₱{{ number_format($package->package_price, 2) }}
+                                                @endif
+                                            </td>
                                             <td>
                                                 @if($package->online_gallery)
                                                     <span class="badge badge-soft-success fs-8 px-1 w-100">

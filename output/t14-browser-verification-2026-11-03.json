@@ -1,0 +1,130 @@
+{
+  "scope": "T-14 requirements and recorded decisions",
+  "date": "2026-11-03",
+  "repository_commit": "0b9c39e8",
+  "application_origin": "http://127.0.0.1:8013",
+  "method": "Actual Playwright MCP browser interactions. Test-data changes occurred through normal UI forms only. No forced clicks, disabled-option overrides, application JavaScript overrides, direct API submissions, direct database writes, or validation bypasses.",
+  "overall_status": "FAIL",
+  "complete_acceptance_coverage": false,
+  "requirements": [
+    "docs/ANALYSIS - PLATINUM STUDIO PLATFORM/MATERIAL/LEGACY DOCUMENTATION/tasks/14.md",
+    "docs/implementation-plan/platform-updates-2026-11/README.md"
+  ],
+  "cases": [
+    {
+      "id": "prices",
+      "status": "PARTIAL",
+      "expected": "Prices use the peso sign throughout the platform.",
+      "actual": "Inspected studio/freelancer package cards, booking forms and details, summaries, gallery pages, and owner/HR dashboards show peso amounts. Complete platform-wide coverage was not established. Some booking detail amounts omit thousands separators.",
+      "remaining": "Every monetary screen, receipt, email, and error state."
+    },
+    {
+      "id": "messages",
+      "status": "PASS",
+      "expected": "Messages moves from sidebars to topbars across seven portals; navigation and unread badge work.",
+      "actual": "Owner, client, freelancer, photographer, HR, finance, and admin topbar links opened their Messages pages. Inspected sidebars had no Messages link. All seven mobile link bounding boxes were 44 by 44 CSS pixels at a 375-pixel viewport. Owner sent a test message on booking 70; client badge showed 1, opening its conversation cleared the badge, and message text survived reload.",
+      "limitation": "Sending and receiving were exercised for owner/client, not every role pair."
+    },
+    {
+      "id": "booking-times",
+      "status": "FAIL",
+      "expected": "Fixed packages compute and hide end time; same-day midnight limit is explained correctly. Flexible sessions may finish after closing but must start within opening hours.",
+      "actual": "Five-hour studio package at 22:00 hid end-time input and disabled continuation, but displayed both 'After midnight. Choose an earlier start time.' and misleading 'End time must be after the start time'. Flexible studio session on November 20 from 16:00 to 21:00 reached summary despite 18:00 closing. A start of 18:30 was refused with opening-hours explanation. Four-hour freelancer package at 09:00 hid end-time input and displayed 13:00.",
+      "evidence": [".playwright-mcp/verify-fixed-midnight.png", ".playwright-mcp/verify-flexible-summary.png"]
+    },
+    {
+      "id": "package-discounts",
+      "status": "PARTIAL",
+      "expected": "Studio and freelancer packages have independent discounts that persist and reduce total, deposit, and payment.",
+      "actual": "Studio package 49 saved 20 percent with HTTP 200 and retained it after reload; package 32 independently showed 10 percent. Studio summary displayed 5000 minus 1000 equals 4000, 30-percent deposit 1200, balance 2800. Discounts -1 and 150 submitted through normal Save Changes produced HTTP 422 and visible validation dialogs; saved 20 percent remained. Freelancer package 1 saved 10 percent with HTTP 200; client profile and booking form showed 4200 reduced to 3780. Its summary was blocked by missing venue-map controls. Freelancer discount was reset to no discount through Save Changes afterward.",
+      "discrepancy": "Owner package table shows base price without discount while card view shows discount.",
+      "remaining": "Fresh payment-gateway amount and charge verification; freelancer summary/deposit/payment cannot proceed through current UI.",
+      "evidence": [".playwright-mcp/verify-flexible-summary.png", ".playwright-mcp/verify-freelancer-missing-map.png"]
+    },
+    {
+      "id": "camera-specs",
+      "status": "PASS",
+      "expected": "Client can read camera specifications before booking.",
+      "actual": "Client opened Quarry Road Studio profile without creating a booking and saw Sony A7 IV, ILCE-7M4, 33 MP full-frame sensor, 24-70mm f/2.8 lens, and 4K video. Booking form also offered NIKON and Sony preferences and a cameras-and-gear link.",
+      "limitation": "Camera catalog creation/edit validation was not rerun in this verification."
+    },
+    {
+      "id": "venue-pin",
+      "status": "FAIL",
+      "expected": "On-location booking requires a pin and supplies usable controls to choose one.",
+      "actual": "Studio on-location form rejected continuation without a pin. Playwright-emulated current location and ordinary map click set a pin and allowed summary. Direct freelancer form required 'Pin the Venue' on continuation but had zero Leaflet map containers and zero 'Use my current location' buttons. Freelancer booking could not reach summary without bypassing validation, which was not attempted.",
+      "additional_discrepancy": "After switching studio location from in-studio to on-location, summary displayed Location Type: On-Location while also retaining Package Location: In-Studio Package and empty duplicate headings.",
+      "evidence": [".playwright-mcp/verify-freelancer-missing-map.png"]
+    },
+    {
+      "id": "arrival",
+      "status": "PARTIAL",
+      "expected": "GPS check-in rejects locations beyond 300 m, accepts nearby arrival, persists proof, and alerts client and owner.",
+      "actual": "Freelancer replacement Lorena accepted booking 70. A location approximately 10229 m away was refused with a within-300-m explanation and status remained confirmed. Nearby location 14.4295,120.939 saved. Browser server restart interrupted observation, so submission was not repeated: a new authenticated browser session showed on-site status. Owner/client booking views showed Lorena at 40 m with coordinates and time; each portal showed arrival notification. Client confirmed arrival through its normal confirmation dialog. Lorena then started work and in-progress state persisted after reload.",
+      "simulation": "GPS used Playwright context geolocation. Arrival-photo picker used an existing local test gallery JPEG. This is local workflow testing, not evidence of physical attendance.",
+      "remaining": "Real email delivery; fresh denied-location and exact 300-m boundary cases.",
+      "evidence": [".playwright-mcp/verify-freelancer-arrival-owner.png"]
+    },
+    {
+      "id": "on-site-cancellation-replacement",
+      "status": "FAIL",
+      "expected": "On-site cancellation requires reason, preserves payments, alerts participants, and allows eligible replacement assignment.",
+      "actual": "Cesar's in-progress test assignment refused an empty cancellation reason with visible dialog. Reasoned cancellation persisted after reload. Amount paid 3092.85 and balance 7216.65 did not change. Owner showed replacement banner and leave/conflict reasons. Three single-day leave requests were submitted by staff and approved through HR UI; with both other photographers already cancelled, Lorena became selectable. Owner assigned Lorena, freelancer accepted, client saw replacement and arrival notices, confirmed arrival, and freelancer started work.",
+      "discrepancies": [
+        "Replacement dialog incorrectly says Initial Assignment and labels on-site cancellations as Rejected this assignment.",
+        "Photographer booking table retained IN PROGRESS immediately after cancellation while detail dialog showed CANCELLED; reload corrected the table."
+      ],
+      "evidence": [".playwright-mcp/verify-freelancer-replacement.png", ".playwright-mcp/verify-freelancer-arrival-owner.png"]
+    },
+    {
+      "id": "freelancer-groups",
+      "status": "FAIL",
+      "expected": "Shared name appears on cards/profiles; group mates link together and clients can search by group name.",
+      "actual": "Northlight and Amber Field profiles linked to each other successfully. Dashboard initially displayed Golden Hour Collective and golden hour collective as separate spellings. Selecting freelancer filter and Apply Filters kept those providers but removed both group badges. Dashboard supplied no group-name search input.",
+      "evidence": [".playwright-mcp/verify-groups-filter.png"]
+    },
+    {
+      "id": "before-after",
+      "status": "FAIL",
+      "expected": "Published gallery compares original and edited images with a working slider; published delivery cannot be edited without revision.",
+      "actual": "Client opened test gallery 70; original and edited JPEGs loaded. ArrowRight moved slider from 50 to 51, mouse drag moved it to 81, and original remained available after reload. Published owner gallery still exposed Add original. Selecting a file through that visible control produced 'Original not added: This gallery is already published. Ask the client to request a revision before changing photos.' The restriction worked, but UI offered a forbidden action.",
+      "remaining": "Fresh original upload and persistence on unpublished galleries across owner, photographer, and freelancer roles.",
+      "evidence": [".playwright-mcp/verify-slider.png", ".playwright-mcp/verify-published-original-controls.png", ".playwright-mcp/page-2026-11-03T13-20-08-367Z.yml"]
+    },
+    {
+      "id": "tutorial",
+      "status": "PASS",
+      "expected": "Tutorial explains platform and tools, supports replay, forward/back navigation, and completion.",
+      "actual": "Client used profile-menu Replay tutorial. All five sections were read: platform booking path, budget, booking, photo gallery, and messaging. Sections included explanatory what/why/where content. Next traversed all five steps; Back returned to step 4; Finish returned to client dashboard.",
+      "limitation": "Subjective clarity, all role-specific tutorials, and mobile wrapping were not fully assessed."
+    },
+    {
+      "id": "landing",
+      "status": "FAIL",
+      "expected": "Usable desktop/mobile landing navigation and registration/login destinations.",
+      "actual": "Earlier fresh Playwright check in this session at 375 px opened menu and clicked Studios: URL changed to /#studios but menu remained expanded. Separate toggle closed it. Existing-account link opened /auth/login. These completed checks were not repeated after browser restart.",
+      "remaining": "Subjective visual acceptance and exhaustive link/breakpoint/keyboard checks.",
+      "evidence": [".playwright-mcp/page-2026-11-03T12-41-28-953Z.yml"]
+    }
+  ],
+  "test_data_changes": {
+    "booking": "BK-6AE9C50EEA1EA (70)",
+    "assignment": "Cesar cancelled with test reason; Lorena assigned, accepted, arrived, client-confirmed, and started work. No new charge or payment change.",
+    "leave_requests": [
+      "LR-20261103205711-VYAUO: Divina, approved November 19 only",
+      "LR-20261103205727-XPJBA: Eduardo, approved November 19 only",
+      "LR-20261103205742-PNCZS: Florencia, approved November 19 only"
+    ],
+    "discounts": "Studio package 49 retained 20 percent. Freelancer package 1 temporarily used 10 percent and was reset through UI to 0 percent (original field was blank).",
+    "message": "Owner/client conversation 2: Playwright verification 2026-11-03: unread badge and message delivery check.",
+    "uploads": "Existing test JPEG selected as Lorena arrival proof; published-gallery original upload was refused."
+  },
+  "not_claimed": [
+    "Everything works",
+    "Production readiness",
+    "Successful real email delivery",
+    "Fresh payment charge verification",
+    "Complete role, breakpoint, and error-state coverage"
+  ],
+  "product_code_modified": false
+}

@@ -1,0 +1,5 @@
+[    1993ms] SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at LayoutCustomizer.initConfig (http://127.0.0.1:8013/assets/js/app.js?v=1792932692:383:37)
+    at LayoutCustomizer.init (http://127.0.0.1:8013/assets/js/app.js?v=1792932692:374:15)
+    at HTMLDocument.<anonymous> (http://127.0.0.1:8013/assets/js/app.js?v=1792932692:824:32)

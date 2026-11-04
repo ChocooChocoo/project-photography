@@ -1,0 +1,360 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - link [ref=e4] [cursor=pointer]:
+        - /url: http://127.0.0.1:8013
+        - img "logo" [ref=e7]
+      - text: ｂ
+      - button "" [ref=e8] [cursor=pointer]
+      - region "scrollable content" [ref=e14]:
+        - list [ref=e16]:
+          - listitem: Apps
+          - listitem [ref=e17]:
+            - link " Dashboard" [ref=e18] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/owner/dashboard
+              - generic [ref=e19]: 
+              - generic [ref=e21]: Dashboard
+          - listitem [ref=e22]:
+            - link " Studios " [ref=e23] [cursor=pointer]:
+              - /url: "#sidebarManageStudios"
+              - generic [ref=e24]: 
+              - generic [ref=e26]: Studios
+              - generic [ref=e27]: 
+          - listitem [ref=e28]:
+            - link " Bookings " [ref=e29] [cursor=pointer]:
+              - /url: "#sidebarManageBookings"
+              - generic [ref=e30]: 
+              - generic [ref=e32]: Bookings
+              - generic [ref=e33]: 
+          - listitem [ref=e34]:
+            - link "Client Feedback" [ref=e35] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/owner/feedback
+              - generic [aria-hidden] [ref=e37]: 
+          - listitem [ref=e39]:
+            - link " Online Gallery" [ref=e40] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/owner/view/online-gallery
+              - generic [ref=e41]: 
+              - generic [ref=e43]: Online Gallery
+          - listitem [ref=e44]:
+            - link " Portfolio Gallery" [ref=e45] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/owner/online-gallery/portfolio
+              - generic [ref=e46]: 
+              - generic [ref=e48]: Portfolio Gallery
+          - listitem [ref=e49]:
+            - link " Schedules " [ref=e50] [cursor=pointer]:
+              - /url: "#sidebarManageSchedules"
+              - generic [ref=e51]: 
+              - generic [ref=e53]: Schedules
+              - generic [ref=e54]: 
+          - listitem [ref=e55]:
+            - link " Members " [ref=e56] [cursor=pointer]:
+              - /url: "#sidebarManageMembers"
+              - generic [ref=e57]: 
+              - generic [ref=e59]: Members
+              - generic [ref=e60]: 
+          - listitem [ref=e61]:
+            - link " Photographers " [ref=e62] [cursor=pointer]:
+              - /url: "#sidebarManageStudioPhotographers"
+              - generic [ref=e63]: 
+              - generic [ref=e65]: Photographers
+              - generic [ref=e66]: 
+          - listitem [ref=e67]:
+            - link " Employee " [ref=e68] [cursor=pointer]:
+              - /url: "#sidebarManageEmployee"
+              - generic [ref=e69]: 
+              - generic [ref=e71]: Employee
+              - generic [ref=e72]: 
+          - listitem [ref=e73]:
+            - link " Request " [ref=e74] [cursor=pointer]:
+              - /url: "#sidebarLeaveRequests"
+              - generic [ref=e75]: 
+              - generic [ref=e77]: Request
+              - generic [ref=e78]: 
+          - listitem [ref=e79]:
+            - link " Procurement" [ref=e80] [cursor=pointer]:
+              - /url: http://127.0.0.1:8013/owner/procurement
+              - generic [ref=e81]: 
+              - generic [ref=e83]: Procurement
+          - listitem [ref=e84]:
+            - link " Roles & Permissions " [ref=e85] [cursor=pointer]:
+              - /url: "#sidebarManageRoles"
+              - generic [ref=e86]: 
+              - generic [ref=e88]: Roles & Permissions
+              - generic [ref=e89]: 
+          - listitem [ref=e90]:
+            - link "𐅉 Payroll " [ref=e91] [cursor=pointer]:
+              - /url: "#sidebarManagePayroll"
+              - generic [ref=e92]: 𐅉
+              - generic [ref=e94]: Payroll
+              - generic [ref=e95]: 
+          - listitem [ref=e96]:
+            - link " Packages " [ref=e97] [cursor=pointer]:
+              - /url: "#sidebarManagePackages"
+              - generic [ref=e98]: 
+              - generic [ref=e100]: Packages
+              - generic [ref=e101]: 
+          - listitem [ref=e102]:
+            - link "﫺 Services " [ref=e103] [cursor=pointer]:
+              - /url: "#sidebarManageCategoryServices"
+              - generic [ref=e104]: 﫺
+              - generic [ref=e106]: Services
+              - generic [ref=e107]: 
+          - listitem [ref=e108]:
+            - link "ﺹ Subscription " [ref=e109] [cursor=pointer]:
+              - /url: "#sidebarManageSubscription"
+              - generic [ref=e110]: ﺹ
+              - generic [ref=e112]: Subscription
+              - generic [ref=e113]: 
+          - listitem [ref=e114]:
+            - link "泌 AI Assistant " [ref=e115] [cursor=pointer]:
+              - /url: "#sidebarInquiries"
+              - generic [ref=e116]: 泌
+              - generic [ref=e118]: AI Assistant
+              - generic [ref=e119]: 
+    - banner [ref=e120]:
+      - generic [ref=e121]:
+        - generic [ref=e122]:
+          - button "ｂ" [ref=e123] [cursor=pointer]
+          - text: ｂ
+        - generic [ref=e125]:
+          - link "Messages" [ref=e127] [cursor=pointer]:
+            - /url: http://127.0.0.1:8013/owner/messages
+            - generic [aria-hidden] [ref=e128]: 
+          - generic [ref=e130]:
+            - button [ref=e131] [cursor=pointer]
+            - text:  
+          - generic [ref=e136]:
+            - link [ref=e137] [cursor=pointer]:
+              - /url: "#!"
+              - img "user-image" [ref=e138]
+              - text: 
+            - text:   奄
+          - button "" [ref=e140] [cursor=pointer]
+    - generic [ref=e144]:
+      - generic [ref=e145]:
+        - generic [ref=e146]:
+          - heading "Studio Owner Dashboard" [level=4] [ref=e147]
+          - paragraph [ref=e148]: Business performance for Quarry Road Studio
+        - generic [ref=e150]:
+          - generic [ref=e151]:
+            - generic [ref=e152]: Start Date
+            - textbox "Start Date" [ref=e153]: 2026-10-05
+          - generic [ref=e154]:
+            - generic [ref=e155]: End Date
+            - textbox "End Date" [ref=e156]: 2026-11-03
+          - button " Apply" [ref=e158] [cursor=pointer]:
+            - generic [ref=e159]: 
+            - text: Apply
+          - link " Export CSV" [ref=e161] [cursor=pointer]:
+            - /url: http://127.0.0.1:8013/owner/dashboard/export?start_date=2026-10-05&end_date=2026-11-03
+            - generic [ref=e162]: 
+            - text: Export CSV
+      - generic [ref=e163]:
+        - generic [ref=e166]:
+          - generic [ref=e167]:
+            - heading "Active Employees" [level=5] [ref=e168]
+            - paragraph [ref=e169]:
+              - generic [ref=e170]: 
+          - generic [ref=e171]:
+            - generic [ref=e172]: 
+            - heading "7" [level=3] [ref=e175]
+          - paragraph [ref=e176]:
+            - generic [ref=e177]: 
+            - text: All Employees
+            - generic [ref=e179]: "7"
+        - generic [ref=e182]:
+          - generic [ref=e183]:
+            - heading "Total Bookings" [level=5] [ref=e184]
+            - paragraph [ref=e185]:
+              - generic [ref=e186]: 
+          - generic [ref=e187]:
+            - generic [ref=e188]: 
+            - heading "8" [level=3] [ref=e191]
+          - paragraph [ref=e192]:
+            - generic [ref=e193]: 
+            - text: Completed
+            - generic [ref=e195]: "1"
+        - generic [ref=e198]:
+          - generic [ref=e199]:
+            - heading "Revenue" [level=5] [ref=e200]
+            - paragraph [ref=e201]:
+              - generic [ref=e202]: 
+          - generic [ref=e203]:
+            - generic [ref=e204]: 
+            - heading "₱21,092.85" [level=3] [ref=e207]
+          - paragraph [ref=e208]:
+            - generic [ref=e209]: 
+            - text: Paid Transactions
+            - generic [ref=e211]: "6"
+        - generic [ref=e214]:
+          - generic [ref=e215]:
+            - heading "Average Rating" [level=5] [ref=e216]
+            - paragraph [ref=e217]:
+              - generic [ref=e218]: 
+          - generic [ref=e219]:
+            - generic [ref=e220]: 
+            - heading "0.0" [level=3] [ref=e223]
+          - paragraph [ref=e224]:
+            - generic [ref=e225]: 
+            - text: Reviews
+            - generic [ref=e227]: "0"
+      - generic [ref=e228]:
+        - generic [ref=e230]:
+          - generic [ref=e231]:
+            - heading "Bookings by Service" [level=4] [ref=e232]
+            - generic [ref=e233]: Oct 05, 2026 - Nov 03, 2026
+          - generic [ref=e236]:
+            - img [ref=e237]:
+              - generic [ref=e240]:
+                - generic "8" [ref=e241]
+                - generic "6" [ref=e242]
+                - generic "4" [ref=e243]
+                - generic "2" [ref=e244]
+                - generic "0" [ref=e245]
+              - generic "Wedding Photography" [ref=e255]
+            - generic: ●
+        - generic [ref=e257]:
+          - generic [ref=e258]:
+            - heading "Income Trend" [level=4] [ref=e259]
+            - generic [ref=e260]: Oct 05, 2026 - Nov 03, 2026
+          - generic [ref=e263]:
+            - img [ref=e264]:
+              - generic [ref=e267]:
+                - generic "15000.00" [ref=e268]
+                - generic "10000.00" [ref=e269]
+                - generic "5000.00" [ref=e270]
+                - generic "0.00" [ref=e271]
+              - generic [ref=e279]:
+                - generic "Oct 05" [ref=e280]
+                - generic "Oct 06" [ref=e281]
+                - generic "Oct 07" [ref=e282]
+                - generic "Oct 08" [ref=e283]
+                - generic "Oct 09" [ref=e284]
+                - generic "Oct 10" [ref=e285]
+                - generic "Oct 11" [ref=e286]
+                - generic "Oct 12" [ref=e287]
+                - generic "Oct 13" [ref=e288]
+                - generic "Oct 14" [ref=e289]
+                - generic "Oct 15" [ref=e290]
+                - generic "Oct 16" [ref=e291]
+                - generic "Oct 17" [ref=e292]
+                - generic "Oct 18" [ref=e293]
+                - generic "Oct 19" [ref=e294]
+                - generic "Oct 20" [ref=e295]
+                - generic "Oct 21" [ref=e296]
+                - generic "Oct 22" [ref=e297]
+                - generic "Oct 23" [ref=e298]
+                - generic "Oct 24" [ref=e299]
+                - generic "Oct 25" [ref=e300]
+                - generic "Oct 26" [ref=e301]
+                - generic "Oct 27" [ref=e302]
+                - generic "Oct 28" [ref=e303]
+                - generic "Oct 29" [ref=e304]
+                - generic "Oct 30" [ref=e305]
+                - generic "Oct 31" [ref=e306]
+                - generic "Nov 01" [ref=e307]
+                - generic "Nov 02" [ref=e308]
+                - generic "Nov 03" [ref=e309]
+            - generic: ●
+        - generic [ref=e311]:
+          - generic [ref=e312]:
+            - heading "Booking Status Breakdown" [level=4] [ref=e313]
+            - generic [ref=e314]: Oct 05, 2026 - Nov 03, 2026
+          - generic [ref=e317]:
+            - generic [ref=e327]:
+              - generic [ref=e328] [cursor=pointer]: Pending
+              - generic [ref=e331] [cursor=pointer]: Confirmed
+              - generic [ref=e334] [cursor=pointer]: In Progress
+              - generic [ref=e337] [cursor=pointer]: Completed
+              - generic [ref=e340] [cursor=pointer]: Cancelled
+            - generic: ● ● ● ● ●
+        - generic [ref=e344]:
+          - generic [ref=e345]:
+            - heading "Rating Distribution" [level=4] [ref=e346]
+            - generic [ref=e347]: Oct 05, 2026 - Nov 03, 2026
+          - generic [ref=e350]:
+            - img [ref=e351]:
+              - generic [ref=e354]:
+                - generic "2" [ref=e355]
+                - generic "1.5" [ref=e356]
+                - generic "1" [ref=e357]
+                - generic "0.5" [ref=e358]
+                - generic "0" [ref=e359]
+              - generic [ref=e365]:
+                - generic "1 Star" [ref=e366]
+                - generic "2 Stars" [ref=e367]
+                - generic "3 Stars" [ref=e368]
+                - generic "4 Stars" [ref=e369]
+                - generic "5 Stars" [ref=e370]
+            - generic: ●
+      - generic [ref=e371]:
+        - generic [ref=e373]:
+          - heading "Recent Bookings" [level=4] [ref=e375]
+          - table [ref=e378]:
+            - rowgroup [ref=e379]:
+              - row [ref=e380]:
+                - columnheader "Reference" [ref=e381]
+                - columnheader "Client" [ref=e382]
+                - columnheader "Event Date" [ref=e383]
+                - columnheader "Status" [ref=e384]
+            - rowgroup [ref=e385]:
+              - row [ref=e386]:
+                - cell "BK-6AE9C50EEA1EA" [ref=e387]
+                - cell "Beatriz Fajardo Inocencio" [ref=e388]
+                - cell "Nov 19, 2026" [ref=e389]
+                - cell "In_progress" [ref=e390]
+              - row [ref=e391]:
+                - cell "BK-6AE9C3F4EF9C6" [ref=e392]
+                - cell "Beatriz Fajardo Inocencio" [ref=e393]
+                - cell "Nov 18, 2026" [ref=e394]
+                - cell "Confirmed" [ref=e395]
+              - row [ref=e396]:
+                - cell "BK-6ADDE413313F5" [ref=e397]
+                - cell "Beatriz Fajardo Inocencio" [ref=e398]
+                - cell "Jan 21, 2027" [ref=e399]
+                - cell "Cancelled" [ref=e400]
+              - row [ref=e401]:
+                - cell "BK-6ADD9A0FD3B8D" [ref=e402]
+                - cell "Beatriz Fajardo Inocencio" [ref=e403]
+                - cell "Nov 11, 2026" [ref=e404]
+                - cell "Confirmed" [ref=e405]
+              - row [ref=e406]:
+                - cell "BK-6ADCA27549033" [ref=e407]
+                - cell "Beatriz Fajardo Inocencio" [ref=e408]
+                - cell "Oct 23, 2026" [ref=e409]
+                - cell "Completed" [ref=e410]
+              - row [ref=e411]:
+                - cell "BK-6ADC6C55376A8" [ref=e412]
+                - cell "Beatriz Fajardo Inocencio" [ref=e413]
+                - cell "Dec 23, 2026" [ref=e414]
+                - cell "Confirmed" [ref=e415]
+              - row [ref=e416]:
+                - cell "T02-DOWN-153952" [ref=e417]
+                - cell "Beatriz Fajardo Inocencio" [ref=e418]
+                - cell "Dec 05, 2026" [ref=e419]
+                - cell "Cancelled" [ref=e420]
+              - row [ref=e421]:
+                - cell "T02-FUTURE-104623" [ref=e422]
+                - cell "Cristian Galang Panganiban" [ref=e423]
+                - cell "Nov 28, 2026" [ref=e424]
+                - cell "Cancelled" [ref=e425]
+        - generic [ref=e427]:
+          - heading "Income by Service Category" [level=4] [ref=e429]
+          - table [ref=e432]:
+            - rowgroup [ref=e433]:
+              - row [ref=e434]:
+                - columnheader "Service Category" [ref=e435]
+                - columnheader "Bookings" [ref=e436]
+                - columnheader "Total Revenue" [ref=e437]
+                - columnheader "Platform Fee" [ref=e438]
+                - columnheader "Net Income" [ref=e439]
+            - rowgroup [ref=e440]:
+              - row [ref=e441]:
+                - cell "Wedding Photography" [ref=e442]
+                - cell "7" [ref=e443]
+                - cell "₱22,962.85" [ref=e444]
+                - cell "₱2,296.29" [ref=e445]
+                - cell "₱20,666.57" [ref=e446]
+  - button "Ask the photography assistant" [ref=e447] [cursor=pointer]:
+    - generic [ref=e448]: 
+  - text:  
