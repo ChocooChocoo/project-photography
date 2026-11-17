@@ -1,11 +1,11 @@
 @extends('layouts.owner.app')
 
-@section('title', 'Photographer Cancellation Recovery')
+@section('title', $canSetRefundTarget ? 'Booking Refund' : 'Photographer Cancellation Recovery')
 
 @section('content')
 <div class="content-page">
 <div class="container py-4">
-    <h1 class="h4">Photographer cancellation recovery</h1>
+    <h1 class="h4">{{ $canSetRefundTarget ? 'Booking refund' : 'Photographer cancellation recovery' }}</h1>
     <p class="text-muted">Booking {{ $recovery->booking->booking_reference }} · deadline {{ $recovery->deadline ? $recovery->deadline->format('M d, Y h:i A') : 'Not set' }}</p>
     <p>Status: <strong>{{ str_replace('_', ' ', $recovery->status) }}</strong></p>
     @if ($recovery->photographer_reason)
@@ -35,7 +35,7 @@
                     @csrf
                     <label for="refund_amount" class="form-label">Refund amount (₱)</label>
                     <input type="number" step="0.01" min="0" max="{{ $maxRefund }}" id="refund_amount" name="refund_amount"
-                        value="{{ old('refund_amount', $recovery->refund_amount) }}" class="form-control mb-2" required>
+                        value="{{ old('refund_amount', $recovery->refund_amount ?? number_format($maxRefund, 2, '.', '')) }}" class="form-control mb-2" required>
                     @error('refund_amount')
                         <div class="text-danger small mb-2">{{ $message }}</div>
                     @enderror

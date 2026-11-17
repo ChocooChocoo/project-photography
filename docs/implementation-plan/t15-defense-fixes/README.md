@@ -37,7 +37,23 @@
 
 ## Known limits and follow-ups
 
-- A fully paid client cancellation now always keeps the downpayment, so the booking's payment status stays `refund_pending` after the refund is recorded (the recovery itself moves to `refunded`). A distinct "partially refunded" booking status would make this clearer; not approved.
+- ~~A fully paid client cancellation keeps the booking at `refund_pending` after the refund is recorded.~~ Fixed in 14dfc515: the booking moves to `partially_refunded`. Older rows need `output/fix-completed-refund-status.sql`.
 - The HR portal has no "Replace photo" button; HR users cannot manage revisions.
 - Inventory is view-only. Stock is never reduced, asset status cannot change, and received equipment is not linked to the bookable equipment catalog. The panel's S12 request for inventory quantity on booking equipment remains open.
 - Run `php artisan migrate` on production before deploying (one new migration).
+
+## Follow-ups after testing (17 November 2026)
+
+A local browser run of every testing-artifact section found these. All are fixed and pushed to `main`.
+
+| Commit | Problem found | Fix |
+|---|---|---|
+| 14dfc515 | A finished partial refund looked the same as a pending one. | New booking payment status `partially_refunded`. `output/fix-completed-refund-status.sql` fixes older rows. |
+| 68061f4f | Studio schedule setup showed the default notice, not the studio's saved advance notice. | The studio select carries the saved value and sets the 1/2/3+ choice when a studio is picked. |
+| a9ceb9eb | Seeded studio subscriptions expired about 20 days after seeding. | The seeder starts them today. `output/fix-expired-seed-subscriptions.sql` renews existing seeded rows. |
+| 45f24d26 | A partial refund was taken from the oldest payment first, so the downpayment payment was marked refunded and needed a reference. | Refunds are taken from the newest payment first. Only payments that return money need a provider reference; the Admin queue shows reference fields only for those. |
+| (this commit) | The owner refund page was titled "Photographer Cancellation Recovery" for client cancellations, and the refund box started empty. On phones the chat button covered right-aligned table actions. | The page is titled "Booking refund" when the owner sets a refund. The box starts at the highest allowed refund. The chat button is 44 px and sits closer to the corner below 576 px. |
+
+Local browser check of the hardcopy flow (booking 67, fixture data): the print order moved Pending, Preparing, Ready; completion was blocked while it was Preparing; Complete Booking then worked; Mark delivered still worked after completion.
+
+Still open on production: run both SQL files above, and re-upload the studio logo whose stored file returns an HTML page.

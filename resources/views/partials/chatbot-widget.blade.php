@@ -27,12 +27,19 @@
                 .content-page {
                     padding-bottom: 6rem;
                 }
+                .chatbot-launcher {
+                    position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; z-index: 1035;
+                }
+                /* Smaller and tucked into the corner on phones so it covers less of
+                   right-aligned table actions such as Reject. */
+                @media (max-width: 575.98px) {
+                    .chatbot-launcher { bottom: 12px; right: 12px; width: 44px; height: 44px; opacity: .85; }
+                }
             </style>
         @endonce
 
-        <button type="button" class="btn btn-primary rounded-circle shadow"
+        <button type="button" class="btn btn-primary rounded-circle shadow chatbot-launcher d-flex align-items-center justify-content-center"
             data-bs-toggle="modal" data-bs-target="#studioChatbotModal"
-            style="position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; z-index: 1035;"
             title="Ask the photography assistant" aria-label="Ask the photography assistant">
             <i class="ti ti-message-circle fs-5"></i>
         </button>
