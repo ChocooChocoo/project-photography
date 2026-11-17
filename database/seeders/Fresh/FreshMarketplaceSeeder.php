@@ -332,7 +332,8 @@ class FreshMarketplaceSeeder
         foreach ($studios as $index => $studio) {
             $code = $codes[$index % count($codes)];
             $yearly = str_ends_with($code, 'YEARLY');
-            $start = $today->copy()->subDays(20 + $index);
+            // Start recently so a fresh seed keeps most of a billing period before plans expire.
+            $start = $today->copy()->subDays($index);
 
             $rows[] = [
                 'studio_id' => $studio['id'],
