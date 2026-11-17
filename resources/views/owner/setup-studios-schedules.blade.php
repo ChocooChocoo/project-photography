@@ -21,7 +21,7 @@
                                             <select class="form-select mb-1" name="studio_id" id="studio_id" required>
                                                 <option value="">Select Studio</option>
                                                 @foreach($studios as $studio)
-                                                    <option value="{{ $studio->id }}">{{ $studio->studio_name }}</option>
+                                                    <option value="{{ $studio->id }}" data-saved-notice="{{ $studio->advance_booking_days }}">{{ $studio->studio_name }}</option>
                                                 @endforeach
                                             </select>
                                             <small class="d-block text-muted">Select your verified studio</small>
@@ -114,6 +114,14 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            // Show the chosen studio's saved advance notice so saving a schedule does not reset it.
+            $('#studio_id').on('change', function () {
+                const days = Number($(this).find(':selected').data("saved-notice"));
+                if (!days) return;
+                const choice = $('#minAdvanceNotice').closest('[data-advance-booking]').find('[data-advance-choice]');
+                choice.val(days >= 3 ? '3+' : String(days))[0].dispatchEvent(new Event('change', { bubbles: true }));
+                if (days >= 3) $('#minAdvanceNotice').val(days);
+            });
             // Handle form submission via button click
             $('#submitBtn').on('click', function(e) {
                 e.preventDefault();
