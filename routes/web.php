@@ -64,6 +64,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
     Route::post('/gallery-originals/{type}/{galleryId}', [\App\Http\Controllers\GalleryOriginalController::class, 'store'])
         ->whereIn('type', ['studio', 'freelancer'])->whereNumber('galleryId')->name('gallery.originals.store');
 
+    // Replacement for a photo the client flagged for revision. The controller checks who may manage the gallery.
+    Route::post('/gallery-revisions/{type}/{galleryId}', [\App\Http\Controllers\GalleryRevisionController::class, 'replace'])
+        ->whereIn('type', ['studio', 'freelancer'])->whereNumber('galleryId')->name('gallery-revisions.replace');
+
     // Notifications Routes ================================================================================================================================================
     Route::prefix('notifications')->group(function () {
 
@@ -321,6 +325,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
 
         // Procurement
         Route::get('/procurement', [\App\Http\Controllers\StudioOwner\ProcurementApprovalController::class, 'index'])->middleware('permission:owner.procurement.view,owner.procurement.approve,owner.procurement.report')->name('owner.procurement.index');
+        Route::get('/procurement-inventory', [\App\Http\Controllers\StudioOwner\ProcurementApprovalController::class, 'inventory'])->middleware('permission:owner.procurement.view,owner.procurement.approve,owner.procurement.report')->name('owner.procurement.inventory');
         Route::get('/procurement/{id}', [\App\Http\Controllers\StudioOwner\ProcurementApprovalController::class, 'show'])->middleware('permission:owner.procurement.view,owner.procurement.approve,owner.procurement.report')->name('owner.procurement.show');
         Route::post('/procurement/{id}/{action}', [\App\Http\Controllers\StudioOwner\ProcurementApprovalController::class, 'process'])->middleware('permission:owner.procurement.approve')->name('owner.procurement.process');
 
@@ -532,6 +537,7 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
 
         // Procurement
         Route::get('/procurement', [\App\Http\Controllers\Finance\ProcurementController::class, 'index'])->middleware('permission:studio-finance.procurement.view,studio-finance.procurement.review,studio-finance.procurement.order,studio-finance.procurement.payment')->name('studio-finance.procurement.index');
+        Route::get('/procurement-inventory', [\App\Http\Controllers\Finance\ProcurementController::class, 'inventory'])->middleware('permission:studio-finance.procurement.view,studio-finance.procurement.review,studio-finance.procurement.order,studio-finance.procurement.payment')->name('studio-finance.procurement.inventory');
         Route::get('/procurement/{id}', [\App\Http\Controllers\Finance\ProcurementController::class, 'show'])->middleware('permission:studio-finance.procurement.view,studio-finance.procurement.review,studio-finance.procurement.order,studio-finance.procurement.payment')->name('studio-finance.procurement.show');
         Route::post('/procurement/{id}/review', [\App\Http\Controllers\Finance\ProcurementController::class, 'review'])->middleware('permission:studio-finance.procurement.review')->name('studio-finance.procurement.review');
         Route::post('/procurement/{id}/purchase-order', [\App\Http\Controllers\Finance\ProcurementController::class, 'storePurchaseOrder'])->middleware('permission:studio-finance.procurement.order')->name('studio-finance.procurement.purchase-order');

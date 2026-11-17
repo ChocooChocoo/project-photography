@@ -50,6 +50,18 @@ class ProcurementController extends Controller
         ]);
     }
 
+    public function inventory(): View|RedirectResponse
+    {
+        $financeUser = $this->getAuthenticatedFinanceUser();
+        $studioIds = $this->procurementWorkflowService->getAssignedStudioIds($financeUser, 'studio-finance');
+
+        if ($studioIds->isEmpty()) {
+            return redirect()->route('studio-finance.dashboard')->with('error', 'No studio assigned to your account.');
+        }
+
+        return view('studio-finance.procurement-inventory', $this->procurementWorkflowService->getInventorySummary($studioIds));
+    }
+
     public function show(string $id): JsonResponse
     {
         $financeUser = $this->getAuthenticatedFinanceUser();

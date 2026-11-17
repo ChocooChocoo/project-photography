@@ -101,7 +101,10 @@ class OnlineGalleryController extends Controller
                     'client_email' => $booking->client->email,
                 ],
                 'gallery' => $gallery,
-                'has_gallery' => $gallery ? true : false
+                'has_gallery' => $gallery ? true : false,
+                'deletion_locked' => $booking->galleryDeletionLocked($gallery?->gallery_status),
+                'revision_photos' => $gallery?->revision_photos ?? [],
+                'revision_note' => $gallery?->revision_note,
             ]);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -262,6 +265,13 @@ class OnlineGalleryController extends Controller
                 ], 403);
             }
 
+            if ($gallery->booking?->galleryDeletionLocked($gallery->gallery_status)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => BookingModel::GALLERY_DELETION_LOCKED_MESSAGE,
+                ], 422);
+            }
+
             $images = $gallery->images ?? [];
             
             // Find and remove the image
@@ -326,6 +336,13 @@ class OnlineGalleryController extends Controller
                     'success' => false,
                     'message' => 'You are not authorized to delete this gallery.'
                 ], 403);
+            }
+
+            if ($gallery->booking?->galleryDeletionLocked($gallery->gallery_status)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => BookingModel::GALLERY_DELETION_LOCKED_MESSAGE,
+                ], 422);
             }
 
             // Delete all images from storage

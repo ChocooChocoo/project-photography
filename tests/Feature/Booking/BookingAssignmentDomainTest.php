@@ -55,7 +55,7 @@ class BookingAssignmentDomainTest extends TestCase
                 'photographer_ids' => [$photographer->id],
             ]);
 
-        $response->assertOk()->assertJsonPath('success', false);
+        $response->assertStatus(422)->assertJsonPath('success', false);
         $this->assertSame(
             'Cannot assign photographers to a booking that is already completed or cancelled.',
             $response->json('message')
@@ -73,7 +73,7 @@ class BookingAssignmentDomainTest extends TestCase
                 'photographer_ids' => [$photographer->id],
             ]);
 
-        $response->assertOk()->assertJsonPath('success', false);
+        $response->assertStatus(422)->assertJsonPath('success', false);
         $this->assertSame(
             'Cannot assign photographers to a booking that is already completed or cancelled.',
             $response->json('message')
@@ -188,7 +188,7 @@ class BookingAssignmentDomainTest extends TestCase
         $this->assertSame(BookingModel::STATUS_IN_PROGRESS, $booking->fresh()->status);
     }
 
-    public function test_current_assigned_count_counts_active_assignments_only(): void
+    public function test_current_assigned_count_counts_every_non_cancelled_assignment(): void
     {
         $cancelled = $this->createUser('studio-photographer', 'count-cancelled@example.com');
         $completed = $this->createUser('studio-photographer', 'count-completed@example.com');
@@ -204,7 +204,38 @@ class BookingAssignmentDomainTest extends TestCase
             ->assertOk()
             ->assertJsonPath('success', true);
 
-        $this->assertSame(1, $response->json('current_assigned_count'));
+        // A completed assignment still fills its slot.
+        $this->assertSame(2, $response->json('current_assigned_count'));
+    }
+
+    public function test_finished_photographers_do_not_reopen_the_booking_for_new_assignments(): void
+    {
+        $done = $this->createUser('studio-photographer', 'finished@example.com');
+        $extra = $this->createUser('studio-photographer', 'extra@example.com');
+        $booking = $this->createBooking('in_progress', 1);
+        $this->createAssignment($booking, $done, 'completed', now());
+
+        $this->actingAs($this->owner)
+            ->postJson("/_test/owner/booking/{$booking->id}/assign", ['photographer_ids' => [$extra->id]])
+            ->assertStatus(422)
+            ->assertJsonPath('success', false);
+
+        $this->assertSame(0, BookingAssignedPhotographerModel::where('booking_id', $booking->id)
+            ->where('photographer_id', $extra->id)->count());
+    }
+
+    public function test_assignment_status_cannot_change_on_a_completed_booking(): void
+    {
+        Route::put('/_test/owner/assignments/{id}/status', [BookingController::class, 'updateAssignmentStatus']);
+        $photographer = $this->createUser('studio-photographer', 'locked@example.com');
+        $booking = $this->createBooking('completed', 1);
+        $assignment = $this->createAssignment($booking, $photographer, 'completed', now());
+
+        $this->actingAs($this->owner)
+            ->putJson("/_test/owner/assignments/{$assignment->id}/status", ['status' => 'cancelled', 'cancellation_reason' => 'Late change'])
+            ->assertStatus(422);
+
+        $this->assertSame('completed', $assignment->fresh()->status);
     }
 
     private function createBooking(string $status, int $photographerCount, bool $onlineGallery = false): BookingModel

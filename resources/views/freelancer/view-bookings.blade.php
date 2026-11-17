@@ -153,7 +153,7 @@
                     </div>
                 </div>
                 <div class="modal-footer" id="bookingModalFooter" style="display: none;">
-                    <div id="bookingActionButtons">
+                    <div id="bookingActionButtons" class="d-flex flex-wrap justify-content-end gap-2">
                         <!-- Action buttons will be dynamically added here -->
                     </div>
                 </div>

@@ -122,6 +122,8 @@ class BookingController extends Controller
 
         // Downpayment option shown on the form; the server recomputes on save.
         $depositTerms = BookingModel::depositTerms($type, $provider);
+        $minimumNoticeDays = BookingModel::minimumNoticeDays($type, $provider);
+        $earliestBookableDate = BookingModel::earliestBookableDate($type, $provider)->format('Y-m-d');
 
         // Get all active municipalities for dropdown
         $municipalities = \App\Models\Admin\LocationModel::where('status', 'active')
@@ -155,7 +157,9 @@ class BookingController extends Controller
             'operatingDays',
             'clientBudgets', // ADD THIS
             'equipmentBrands',
-            'depositTerms'
+            'depositTerms',
+            'minimumNoticeDays',
+            'earliestBookableDate'
         ));
     }
 
@@ -289,8 +293,18 @@ class BookingController extends Controller
             $maxBookings = $schedule->booking_limit ?? 3;
         }
 
+        if ($noticeMessage = $this->advanceNoticeMessage($request->type, $provider, $request->date)) {
+            return response()->json([
+                'success'   => false,
+                'available' => false,
+                'message'   => $noticeMessage,
+                'too_soon'  => true,
+            ]);
+        }
+
         // Check max bookings limit for the day
         $existingBookingsCount = $this->peakBookingCount($request->type, $request->provider_id, $request->date, $request->end_date);
+        $slotsLeft = max(0, $maxBookings - $existingBookingsCount);
 
         if ($existingBookingsCount >= $maxBookings) {
             return response()->json([
@@ -298,7 +312,8 @@ class BookingController extends Controller
                 'available'         => false,
                 'existing_bookings' => $existingBookingsCount,
                 'max_bookings'      => $maxBookings,
-                'message'           => 'This date is fully booked (' . $existingBookingsCount . '/' . $maxBookings . ' bookings).',
+                'slots_left'        => 0,
+                'message'           => 'This date is fully booked (' . $existingBookingsCount . ' of ' . $maxBookings . ' slots taken).',
             ]);
         }
 
@@ -326,8 +341,9 @@ class BookingController extends Controller
             'available'         => true,
             'existing_bookings' => $existingBookingsCount,
             'max_bookings'      => $maxBookings,
+            'slots_left'        => $slotsLeft,
             'operating_day'     => true,
-            'message'           => 'Available (' . $existingBookingsCount . '/' . $maxBookings . ' bookings)',
+            'message'           => 'Available (' . $slotsLeft . ' of ' . $maxBookings . ' slots left)',
         ]);
     }
 
@@ -414,6 +430,23 @@ class BookingController extends Controller
     }
 
     /**
+     * The provider's advance-notice message when the event date is too soon, else null.
+     */
+    private function advanceNoticeMessage(string $type, $provider, $eventDate): ?string
+    {
+        $earliest = BookingModel::earliestBookableDate($type, $provider);
+        if (Carbon::parse($eventDate)->startOfDay()->gte($earliest)) {
+            return null;
+        }
+
+        $days = BookingModel::minimumNoticeDays($type, $provider);
+        $who = $type === 'studio' ? 'This studio' : 'This photographer';
+
+        return $who.' needs at least '.$days.' '.\Illuminate\Support\Str::plural('day', $days)
+            .' of notice. The earliest date you can book is '.$earliest->format('M d, Y').'.';
+    }
+
+    /**
      * Active bookings per calendar day within the range; multi-day bookings count on every day they span.
      *
      * @return array<string, int>
@@ -427,11 +460,13 @@ class BookingController extends Controller
         BookingModel::where('booking_type', $type)
             ->where('provider_id', $providerId)
             ->overlappingDates($rangeStart, $rangeEnd)
-            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereIn('status', BookingModel::CAPACITY_STATUSES)
             ->get(['event_date', 'event_end_date'])
             ->each(function ($booking) use (&$counts, $rangeStart, $rangeEnd) {
-                $day = $booking->event_date->copy()->startOfDay()->max($rangeStart);
-                $last = ($booking->event_end_date ?? $booking->event_date)->copy()->startOfDay()->min($rangeEnd);
+                // max()/min() can return the shared range object itself; copy so
+                // addDay() below never moves the range for later bookings.
+                $day = $booking->event_date->copy()->startOfDay()->max($rangeStart)->copy();
+                $last = ($booking->event_end_date ?? $booking->event_date)->copy()->startOfDay()->min($rangeEnd)->copy();
 
                 for (; $day->lte($last); $day->addDay()) {
                     $key = $day->toDateString();
@@ -597,6 +632,17 @@ class BookingController extends Controller
                 'success' => false,
                 'message' => $hoursMessage,
                 'errors' => ['start_time' => [$hoursMessage]],
+            ], 422);
+        }
+
+        $noticeProvider = $request->type === 'studio'
+            ? StudiosModel::find($request->provider_id)
+            : ProfileModel::with('schedule')->where('user_id', $request->provider_id)->first();
+        if ($noticeProvider && ($noticeMessage = $this->advanceNoticeMessage($request->type, $noticeProvider, $request->event_date))) {
+            return response()->json([
+                'success' => false,
+                'message' => $noticeMessage,
+                'errors' => ['event_date' => [$noticeMessage]],
             ], 422);
         }
 
@@ -1013,6 +1059,14 @@ class BookingController extends Controller
                 }
                 
                 $maxBookings = $schedule->booking_limit ?? 3;
+            }
+
+            if ($noticeMessage = $this->advanceNoticeMessage($request->type, $provider, $request->event_date)) {
+                return [
+                    'success' => false,
+                    'available' => false,
+                    'message' => $noticeMessage,
+                ];
             }
 
             // Get existing bookings
@@ -2062,17 +2116,19 @@ class BookingController extends Controller
             $availability = [];
             $currentDate  = $startDate->copy();
             $today        = Carbon::today();
+            $earliest     = BookingModel::earliestBookableDate($request->type, $provider);
 
             while ($currentDate->lte($endDate)) {
                 $dateString    = $currentDate->format('Y-m-d');
                 $dayOfWeek     = strtolower($currentDate->format('l'));
                 $isPast        = $currentDate->lt($today);
+                $tooSoon       = ! $isPast && $currentDate->lt($earliest);
                 $isOperatingDay = in_array($dayOfWeek, $operatingDays);
                 $bookingCount  = $existingBookings[$dateString] ?? 0;
 
                 // Fully booked if booking count has reached max limit
                 $fullyBooked = $isOperatingDay && ($bookingCount >= $maxBookings);
-                $available   = !$isPast && $isOperatingDay && !$fullyBooked;
+                $available   = !$isPast && !$tooSoon && $isOperatingDay && !$fullyBooked;
 
                 $availability[$dateString] = [
                     'date'            => $dateString,
@@ -2080,6 +2136,8 @@ class BookingController extends Controller
                     'fully_booked'    => $fullyBooked,
                     'not_operating'   => !$isOperatingDay,
                     'is_past'         => $isPast,
+                    'too_soon'        => $tooSoon,
+                    'slots_left'      => max(0, $maxBookings - $bookingCount),
                     'is_operating_day' => $isOperatingDay,
                     'booking_count'   => $bookingCount,
                     'max_bookings'    => $maxBookings,

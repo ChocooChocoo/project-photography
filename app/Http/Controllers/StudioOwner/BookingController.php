@@ -144,7 +144,7 @@ class BookingController extends Controller
             // Get maximum photographers allowed based on package
             $maxPhotographers = $this->getMaxPhotographersFromPackage($booking);
             $currentAssignedCount = $booking->assignedPhotographers
-                ->whereIn('status', BookingModel::ACTIVE_ASSIGNMENT_STATUSES)
+                ->whereIn('status', BookingModel::OCCUPYING_ASSIGNMENT_STATUSES)
                 ->count();
 
             // Get package details for display
@@ -347,7 +347,7 @@ class BookingController extends Controller
             // Get required photographer count from package
             $requiredPhotographers = $this->getMaxPhotographersFromPackage($booking);
             $currentAssignedCount = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
-                ->whereIn('status', BookingModel::ACTIVE_ASSIGNMENT_STATUSES)->count();
+                ->whereIn('status', BookingModel::OCCUPYING_ASSIGNMENT_STATUSES)->count();
             $remainingNeeded = $requiredPhotographers - $currentAssignedCount;
 
             // Get package details for display
@@ -377,7 +377,7 @@ class BookingController extends Controller
                 ->get();
 
             $assignedPhotographerIds = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
-                ->whereIn('status', BookingModel::ACTIVE_ASSIGNMENT_STATUSES)
+                ->whereIn('status', BookingModel::OCCUPYING_ASSIGNMENT_STATUSES)
                 ->pluck('photographer_id')
                 ->map(fn ($photographerId) => (int) $photographerId)
                 ->toArray();
@@ -525,13 +525,13 @@ class BookingController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Cannot assign photographers to a booking that is already completed or cancelled.',
-                ]);
+                ], 422);
             }
 
             // Get required photographer count from package
             $requiredPhotographers = $this->getMaxPhotographersFromPackage($booking);
             $currentAssignedCount = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
-                ->whereIn('status', BookingModel::ACTIVE_ASSIGNMENT_STATUSES)->count();
+                ->whereIn('status', BookingModel::OCCUPYING_ASSIGNMENT_STATUSES)->count();
             $requestedPhotographerIds = collect($request->input('photographer_ids', []))
                 ->map(fn ($photographerId) => (int) $photographerId)
                 ->unique()
@@ -567,7 +567,7 @@ class BookingController extends Controller
             }
 
             $alreadyAssignedPhotographerIds = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
-                ->whereIn('status', BookingModel::ACTIVE_ASSIGNMENT_STATUSES)
+                ->whereIn('status', BookingModel::OCCUPYING_ASSIGNMENT_STATUSES)
                 ->pluck('photographer_id')
                 ->map(fn ($photographerId) => (int) $photographerId)
                 ->toArray();
@@ -642,7 +642,7 @@ class BookingController extends Controller
                 UserModel::whereIn('id', $lockIds)->orderBy('id')->lockForUpdate()->get();
                 $freelancerIds = $fallback->validate($booking, $requestedPhotographerIds);
                 if (in_array($booking->status, ['completed', 'cancelled'])
-                    || BookingAssignedPhotographerModel::where('booking_id', $bookingId)->whereIn('status', BookingModel::ACTIVE_ASSIGNMENT_STATUSES)->count()
+                    || BookingAssignedPhotographerModel::where('booking_id', $bookingId)->whereIn('status', BookingModel::OCCUPYING_ASSIGNMENT_STATUSES)->count()
                         + count($requestedPhotographerIds) !== $this->getMaxPhotographersFromPackage($booking)) {
                     throw new \RuntimeException(json_encode(['message' => 'Booking assignment requirement changed. Reload and try again.'], JSON_THROW_ON_ERROR));
                 }
@@ -664,7 +664,7 @@ class BookingController extends Controller
                 foreach ($requestedPhotographerIds as $photographerId) {
                     $exists = BookingAssignedPhotographerModel::where('booking_id', $bookingId)
                         ->where('photographer_id', $photographerId)
-                        ->whereIn('status', BookingModel::ACTIVE_ASSIGNMENT_STATUSES)
+                        ->whereIn('status', BookingModel::OCCUPYING_ASSIGNMENT_STATUSES)
                         ->exists();
 
                     if ($exists) {
@@ -1140,6 +1140,13 @@ class BookingController extends Controller
                 ->whereIn('studio_id', $studioIds)
                 ->firstOrFail();
 
+            if (in_array($assignment->booking?->status, [BookingModel::STATUS_COMPLETED, BookingModel::STATUS_CANCELLED], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This booking is already completed or cancelled. Its photographer assignments can no longer change.',
+                ], 422);
+            }
+
             $status = $request->input('status');
 
             if (! in_array($status, ['completed', 'cancelled'])) {
@@ -1221,6 +1228,13 @@ class BookingController extends Controller
         try {
             $studioIds = StudiosModel::where('user_id', Auth::id())->pluck('id');
             $recovery = BookingCancellationRecoveryModel::whereIn('studio_id', $studioIds)->findOrFail($recoveryId);
+            $recoveryBooking = BookingModel::find($recovery->booking_id);
+            if (! $recoveryBooking || in_array($recoveryBooking->status, [BookingModel::STATUS_COMPLETED, BookingModel::STATUS_CANCELLED], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot assign photographers to a booking that is already completed or cancelled.',
+                ], 422);
+            }
             $assignmentId = $request->input('assignment_id');
             if ($assignmentId) {
                 $assignment = BookingAssignedPhotographerModel::where('id', $assignmentId)
@@ -1292,13 +1306,17 @@ class BookingController extends Controller
             && $booking->cancelled_by === 'client'
             && $paidTotal > 0
             && $paidTotal >= (float) $booking->total_amount;
+        $maxRefund = $canSetRefundTarget ? $booking->maxClientRefund() : $paidTotal;
+        $nonRefundableDownpayment = $canSetRefundTarget ? $booking->nonRefundableDownpayment() : 0.0;
 
         return view('owner.cancellation-recovery', compact(
             'recovery',
             'replacementCandidates',
             'replacementMembers',
             'paidTotal',
-            'canSetRefundTarget'
+            'canSetRefundTarget',
+            'maxRefund',
+            'nonRefundableDownpayment'
         ));
     }
 

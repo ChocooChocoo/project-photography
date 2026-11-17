@@ -327,7 +327,8 @@ class DepositPolicyTest extends TestCase
             'provider_id' => $studio->id,
             'category_id' => $category->id,
             'package_id' => $package->id,
-            'event_date' => Carbon::tomorrow()->format('Y-m-d'),
+            // A week after tomorrow: the same open weekday, beyond the studio's 3-day notice.
+            'event_date' => Carbon::tomorrow()->addWeek()->format('Y-m-d'),
             'start_time' => '09:00',
             'end_time' => '10:00',
             'location_type' => 'in-studio',

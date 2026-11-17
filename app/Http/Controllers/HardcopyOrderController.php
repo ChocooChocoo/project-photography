@@ -23,9 +23,13 @@ class HardcopyOrderController extends Controller
         return BookingModel::where('client_id', auth()->id())->findOrFail($id);
     }
 
-    private function editable(BookingModel $booking): void
+    private function editable(BookingModel $booking, bool $allowCompleted = false): void
     {
-        abort_unless(in_array($booking->status, ['confirmed', 'in_progress'], true), 422, 'Hardcopy changes require an open, confirmed booking.');
+        $open = ['confirmed', 'in_progress'];
+        if ($allowCompleted) {
+            $open[] = 'completed';
+        }
+        abort_unless(in_array($booking->status, $open, true), 422, 'Hardcopy changes require an open, confirmed booking.');
     }
 
     public function ownerShow($bookingId)
@@ -117,7 +121,9 @@ class HardcopyOrderController extends Controller
 
         return DB::transaction(function () use ($booking, $order, $data) {
             $booking = BookingModel::lockForUpdate()->findOrFail($booking->id);
-            $this->editable($booking);
+            // A booking may be completed once prints are ready, so delivery
+            // tracking continues after completion.
+            $this->editable($booking, true);
             $order = HardcopyOrderModel::where('booking_id', $booking->id)->lockForUpdate()->findOrFail($order);
             $next = $data['status'];
             if ($next === $order->status) {

@@ -762,11 +762,8 @@
                                             <div>
                                                 <h5 class="mb-1">Advance Booking</h5>
                                                 <p class="text-muted mb-0">
-                                                    @if($type === 'studio')
-                                                        Book at least {{ $studio->advance_booking_days ?? 3 }} days in advance
-                                                    @else
-                                                        Book at least {{ $freelancer->schedule->advance_booking ?? 3 }} days in advance
-                                                    @endif
+                                                    @php($noticeDays = \App\Models\BookingModel::minimumNoticeDays($type, $type === 'studio' ? $studio : $freelancer))
+                                                    Book at least {{ $noticeDays }} {{ \Illuminate\Support\Str::plural('day', $noticeDays) }} in advance
                                                 </p>
                                             </div>
                                         </div>

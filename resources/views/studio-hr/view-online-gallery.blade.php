@@ -275,6 +275,7 @@
                 submitBtn.disabled = true;
                 publishBtn.disabled = true;
                 deleteBtn.disabled = true;
+                deleteBtn.classList.remove('d-none');
                 document.getElementById('galleryModalTitle').textContent = 'Manage Gallery - ' + bookingName;
 
                 modal.show();
@@ -298,6 +299,8 @@
                     const hasGallery = !!currentGallery;
                     updateActionButtons();
                     deleteBtn.disabled = !hasGallery;
+                    // Completed bookings keep their gallery.
+                    deleteBtn.classList.toggle('d-none', !!data.deletion_locked);
                 } catch (error) {
                     showAlert('Unable to load gallery.', 'danger');
                 }

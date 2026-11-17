@@ -22,6 +22,11 @@ class ProfileSetupRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Uploads are required on first setup; on edit, stored files are kept when none are sent.
+        $fileRule = \App\Models\Freelancer\ProfileModel::where('user_id', auth()->id())->exists()
+            ? 'nullable'
+            : 'required';
+
         $rules = [
             // Personal Information
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -34,7 +39,7 @@ class ProfileSetupRequest extends FormRequest
             'bio' => 'required|string|min:50|max:2000',
             'contract_template' => 'nullable|string|max:5000',
             'years_of_experience' => 'required|integer|min:0|max:50',
-            'brand_logo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'brand_logo' => $fileRule.'|image|mimes:jpeg,png,jpg|max:2048',
             
             // Location and Coverage
             'municipality' => 'required|exists:tbl_locations,municipality',
@@ -59,17 +64,17 @@ class ProfileSetupRequest extends FormRequest
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'max_clients_per_day' => 'required|integer|min:1|max:100',
-            'advance_booking_days' => 'required|integer|min:1|max:31',
+            'advance_booking_days' => 'required|integer|min:1|max:30',
             
             // Personal Portfolio
-            'portfolios' => 'required|array|min:1',
+            'portfolios' => $fileRule.'|array|min:1',
             'portfolios.*' => 'image|mimes:jpeg,png,jpg|max:3072',
             'facebook_url' => 'nullable|url|max:255',
             'instagram_url' => 'nullable|url|max:255',
             'website_url' => 'nullable|url|max:255',
             
             // Verification Documents
-            'freelancer_id_document' => 'required|file|mimes:pdf,jpeg,png,jpg|max:3072',
+            'freelancer_id_document' => $fileRule.'|file|mimes:pdf,jpeg,png,jpg|max:3072',
         ];
 
         // Additional validation for deposit amount based on type

@@ -40,6 +40,18 @@ class ProcurementApprovalController extends Controller
         ]);
     }
 
+    public function inventory(): View|RedirectResponse
+    {
+        $ownerUser = $this->getAuthenticatedOwnerUser();
+        $studioIds = $this->procurementWorkflowService->getAssignedStudioIds($ownerUser, 'owner');
+
+        if ($studioIds->isEmpty()) {
+            return redirect()->route('owner.dashboard')->with('error', 'No owned studio is available for procurement oversight.');
+        }
+
+        return view('owner.procurement-inventory', $this->procurementWorkflowService->getInventorySummary($studioIds));
+    }
+
     public function show(string $id): JsonResponse
     {
         $ownerUser = $this->getAuthenticatedOwnerUser();

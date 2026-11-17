@@ -414,7 +414,7 @@
 
                                     <div class="col-lg-6 mb-3">
                                         <label class="form-label">Advance Booking</label>
-                                        <input type="number" class="form-control" placeholder="Enter the advance booking days" max="30" name="advance_booking_days" value="{{ $studio->advance_booking_days }}" required>
+                                        @include('partials.advance-booking-select', ['name' => 'advance_booking_days', 'value' => $studio->advance_booking_days])
                                         <small class="form-text text-muted">The minimum number of days before the studio can be reserved</small>
                                         <div class="invalid-feedback">
                                             Please enter the advance booking days.

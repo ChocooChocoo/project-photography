@@ -8,6 +8,9 @@ class HardcopyOrderModel extends Model
 {
     protected $table = 'tbl_booking_hardcopy_orders';
 
+    /** Order statuses that let the owner complete the booking. */
+    public const COMPLETION_READY_STATUSES = ['ready', 'shipped', 'delivered'];
+
     protected $guarded = ['id'];
 
     protected $casts = ['amount' => 'decimal:2', 'accepted_at' => 'datetime'];

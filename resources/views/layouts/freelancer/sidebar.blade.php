@@ -29,11 +29,11 @@
 
             {{-- Dashboard --}}
             @php
-                $isDashboardActive = Route::is('owner.dashboard');
+                $isDashboardActive = Route::is('freelancer.dashboard');
             @endphp
             
             <li class="side-nav-item {{ $isDashboardActive ? 'active' : '' }}">
-                <a href="{{ route('owner.dashboard') }}" class="side-nav-link {{ $isDashboardActive ? 'active' : '' }}">
+                <a href="{{ route('freelancer.dashboard') }}" class="side-nav-link {{ $isDashboardActive ? 'active' : '' }}">
                     <span class="menu-icon"><i data-lucide="layout-dashboard"></i></span>
                     <span class="menu-text" data-lang="dashboard">Dashboard</span>
                 </a>

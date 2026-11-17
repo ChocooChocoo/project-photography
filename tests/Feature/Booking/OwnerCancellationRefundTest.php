@@ -89,7 +89,19 @@ class OwnerCancellationRefundTest extends TestCase
             ->getJson('/_test/admin/refunds')
             ->assertOk()
             ->assertJsonPath('recoveries.0.id', $recovery->id)
-            ->assertJsonPath('recoveries.0.status', 'refund_pending');
+            ->assertJsonPath('recoveries.0.status', 'refund_pending')
+            ->assertJsonPath('recoveries.0.refund_editable', false)
+            ->assertJsonPath('recoveries.0.max_refund', 1000);
+
+        // A studio cancellation is refunded in full; the admin cannot lower it.
+        $this->actingAs($this->owner)
+            ->postJson("/_test/admin/refunds/{$recovery->id}/complete", [
+                'provider_refund_reference' => 'stripe_refund_owner_1',
+                'refund_amount' => 600,
+            ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Business-initiated cancellations are refunded in full and cannot be changed.');
+        $this->assertSame('succeeded', $payment->fresh()->status);
 
         $this->actingAs($this->owner)
             ->postJson("/_test/admin/refunds/{$recovery->id}/complete", ['provider_refund_reference' => 'stripe_refund_owner_1'])

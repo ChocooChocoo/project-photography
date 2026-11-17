@@ -71,10 +71,30 @@
                 const client = booking.client || {};
                 const payments = (booking.payments || []).filter(payment => payment.status === 'succeeded');
 
-                const paidTotal = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+                const paidTotal = item.paid_total == null
+                    ? payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+                    : Number(item.paid_total);
+                const editable = Boolean(item.refund_editable);
+                const maxRefund = item.max_refund == null ? paidTotal : Number(item.max_refund);
+                const keptDownpayment = Number(item.non_refundable_downpayment || 0);
                 const ownerTarget = item.refund_amount == null ? null : Number(item.refund_amount);
-                const target = ownerTarget ?? paidTotal;
-                const percentage = item.refund_percentage == null ? 100 : Number(item.refund_percentage);
+                const target = Math.min(ownerTarget ?? maxRefund, maxRefund);
+                const refundSection = editable ? `
+                        <div class="alert alert-info py-2 mb-3">
+                            ${ownerTarget == null ? 'Refund target' : 'Owner refund target'}: <strong>${money(target)}</strong>.
+                            The client cancelled, so you may adjust this amount up to ${money(maxRefund)}.
+                            ${keptDownpayment > 0 ? `<div class="small mt-1">${money(keptDownpayment)} downpayment kept (non-refundable).</div>` : ''}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label mb-1" for="refund_amount_${item.id}">Refund amount to record</label>
+                            <input type="number" step="0.01" min="0" max="${maxRefund.toFixed(2)}" id="refund_amount_${item.id}"
+                                name="refund_amount" class="form-control" value="${target.toFixed(2)}">
+                        </div>
+                    ` : `
+                        <div class="alert alert-info py-2 mb-3">
+                            Full refund: <strong>${money(paidTotal)}</strong> (business-initiated cancellation)
+                        </div>
+                    `;
                 const paymentInputs = payments.map(payment => `
                     <div class="mb-3">
                         <label class="form-label mb-1">Provider refund reference — ${esc(payment.payment_reference)} (${money(payment.amount)})</label>
@@ -97,15 +117,7 @@
                             ${paymentStatusBadge(booking.payment_status)}
                         </div>
                         <div class="small text-muted mb-2"><i class="ti ti-info-circle me-1"></i>Reason: ${esc(reason)}</div>
-                        <div class="alert alert-info py-2 mb-3">
-                            ${ownerTarget == null ? 'Refund target' : 'Owner refund target'}: <strong>${money(target)}</strong>
-                            (${percentage.toFixed(2)}% of succeeded payments). You may override this amount at or below the total paid (${money(paidTotal)}).
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label mb-1" for="refund_amount_${item.id}">Refund amount to record</label>
-                            <input type="number" step="0.01" min="0" max="${paidTotal}" id="refund_amount_${item.id}"
-                                name="refund_amount" class="form-control" value="${target.toFixed(2)}">
-                        </div>
+                        ${refundSection}
                         ${paymentInputs || '<div class="text-danger small mb-3">No succeeded payments found for this booking.</div>'}
                         <div class="mb-3">
                             <label class="form-label mb-1">Processor fee or evidence notes</label>

@@ -33,7 +33,7 @@
                                         <th>Category</th>
                                         <th>Package</th>
                                         <th class="text-center">Gallery Status</th>
-                                        <th class="text-center" style="width: 1%;">Actions</th>
+                                        <th class="text-center text-nowrap">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -86,32 +86,34 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
+                                                <div class="d-inline-flex flex-nowrap align-items-center gap-1">
                                                 @if ($booking->has_gallery)
                                                     @php($approvalStatus = $booking->gallery->approval_status ?? null)
                                                     <button class="btn btn-sm manage-gallery"
-                                                        data-booking-id="{{ $booking->id }}" title="Manage Gallery">
+                                                        data-booking-id="{{ $booking->id }}" title="Manage Gallery" aria-label="Manage Gallery">
                                                         <i class="ti ti-library-photo fs-5" aria-hidden="true"></i>
                                                     </button>
                                                     @if ($booking->gallery->gallery_status !== 'published' && ($approvalStatus === null || $approvalStatus === 'rejected'))
                                                         <button class="btn btn-sm submit-gallery"
                                                             data-gallery-id="{{ $booking->gallery->id }}"
-                                                            title="Submit for approval">
+                                                            title="Submit for approval" aria-label="Submit for approval">
                                                             <i class="ti ti-check fs-5" aria-hidden="true"></i>
                                                         </button>
                                                     @endif
                                                     @if ($booking->gallery->gallery_status !== 'published' && $approvalStatus === 'approved')
                                                         <button class="btn btn-sm publish-gallery"
                                                             data-gallery-id="{{ $booking->gallery->id }}"
-                                                            title="Publish to Client">
+                                                            title="Publish to Client" aria-label="Publish to Client">
                                                             <i class="ti ti-send fs-5" aria-hidden="true"></i>
                                                         </button>
                                                     @endif
                                                 @else
                                                     <button class="btn btn-sm create-gallery"
-                                                        data-booking-id="{{ $booking->id }}" title="Create Gallery">
+                                                        data-booking-id="{{ $booking->id }}" title="Create Gallery" aria-label="Create Gallery">
                                                         <i class="ti ti-photo-up fs-5" aria-hidden="true"></i>
                                                     </button>
                                                 @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty
@@ -461,6 +463,7 @@
 
                                     {{-- Images Container --}}
                                     <div class="col-12">
+                                        <div id="revisionNote"></div>
                                         <div id="imagesContainer" class="row"></div>
                                     </div>
 
@@ -529,6 +532,7 @@
 {{-- SCRIPTS --}}
 @section('scripts')
     <script src="{{ asset('assets/js/before-after.js').'?v='.filemtime(public_path('assets/js/before-after.js')) }}"></script>
+    <script src="{{ asset('assets/js/gallery-revision.js').'?v='.filemtime(public_path('assets/js/gallery-revision.js')) }}"></script>
     <script>
         $(document).ready(function() {
             let selectedBookingId = null;
@@ -631,10 +635,15 @@
                                 $('#edit_description').val(response.gallery.description || '');
                                 $('#edit_status').val(response.gallery.status);
 
+                                // Completed bookings keep their gallery: no delete controls.
+                                $('#deleteGalleryBtn').toggleClass('d-none', !!response.deletion_locked);
+                                $('#revisionNote').html(GalleryRevision.note(response.revision_note && (response.revision_photos || []).length ? response.revision_note : ''));
+
                                 // Load gallery images
-                                loadGalleryImages(response.gallery);
+                                loadGalleryImages(response.gallery, response);
                             } else {
                                 currentGalleryId = null;
+                                $('#revisionNote').empty();
                                 $('#noGalleryMessage').show();
                                 $('#galleryInfo').hide();
                                 $('#galleryImagesSection').hide();
@@ -701,7 +710,9 @@
             });
 
             // Load gallery images function
-            function loadGalleryImages(gallery) {
+            function loadGalleryImages(gallery, details = {}) {
+                const flagged = details.revision_photos || [];
+                const locked = !!details.deletion_locked;
                 $('#manageLoadingSpinner').show();
                 $('#galleryImagesSection').hide();
 
@@ -743,6 +754,7 @@
                                 <div class="position-relative">
                                     <img src="{{ asset('storage') }}/${image}" class="card-img-top" alt="Gallery Image" style="height: 150px; object-fit: cover;">
                                     <span class="position-absolute top-0 start-0 bg-primary text-white p-1 m-2 rounded small"><i class="ti ti-photo me-1"></i>${index + 1}</span>
+                                    ${flagged.includes(image) ? GalleryRevision.badge() : ''}
                                 </div>
                                 <div class="card-body p-2">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -753,10 +765,11 @@
                                         <button type="button" class="btn btn-sm ${(gallery.raw_images || {})[image] ? 'btn-soft-success' : 'btn-soft-secondary'} add-original me-1" data-image="${image}" data-url="{{ url('gallery-originals/studio') }}/${gallery.id}" ${gallery.gallery_status === 'published' ? 'disabled' : ''} title="${gallery.gallery_status === 'published' ? 'Request a revision before changing published photos' : 'Upload the unedited original for a before-and-after slider'}">
                                             <i class="ti ti-photo-up" aria-hidden="true"></i> <span class="add-original-text">${(gallery.raw_images || {})[image] ? 'Original added' : 'Add original'}</span>
                                         </button>
-                                        <button class="btn btn-sm btn-soft-danger delete-image" data-image="${image}" title="Delete this image">
+                                        ${locked ? '' : `<button class="btn btn-sm btn-soft-danger delete-image" data-image="${image}" title="Delete this image">
                                             <i class="ti ti-trash"></i>
-                                        </button>
+                                        </button>`}
                                     </div>
+                                    ${flagged.includes(image) ? GalleryRevision.button(image, `{{ url('gallery-revisions/studio') }}/${gallery.id}`) : ''}
                                 </div>
                             </div>
                         </div>

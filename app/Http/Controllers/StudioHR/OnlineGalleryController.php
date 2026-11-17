@@ -110,6 +110,7 @@ class OnlineGalleryController extends Controller
                 ],
                 'gallery' => $gallery,
                 'has_gallery' => $gallery ? true : false,
+                'deletion_locked' => $booking->galleryDeletionLocked($gallery?->gallery_status),
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->recordNotFound();
@@ -225,6 +226,10 @@ class OnlineGalleryController extends Controller
                 return $this->errorResponse('Gallery not found.', 404);
             }
 
+            if ($gallery->booking?->galleryDeletionLocked($gallery->gallery_status)) {
+                return $this->errorResponse(BookingModel::GALLERY_DELETION_LOCKED_MESSAGE, 422);
+            }
+
             $images = $gallery->images ?? [];
 
             if (($key = array_search($request->image_path, $images)) !== false) {
@@ -262,6 +267,10 @@ class OnlineGalleryController extends Controller
 
             if (! $gallery) {
                 return $this->errorResponse('Gallery not found.', 404);
+            }
+
+            if ($gallery->booking?->galleryDeletionLocked($gallery->gallery_status)) {
+                return $this->errorResponse(BookingModel::GALLERY_DELETION_LOCKED_MESSAGE, 422);
             }
 
             foreach ($gallery->images ?? [] as $image) {

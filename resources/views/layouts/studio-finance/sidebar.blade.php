@@ -128,14 +128,30 @@
             {{-- Procurement --}}
             @php
                 $isProcurementActive = Route::is('studio-finance.procurement.*');
+                $isProcurementInventoryActive = Route::is('studio-finance.procurement.inventory');
             @endphp
 
             @if($canViewProcurement || $canReviewProcurement || $canOrderProcurement || $canPayProcurement)
                 <li class="side-nav-item {{ $isProcurementActive ? 'active' : '' }}">
-                    <a href="{{ route('studio-finance.procurement.index') }}" class="side-nav-link {{ $isProcurementActive ? 'active' : '' }}">
+                    <a data-bs-toggle="collapse" href="#sidebarProcurement" aria-expanded="{{ $isProcurementActive ? 'true' : 'false' }}" aria-controls="sidebarProcurement" class="side-nav-link {{ $isProcurementActive ? 'active' : '' }}">
                         <span class="menu-icon"><i class="ti ti-package-import"></i></span>
                         <span class="menu-text" data-lang="procurement">Procurement</span>
+                        <span class="menu-arrow"></span>
                     </a>
+                    <div class="collapse {{ $isProcurementActive ? 'show' : '' }}" id="sidebarProcurement">
+                        <ul class="sub-menu">
+                            <li class="side-nav-item">
+                                <a href="{{ route('studio-finance.procurement.index') }}" class="side-nav-link {{ $isProcurementActive && ! $isProcurementInventoryActive ? 'active' : '' }}">
+                                    <span class="menu-text" data-lang="procurement-requests">Requests</span>
+                                </a>
+                            </li>
+                            <li class="side-nav-item">
+                                <a href="{{ route('studio-finance.procurement.inventory') }}" class="side-nav-link {{ $isProcurementInventoryActive ? 'active' : '' }}">
+                                    <span class="menu-text" data-lang="procurement-inventory">Inventory</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
             @endif
         </ul>

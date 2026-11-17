@@ -365,12 +365,15 @@ class MyBookingsController extends Controller
     }
 
     /**
-     * Request a revision on a completed booking's gallery.
+     * Request a revision of selected photos in a completed booking's gallery.
+     * The gallery stays published; only the flagged photos await replacement.
      */
     public function requestRevision(Request $request, $id)
     {
         try {
             $request->validate([
+                'photos' => 'required|array|min:1',
+                'photos.*' => 'string',
                 'note' => 'nullable|string|max:1000',
             ]);
 
@@ -388,24 +391,41 @@ class MyBookingsController extends Controller
                 ], 403);
             }
 
-            $booking->update(['revision_requested_at' => now()]);
+            $gallery = $booking->booking_type === 'freelancer'
+                ? FreelanceOnlineGalleryModel::where('booking_id', $id)->first()
+                : StudioOnlineGalleryModel::where('booking_id', $id)->first();
+
+            if (! $gallery) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This booking has no gallery to revise.',
+                ], 422);
+            }
+
+            $photos = array_values(array_unique($request->input('photos')));
+
+            if (array_diff($photos, $gallery->images ?? [])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Select only photos from this gallery.',
+                ], 422);
+            }
+
+            DB::transaction(function () use ($booking, $gallery, $photos, $request) {
+                $gallery->update([
+                    'revision_photos' => $photos,
+                    'revision_note' => $request->input('note'),
+                    'revision_resolved_at' => null,
+                ]);
+                $booking->update(['revision_requested_at' => now()]);
+            });
 
             $recipients = [];
 
             if ($booking->booking_type === 'studio') {
-                $gallery = StudioOnlineGalleryModel::where('booking_id', $id)->first();
-                if ($gallery && $gallery->gallery_status === 'published') {
-                    $gallery->update(['gallery_status' => 'draft']);
-                }
-
                 $studio = StudiosModel::find($booking->provider_id);
                 if ($studio && $studio->user) {
                     $recipients[] = $studio->user;
-                }
-            } elseif ($booking->booking_type === 'freelancer') {
-                $gallery = FreelanceOnlineGalleryModel::where('booking_id', $id)->first();
-                if ($gallery && $gallery->gallery_status === 'published') {
-                    $gallery->update(['gallery_status' => 'draft']);
                 }
             }
 
@@ -427,12 +447,13 @@ class MyBookingsController extends Controller
             }
 
             foreach ($recipients as $recipient) {
-                $this->notifyRevisionRequested($booking, $recipient);
+                $this->notifyRevisionRequested($booking, $recipient, count($photos));
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Your revision request has been sent.',
+                'revision_photos' => $photos,
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->recordNotFound();

@@ -242,8 +242,9 @@
                                             <label class="form-label" for="eventDate">Event Date</label>
                                             <div class="input-group">
                                                 <input type="date" class="form-control" id="eventDate" name="event_date"
-                                                    min="{{ date('Y-m-d') }}"
+                                                    min="{{ $earliestBookableDate }}"
                                                     max="{{ date('Y-m-d', strtotime('+60 days')) }}"
+                                                    aria-describedby="advanceNoticeNote"
                                                     placeholder="Select event date" required>
                                                 <button class="btn btn-outline-secondary" type="button" id="viewCalendarBtn" data-bs-toggle="modal" data-bs-target="#calendarModal">
                                                     <i class="ti ti-calendar-event me-1"></i> View Calendar
@@ -255,6 +256,7 @@
                                             <div class="invalid-feedback">
                                                 Please select a valid event date.
                                             </div>
+                                            <small class="text-muted mt-1 d-block" id="advanceNoticeNote">Book at least {{ $minimumNoticeDays }} {{ \Illuminate\Support\Str::plural('day', $minimumNoticeDays) }} before the event. Earliest date: {{ \Carbon\Carbon::parse($earliestBookableDate)->format('M d, Y') }}.</small>
                                             <small class="text-muted mt-1 d-block" id="closedDayNote" style="display:none !important;"></small>
                                             <small class="text-muted mt-1" id="dateAvailabilityStatus">
                                                 <span id="dateStatusIcon" class="me-1"></span>
@@ -1711,7 +1713,7 @@
                             $('#dateStatusIcon').html('<i class="ti ti-circle-check text-success"></i>');
                             $('#dateStatusText').html(`
                                 <span class="text-success fw-medium">Available</span> 
-                                <span class="text-muted">(${response.existing_bookings}/${response.max_bookings} bookings)</span>
+                                <span class="text-muted">(${response.slots_left ?? Math.max(0, response.max_bookings - response.existing_bookings)} of ${response.max_bookings} slots left)</span>
                             `);
                             $('#submitBookingBtn').prop('disabled', false);
                         } else {
@@ -1812,7 +1814,15 @@
                         }
                     }
 
-                    html += `<td class="p-1"><div class="rounded py-1 ${cellClass}" style="cursor:${clickable ? 'pointer' : 'default'};" ${clickable ? `data-date="${dateString}"` : ''}>${day}</div></td>`;
+                    let cellTitle = '';
+                    if (info) {
+                        if (info.too_soon) cellTitle = 'Too soon: needs advance notice';
+                        else if (info.available) cellTitle = `${info.slots_left} of ${info.max_bookings} slots left`;
+                        else if (info.fully_booked) cellTitle = 'Fully booked';
+                        else if (info.not_operating) cellTitle = 'Closed';
+                    }
+
+                    html += `<td class="p-1"><div class="rounded py-1 ${cellClass}" title="${cellTitle}" style="cursor:${clickable ? 'pointer' : 'default'};" ${clickable ? `data-date="${dateString}"` : ''}>${day}</div></td>`;
 
                     cellsInRow++;
                     if (cellsInRow % 7 === 0 && day !== daysInMonth) {
@@ -2927,104 +2937,6 @@
                         console.error('Payment init error:', xhr);
                         showError('Payment initialization failed. Please try again.');
                         resetPaymentButton();
-                    }
-                });
-            }
-            
-            /**
-             * Generate availability calendar
-             */
-            function generateAvailabilityCalendar() {
-                const calendarEl = document.getElementById('availabilityCalendar');
-                const today = new Date();
-                
-                getCalendarAvailability(today.getFullYear(), today.getMonth() + 1).then(availabilityData => {
-                    let calendarHtml = `
-                        <div class="calendar-header d-flex justify-content-between align-items-center mb-3">
-                            <button class="btn btn-sm btn-outline-secondary" id="prevMonth"><i class="ti ti-chevron-left"></i></button>
-                            <h6 class="mb-0" id="currentMonth">${today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h6>
-                            <button class="btn btn-sm btn-outline-secondary" id="nextMonth"><i class="ti ti-chevron-right"></i></button>
-                        </div>
-                        <div class="calendar-grid" id="calendarGrid">
-                    `;
-                    
-                    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                    days.forEach(day => {
-                        calendarHtml += `<div class="calendar-day-header">${day}</div>`;
-                    });
-                    
-                    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-                    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                    
-                    for (let i = 0; i < firstDay.getDay(); i++) {
-                        calendarHtml += `<div class="calendar-day empty"></div>`;
-                    }
-                    
-                    for (let day = 1; day <= lastDay.getDate(); day++) {
-                        const date = new Date(today.getFullYear(), today.getMonth(), day);
-                        const dateString = date.toISOString().split('T')[0];
-                        const isToday = date.toDateString() === today.toDateString();
-                        const isPast = date < today;
-                        
-                        const dateAvailability = availabilityData[dateString];
-                        const isAvailable = dateAvailability ? dateAvailability.available : true;
-                        const isFullyBooked = dateAvailability ? dateAvailability.fully_booked : false;
-                        const isNotOperating = dateAvailability ? dateAvailability.not_operating : !isOperatingDay(dateString);
-                        
-                        let dateClass = 'calendar-day';
-                        if (isToday) dateClass += ' today';
-                        if (isPast) dateClass += ' past';
-                        if (!isAvailable || isFullyBooked || isNotOperating) dateClass += ' unavailable';
-                        if (isFullyBooked) dateClass += ' fully-booked';
-                        
-                        calendarHtml += `
-                            <div class="${dateClass}" data-date="${dateString}" 
-                                title="${isNotOperating ? 'Closed' : (isFullyBooked ? 'Fully Booked' : (isAvailable ? 'Available' : 'Not Available'))}">
-                                ${day}
-                                ${isFullyBooked ? '<div class="availability-dot unavailable"></div>' : (isAvailable && !isNotOperating ? '<div class="availability-dot available"></div>' : '')}
-                            </div>
-                        `;
-                    }
-                    
-                    calendarHtml += '</div>';
-                    calendarEl.innerHTML = calendarHtml;
-                    
-                    $('.calendar-day:not(.past):not(.unavailable):not(.fully-booked)').on('click', function() {
-                        const selectedDate = $(this).data('date');
-                        $('#eventDate').val(selectedDate);
-                        $('#calendarModal').modal('hide');
-                        $('#eventDate').trigger('change');
-                    });
-                    
-                    $('<style>')
-                        .prop('type', 'text/css')
-                        .html('.calendar-day.fully-booked { background: #fee; border-color: #dc3545; color: #dc3545; cursor: not-allowed; }')
-                        .appendTo('head');
-                });
-            }
-
-            /**
-             * Get calendar availability
-             */
-            function getCalendarAvailability(year, month) {
-                const type = $('#bookingType').val();
-                const providerId = $('#providerId').val();
-                
-                return $.ajax({
-                    url: '{{ route("client.bookings.calendar-availability") }}',
-                    type: 'POST',
-                    data: {
-                        type: type,
-                        provider_id: providerId,
-                        year: year,
-                        month: month,
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        return response.availability || {};
-                    },
-                    error: function() {
-                        return {};
                     }
                 });
             }

@@ -132,9 +132,11 @@ class OrdinaryCancellationTest extends TestCase
             ->assertOk()
             ->assertJsonPath('success', true);
 
-        $this->assertSame('refunded', $payment->fresh()->status);
-        $this->assertSame('refunded', $revenue->fresh()->status);
-        $this->assertSame(BookingModel::PAYMENT_REFUNDED, $booking->fresh()->payment_status);
+        // The client cancelled, so the default 30% downpayment (₱300) is kept and
+        // only the remaining ₱700 goes back.
+        $this->assertSame('partially_refunded', $payment->fresh()->status);
+        $this->assertSame('completed', $revenue->fresh()->status);
+        $this->assertSame(BookingModel::PAYMENT_REFUND_PENDING, $booking->fresh()->payment_status);
         $this->assertSame('refunded', $recovery->fresh()->status);
     }
 

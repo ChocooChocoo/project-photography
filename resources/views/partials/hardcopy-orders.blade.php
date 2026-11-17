@@ -1,6 +1,11 @@
 <h5>Printed photos and albums</h5>
 <p>Review the items and price before accepting. Accepted costs are added to the booking balance.</p>
 @php($open = in_array($booking->status, ['confirmed', 'in_progress'], true))
+{{-- A booking can be completed once prints are ready, so delivery tracking continues after completion. --}}
+@php($tracking = $open || $booking->status === 'completed')
+@if($owner && $open)
+    <p class="text-muted small">You can complete the booking once accepted prints are ready for pickup, shipped, or delivered.</p>
+@endif
 @php($methods = ['pickup' => 'Studio pickup', 'courier' => 'Third-party courier'])
 @php($eventEnded = $booking->eventHasEnded())
 @forelse($orders as $order)
@@ -36,7 +41,7 @@
             </form>
         @elseif($owner && $open && $order->accepted_at && !$eventEnded && !in_array($order->status, ['cancelled', 'delivered'], true))
             <p>Delivery can start after the event ends on {{ $booking->eventEndsAt()->format('M d, Y g:i A') }}.</p>
-        @elseif($owner && $open && !in_array($order->status, ['cancelled', 'delivered'], true))
+        @elseif($owner && ($open || ($tracking && $order->accepted_at)) && !in_array($order->status, ['cancelled', 'delivered'], true))
             <form data-hardcopy-action="{{ route('owner.hardcopy.status', [$booking->id, $order->id]) }}">
                 @php($next = ['pending' => 'preparing', 'preparing' => 'ready', 'ready' => $order->fulfillment_method === 'pickup' ? 'delivered' : 'shipped', 'shipped' => 'delivered'][$order->status])
                 <input type="hidden" name="status" value="{{ $order->accepted_at ? $next : 'cancelled' }}">

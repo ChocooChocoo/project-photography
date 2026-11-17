@@ -527,11 +527,12 @@
                     `;
                 } 
                 else if (assignment.status === 'completed') {
+                    const bookingDone = booking && booking.status === 'completed';
                     statusActions = `
                         <span class="badge badge-soft-success fs-6 px-3 py-2">
-                            <i data-lucide="check-circle" class="me-1"></i> Work Completed
+                            <i data-lucide="check-circle" class="me-1"></i> ${bookingDone ? 'Booking Completed' : 'Work Completed'}
                         </span>
-                        <small class="text-muted d-block mt-2">Waiting for owner to finalize booking</small>
+                        <small class="text-muted d-block mt-2">${bookingDone ? 'The owner has completed this booking.' : 'Waiting for owner to finalize booking'}</small>
                     `;
                 } 
                 else if (assignment.status === 'cancelled') {

@@ -120,6 +120,37 @@ class ProcurementWorkflowService
     }
 
     /**
+     * Get received consumable stock and equipment assets for the studios.
+     * Low stock means the quantity is at or below the reorder threshold.
+     */
+    public function getInventorySummary(Collection $studioIds): array
+    {
+        $relations = ['studio:id,studio_name', 'procurementRequest:id,request_reference'];
+
+        $stocks = ProcurementInventoryStockModel::with($relations)
+            ->whereIn('studio_id', $studioIds)
+            ->orderByRaw('CASE WHEN stock_quantity <= reorder_threshold THEN 0 ELSE 1 END')
+            ->orderBy('item_name')
+            ->get();
+
+        $assets = ProcurementAssetModel::with($relations)
+            ->whereIn('studio_id', $studioIds)
+            ->orderBy('asset_name')
+            ->get();
+
+        return [
+            'stocks' => $stocks,
+            'assets' => $assets,
+            'totals' => [
+                'stock_items' => $stocks->count(),
+                'low_stock' => $stocks->filter(fn ($stock) => (float) $stock->stock_quantity <= (float) $stock->reorder_threshold)->count(),
+                'assets' => $assets->count(),
+                'active_assets' => $assets->where('status', 'active')->count(),
+            ],
+        ];
+    }
+
+    /**
      * Create a new procurement request.
      */
     public function createRequest(UserModel $user, array $validated, string $portal): ProcurementRequestModel

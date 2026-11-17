@@ -310,14 +310,30 @@
             {{-- Procurement --}}
             @php
                 $procurementRoutes = Route::is('owner.procurement.*');
+                $procurementInventoryRoute = Route::is('owner.procurement.inventory');
             @endphp
 
             @if ($canViewProcurement || $canApproveProcurement || $canReportProcurement)
             <li class="side-nav-item {{ $procurementRoutes ? 'active' : '' }}">
-                <a href="{{ route('owner.procurement.index') }}" class="side-nav-link {{ $procurementRoutes ? 'active' : '' }}">
+                <a data-bs-toggle="collapse" href="#sidebarProcurement" aria-expanded="{{ $procurementRoutes ? 'true' : 'false' }}" aria-controls="sidebarProcurement" class="side-nav-link {{ $procurementRoutes ? 'active' : '' }}">
                     <span class="menu-icon"><i class="ti ti-package-export"></i></span>
                     <span class="menu-text" data-lang="procurement">Procurement</span>
+                    <span class="menu-arrow"></span>
                 </a>
+                <div class="collapse {{ $procurementRoutes ? 'show' : '' }}" id="sidebarProcurement">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="{{ route('owner.procurement.index') }}" class="side-nav-link {{ $procurementRoutes && ! $procurementInventoryRoute ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="procurement-requests">Requests</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{{ route('owner.procurement.inventory') }}" class="side-nav-link {{ $procurementInventoryRoute ? 'active' : '' }}">
+                                <span class="menu-text" data-lang="procurement-inventory">Inventory</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             @endif
 

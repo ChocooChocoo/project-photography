@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\BookingCancellationRecoveryModel;
-use App\Models\PaymentModel;
+use App\Models\BookingModel;
 use App\Services\BookingCancellationRecoveryService;
 use Illuminate\Http\Request;
 
@@ -20,6 +20,18 @@ class BookingRefundController extends Controller
         $recoveries = BookingCancellationRecoveryModel::with(['booking.client', 'booking.payments'])
             ->where('status', BookingCancellationRecoveryService::STATUS_REFUND_PENDING)
             ->latest()->get();
+
+        $recoveries->each(function (BookingCancellationRecoveryModel $recovery) {
+            $booking = $recovery->booking;
+            $paid = $booking ? round((float) $booking->payments->where('status', 'succeeded')->sum('amount'), 2) : 0.0;
+            $byClient = $booking && $booking->cancelled_by === 'client';
+
+            $recovery->setAttribute('cancelled_by', $booking?->cancelled_by);
+            $recovery->setAttribute('paid_total', $paid);
+            $recovery->setAttribute('max_refund', $byClient ? $booking->maxClientRefund() : $paid);
+            $recovery->setAttribute('non_refundable_downpayment', $byClient ? $booking->nonRefundableDownpayment() : 0.0);
+            $recovery->setAttribute('refund_editable', $byClient);
+        });
 
         return response()->json(['recoveries' => $recoveries->makeHidden('photographer_reason')]);
     }
@@ -37,16 +49,26 @@ class BookingRefundController extends Controller
         $recovery = BookingCancellationRecoveryModel::findOrFail($recoveryId);
 
         // The stored refund_amount is the owner's target and the default the
-        // queue executes. An admin may override it, but never above the total paid.
+        // queue executes. A business-side cancellation is always refunded in
+        // full; for a client cancellation the admin may adjust the target, but
+        // never into the non-refundable downpayment.
         if (array_key_exists('refund_amount', $data) && $data['refund_amount'] !== null
             && $recovery->status === BookingCancellationRecoveryService::STATUS_REFUND_PENDING) {
-            $paidTotal = (float) PaymentModel::where('booking_id', $recovery->booking_id)
-                ->where('status', 'succeeded')->sum('amount');
+            $booking = BookingModel::findOrFail($recovery->booking_id);
 
-            if ((float) $data['refund_amount'] > $paidTotal) {
+            if ($booking->cancelled_by !== 'client') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'The refund amount cannot exceed the total amount paid for this booking.',
+                    'message' => 'Business-initiated cancellations are refunded in full and cannot be changed.',
+                ], 422);
+            }
+
+            $max = $booking->maxClientRefund();
+            if ((float) $data['refund_amount'] > $max + 0.001) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The ₱'.number_format($booking->nonRefundableDownpayment(), 2)
+                        .' downpayment is non-refundable. The refund can be at most ₱'.number_format($max, 2).'.',
                 ], 422);
             }
 

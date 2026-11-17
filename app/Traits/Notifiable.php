@@ -425,17 +425,22 @@ trait Notifiable
      * @param object $recipient
      * @return NotificationModel|null
      */
-    public function notifyRevisionRequested($booking, $recipient)
+    public function notifyRevisionRequested($booking, $recipient, ?int $photoCount = null)
     {
+        $message = $photoCount
+            ? "The client requested a revision of {$photoCount} photo(s) for booking #{$booking->booking_reference}."
+            : "The client requested a revision for booking #{$booking->booking_reference}.";
+
         return $this->createNotification(
             $recipient->id,
             'revision_requested',
             'Revision Requested',
-            "The client requested a revision for booking #{$booking->booking_reference}.",
-            [
+            $message,
+            array_filter([
                 'booking_id' => $booking->id,
                 'booking_reference' => $booking->booking_reference,
-            ],
+                'photo_count' => $photoCount,
+            ], fn ($value) => $value !== null),
             'refresh',
             'warning'
         );

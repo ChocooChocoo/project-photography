@@ -212,6 +212,107 @@ class BookingTermsAndTimeslotTest extends TestCase
             ]);
     }
 
+    public function test_an_in_progress_booking_still_takes_its_slot_and_blocks_overlap(): void
+    {
+        $date = Carbon::tomorrow()->format('Y-m-d');
+        $booking = $this->createExistingBooking($date, '09:00', '11:00');
+        DB::table('tbl_bookings')->where('id', $booking->id)->update(['status' => BookingModel::STATUS_IN_PROGRESS]);
+
+        $this->actingAs($this->client)
+            ->postJson('/test/bookings/check-availability', [
+                'type' => 'studio', 'provider_id' => $this->studio->id, 'date' => $date,
+                'start_time' => '10:00', 'end_time' => '12:00',
+            ])
+            ->assertOk()
+            ->assertJson(['available' => false, 'time_overlap' => true]);
+    }
+
+    public function test_slot_counter_reports_slots_left_and_counts_in_progress_bookings(): void
+    {
+        $this->studio->update(['max_clients_per_day' => 3]);
+        $date = Carbon::tomorrow()->format('Y-m-d');
+        $this->createExistingBooking($date, '08:00', '09:00');
+        DB::table('tbl_bookings')->where('id', $this->createExistingBooking($date, '09:00', '10:00')->id)->update(['status' => BookingModel::STATUS_IN_PROGRESS]);
+        DB::table('tbl_bookings')->where('id', $this->createExistingBooking($date, '10:00', '11:00')->id)->update(['status' => BookingModel::STATUS_CANCELLED]);
+
+        $this->actingAs($this->client)
+            ->postJson('/test/bookings/check-availability', [
+                'type' => 'studio', 'provider_id' => $this->studio->id, 'date' => $date,
+                'start_time' => '13:00', 'end_time' => '14:00',
+            ])
+            ->assertOk()
+            ->assertJson(['available' => true, 'existing_bookings' => 2, 'max_bookings' => 3, 'slots_left' => 1])
+            ->assertJsonPath('message', 'Available (1 of 3 slots left)');
+    }
+
+    public function test_two_same_day_bookings_are_both_counted(): void
+    {
+        // Reported defect: with two clients booked on one day the counter was wrong,
+        // because the shared range date moved after counting the first booking.
+        $this->studio->update(['max_clients_per_day' => 3]);
+        $date = Carbon::tomorrow()->format('Y-m-d');
+        $this->createExistingBooking($date, '08:00', '09:00');
+        $this->createExistingBooking($date, '09:00', '10:00');
+
+        $this->actingAs($this->client)
+            ->postJson('/test/bookings/check-availability', [
+                'type' => 'studio', 'provider_id' => $this->studio->id, 'date' => $date,
+                'start_time' => '13:00', 'end_time' => '14:00',
+            ])
+            ->assertOk()
+            ->assertJson(['existing_bookings' => 2, 'slots_left' => 1]);
+    }
+
+    public function test_advance_notice_is_enforced_by_check_store_and_calendar(): void
+    {
+        Route::post('/test/bookings/calendar', [BookingController::class, 'getCalendarAvailability']);
+        $this->studio->update(['advance_booking_days' => 2]);
+
+        $tooSoon = Carbon::tomorrow()->format('Y-m-d');
+        $ok = Carbon::today()->addDays(2)->format('Y-m-d');
+
+        $this->actingAs($this->client)
+            ->postJson('/test/bookings/check-availability', [
+                'type' => 'studio', 'provider_id' => $this->studio->id, 'date' => $tooSoon,
+                'start_time' => '09:00', 'end_time' => '10:00',
+            ])
+            ->assertOk()
+            ->assertJson(['available' => false, 'too_soon' => true]);
+
+        $this->postJson('/test/bookings/check-availability', [
+            'type' => 'studio', 'provider_id' => $this->studio->id, 'date' => $ok,
+            'start_time' => '09:00', 'end_time' => '10:00',
+        ])->assertOk()->assertJson(['available' => true]);
+
+        $this->postJson('/test/bookings/store', $this->bookingPayload(['event_date' => $tooSoon]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('event_date');
+        $this->assertSame(0, BookingModel::count());
+
+        $calendar = $this->postJson('/test/bookings/calendar', [
+            'type' => 'studio', 'provider_id' => $this->studio->id, 'year' => 2026, 'month' => 8,
+        ])->assertOk();
+        $this->assertTrue($calendar->json("availability.$tooSoon.too_soon"));
+        $this->assertFalse($calendar->json("availability.$tooSoon.available"));
+        $this->assertTrue($calendar->json("availability.$ok.available"));
+    }
+
+    public function test_three_plus_days_notice_uses_the_custom_day_count(): void
+    {
+        $this->studio->update(['advance_booking_days' => 5]);
+
+        $this->assertSame(5, BookingModel::minimumNoticeDays('studio', $this->studio->fresh()));
+        $this->assertSame('2026-08-17', BookingModel::earliestBookableDate('studio', $this->studio->fresh())->toDateString());
+
+        $this->actingAs($this->client)
+            ->postJson('/test/bookings/check-availability', [
+                'type' => 'studio', 'provider_id' => $this->studio->id, 'date' => '2026-08-16',
+                'start_time' => '09:00', 'end_time' => '10:00',
+            ])
+            ->assertOk()
+            ->assertJson(['available' => false, 'too_soon' => true]);
+    }
+
     public function test_booking_form_step_validation_gates_terms_and_overlap(): void
     {
         // The step validation runs in the browser, so assert the Blade template
@@ -323,6 +424,8 @@ class BookingTermsAndTimeslotTest extends TestCase
             $table->string('studio_name');
             $table->string('status');
             $table->decimal('downpayment_percentage', 5, 2)->nullable();
+            $table->integer('advance_booking_days')->nullable();
+            $table->integer('max_clients_per_day')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

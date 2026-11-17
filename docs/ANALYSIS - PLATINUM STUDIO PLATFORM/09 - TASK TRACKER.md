@@ -2,7 +2,7 @@
 
 [Back to start](00%20-%20START%20HERE.md) · Previous: [08 - ROADMAP TRACKER](08%20-%20ROADMAP%20TRACKER.md) · Next: [10 - WORD LIST](10%20-%20WORD%20LIST.md)
 
-**Last checked:** 3 November 2026 (T-14 platform updates entry; historical task statuses retained)
+**Last checked:** 17 November 2026 (T-15 entry; historical task statuses retained)
 
 Every task below is a piece of work from a frozen user-authored prompt. The prompt remains exact under `MATERIAL/LEGACY DOCUMENTATION/tasks/`.
 
@@ -22,6 +22,7 @@ Every task below is a piece of work from a frozen user-authored prompt. The prom
 | T-12 | Resolve municipality permission behavior and standardize task documentation. | `MATERIAL/LEGACY DOCUMENTATION/tasks/12.md` | Owner studio creation lookup and documentation consistency. | [R-04](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-1--make-the-foundations-dependable) | 🔵 |
 | T-13 | Fix the client-reported T02 defects and build the requested enhancements. | `MATERIAL/LEGACY DOCUMENTATION/tasks/13.md` (frozen copy of `docs/tasks/T02.md`) | Employees page error, CSRF retry, gallery-approval notification, equipment inventory and confirmation, printed-photo delivery gate and fulfillment rule, downpayment settings, cancellation and refund rules, photo editing pricing, and rescheduling requests. | [R-05](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-2--complete-booking-and-media-journeys), [R-15](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-4--expand-discovery-and-advanced-operations) | ✅ |
 | T-14 | Build the platform feature and UI updates. | `MATERIAL/LEGACY DOCUMENTATION/tasks/14.md` (asked for in conversation, 3 November 2026) | Landing page redesign, messages icon in the topbar, tutorial rework, peso sign, per-package discounts, camera specs before booking, fixed and flexible booking times, venue pin and GPS arrival check-in with alerts, on-site cancellation and replacement, freelancer group names, and a before-and-after photo slider. | [R-05](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-2--complete-booking-and-media-journeys), [R-13](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-4--expand-discovery-and-advanced-operations) | ✅ |
+| T-15 | Fix the post-defense booking, gallery and navigation defects and add inventory, refund-rule and per-photo revision changes. | `MATERIAL/LEGACY DOCUMENTATION/tasks/15.md` (asked for in conversation, 17 November 2026) | Assignment after completion, photographer status text, advance-notice options, slot counter, hardcopy completion, gallery deletion lock, per-photo revisions, profile navigation, icon overlap, procurement inventory, and cancellation refund rules. | [R-05](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-2--complete-booking-and-media-journeys), [R-20](07%20-%20DEVELOPMENT%20ROADMAP.md#phase-6--resolve-cancellation-and-subscription-lifecycles) | ✅ |
 
 ## Tasks that serve no roadmap item
 
@@ -51,6 +52,14 @@ The acceptance-test sheet is outside this repo, and its testers must still mark 
 | 1–11 | Everything in T-14. The answers to its open questions are recorded in the plan. Studio discount rules are retired because they never changed a price; package discounts replace them. | [T-14 plan](../implementation-plan/platform-updates-2026-11/README.md): 775 PHP tests / 4021 assertions passed. A local browser run checked the landing page at desktop and phone widths, the client topbar, the fixed-package end time, and the venue pin map. | ✅ Locally verified, 3 November 2026; production unverified. |
 
 Not covered: direct freelancer bookings do not use GPS check-in or on-site cancellation, because they have no assignment record. Six migrations must run on production before the code is deployed.
+
+## T-15 booking, gallery, inventory and refund fixes
+
+| Phases | Scope | Source and verification | Status |
+|---|---|---|---|
+| 1 | Everything in T-15 (`MATERIAL/LEGACY DOCUMENTATION/tasks/15.md`): no assignment after completion, photographer completed status, 1/2/3+ day advance notice, slot counter, hardcopy completion, gallery deletion lock, per-photo revisions, freelancer profile navigation, ✓/✕ spacing, view-only procurement inventory, and refund rules by who cancelled. | [T-15 plan](../implementation-plan/t15-defense-fixes/README.md): 822 PHP tests / 4280 assertions passed and the build succeeded. A local browser run covered the freelancer setup page, advance-notice select, booking date minimum, inventory page, gallery delete lock, and a full photo revision cycle. | ✅ Locally verified, 17 November 2026; production unverified. |
+
+Not covered: inventory stock adjustments, asset status changes and inventory quantity on booking equipment (panel request S12) remain open. One migration must run on production before deploying.
 
 ## Status legend
 

@@ -54,19 +54,27 @@ class ProfileController extends Controller
     public function setup()
     {
         $user = auth()->user();
-        
-        // Check if profile already exists
-        $existingProfile = ProfileModel::where('user_id', $user->id)->first();
-        if ($existingProfile) {
-            return redirect()->route('freelancer.profile.index')
-                ->with('info', 'Your profile is already setup.');
-        }
+
+        // An existing profile opens the same form prefilled for editing.
+        $profile = ProfileModel::with(['categories', 'schedule', 'location'])
+            ->where('user_id', $user->id)
+            ->first();
 
         $categories = CategoriesModel::where('status', 'active')->get();
         $locations = LocationModel::where('status', 'active')->get();
         $municipalities = $locations->pluck('municipality')->unique();
 
-        return view('freelancer.setup-profile', compact('categories', 'municipalities'));
+        $barangays = [];
+        if ($profile?->location) {
+            $barangays = collect($profile->location->barangays)
+                ->filter(fn ($barangay) => is_string($barangay) && $barangay !== '')
+                ->unique()
+                ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+                ->values()
+                ->all();
+        }
+
+        return view('freelancer.setup-profile', compact('categories', 'municipalities', 'profile', 'barangays'));
     }
 
     /**
@@ -104,30 +112,34 @@ class ProfileController extends Controller
             
             $selectedBarangay = $request->barangay;
 
-            // Handle brand logo upload
-            $brandLogoPath = null;
+            $existing = ProfileModel::where('user_id', $user->id)->first();
+            $oldFiles = [];
+
+            // Uploaded files replace the stored ones; otherwise the stored paths stay.
+            $profileFiles = [];
             if ($request->hasFile('brand_logo')) {
-                $brandLogoPath = $request->file('brand_logo')->store('brand-logos', 'public');
+                $profileFiles['brand_logo'] = $request->file('brand_logo')->store('brand-logos', 'public');
+                $oldFiles[] = $existing?->brand_logo;
             }
 
-            // Handle portfolio works upload
-            $portfolioWorks = [];
             if ($request->hasFile('portfolios')) {
+                $portfolioWorks = [];
                 foreach ($request->file('portfolios') as $portfolio) {
-                    $portfolioPath = $portfolio->store('portfolio-works', 'public');
-                    $portfolioWorks[] = $portfolioPath;
+                    $portfolioWorks[] = $portfolio->store('portfolio-works', 'public');
                 }
+                // Same encoding as before so existing readers keep working.
+                $profileFiles['portfolio_works'] = json_encode($portfolioWorks);
+                $oldPortfolio = $existing?->portfolio_works;
+                $oldPortfolio = is_array($oldPortfolio) ? $oldPortfolio : (json_decode((string) $oldPortfolio, true) ?: []);
+                $oldFiles = array_merge($oldFiles, array_values($oldPortfolio));
             }
 
-            // Handle valid ID upload
-            $validIdPath = null;
             if ($request->hasFile('freelancer_id_document')) {
-                $validIdPath = $request->file('freelancer_id_document')->store('valid-ids', 'public');
+                $profileFiles['valid_id'] = $request->file('freelancer_id_document')->store('valid-ids', 'public');
+                $oldFiles[] = $existing?->valid_id;
             }
 
-            // Create freelancer profile
             $profileData = [
-                'user_id' => $user->id,
                 'location_id' => $location->id,
                 'brand_name' => $request->brand_name,
                 'group_name' => filled($request->group_name) ? trim($request->group_name) : null,
@@ -135,7 +147,6 @@ class ProfileController extends Controller
                 'bio' => $request->bio,
                 'contract_template' => $request->contract_template,
                 'years_experience' => $request->years_of_experience,
-                'brand_logo' => $brandLogoPath,
                 'street' => $request->street,
                 'barangay' => $selectedBarangay,
                 'service_area' => $request->service_area,
@@ -145,18 +156,14 @@ class ProfileController extends Controller
                 'deposit_type' => $request->deposit_policy === 'required' ? $request->deposit_type : null,
                 'deposit_amount' => $request->deposit_policy === 'required' ? $request->deposit_amount : null,
                 // ==== End: Deposit Policy Enhancement ==== //
-                'portfolio_works' => !empty($portfolioWorks) ? json_encode($portfolioWorks) : null,
                 'facebook_url' => $request->facebook_url,
                 'instagram_url' => $request->instagram_url,
                 'website_url' => $request->website_url,
-                'valid_id' => $validIdPath,
-            ];
+            ] + $profileFiles;
 
-            $profile = ProfileModel::create($profileData);
+            ProfileModel::updateOrCreate(['user_id' => $user->id], $profileData);
 
-            // Create freelancer schedule
-            FreelancerScheduleModel::create([
-                'user_id' => $user->id,
+            FreelancerScheduleModel::updateOrCreate(['user_id' => $user->id], [
                 'operating_days' => json_encode($request->operating_days),
                 'start_time' => $request->start_time,
                 'end_time' => $request->end_time,
@@ -164,21 +171,24 @@ class ProfileController extends Controller
                 'advance_booking' => $request->advance_booking_days,
             ]);
 
-            // Attach categories
-            if ($request->has('category_services')) {
-                foreach ($request->category_services as $categoryId) {
-                    FreelancerCategoryModel::create([
-                        'user_id' => $user->id,
-                        'category_id' => $categoryId,
-                    ]);
-                }
+            FreelancerCategoryModel::where('user_id', $user->id)->delete();
+            foreach (array_unique((array) $request->category_services) as $categoryId) {
+                FreelancerCategoryModel::create([
+                    'user_id' => $user->id,
+                    'category_id' => $categoryId,
+                ]);
             }
 
             DB::commit();
 
+            $oldFiles = array_filter($oldFiles, fn ($path) => is_string($path) && $path !== '');
+            if ($oldFiles) {
+                Storage::disk('public')->delete($oldFiles);
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Profile setup completed successfully!',
+                'message' => $existing ? 'Profile updated.' : 'Profile setup completed successfully!',
                 'redirect' => route('freelancer.profile.index')
             ]);
 

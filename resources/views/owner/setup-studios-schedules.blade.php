@@ -88,7 +88,7 @@
                                                 <label class="form-label">Advance Booking</label>
                                                 <div class="mb-3">
                                                     <small class="d-block text-muted mb-1">Minimum Advance Notice (Days)</small>
-                                                    <input type="number" class="form-control" id="minAdvanceNotice" name="advance_booking" value="1" min="1" max="30" required>
+                                                    @include('partials.advance-booking-select', ['name' => 'advance_booking', 'value' => 1, 'id' => 'minAdvanceNotice'])
                                                     <div class="invalid-feedback" id="advance_booking_error">Please enter a valid number (1-30).</div>
                                                 </div>
                                             </div>

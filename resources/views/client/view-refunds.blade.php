@@ -48,8 +48,12 @@
                                             $refundedAmount = $booking->payments
                                                 ->whereIn('status', ['refunded', 'partially_refunded'])
                                                 ->sum(fn ($payment) => $payment->refunded_amount ?? $payment->amount);
-                                             $targetAmount = $recovery->refund_amount ?? $paidAmount;
                                             $isRefunded = $recovery->status === 'refunded';
+                                            // A client cancellation keeps the downpayment, so an unset
+                                            // target can be at most what was paid beyond it.
+                                            $targetUndecided = $recovery->refund_amount === null && $booking->cancelled_by === 'client' && ! $isRefunded;
+                                            $targetAmount = $recovery->refund_amount
+                                                ?? ($targetUndecided ? $booking->maxClientRefund() : $paidAmount);
                                             $statusBadge = $isRefunded ? 'badge-soft-success' : 'badge-soft-warning';
                                             $statusText = $isRefunded ? 'Refunded' : 'Refund Pending';
                                         @endphp
@@ -65,7 +69,7 @@
                                                 <small class="text-muted d-block">{{ $booking->start_time }}</small>
                                             </td>
                                             <td data-sort-value="{{ $targetAmount }}">
-                                                <span class="fw-semibold">Target: ₱{{ number_format($targetAmount, 2) }}</span>
+                                                <span class="fw-semibold">{{ $targetUndecided ? 'Up to' : 'Target' }}: ₱{{ number_format($targetAmount, 2) }}</span>
                                                  <small class="text-muted d-block">Paid: ₱{{ number_format($paidAmount, 2) }}</small>
                                                 @if($isRefunded)
                                                     <small class="text-warning d-block">Refunded: ₱{{ number_format($refundedAmount, 2) }}</small>

@@ -38,6 +38,9 @@ class RefundTargetDiscretionTest extends TestCase
             'user_id' => $this->owner->id,
             'studio_name' => 'Discretion Studio',
             'status' => 'verified',
+            'requires_downpayment' => true,
+            'downpayment_type' => 'percentage',
+            'downpayment_percentage' => 30,
         ]);
 
         $this->booking = BookingModel::create([
@@ -163,9 +166,26 @@ class RefundTargetDiscretionTest extends TestCase
         );
     }
 
+    public function test_client_cancellation_without_a_target_refunds_only_beyond_the_downpayment(): void
+    {
+        $this->actingAs($this->owner)
+            ->postJson("/_test/admin/refunds/{$this->recovery->id}/complete", [
+                'provider_refund_reference' => 'stripe_refund_client_default',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        // 30% studio terms on 1000: 300 is kept, so the default target is 700.
+        $this->assertSame('partially_refunded', $this->payment->fresh()->status);
+        $this->assertSame('700.00', $this->payment->fresh()->refunded_amount);
+        $this->assertSame('refund_pending', $this->booking->fresh()->payment_status);
+    }
+
     public function test_full_target_marks_payment_booking_and_revenue_refunded(): void
     {
-        // No override and no stored target, so the full paid total is refunded.
+        // A business-side cancellation with no stored target refunds everything paid.
+        $this->booking->update(['cancelled_by' => 'studio']);
+
         $this->actingAs($this->owner)
             ->postJson("/_test/admin/refunds/{$this->recovery->id}/complete", [
                 'provider_refund_reference' => 'stripe_refund_full_default',
@@ -187,6 +207,47 @@ class RefundTargetDiscretionTest extends TestCase
             ->assertJsonPath('success', false);
 
         $this->assertNull($this->recovery->fresh()->refund_amount);
+    }
+
+    public function test_owner_refund_target_cannot_include_the_downpayment_on_a_full_payment_booking(): void
+    {
+        $this->actingAs($this->owner)
+            ->postJson("/_test/owner/recoveries/{$this->recovery->id}/escalate", ['refund_amount' => 800])
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'The ₱300.00 downpayment is non-refundable. The refund can be at most ₱700.00.');
+
+        $this->assertNull($this->recovery->fresh()->refund_amount);
+
+        $this->actingAs($this->owner)
+            ->postJson("/_test/owner/recoveries/{$this->recovery->id}/escalate", ['refund_amount' => 700])
+            ->assertOk();
+
+        $this->assertSame('700.00', $this->recovery->fresh()->refund_amount);
+    }
+
+    public function test_owner_refund_target_keeps_the_recorded_downpayment_of_a_paid_off_booking(): void
+    {
+        // Booked with a 400 downpayment, later paid off with the 600 balance.
+        $this->booking->update(['payment_type' => 'downpayment', 'down_payment' => 400, 'remaining_balance' => 0]);
+        $this->payment->update(['amount' => 400]);
+        PaymentModel::create([
+            'booking_id' => $this->booking->id,
+            'payment_reference' => 'PAY-DISCRETION-BALANCE',
+            'amount' => 600,
+            'payment_method' => 'card',
+            'status' => 'succeeded',
+        ]);
+
+        $this->actingAs($this->owner)
+            ->postJson("/_test/owner/recoveries/{$this->recovery->id}/escalate", ['refund_amount' => 601])
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'The ₱400.00 downpayment is non-refundable. The refund can be at most ₱600.00.');
+
+        $this->actingAs($this->owner)
+            ->postJson("/_test/owner/recoveries/{$this->recovery->id}/escalate", ['refund_amount' => 600])
+            ->assertOk();
+
+        $this->assertSame('600.00', $this->recovery->fresh()->refund_amount);
     }
 
     public function test_admin_can_override_the_owner_amount_at_or_below_the_total_paid(): void
@@ -221,6 +282,70 @@ class RefundTargetDiscretionTest extends TestCase
 
         $this->assertSame('succeeded', $this->payment->fresh()->status);
         $this->assertSame('refund_pending', $this->recovery->fresh()->status);
+    }
+
+    public function test_admin_override_into_the_downpayment_is_rejected(): void
+    {
+        $this->actingAs($this->owner)
+            ->postJson("/_test/admin/refunds/{$this->recovery->id}/complete", [
+                'provider_refund_reference' => 'stripe_refund_into_downpayment',
+                'refund_amount' => 800,
+            ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'The ₱300.00 downpayment is non-refundable. The refund can be at most ₱700.00.');
+
+        $this->assertSame('succeeded', $this->payment->fresh()->status);
+        $this->assertNull($this->recovery->fresh()->refund_amount);
+    }
+
+    public function test_admin_cannot_change_the_refund_of_a_business_side_cancellation(): void
+    {
+        foreach (['studio', 'photographer'] as $cancelledBy) {
+            $this->booking->update(['cancelled_by' => $cancelledBy]);
+
+            $this->actingAs($this->owner)
+                ->postJson("/_test/admin/refunds/{$this->recovery->id}/complete", [
+                    'provider_refund_reference' => 'stripe_refund_business_'.$cancelledBy,
+                    'refund_amount' => 500,
+                ])
+                ->assertStatus(422)
+                ->assertJsonPath('message', 'Business-initiated cancellations are refunded in full and cannot be changed.');
+
+            $this->assertSame('succeeded', $this->payment->fresh()->status);
+            $this->assertSame('refund_pending', $this->recovery->fresh()->status);
+        }
+
+        // Without an amount, the full paid total goes back.
+        $this->actingAs($this->owner)
+            ->postJson("/_test/admin/refunds/{$this->recovery->id}/complete", [
+                'provider_refund_reference' => 'stripe_refund_business_full',
+            ])
+            ->assertOk();
+
+        $this->assertSame('refunded', $this->payment->fresh()->status);
+        $this->assertSame('1000.00', $this->payment->fresh()->refunded_amount);
+        $this->assertSame('refunded', $this->booking->fresh()->payment_status);
+    }
+
+    public function test_admin_queue_lists_refund_limits(): void
+    {
+        Route::get('/_test/admin/refunds', [BookingRefundController::class, 'index']);
+
+        $this->actingAs($this->owner)->getJson('/_test/admin/refunds')
+            ->assertOk()
+            ->assertJsonPath('recoveries.0.cancelled_by', 'client')
+            ->assertJsonPath('recoveries.0.paid_total', 1000)
+            ->assertJsonPath('recoveries.0.max_refund', 700)
+            ->assertJsonPath('recoveries.0.non_refundable_downpayment', 300)
+            ->assertJsonPath('recoveries.0.refund_editable', true);
+
+        $this->booking->update(['cancelled_by' => 'studio']);
+
+        $this->actingAs($this->owner)->getJson('/_test/admin/refunds')
+            ->assertOk()
+            ->assertJsonPath('recoveries.0.max_refund', 1000)
+            ->assertJsonPath('recoveries.0.non_refundable_downpayment', 0)
+            ->assertJsonPath('recoveries.0.refund_editable', false);
     }
 
     public function test_admin_can_refund_zero_when_the_owner_returns_nothing(): void
@@ -271,6 +396,10 @@ class RefundTargetDiscretionTest extends TestCase
             $table->foreignId('user_id');
             $table->string('studio_name');
             $table->string('status');
+            $table->boolean('requires_downpayment')->default(true);
+            $table->string('downpayment_type')->default('percentage');
+            $table->decimal('downpayment_percentage', 5, 2)->nullable();
+            $table->decimal('downpayment_amount', 10, 2)->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

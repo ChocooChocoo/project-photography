@@ -73,6 +73,9 @@ class FreelanceOnlineGalleryModel extends Model
         'approved_at',
         'rejected_by',
         'rejected_at',
+        'revision_photos',
+        'revision_note',
+        'revision_resolved_at',
     ];
 
     /**
@@ -83,6 +86,8 @@ class FreelanceOnlineGalleryModel extends Model
     protected $casts = [
         'images' => 'array',
         'raw_images' => 'array',
+        'revision_photos' => 'array',
+        'revision_resolved_at' => 'datetime',
         'published_at' => 'datetime',
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',

@@ -104,7 +104,7 @@ class ClientCancellationRefundFlowTest extends TestCase
         $this->actingAs($client)
             ->postJson("/_test/client/booking/{$booking->id}/cancel", ['cancellation_reason' => 'Our family has decided to relocate and cancel the event.'])
             ->assertOk()
-            ->assertJsonPath('message', 'Booking cancelled. You paid in full, so the studio will decide your refund, up to ₱1,000.00.');
+            ->assertJsonPath('message', 'Booking cancelled. The ₱300.00 downpayment is non-refundable. The studio decides any refund of the remaining ₱700.00.');
 
         $booking->refresh();
         $this->assertSame(BookingModel::PAYMENT_REFUND_PENDING, $booking->payment_status);
@@ -148,7 +148,7 @@ class ClientCancellationRefundFlowTest extends TestCase
         ]);
         $payment = $this->createPayment($booking, 10000, 'PAY-CLIENT-PARTIAL-4000');
 
-        $this->assertSame('You paid in full, so the studio will decide your refund, up to ₱10,000.00.', $booking->cancellationRefundNote());
+        $this->assertSame('The ₱3,000.00 downpayment is non-refundable. The studio decides any refund of the remaining ₱7,000.00.', $booking->cancellationRefundNote());
 
         $this->actingAs($client)
             ->postJson("/_test/client/booking/{$booking->id}/cancel", ['cancellation_reason' => 'We moved the wedding abroad and must cancel.'])
@@ -156,11 +156,11 @@ class ClientCancellationRefundFlowTest extends TestCase
 
         $recovery = BookingCancellationRecoveryModel::where('booking_id', $booking->id)->firstOrFail();
 
-        // The owner cannot refund more than was paid.
+        // The owner cannot refund into the 30% downpayment.
         $this->actingAs($this->owner)
-            ->postJson("/_test/owner/recoveries/{$recovery->id}/escalate", ['refund_amount' => 10001])
+            ->postJson("/_test/owner/recoveries/{$recovery->id}/escalate", ['refund_amount' => 7001])
             ->assertStatus(409)
-            ->assertJsonPath('success', false);
+            ->assertJsonPath('message', 'The ₱3,000.00 downpayment is non-refundable. The refund can be at most ₱7,000.00.');
         $this->assertNull($recovery->fresh()->refund_amount);
 
         $this->postJson("/_test/owner/recoveries/{$recovery->id}/escalate", ['refund_amount' => 4000])->assertOk();

@@ -225,6 +225,9 @@ class OnlineGalleryController extends Controller
                     'booking_reference' => $booking->booking_reference,
                     'event_name' => $booking->event_name,
                     'event_date' => \Carbon\Carbon::parse($booking->event_date)->format('M d, Y'),
+                    'booking_id' => $booking->id,
+                    'can_request_revision' => $booking->canRequestRevision(),
+                    'revision_photos' => $gallery->revision_photos ?? [],
                 ]
             ]);
 

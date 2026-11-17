@@ -255,7 +255,14 @@ class BookingCancellationRecoveryService
             ->where('status', 'succeeded')->sum('amount');
 
         $amount = round($amount, 2);
-        if ($amount < 0 || $amount > $paidTotal) {
+        if ($booking->cancelled_by === 'client') {
+            // A client cancellation never refunds the downpayment portion.
+            $max = $booking->maxClientRefund();
+            if ($amount < 0 || $amount > $max + 0.001) {
+                throw new \DomainException('The ₱'.number_format($booking->nonRefundableDownpayment(), 2)
+                    .' downpayment is non-refundable. The refund can be at most ₱'.number_format($max, 2).'.');
+            }
+        } elseif ($amount < 0 || $amount > $paidTotal) {
             throw new \DomainException('The refund amount must be between 0 and the total amount paid.');
         }
 
@@ -415,7 +422,16 @@ class BookingCancellationRecoveryService
             }
 
             $totalPaid = round((float) $payments->sum('amount'), 2);
-            $target = round((float) ($recovery->refund_amount ?? $totalPaid), 2);
+            $target = $recovery->refund_amount;
+            if ($target === null) {
+                // With no target set, a client cancellation still keeps the
+                // downpayment; any other cancellation refunds everything paid.
+                $booking = BookingModel::find($recovery->booking_id);
+                $target = $booking && $booking->cancelled_by === 'client'
+                    ? $booking->maxClientRefund()
+                    : $totalPaid;
+            }
+            $target = round((float) $target, 2);
             $remaining = $target;
 
             // Allocate the target across the succeeded payments. A payment is only

@@ -186,6 +186,14 @@
                             </div>
                         </div>
 
+                        {{-- Revision selection (shown only while a revision can be requested) --}}
+                        <div id="revisionBar" class="alert alert-warning d-none align-items-center justify-content-between flex-wrap gap-2 py-2 sticky-top" role="region" aria-label="Photo revision">
+                            <small class="mb-0"><i class="ti ti-photo-edit me-1"></i>Tick the photos you want revised, then send one request.</small>
+                            <button type="button" class="btn btn-warning btn-sm" id="requestRevisionBtn" disabled style="min-height:44px;">
+                                Request revision for selected (<span id="revisionCount">0</span>)
+                            </button>
+                        </div>
+
                         {{-- Images Grid --}}
                         <div class="row g-3 mx-0" id="imagesGrid"></div>
                     </div>
@@ -229,11 +237,65 @@
             let currentGalleryId = null;
             let currentGalleryType = null;
 
+            let currentBookingId = null;
+
+            function escapeAttr(value) {
+                return $('<div>').text(value).html().replace(/"/g, '&quot;');
+            }
+
+            function updateRevisionCount() {
+                const count = $('.revision-select:checked').length;
+                $('#revisionCount').text(count);
+                $('#requestRevisionBtn').prop('disabled', count === 0);
+            }
+
+            $(document).on('change', '.revision-select', updateRevisionCount);
+
+            $('#requestRevisionBtn').on('click', function() {
+                const photos = $('.revision-select:checked').map(function() { return $(this).val(); }).get();
+                if (!photos.length || !currentBookingId) {
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Request a Revision',
+                    html: `Ask for changes to <strong>${photos.length}</strong> photo(s). You can send one revision request per booking.`,
+                    input: 'textarea',
+                    inputLabel: 'What should change? (optional)',
+                    inputPlaceholder: 'Describe the changes you need...',
+                    inputAttributes: { maxlength: 1000 },
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3475db',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Send request',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (!result.isConfirmed) {
+                        return;
+                    }
+
+                    $.ajax({
+                        url: `{{ url('client/bookings') }}/${currentBookingId}/request-revision`,
+                        type: 'POST',
+                        data: { _token: '{{ csrf_token() }}', photos: photos, note: result.value || '' },
+                        success: function(response) {
+                            Swal.fire({ icon: 'success', title: 'Request sent', text: response.message, timer: 2000, showConfirmButton: false });
+                            loadGallery(currentGalleryId, currentGalleryType);
+                        },
+                        error: function(xhr) {
+                            Swal.fire('Error', xhr.responseJSON?.message || 'Failed to send the revision request.', 'error');
+                        }
+                    });
+                });
+            });
+
             // View Gallery button click
             $('.view-gallery-btn').on('click', function() {
-                const galleryId = $(this).data('gallery-id');
-                const galleryType = $(this).data('gallery-type');
-                
+                loadGallery($(this).data('gallery-id'), $(this).data('gallery-type'));
+            });
+
+            function loadGallery(galleryId, galleryType) {
                 currentGalleryId = galleryId;
                 currentGalleryType = galleryType;
 
@@ -269,10 +331,24 @@
 
                             // Store images for fullscreen navigation
                             currentImages = gallery.images;
+                            currentBookingId = gallery.booking_id;
+                            const canRevise = !!gallery.can_request_revision;
+                            const flagged = gallery.revision_photos || [];
+                            $('#revisionBar').toggleClass('d-none', !canRevise).toggleClass('d-flex', canRevise);
+                            updateRevisionCount();
 
                             // Generate images grid
                             let imagesHtml = '';
                             $.each(gallery.images, function(index, image) {
+                                const revisionBadge = flagged.includes(image)
+                                    ? '<span class="badge badge-soft-warning d-block mb-1"><i class="ti ti-photo-edit me-1"></i>Revision requested</span>'
+                                    : '';
+                                const revisionToggle = canRevise
+                                    ? `<div class="form-check d-flex justify-content-center align-items-center gap-2 mb-1" style="min-height:44px;">
+                                            <input class="form-check-input revision-select m-0" type="checkbox" id="revisionSelect${index}" value="${escapeAttr(image)}">
+                                            <label class="form-check-label small" for="revisionSelect${index}">Select for revision</label>
+                                        </div>`
+                                    : '';
                                 const original = (gallery.originals || [])[index];
                                 const media = original
                                     ? BeforeAfter.slider(`{{ asset('storage') }}/${original}`, `{{ asset('storage') }}/${image}`, `Photo ${index + 1}`)
@@ -285,6 +361,7 @@
                                         <div class="card gallery-image-card" data-index="${index}">
                                             ${media}
                                             <div class="card-body p-2 text-center">
+                                                ${revisionBadge}${revisionToggle}
                                                 <small class="text-muted">Photo ${index + 1}${original ? ' · drag to compare before and after' : ''}</small>
                                             </div>
                                         </div>
@@ -331,7 +408,7 @@
                         $('#modalLoadingSpinner').hide();
                     }
                 });
-            });
+            }
 
             // Click on gallery image to view fullscreen
             $(document).on('click', '.gallery-image', function() {

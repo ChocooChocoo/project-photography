@@ -34,6 +34,26 @@ class BookingModel extends Model
     public const ACTIVE_ASSIGNMENT_STATUSES = ['assigned', 'confirmed', 'on_site', 'in_progress'];
 
     /**
+     * Assignment statuses that count toward the package's photographer limit.
+     * A completed assignment still fills its slot, so finishing work never
+     * reopens the booking for a new photographer.
+     *
+     * @var array<int, string>
+     */
+    public const OCCUPYING_ASSIGNMENT_STATUSES = ['assigned', 'confirmed', 'on_site', 'in_progress', 'completed'];
+
+    /**
+     * Booking statuses that take one of the provider's daily slots and block
+     * an overlapping timeslot. A photographer accepting the job moves the
+     * booking to in_progress, and it must keep its slot.
+     *
+     * @var array<int, string>
+     */
+    public const CAPACITY_STATUSES = ['pending', 'confirmed', 'in_progress'];
+
+    public const GALLERY_DELETION_LOCKED_MESSAGE = 'This booking is completed, so its gallery can no longer be deleted. Use a client revision to replace photos.';
+
+    /**
      * Payment Status Constants
      */
     public const PAYMENT_PENDING = 'pending';
@@ -673,7 +693,7 @@ class BookingModel extends Model
             ->when($exceptBookingId, fn ($query) => $query->whereKeyNot($exceptBookingId))
             ->where('provider_id', $providerId)
             ->overlappingDates($date, $endDate)
-            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereIn('status', self::CAPACITY_STATUSES)
             ->where(function ($query) use ($startTime, $endTime) {
                 $query->where(function ($q) use ($startTime) {
                     // New booking starts during an existing booking
@@ -815,9 +835,95 @@ class BookingModel extends Model
 
         $provider = $this->booking_type === 'studio' ? 'the studio' : 'the photographer';
 
-        return $this->isFullyPaid()
-            ? 'You paid in full, so '.$provider.' will decide your refund, up to ₱'.number_format($paid, 2).'.'
-            : 'Your downpayment of ₱'.number_format($paid, 2).' is non-refundable and is kept by '.$provider.'.';
+        if (! $this->isFullyPaid()) {
+            return 'Your downpayment of ₱'.number_format($paid, 2).' is non-refundable and is kept by '.$provider.'.';
+        }
+
+        $kept = $this->nonRefundableDownpayment();
+        if ($kept <= 0) {
+            return 'You paid in full, so '.$provider.' will decide your refund, up to ₱'.number_format($paid, 2).'.';
+        }
+
+        return 'The ₱'.number_format($kept, 2).' downpayment is non-refundable. '
+            .ucfirst($provider).' decides any refund of the remaining ₱'.number_format($this->maxClientRefund(), 2).'.';
+    }
+
+    /**
+     * The downpayment portion a client forfeits when they cancel. A booking
+     * made with a downpayment uses the amount it recorded; a booking paid in
+     * full applies the provider's downpayment terms to the booking total.
+     */
+    public function nonRefundableDownpayment(): float
+    {
+        $total = (float) $this->total_amount;
+
+        if ($this->payment_type === 'downpayment') {
+            return round(min((float) $this->getRawOriginal('down_payment'), $total), 2);
+        }
+
+        $providerTable = $this->booking_type === 'studio' ? 'tbl_studios' : 'tbl_freelancers';
+        if (! \Illuminate\Support\Facades\Schema::hasTable($providerTable)) {
+            return 0.0;
+        }
+        $provider = $this->booking_type === 'studio'
+            ? \App\Models\StudioOwner\StudiosModel::find($this->provider_id)
+            : \App\Models\Freelancer\ProfileModel::where('user_id', $this->provider_id)->first();
+        $terms = self::depositTerms((string) $this->booking_type, $provider);
+        if (! $terms) {
+            return 0.0;
+        }
+
+        $down = $terms['type'] === 'fixed'
+            ? min($terms['value'], $total)
+            : round($total * $terms['value'] / 100, 2);
+
+        return round(max(0, $down), 2);
+    }
+
+    /**
+     * Most a client can get back after cancelling: what they paid, less the
+     * non-refundable downpayment.
+     */
+    public function maxClientRefund(): float
+    {
+        $paid = (float) $this->payments()->where('status', 'succeeded')->sum('amount');
+
+        return round(max(0, $paid - $this->nonRefundableDownpayment()), 2);
+    }
+
+    /**
+     * Minimum days of notice the provider requires before an event (1, 2, or 3+).
+     */
+    public static function minimumNoticeDays(string $providerType, $provider): int
+    {
+        $days = $providerType === 'studio'
+            ? ($provider->advance_booking_days ?? null)
+            : ($provider?->schedule?->advance_booking ?? null);
+
+        return max(1, min(30, (int) ($days ?: 1)));
+    }
+
+    /**
+     * Earliest event date a client may book with this provider.
+     */
+    public static function earliestBookableDate(string $providerType, $provider): \Carbon\Carbon
+    {
+        return \Carbon\Carbon::today()->addDays(self::minimumNoticeDays($providerType, $provider));
+    }
+
+    /**
+     * Whether the gallery for this booking (or any of its photos) may no
+     * longer be deleted. A completed studio booking locks its gallery. A
+     * freelancer gallery is only created after completion, so it locks once
+     * it is published to the client.
+     */
+    public function galleryDeletionLocked(?string $galleryStatus = null): bool
+    {
+        if ($this->status !== self::STATUS_COMPLETED) {
+            return false;
+        }
+
+        return $this->booking_type === 'freelancer' ? $galleryStatus === 'published' : true;
     }
 
     /**
@@ -852,11 +958,16 @@ class BookingModel extends Model
         $orders = \Illuminate\Support\Facades\Schema::hasTable('tbl_booking_hardcopy_orders')
             ? HardcopyOrderModel::where('booking_id', $this->id)->where('status', '!=', 'cancelled')->get()
             : collect();
-        if ($orders->contains(fn ($order) => !$order->accepted_at || $order->status !== 'delivered')) {
-            return 'All hardcopy orders must be accepted and delivered before completion.';
+        if ($orders->contains(fn ($order) => ! $order->accepted_at)) {
+            return 'A hardcopy quote is still waiting for the client. Get the client to accept it, or cancel it, before completion.';
+        }
+        // Prints that are ready, shipped, or delivered no longer hold the
+        // booking open; the order keeps its own tracking after completion.
+        if ($orders->contains(fn ($order) => ! in_array($order->status, HardcopyOrderModel::COMPLETION_READY_STATUSES, true))) {
+            return 'Hardcopy prints must be ready for pickup, shipped, or delivered before completion.';
         }
         if (in_array($this->delivery_type, ['hardcopy', 'both'], true) && $orders->isEmpty()) {
-            return 'Add and deliver a hardcopy order before selecting this delivery type.';
+            return 'Add a hardcopy order and get it ready before selecting this delivery type.';
         }
         return $this->getGalleryCompletionBlockReason();
     }

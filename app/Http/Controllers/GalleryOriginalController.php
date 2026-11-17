@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ManagesGalleryAccess;
 use App\Models\Freelancer\FreelanceOnlineGalleryModel;
-use App\Models\StudioOwner\BookingAssignedPhotographerModel;
 use App\Models\StudioOwner\StudioOnlineGalleryModel;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * Uploads the unedited original of a delivered photo. The client then sees
@@ -14,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
  */
 class GalleryOriginalController extends Controller
 {
+    use ManagesGalleryAccess;
+
     public function store(Request $request, string $type, int $galleryId)
     {
         $request->validate([
@@ -47,24 +48,5 @@ class GalleryOriginalController extends Controller
             'message' => 'Original added. The client sees a before-and-after slider for this photo.',
             'raw_images' => $gallery->raw_images,
         ]);
-    }
-
-    /**
-     * The studio owner and photographers assigned to the shoot manage a
-     * studio gallery; a freelancer manages their own gallery.
-     */
-    private function canManage($gallery, string $type): bool
-    {
-        $userId = (int) Auth::id();
-
-        if ($type === 'freelancer') {
-            return (int) $gallery->freelancer_id === $userId;
-        }
-
-        return (int) $gallery->studio?->user_id === $userId
-            || BookingAssignedPhotographerModel::where('booking_id', $gallery->booking_id)
-                ->where('photographer_id', $userId)
-                ->whereIn('status', ['on_site', 'in_progress', 'completed'])
-                ->exists();
     }
 }

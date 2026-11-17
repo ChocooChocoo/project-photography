@@ -112,6 +112,29 @@ class PortalLayoutRegressionTest extends TestCase
         }
     }
 
+    public function test_each_profile_page_extends_its_own_portal_layout(): void
+    {
+        foreach (['admin', 'client', 'freelancer', 'owner', 'studio-hr', 'studio-finance', 'studio-photographer'] as $role) {
+            $this->assertStringContainsString(
+                "@extends('layouts.{$role}.app')",
+                $this->readView("resources/views/{$role}/view-user-profile.blade.php"),
+                "The {$role} profile page opens inside another portal's shell."
+            );
+            $this->assertStringContainsString(
+                "route('{$role}.profile')",
+                $this->readView("resources/views/layouts/{$role}/topbar.blade.php"),
+                "The {$role} topbar profile link points at another portal."
+            );
+        }
+    }
+
+    public function test_freelancer_sidebar_dashboard_link_stays_in_the_freelancer_portal(): void
+    {
+        $contents = $this->readView('resources/views/layouts/freelancer/sidebar.blade.php');
+        $this->assertStringContainsString("route('freelancer.dashboard')", $contents);
+        $this->assertStringNotContainsString("route('owner.dashboard')", $contents);
+    }
+
     public function test_chatbot_launcher_reserves_bottom_space_for_footer_actions(): void
     {
         $contents = $this->readView('resources/views/partials/chatbot-widget.blade.php');

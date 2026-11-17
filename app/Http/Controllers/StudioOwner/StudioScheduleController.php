@@ -95,6 +95,9 @@ class StudioScheduleController extends Controller
                 'advance_booking' => $request->advance_booking,
             ]);
 
+            // Client booking reads the notice period from the studio record.
+            $studio->update(['advance_booking_days' => (int) $request->advance_booking]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Studio schedule created successfully!',
