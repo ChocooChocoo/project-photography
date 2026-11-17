@@ -151,12 +151,12 @@ class RefundTargetDiscretionTest extends TestCase
         $this->recovery->refresh();
         $this->assertSame('refunded', $this->recovery->status);
 
-        // The first payment absorbs the whole 700 target and is partially refunded.
+        // The refund comes out of the newest payment first: the second payment is
+        // refunded in full and the first payment covers only the remaining 200.
+        $this->assertSame('refunded', $secondPayment->fresh()->status);
+        $this->assertSame('500.00', $secondPayment->fresh()->refunded_amount);
         $this->assertSame('partially_refunded', $this->payment->fresh()->status);
-        $this->assertSame('700.00', $this->payment->fresh()->refunded_amount);
-        // The second payment got nothing, so it is untouched rather than zeroed.
-        $this->assertSame('succeeded', $secondPayment->fresh()->status);
-        $this->assertSame('0.00', $secondPayment->fresh()->refunded_amount);
+        $this->assertSame('200.00', $this->payment->fresh()->refunded_amount);
 
         // The paid total (1500) is not wiped out; only the target (700) is refunded.
         $this->assertSame('partially_refunded', $this->booking->fresh()->payment_status);
@@ -248,6 +248,61 @@ class RefundTargetDiscretionTest extends TestCase
             ->assertOk();
 
         $this->assertSame('600.00', $this->recovery->fresh()->refund_amount);
+    }
+
+    public function test_kept_downpayment_payment_is_not_refunded_and_needs_no_reference(): void
+    {
+        // Booked with a 400 downpayment, later paid off with the 600 balance.
+        $this->booking->update(['payment_type' => 'downpayment', 'down_payment' => 400, 'remaining_balance' => 0]);
+        $this->payment->update(['amount' => 400]);
+        $balance = PaymentModel::create([
+            'booking_id' => $this->booking->id,
+            'payment_reference' => 'PAY-DISCRETION-BALANCE',
+            'amount' => 600,
+            'payment_method' => 'card',
+            'status' => 'succeeded',
+        ]);
+
+        $this->actingAs($this->owner)
+            ->postJson("/_test/owner/recoveries/{$this->recovery->id}/escalate", ['refund_amount' => 300])
+            ->assertOk();
+
+        // Only the balance payment returns money, so only it carries a reference.
+        $this->actingAs($this->owner)
+            ->postJson("/_test/admin/refunds/{$this->recovery->id}/complete", [
+                'provider_refund_references' => [$this->payment->id => null, $balance->id => 'stripe_refund_balance_only'],
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertSame('succeeded', $this->payment->fresh()->status);
+        $this->assertSame('0.00', $this->payment->fresh()->refunded_amount);
+        $this->assertNull($this->payment->fresh()->refund_reference);
+        $this->assertSame('partially_refunded', $balance->fresh()->status);
+        $this->assertSame('300.00', $balance->fresh()->refunded_amount);
+        $this->assertSame('partially_refunded', $this->booking->fresh()->payment_status);
+    }
+
+    public function test_refund_still_needs_a_reference_for_each_payment_that_returns_money(): void
+    {
+        $balance = PaymentModel::create([
+            'booking_id' => $this->booking->id,
+            'payment_reference' => 'PAY-DISCRETION-SECOND',
+            'amount' => 500,
+            'payment_method' => 'card',
+            'status' => 'succeeded',
+        ]);
+        $this->booking->update(['cancelled_by' => 'studio']);
+
+        // A full refund draws on both payments, so a missing reference is refused.
+        $this->actingAs($this->owner)
+            ->postJson("/_test/admin/refunds/{$this->recovery->id}/complete", [
+                'provider_refund_references' => [$this->payment->id => null, $balance->id => 'stripe_refund_second_only'],
+            ])
+            ->assertStatus(422);
+
+        $this->assertSame('refund_pending', $this->recovery->fresh()->status);
+        $this->assertSame('succeeded', $this->payment->fresh()->status);
     }
 
     public function test_admin_can_override_the_owner_amount_at_or_below_the_total_paid(): void

@@ -41,7 +41,9 @@ class BookingRefundController extends Controller
         $data = $request->validate([
             'provider_refund_reference' => 'nullable|string|max:255|required_without:provider_refund_references',
             'provider_refund_references' => 'nullable|array|required_without:provider_refund_reference',
-            'provider_refund_references.*' => 'required|string|max:255',
+            // A kept payment (such as the downpayment) gets no reference; the service
+            // requires one for every payment that actually returns money.
+            'provider_refund_references.*' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:2000',
             'refund_amount' => 'nullable|numeric|min:0',
         ]);

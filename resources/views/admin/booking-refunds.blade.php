@@ -95,10 +95,11 @@
                             Full refund: <strong>${money(paidTotal)}</strong> (business-initiated cancellation)
                         </div>
                     `;
-                const paymentInputs = payments.map(payment => `
-                    <div class="mb-3">
+                // Newest payment first, matching how the server takes the refund.
+                const paymentInputs = [...payments].sort((a, b) => b.id - a.id).map(payment => `
+                    <div class="mb-3" data-refund-payment data-amount="${Number(payment.amount)}">
                         <label class="form-label mb-1">Provider refund reference — ${esc(payment.payment_reference)} (${money(payment.amount)})</label>
-                        <input name="provider_refund_references[${payment.id}]" required
+                        <input name="provider_refund_references[${payment.id}]"
                             class="form-control" placeholder="Enter the provider refund reference for ${esc(payment.payment_reference)}">
                     </div>
                 `).join('');
@@ -155,6 +156,7 @@
                     }
 
                     $('#refund-queue').html(recoveries.map(renderRecovery).join(''));
+                    $('.refund-form').each(function () { markRefundedPayments($(this)); });
                 }).fail(function () {
                     $('#refund-queue').html(`
                         <div class="text-center py-4 text-danger">
@@ -163,6 +165,27 @@
                     `);
                 });
             }
+
+            // Show a reference field only for the payments the refund amount draws on
+            // (newest first). A kept payment, such as the downpayment, needs none.
+            function markRefundedPayments($form) {
+                const $rows = $form.find('[data-refund-payment]');
+                const $amount = $form.find('[name="refund_amount"]');
+                let remaining = $amount.length
+                    ? Number($amount.val() || 0)
+                    : $rows.toArray().reduce((sum, row) => sum + Number(row.dataset.amount), 0);
+                $rows.each(function (index) {
+                    const owed = Number(this.dataset.amount);
+                    const take = index === $rows.length - 1 ? remaining : Math.min(owed, remaining);
+                    remaining = Math.max(0, remaining - take);
+                    const used = take > 0.004;
+                    $(this).toggle(used).find('input').prop('required', used).prop('disabled', !used);
+                });
+            }
+
+            $(document).on('input', '.refund-form [name="refund_amount"]', function () {
+                markRefundedPayments($(this).closest('.refund-form'));
+            });
 
             $(document).on('submit', '.refund-form', function (e) {
                 e.preventDefault();

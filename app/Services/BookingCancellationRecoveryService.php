@@ -400,24 +400,11 @@ class BookingCancellationRecoveryService
                 return false;
             }
 
+            // Newest payment first: a refund comes out of the latest payments, so the
+            // downpayment (the first payment) is the part a client cancellation keeps.
             $payments = PaymentModel::where('booking_id', $recovery->booking_id)
-                ->where('status', 'succeeded')->lockForUpdate()->get();
-            if ($payments->isEmpty() || ($payments->count() > 1 && ! is_array($providerReferences))) {
-                return false;
-            }
-
-            $references = [];
-            foreach ($payments as $payment) {
-                $reference = is_array($providerReferences)
-                    ? ($providerReferences[$payment->id] ?? $providerReferences[$payment->payment_reference] ?? null)
-                    : $providerReferences;
-                if (! $reference || ($payment->refund_reference && $payment->refund_reference !== $reference)
-                    || PaymentModel::where('refund_reference', $reference)->whereKey('!=', $payment->id)->exists()) {
-                    return false;
-                }
-                $references[$payment->id] = $reference;
-            }
-            if (count($references) !== count(array_unique($references))) {
+                ->where('status', 'succeeded')->orderByDesc('id')->lockForUpdate()->get();
+            if ($payments->isEmpty()) {
                 return false;
             }
 
@@ -434,21 +421,51 @@ class BookingCancellationRecoveryService
             $target = round((float) $target, 2);
             $remaining = $target;
 
-            // Allocate the target across the succeeded payments. A payment is only
-            // marked refunded when its own refunded amount covers its full value;
-            // otherwise the partial amount is recorded against an honest status so
-            // the paid total is not quietly zeroed out.
-            foreach ($payments as $index => $payment) {
+            // Allocate the target across the succeeded payments, newest first.
+            $allocations = [];
+            foreach ($payments->values() as $index => $payment) {
                 $owed = round((float) $payment->amount, 2);
                 $amount = $index === $payments->count() - 1
                     ? $remaining
                     : min($owed, $remaining);
                 $amount = max(0, round($amount, 2));
                 $remaining = round($remaining - $amount, 2);
+                if ($amount > 0) {
+                    $allocations[$payment->id] = $amount;
+                }
+            }
 
-                if ($amount <= 0) {
+            // Only the payments that return money need a provider refund reference.
+            if (! is_array($providerReferences) && count($allocations) > 1) {
+                return false;
+            }
+            $references = [];
+            foreach ($payments as $payment) {
+                if (! isset($allocations[$payment->id])) {
                     continue;
                 }
+                $reference = is_array($providerReferences)
+                    ? ($providerReferences[$payment->id] ?? $providerReferences[$payment->payment_reference] ?? null)
+                    : $providerReferences;
+                if (! $reference || ($payment->refund_reference && $payment->refund_reference !== $reference)
+                    || PaymentModel::where('refund_reference', $reference)->whereKey('!=', $payment->id)->exists()) {
+                    return false;
+                }
+                $references[$payment->id] = $reference;
+            }
+            if (count($references) !== count(array_unique($references))) {
+                return false;
+            }
+
+            // A payment is only marked refunded when its own refunded amount covers
+            // its full value; otherwise the partial amount is recorded against an
+            // honest status so the paid total is not quietly zeroed out.
+            foreach ($payments as $payment) {
+                if (! isset($allocations[$payment->id])) {
+                    continue;
+                }
+                $owed = round((float) $payment->amount, 2);
+                $amount = $allocations[$payment->id];
 
                 $fullyRefunded = $amount >= $owed - 0.001;
                 $paymentUpdate = [
