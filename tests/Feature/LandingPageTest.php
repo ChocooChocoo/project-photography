@@ -35,7 +35,7 @@ class LandingPageTest extends TestCase
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('Platinum Photography')
+            ->assertSee('Lumora Photography')
             ->assertSee('Login');
     }
 

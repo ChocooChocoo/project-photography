@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="Book verified photography studios and freelance photographers for weddings, portraits, events, and brand work, with clear peso pricing and private online galleries.">
     <meta name="theme-color" content="#0d0c0b">
-    <title>Platinum Photography</title>
+    <title>Lumora Photography</title>
 
     <link href="{{ asset('assets/images/favicon.ico') }}" rel="icon"/>
 
@@ -21,8 +21,8 @@
 
     <header class="lp-header">
         <nav class="navbar navbar-expand-lg lp-wrap" aria-label="Main">
-            <a class="lp-brand" href="/" aria-label="Platinum Photography, home">
-                <b>PLATINUM</b>
+            <a class="lp-brand" href="/" aria-label="Lumora Photography, home">
+                <b>LUMORA</b>
                 <small>Photography</small>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Open menu">
@@ -78,7 +78,7 @@
                     </div>
                     <div class="lp-mosaic">
                         @foreach($photos as $photo)
-                            <figure><img src="{{ asset('storage/'.$photo) }}" alt="Photo from a Platinum studio portfolio" loading="lazy" decoding="async"></figure>
+                            <figure><img src="{{ asset('storage/'.$photo) }}" alt="Photo from a Lumora studio portfolio" loading="lazy" decoding="async"></figure>
                         @endforeach
                     </div>
                 </div>
@@ -148,7 +148,7 @@
                 <div>
                     <p class="lp-eyebrow">For studios &amp; freelancers</p>
                     <h2 id="for-studios-title" class="lp-serif lp-split-title">Run your whole studio in one place.</h2>
-                    <p class="lp-muted mt-3 mb-4 lp-split-lead">Platinum handles bookings, payments, staff, and delivery, so you can spend your time behind the camera.</p>
+                    <p class="lp-muted mt-3 mb-4 lp-split-lead">Lumora handles bookings, payments, staff, and delivery, so you can spend your time behind the camera.</p>
                     <a href="{{ route('register') }}" class="lp-btn lp-btn-gold">Create a studio account</a>
                 </div>
                 <ul class="lp-ticks">
@@ -174,7 +174,7 @@
 
     <footer class="lp-footer">
         <div class="lp-wrap d-flex flex-wrap justify-content-between gap-2">
-            <span>&copy; {{ date('Y') }} Platinum Photography. All rights reserved.</span>
+            <span>&copy; {{ date('Y') }} Lumora Photography. All rights reserved.</span>
             <span>Prices shown in Philippine pesos (₱).</span>
         </div>
     </footer>
