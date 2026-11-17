@@ -68,6 +68,8 @@ class BookingModel extends Model
 
     public const PAYMENT_REFUNDED = 'refunded';
 
+    public const PAYMENT_PARTIALLY_REFUNDED = 'partially_refunded';
+
     /**
      * The table associated with the model.
      *
@@ -209,7 +211,7 @@ class BookingModel extends Model
 
     public function preparationVisible(): bool
     {
-        return in_array($this->payment_status, [self::PAYMENT_PAID, self::PAYMENT_PARTIALLY_PAID, self::PAYMENT_REFUND_PENDING, self::PAYMENT_REFUNDED], true);
+        return in_array($this->payment_status, [self::PAYMENT_PAID, self::PAYMENT_PARTIALLY_PAID, self::PAYMENT_REFUND_PENDING, self::PAYMENT_REFUNDED, self::PAYMENT_PARTIALLY_REFUNDED], true);
     }
 
     /**
@@ -1073,6 +1075,7 @@ class BookingModel extends Model
             self::PAYMENT_FAILED => 'badge-soft-danger',
             self::PAYMENT_REFUND_PENDING => 'badge-soft-warning',
             self::PAYMENT_REFUNDED => 'badge-soft-secondary',
+            self::PAYMENT_PARTIALLY_REFUNDED => 'badge-soft-warning',
         ];
 
         return $classes[$this->payment_status] ?? 'badge-soft-secondary';

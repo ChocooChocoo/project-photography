@@ -94,6 +94,31 @@ class ClientRefundsPageTest extends TestCase
             ->assertSee('Refunded: ₱4,000.00');
     }
 
+    public function test_history_loads_the_actual_partial_refund_amount(): void
+    {
+        Schema::table('tbl_studios', fn (Blueprint $table) => $table->string('studio_logo')->nullable());
+        Schema::create('tbl_freelancers', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->string('brand_name')->nullable();
+            $table->string('brand_logo')->nullable();
+        });
+        $client = $this->createUser('client', 'history-partial@example.com');
+        $booking = $this->createBooking($this->createStudio(), $client, 'BK-HISTORY-PARTIAL');
+        $booking->update(['payment_status' => 'partially_refunded']);
+        PaymentModel::create([
+            'booking_id' => $booking->id, 'payment_reference' => 'PAY-HISTORY-PARTIAL',
+            'amount' => 7900, 'payment_method' => 'card',
+            'status' => 'partially_refunded', 'refunded_amount' => 5000,
+        ]);
+        $this->actingAs($client);
+
+        $view = app(MyBookingsController::class)->history(\Illuminate\Http\Request::create('/'));
+        $payment = $view->getData()['bookings']->first()->payments->first();
+
+        $this->assertSame('5000.00', $payment->refunded_amount);
+    }
+
     public function test_client_with_no_refunds_sees_empty_state(): void
     {
         $client = $this->createUser('client', 'refunds-empty-client@example.com');

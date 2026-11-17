@@ -469,12 +469,11 @@ class BookingCancellationRecoveryService
                 }
             }
 
-            // The booking is only fully refunded when the whole paid total went back.
-            BookingModel::whereKey($recovery->booking_id)->update([
-                'payment_status' => $target >= $totalPaid - 0.001
-                    ? BookingModel::PAYMENT_REFUNDED
-                    : BookingModel::PAYMENT_REFUND_PENDING,
-            ]);
+            // A completed refund is no longer pending, even when the downpayment is kept.
+            $paymentStatus = $target >= $totalPaid - 0.001
+                ? BookingModel::PAYMENT_REFUNDED
+                : ($target > 0 ? BookingModel::PAYMENT_PARTIALLY_REFUNDED : BookingModel::PAYMENT_PAID);
+            BookingModel::whereKey($recovery->booking_id)->update(['payment_status' => $paymentStatus]);
             $recovery->update(['status' => self::STATUS_REFUNDED, 'resolved_at' => now()]);
 
             return true;

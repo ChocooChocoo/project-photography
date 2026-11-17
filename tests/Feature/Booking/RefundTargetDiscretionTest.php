@@ -120,7 +120,7 @@ class RefundTargetDiscretionTest extends TestCase
         $this->assertSame('partially_refunded', $this->payment->fresh()->status);
         $this->assertSame('250.00', $this->payment->fresh()->refunded_amount);
         $this->assertSame('refunded', $this->recovery->fresh()->status);
-        $this->assertSame('refund_pending', $this->booking->fresh()->payment_status);
+        $this->assertSame('partially_refunded', $this->booking->fresh()->payment_status);
     }
 
     public function test_partial_target_allocates_across_payments_without_zeroing_the_paid_total(): void
@@ -159,7 +159,7 @@ class RefundTargetDiscretionTest extends TestCase
         $this->assertSame('0.00', $secondPayment->fresh()->refunded_amount);
 
         // The paid total (1500) is not wiped out; only the target (700) is refunded.
-        $this->assertSame('refund_pending', $this->booking->fresh()->payment_status);
+        $this->assertSame('partially_refunded', $this->booking->fresh()->payment_status);
         $this->assertSame(
             700.0,
             (float) PaymentModel::where('booking_id', $this->booking->id)->sum('refunded_amount')
@@ -178,7 +178,7 @@ class RefundTargetDiscretionTest extends TestCase
         // 30% studio terms on 1000: 300 is kept, so the default target is 700.
         $this->assertSame('partially_refunded', $this->payment->fresh()->status);
         $this->assertSame('700.00', $this->payment->fresh()->refunded_amount);
-        $this->assertSame('refund_pending', $this->booking->fresh()->payment_status);
+        $this->assertSame('partially_refunded', $this->booking->fresh()->payment_status);
     }
 
     public function test_full_target_marks_payment_booking_and_revenue_refunded(): void
@@ -357,6 +357,15 @@ class RefundTargetDiscretionTest extends TestCase
 
         $this->assertSame('0.00', $this->recovery->fresh()->refund_amount);
         $this->assertSame('0.00', $this->recovery->fresh()->refund_percentage);
+
+        $this->postJson("/_test/admin/refunds/{$this->recovery->id}/complete", [
+            'provider_refund_reference' => 'zero-refund-closed',
+        ])->assertOk();
+
+        $this->assertSame('refunded', $this->recovery->fresh()->status);
+        $this->assertSame('paid', $this->booking->fresh()->payment_status);
+        $this->assertSame('succeeded', $this->payment->fresh()->status);
+        $this->assertSame('0.00', $this->payment->fresh()->refunded_amount);
     }
 
     private function createUser(string $role, string $email): UserModel

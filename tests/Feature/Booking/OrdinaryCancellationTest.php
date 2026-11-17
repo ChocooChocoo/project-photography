@@ -136,7 +136,7 @@ class OrdinaryCancellationTest extends TestCase
         // only the remaining ₱700 goes back.
         $this->assertSame('partially_refunded', $payment->fresh()->status);
         $this->assertSame('completed', $revenue->fresh()->status);
-        $this->assertSame(BookingModel::PAYMENT_REFUND_PENDING, $booking->fresh()->payment_status);
+        $this->assertSame(BookingModel::PAYMENT_PARTIALLY_REFUNDED, $booking->fresh()->payment_status);
         $this->assertSame('refunded', $recovery->fresh()->status);
     }
 

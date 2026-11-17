@@ -60,7 +60,7 @@ class MyBookingsController extends Controller
             ->with([
                 'category:id,category_name',
                 'packages:id,booking_id,package_name,package_price,discount_percentage,discount_amount',
-                'payments:id,booking_id,amount,status',
+                'payments:id,booking_id,amount,status,refunded_amount',
             ])
             ->paginate(10);
 
@@ -141,7 +141,7 @@ class MyBookingsController extends Controller
                 ->with([
                     'category:id,category_name',
                     'packages:id,booking_id,package_name,package_price,discount_percentage,discount_amount,package_inclusions,duration,maximum_edited_photos,coverage_scope,materials,photo_edit_option,enhancement_amount,editing_services',
-                    'payments:id,booking_id,amount,status,payment_method,paid_at,payment_reference',
+                    'payments:id,booking_id,amount,status,payment_method,paid_at,payment_reference,refunded_amount',
                     'assignedPhotographers.photographer:id,first_name,last_name',
                     'assignedPhotographers.studioPhotographer:id,photographer_id,position,specialization,years_of_experience',
                 ])

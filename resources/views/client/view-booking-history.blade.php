@@ -71,6 +71,7 @@
                                                         'paid' => 'badge-soft-success',
                                                         'partially_paid' => 'badge-soft-primary',
                                                         'refund_pending' => 'badge-soft-warning',
+                                                        'partially_refunded' => 'badge-soft-warning',
                                                         'refunded' => 'badge-soft-secondary',
                                                         'cancelled' => 'badge-soft-danger'
                                                     ][$booking->payment_status] ?? 'badge-soft-primary';
@@ -88,10 +89,12 @@
                                                 @endif
                                                 @php
                                                     $totalPaid = $booking->payments->where('status', 'succeeded')->sum('amount');
-                                                    $refunded = $booking->payments->where('status', 'refunded')->sum('amount');
-                                                    $finalAmount = $booking->payment_status === 'refunded' ? $refunded : $totalPaid;
-                                                    $paymentText = $booking->payment_status === 'refunded' ? 'REFUNDED' : 'PAID';
-                                                    $paymentClass = $booking->payment_status === 'refunded' ? 'text-warning' : 'text-success';
+                                                    $refunded = $booking->payments->whereIn('status', ['refunded', 'partially_refunded'])
+                                                        ->sum(fn ($payment) => $payment->refunded_amount ?? $payment->amount);
+                                                    $hasRefund = in_array($booking->payment_status, ['refunded', 'partially_refunded'], true);
+                                                    $finalAmount = $hasRefund ? $refunded : $totalPaid;
+                                                    $paymentText = $hasRefund ? 'REFUNDED' : 'PAID';
+                                                    $paymentClass = $hasRefund ? 'text-warning' : 'text-success';
                                                 @endphp
                                                 <small class="{{ $paymentClass }} d-block mt-1 text-center">
                                                     ₱{{ strtoupper(number_format($finalAmount, 2)) }}
@@ -864,6 +867,11 @@
                 const payments = data.payments;
                 const assignedPhotographers = data.assignedPhotographers;
                 const paymentSummary = data.payment_summary;
+                const hasRefund = ['refunded', 'partially_refunded'].includes(booking.payment_status);
+                const originalPaid = payments.filter(p => ['succeeded', 'refunded', 'partially_refunded'].includes(p.status))
+                    .reduce((sum, p) => sum + Number(p.amount), 0);
+                const refundedTotal = payments.filter(p => ['refunded', 'partially_refunded'].includes(p.status))
+                    .reduce((sum, p) => sum + Number(p.refunded_amount ?? p.amount), 0);
 
                 let packagesHtml = '';
                 if (packages && packages.length > 0) {
@@ -900,8 +908,9 @@
                 }
 
                 let refundInfo = '';
-                if (booking.payment_status === 'refunded') {
-                    const refundAmount = payments.filter(p => p.status === 'refunded').reduce((sum, p) => sum + parseFloat(p.amount), 0);
+                if (['refunded', 'partially_refunded'].includes(booking.payment_status)) {
+                    const refundAmount = payments.filter(p => ['refunded', 'partially_refunded'].includes(p.status))
+                        .reduce((sum, p) => sum + parseFloat(p.refunded_amount ?? p.amount), 0);
                     refundInfo = `
                         <div class="alert alert-warning">
                             <div class="d-flex align-items-center">
@@ -1031,18 +1040,18 @@
                                         </div>
                                         <div class="d-flex justify-content-between mb-2">
                                             <span class="text-muted">Amount Paid:</span>
-                                            <span class="fw-medium text-success">₱${parseFloat(paymentSummary.total_paid).toFixed(2)}</span>
+                                            <span class="fw-medium text-success">₱${originalPaid.toFixed(2)}</span>
                                         </div>
-                                        ${booking.payment_status === 'refunded' ? `
+                                        ${hasRefund ? `
                                             <div class="d-flex justify-content-between mb-2 text-warning">
                                                 <span>Amount Refunded:</span>
-                                                <span class="fw-semibold">₱${parseFloat(paymentSummary.total_paid).toFixed(2)}</span>
+                                                <span class="fw-semibold">₱${refundedTotal.toFixed(2)}</span>
                                             </div>
                                         ` : ''}
                                         <div class="d-flex justify-content-between pt-2 border-top">
                                             <span class="fw-semibold">Final Status:</span>
-                                            <span class="fw-bold ${booking.payment_status === 'refunded' ? 'text-warning' : 'text-success'}">
-                                                ${booking.payment_status === 'refunded' ? 'FULLY REFUNDED' : 'PAID IN FULL'}
+                                            <span class="fw-bold ${hasRefund ? 'text-warning' : 'text-success'}">
+                                                ${booking.payment_status === 'refunded' ? 'FULLY REFUNDED' : booking.payment_status === 'partially_refunded' ? 'PARTIALLY REFUNDED' : 'PAID IN FULL'}
                                             </span>
                                         </div>
                                     </div>

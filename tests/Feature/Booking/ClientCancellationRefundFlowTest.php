@@ -131,8 +131,8 @@ class ClientCancellationRefundFlowTest extends TestCase
 
         $this->assertSame('partially_refunded', $payment->fresh()->status);
         $this->assertSame('250.00', $payment->fresh()->refunded_amount);
-        // Only part of the paid total went back, so the booking is not fully refunded.
-        $this->assertSame(BookingModel::PAYMENT_REFUND_PENDING, $booking->fresh()->payment_status);
+        // The refund is finished, but only part of the paid total went back.
+        $this->assertSame(BookingModel::PAYMENT_PARTIALLY_REFUNDED, $booking->fresh()->payment_status);
     }
 
     public function test_full_payment_cancel_with_a_4000_partial_refund_is_recorded_for_audit(): void
