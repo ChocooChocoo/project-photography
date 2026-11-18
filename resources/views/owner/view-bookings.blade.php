@@ -399,7 +399,8 @@
                 
                 // Keep option labels short: a long label widens the native
                 // dropdown past the modal. The reasons show in the alert below.
-                const completionBlocked = 'completed' in availableStatuses && !canMarkCompleted;
+                // The server may leave Completed out entirely, so key on the status.
+                const completionBlocked = booking.status === 'in_progress' && !canMarkCompleted;
                 $.each(availableStatuses, function(value, label) {
                     const isDisabled = value === 'completed' && !canMarkCompleted;
                     $statusSelect.append($('<option>', {
