@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\BookingModel;
 use App\Models\BookingPackageModel;
 use App\Models\PaymentModel;
+use App\Models\SystemRevenueModel;
 use App\Models\UserModel;
 use App\Models\Admin\CategoriesModel;
 use App\Models\Freelancer\ProfileModel;
@@ -136,6 +137,10 @@ class BookingController extends Controller
                     'message' => 'Cannot mark booking as completed. Payment must be fully paid first.'
                 ], 400);
             }
+
+            if ($newStatus === 'completed' && $reason = $booking->getDeliveryCompletionBlockReason()) {
+                return response()->json(['success' => false, 'message' => $reason], 400);
+            }
             
             $updateData = ['status' => $newStatus];
             
@@ -198,12 +203,21 @@ class BookingController extends Controller
                 ], 403);
             }
 
-            // Can only mark as paid if currently partially paid
-            if ($request->payment_status === 'paid' && $booking->payment_status !== 'partially_paid') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Booking must be partially paid first before marking as fully paid.'
-                ], 400);
+            // Any booking with a balance left can be marked fully paid, for
+            // example when the client paid the rest in cash.
+            if ($request->payment_status === 'paid') {
+                if (in_array($booking->payment_status, ['refunded', 'partially_refunded'], true)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'A refunded booking cannot be marked as fully paid.'
+                    ], 400);
+                }
+                if ($booking->remaining_balance <= 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This booking is already fully paid.'
+                    ], 400);
+                }
             }
 
             // Can only mark as refunded if currently paid
@@ -216,17 +230,15 @@ class BookingController extends Controller
                 ], 400);
             }
             
-            // ========== FIXED: Don't manually update remaining_balance ==========
-            // Let the model handle it through the accessor
-            $booking->payment_status = $request->payment_status;
-            $booking->save();
+            if ($request->payment_status === 'refunded') {
+                $booking->payment_status = 'refunded';
+                $booking->save();
+            }
 
-            // Create a payment record for the final payment
+            // Record the rest of the balance as the final payment
             if ($request->payment_status === 'paid') {
-                // Calculate the final payment amount (total - already paid)
-                $totalPaid = $booking->total_paid; // Use the accessor
-                $finalPayment = $booking->total_amount - $totalPaid;
-                
+                $finalPayment = $booking->remaining_balance;
+
                 if ($finalPayment > 0) {
                     $payment = PaymentModel::create([
                         'booking_id' => $booking->id,
@@ -246,6 +258,8 @@ class BookingController extends Controller
                     // Create revenue record for this payment
                     SystemRevenueModel::createForPayment($booking, $payment);
                 }
+
+                $booking->updatePaymentStatus();
             }
             
             return response()->json([

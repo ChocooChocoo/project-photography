@@ -36,7 +36,8 @@ class OnlineGalleryController extends Controller
             
             $bookings = BookingModel::where('provider_id', $userId)
                 ->where('booking_type', 'freelancer')
-                ->where('status', 'completed')
+                // Photos go up while the booking is in progress, because completion needs them.
+                ->whereIn('status', ['in_progress', 'completed'])
                 ->with([
                     'client:id,first_name,last_name,email',
                     'packages',
@@ -92,6 +93,7 @@ class OnlineGalleryController extends Controller
                 'booking' => [
                     'id' => $booking->id,
                     'booking_reference' => $booking->booking_reference,
+                    'status' => $booking->status,
                     'event_name' => $booking->event_name,
                     'event_date' => \Carbon\Carbon::parse($booking->event_date)->format('M d, Y'),
                     'client_name' => $booking->client->first_name . ' ' . $booking->client->last_name,
@@ -133,7 +135,7 @@ class OnlineGalleryController extends Controller
             $booking = BookingModel::where('id', $bookingId)
                 ->where('provider_id', $userId)
                 ->where('booking_type', 'freelancer')
-                ->where('status', 'completed')
+                ->whereIn('status', ['in_progress', 'completed'])
                 ->firstOrFail();
 
             $gallery = FreelanceOnlineGalleryModel::where('booking_id', $bookingId)->first();

@@ -397,23 +397,21 @@
                 const $statusSelect = $('#bookingStatus');
                 $statusSelect.empty().append('<option value="">Select Status</option>');
                 
+                // Keep option labels short: a long label widens the native
+                // dropdown past the modal. The reasons show in the alert below.
+                const completionBlocked = 'completed' in availableStatuses && !canMarkCompleted;
                 $.each(availableStatuses, function(value, label) {
-                    const isCompleted = value === 'completed';
-                    const isDisabled = isCompleted && !canMarkCompleted;
-                    const disabledLabel = completionBlockers.length > 0
-                        ? ` (${completionBlockers[0]})`
-                        : ' (Completion requirements not met)';
-                    
+                    const isDisabled = value === 'completed' && !canMarkCompleted;
                     $statusSelect.append($('<option>', {
                         value: value,
-                        text: label + (isDisabled ? disabledLabel : ''),
+                        text: label + (isDisabled ? ' (not available yet)' : ''),
                         disabled: isDisabled
                     }));
                 });
-                
+
                 // Reset form
                 $('#cancellationReasonGroup').addClass('d-none');
-                $('#paymentWarningAlert').addClass('d-none');
+                $('#paymentWarningAlert').toggleClass('d-none', !completionBlocked);
                 $('#cancellationReason').val('');
                 $('#paymentWarningMessage').text(completionBlockers.length > 0 ? completionBlockers.join(' ') : completionBlockReason);
                 
@@ -435,11 +433,7 @@
                         $('#cancellationReasonGroup').addClass('d-none');
                     }
                     
-                    if (selectedStatus === 'completed' && !canMarkCompleted) {
-                        $('#paymentWarningAlert').removeClass('d-none');
-                    } else {
-                        $('#paymentWarningAlert').addClass('d-none');
-                    }
+                    $('#paymentWarningAlert').toggleClass('d-none', !completionBlocked || selectedStatus === 'cancelled');
                 });
                 
                 // Hide booking modal and show status modal

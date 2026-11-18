@@ -398,6 +398,11 @@ class BookingModel extends Model
         return $this->hasOne(StudioOnlineGalleryModel::class, 'booking_id');
     }
 
+    public function freelanceOnlineGallery()
+    {
+        return $this->hasOne(\App\Models\Freelancer\FreelanceOnlineGalleryModel::class, 'booking_id');
+    }
+
     /**
      * Get the provider based on booking type.
      */
@@ -571,6 +576,8 @@ class BookingModel extends Model
     {
         if ($this->delivery_type === 'hardcopy') return false;
         if (in_array($this->delivery_type, ['softcopy', 'both'], true)) return true;
+        // Freelancers deliver every booking through their online gallery.
+        if ($this->booking_type === 'freelancer') return true;
         if ($this->booking_type !== 'studio') {
             return false;
         }
@@ -617,9 +624,8 @@ class BookingModel extends Model
      */
     public function hasUploadedGalleryContent(): bool
     {
-        $gallery = $this->relationLoaded('studioOnlineGallery')
-            ? $this->studioOnlineGallery
-            : $this->studioOnlineGallery()->first();
+        $relation = $this->booking_type === 'freelancer' ? 'freelanceOnlineGallery' : 'studioOnlineGallery';
+        $gallery = $this->relationLoaded($relation) ? $this->$relation : $this->$relation()->first();
 
         if (! $gallery) {
             return false;
@@ -673,7 +679,8 @@ class BookingModel extends Model
             return 'Cannot mark as completed until at least one image is uploaded or a Google Drive link is shared in the client\'s online gallery.';
         }
 
-        if (! $this->onlineGalleryIsPublished()) {
+        // A freelancer publishes the gallery after completion.
+        if ($this->booking_type !== 'freelancer' && ! $this->onlineGalleryIsPublished()) {
             return 'Cannot mark as completed until the client\'s online gallery is published.';
         }
 
@@ -966,6 +973,10 @@ class BookingModel extends Model
         // Prints that are ready, shipped, or delivered no longer hold the
         // booking open; the order keeps its own tracking after completion.
         if ($orders->contains(fn ($order) => ! in_array($order->status, HardcopyOrderModel::COMPLETION_READY_STATUSES, true))) {
+            if (! $this->eventHasEnded()) {
+                return 'Printed photo delivery opens after the event ends on '.$this->eventEndsAt()->format('M d, Y g:i A').'. Complete the booking once prints are ready for pickup, shipped, or delivered.';
+            }
+
             return 'Hardcopy prints must be ready for pickup, shipped, or delivered before completion.';
         }
         if (in_array($this->delivery_type, ['hardcopy', 'both'], true) && $orders->isEmpty()) {

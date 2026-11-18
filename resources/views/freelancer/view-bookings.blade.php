@@ -230,7 +230,7 @@
                                 <option value="refunded">Refund Payment</option>
                             </select>
                             <small class="text-muted d-block mt-1">
-                                • <strong>Fully Paid:</strong> Client has paid the remaining balance<br>
+                                • <strong>Fully Paid:</strong> Client has paid the remaining balance, online or in cash<br>
                                 • <strong>Refunded:</strong> Only available for fully paid bookings
                             </small>
                         </div>
@@ -709,7 +709,7 @@
                                 <div class="mt-2 p-2 bg-light-warning rounded">
                                     <small class="text-warning">
                                         <i data-lucide="alert-triangle" class="me-1" style="width: 14px;"></i>
-                                        Payment must be fully paid before marking as completed.
+                                        Payment must be fully paid, and the online gallery must hold at least one photo or Drive link, before marking as completed.
                                     </small>
                                 </div>
                             `;
@@ -859,7 +859,7 @@
                     return;
                 }
                 
-                submitPaymentUpdate(paymentStatus, amountPaid, notes);
+                submitPaymentUpdate(paymentStatus, notes);
             });
 
             // Submit status update to server

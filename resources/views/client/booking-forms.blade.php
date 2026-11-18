@@ -1565,7 +1565,21 @@
                 if (venueMarker) {
                     venueMarker.setLatLng(point);
                 } else {
-                    venueMarker = L.marker(point, {draggable: true}).addTo(venueMap);
+                    // The bundled Leaflet has no marker-icon-2x.png, so high-DPI
+                    // screens showed only the shadow. Use the 1x icon for both.
+                    const pinUrl = @json(asset('assets/plugins/leaflet/images/marker-icon.png'));
+                    venueMarker = L.marker(point, {
+                        draggable: true,
+                        icon: L.icon({
+                            iconUrl: pinUrl,
+                            iconRetinaUrl: pinUrl,
+                            shadowUrl: @json(asset('assets/plugins/leaflet/images/marker-shadow.png')),
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                        })
+                    }).addTo(venueMap);
                     venueMarker.on('dragend', () => {
                         const moved = venueMarker.getLatLng();
                         setVenuePin(moved.lat, moved.lng);

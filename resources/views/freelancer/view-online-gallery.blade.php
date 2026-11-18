@@ -73,7 +73,7 @@
                                         <tr>
                                             <td colspan="7" class="text-center py-4">
                                                 <i class="ti ti-photo-off fs-3 text-muted mb-2 d-block"></i>
-                                                No completed bookings with online gallery found
+                                                No in-progress or completed bookings found
                                             </td>
                                         </tr>
                                     @endforelse
@@ -518,7 +518,8 @@
 
                             if (response.has_gallery && response.gallery) {
                                 currentGalleryId = response.gallery.id;
-                                $('#publishGalleryBtn').toggle(response.gallery.gallery_status !== 'published');
+                                // Publishing opens after the booking is completed.
+                                $('#publishGalleryBtn').toggle(response.booking.status === 'completed' && response.gallery.gallery_status !== 'published');
                                 $('#showUploadFormBtn').prop('disabled', response.gallery.gallery_status === 'published');
 
                                 $('#noGalleryMessage').hide();
